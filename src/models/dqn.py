@@ -129,6 +129,33 @@ class DQN(nn.Module):
             'features': features
         }
 
+    def validate_output_shape(self, batch_size: int = 2):
+        """
+        Validate model produces correct output shapes.
+
+        Args:
+            batch_size: Batch size for dummy input
+
+        Raises:
+            AssertionError: If output shapes are incorrect
+        """
+        self.eval()
+        with torch.no_grad():
+            x = torch.randn(batch_size, 4, 84, 84)
+            output = self(x)
+
+            # Check q_values shape
+            expected_q_shape = (batch_size, self.num_actions)
+            actual_q_shape = output['q_values'].shape
+            assert actual_q_shape == expected_q_shape, \
+                f"Expected q_values shape {expected_q_shape}, got {actual_q_shape}"
+
+            # Check features shape
+            expected_feat_shape = (batch_size, 256)
+            actual_feat_shape = output['features'].shape
+            assert actual_feat_shape == expected_feat_shape, \
+                f"Expected features shape {expected_feat_shape}, got {actual_feat_shape}"
+
     @classmethod
     def from_env(cls, env):
         """
