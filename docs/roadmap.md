@@ -108,8 +108,8 @@ CNN mapping (4×84×84) to Q-values: Conv(16,8×8,s4) → Conv(32,4×4,s2) → F
 **Checklist:**
 - [X] Implement DQN CNN with input `(4,84,84)`: Conv1 (16, 8×8, stride 4, ReLU) → Conv2 (32, 4×4, stride 2, ReLU) → flatten → FC(256, ReLU) → linear head of size `|A|`; channels-first tensors, return dict with `q_values` and optional `features` for debugging.
     - [X] feat: Add DQN model (Conv8x8s4→Conv4x4s2→FC256→Q-head)
-- [ ] Set weight initialization and dtypes: use Kaiming normal (fan_out) for conv/linear with ReLU, zeros for biases; keep parameters in float32; expose a `to(device)` utility; ensure forward accepts `float32` inputs scaled to `[0,1]`.
-    - [ ] build: Configure Kaiming init and float32 dtype for all layers
+- [X] Set weight initialization and dtypes: use Kaiming normal (fan_out) for conv/linear with ReLU, zeros for biases; keep parameters in float32; expose a `to(device)` utility; ensure forward accepts `float32` inputs scaled to `[0,1]`.
+    - [X] build: Configure Kaiming init and float32 dtype for all layers
 - [ ] Add model summary and shape checks: implement a small `model_summary(module, input_shape)` printer and log parameter count; assert expected output shape `(B, |A|)` for a dummy batch; handle dynamic `|A|` from env.
     - [ ] chore: Add model summary utility and output-shape assertion
 - [ ] Create forward-path unit tests: with random input `(B=2, 4, 84, 84)` verify no NaNs/Infs, correct shapes for action spaces (e.g., Pong=6, Breakout=4, BeamRider=9), and gradients flow with a dummy MSE loss/backward.
