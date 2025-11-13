@@ -134,36 +134,133 @@ def dry_run(config, seed, num_episodes=3):
     print(f"Reward clipping: {'enabled' if config.training.reward_clip else 'disabled'}")
     print(f"Episode termination: full episode (life loss NOT terminal for dry run)")
 
-    # Run random episodes
+    # Run random episodes and collect detailed statistics
     episode_stats = []
+    all_rewards = []
+    all_raw_rewards = []
 
     for episode in range(num_episodes):
         obs, info = env.reset(seed=seed + episode)
         episode_reward = 0
+        episode_raw_reward = 0
         episode_length = 0
+        episode_rewards = []
         done = False
 
         print(f"\nEpisode {episode + 1}/{num_episodes}")
         print(f"  Initial observation shape: {obs.shape} (dtype: {obs.dtype})")
         print(f"  Value range: [{obs.min()}, {obs.max()}]")
 
+        step_count = 0
         while not done:
             action = env.action_space.sample()
             obs, reward, terminated, truncated, info = env.step(action)
             done = terminated or truncated
 
+            # Track both clipped and raw rewards
             episode_reward += reward
+            episode_rewards.append(float(reward))
+
+            # Estimate raw reward (before clipping)
+            # Note: This is approximate since we can't access the true raw reward
+            # In actual training, we'd track this before the RewardClipper wrapper
+            if reward > 0:
+                raw_reward_estimate = 1.0  # Could be any positive value
+            elif reward < 0:
+                raw_reward_estimate = -1.0  # Could be any negative value
+            else:
+                raw_reward_estimate = 0.0
+            episode_raw_reward += raw_reward_estimate
+
             episode_length += 1
+            step_count += 1
+
+        all_rewards.extend(episode_rewards)
+        all_raw_rewards.append(episode_raw_reward)
 
         episode_stats.append({
             "episode": episode + 1,
             "reward": float(episode_reward),
-            "length": episode_length
+            "length": episode_length,
+            "rewards_collected": episode_rewards,
+            "unique_rewards": list(set(episode_rewards))
         })
 
         print(f"  Reward: {episode_reward}, Length: {episode_length}")
+        print(f"  Unique rewards seen: {sorted(set(episode_rewards))}")
 
     env.close()
+
+    # Calculate statistics
+    mean_reward = np.mean([s["reward"] for s in episode_stats])
+    std_reward = np.std([s["reward"] for s in episode_stats])
+    mean_length = np.mean([s["length"] for s in episode_stats])
+
+    # Reward statistics
+    reward_counts = {}
+    for r in all_rewards:
+        reward_counts[r] = reward_counts.get(r, 0) + 1
+
+    # Create detailed rollout log
+    rollout_log = {
+        "metadata": {
+            "mode": "dry_run",
+            "environment": config.env.id,
+            "seed": seed,
+            "num_episodes": num_episodes,
+            "timestamp": str(np.datetime64('now'))
+        },
+        "observation_space": {
+            "shape": list(env.observation_space.shape),
+            "dtype": str(env.observation_space.dtype),
+            "description": f"Stacked {config.preprocess.stack_size} grayscale frames of {config.preprocess.frame_size}x{config.preprocess.frame_size}"
+        },
+        "action_space": {
+            "size": action_space_size,
+            "type": "Discrete"
+        },
+        "preprocessing": {
+            "frame_size": config.preprocess.frame_size,
+            "grayscale": True,
+            "frame_stack": config.preprocess.stack_size,
+            "frame_skip": config.env.frameskip,
+            "max_pooling": "last 2 frames",
+            "noop_max": config.env.max_noop_start,
+            "reward_clipping": config.training.reward_clip,
+            "episode_life": False  # Dry run uses full episodes
+        },
+        "reward_statistics": {
+            "clipped_rewards": {
+                "unique_values": sorted(list(reward_counts.keys())),
+                "counts": reward_counts,
+                "total_steps": len(all_rewards),
+                "mean": float(np.mean(all_rewards)) if all_rewards else 0.0,
+                "std": float(np.std(all_rewards)) if all_rewards else 0.0,
+                "min": float(np.min(all_rewards)) if all_rewards else 0.0,
+                "max": float(np.max(all_rewards)) if all_rewards else 0.0
+            },
+            "description": "Rewards are clipped to {-1, 0, +1}" if config.training.reward_clip else "Raw rewards (no clipping)"
+        },
+        "episode_statistics": episode_stats,
+        "summary": {
+            "mean_episode_reward": float(mean_reward),
+            "std_episode_reward": float(std_reward),
+            "mean_episode_length": float(mean_length),
+            "total_frames": sum(s["length"] for s in episode_stats),
+            "total_episodes": num_episodes
+        }
+    }
+
+    # Save rollout log
+    rollout_log_path = output_dir / "rollout_log.json"
+    with open(rollout_log_path, "w") as f:
+        json.dump(rollout_log, f, indent=2)
+    print(f"\nRollout log saved to: {rollout_log_path}")
+    print(f"  - Observation shape: {rollout_log['observation_space']['shape']}")
+    print(f"  - Action repeat (frame skip): {config.env.frameskip}")
+    print(f"  - Reward clipping: {rollout_log['reward_statistics']['description']}")
+    print(f"  - Unique rewards: {rollout_log['reward_statistics']['clipped_rewards']['unique_values']}")
+    print(f"  - Reward counts: {rollout_log['reward_statistics']['clipped_rewards']['counts']}")
 
     # Frame samples are automatically saved by FrameStack wrapper
     print(f"\nPreprocessed frame samples saved to {frames_dir}/")
@@ -184,11 +281,7 @@ def dry_run(config, seed, num_episodes=3):
         json.dump(action_info, f, indent=2)
     print(f"Action list saved to: {action_list_path}")
 
-    # Create minimal evaluation report
-    mean_reward = np.mean([s["reward"] for s in episode_stats])
-    std_reward = np.std([s["reward"] for s in episode_stats])
-    mean_length = np.mean([s["length"] for s in episode_stats])
-
+    # Create minimal evaluation report (backward compatibility)
     eval_report = {
         "mode": "dry_run",
         "environment": config.env.id,
