@@ -85,8 +85,8 @@ Build wrapper transforming raw 210×160×3 frames to 84×84 grayscale, stacking 
     - [X] feat: Add 4-step action repeat and last-2-frame max-pooling
 - [X] Apply reward clipping to the set {−1, 0, +1} with a config toggle to disable for ablations.
     - [X] feat: Add configurable reward clipping to {-1,0,+1}
-- [ ] Align episode termination with evaluation policy: allow training to treat life loss as terminal, use full-episode termination for evaluation, and support optional no-op starts and auto-fire reset where needed; document choices in the wrapper docstring.
-    - [ ] docs: Document termination (life-loss vs full-episode), no-op starts, and auto-fire behavior
+- [X] Align episode termination with evaluation policy: allow training to treat life loss as terminal, use full-episode termination for evaluation, and support optional no-op starts and auto-fire reset where needed; document choices in the wrapper docstring.
+    - [X] docs: Document termination (life-loss vs full-episode), no-op starts, and auto-fire behavior
 - [ ] Produce debug artifacts: write a short random rollout log recording obs shape, action repeat behavior, and clipped reward stats; save preprocessed stacks under `experiments/dqn_atari/artifacts/frames/<game>/` and the rollout log in the corresponding run directory.
     - [ ] feat: Emit rollout debug log and per-game preprocessed frame artifacts
 
