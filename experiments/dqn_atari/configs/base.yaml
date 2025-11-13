@@ -1,0 +1,58 @@
+# Base configuration scaffold for DQN Atari experiments.
+experiment:
+  name: dqn_atari_base
+  seed: 0
+  output_dir: experiments/dqn_atari/runs/${experiment.name}_${experiment.seed}
+
+env:
+  id: ALE/Pong-v5
+  mode: train
+  action_set: minimal
+  frameskip: 4
+  repeat_action_probability: 0.0
+  max_noop_start: 30
+  episode_life: true  # treat life loss as terminal during training
+
+preprocess:
+  frame_size: 84
+  grayscale: true
+  stack_size: 4
+  clip_rewards: true
+  normalize: false
+
+agent:
+  architecture: nature_cnn
+  gamma: 0.99
+  learning_rate: 0.00025
+  optimizer: rmsprop
+  optimizer_eps: 0.00001
+  optimizer_alpha: 0.95
+  replay_capacity: 1000000
+  replay_min_transitions: 50000
+  batch_size: 32
+  target_update_interval: 10000
+  gradient_clip_norm: 10.0
+
+exploration:
+  schedule: linear
+  epsilon_start: 1.0
+  epsilon_end: 0.1
+  epsilon_decay_frames: 1000000
+  eval_epsilon: 0.05
+
+train_loop:
+  total_frames: 10000000
+  train_frequency: 4
+  log_interval_frames: 10000
+  eval_interval_frames: 250000
+  checkpoint_interval_frames: 1000000
+
+logging:
+  use_wandb: false
+  project: thesis-dqn
+  entity: null
+  tensorboard_dir: experiments/dqn_atari/tensorboard
+
+hardware:
+  device: cuda
+  num_envs: 1

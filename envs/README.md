@@ -1,11 +1,15 @@
 # Environment Specifications
 
-This folder stores reproducible environment definitions (e.g., `requirements.txt`, pip-tools `*.in`, optional Dockerfiles) shared across experiments.
+This folder stores reproducible environment definitions shared across experiments.
 
-Planned files:
+## Files
+- `requirements.txt` – Pinned base stack (PyTorch 2.4.1, Gymnasium/ALE, AutoROM helper, plotting/logging utilities).
+- `setup_env.sh` – Creates `.venv/`, installs dependencies, and runs `python -m AutoROM --accept-license`.
 
-- `requirements.txt` – Primary development stack (Python, PyTorch, Gymnasium/ALE, logging stack) for use with `python -m venv`.
-- `requirements-cpu.txt` / `requirements-gpu.txt` – Optional variants tuned for hardware constraints.
-- `setup_env.sh` – Helper script to create/activate the virtual environment and install Atari ROM tooling.
+## Usage
+```bash
+bash envs/setup_env.sh         # creates .venv and installs everything
+source .venv/bin/activate      # activate when working in the repo
+```
 
-Document any external steps (ROM acquisition, CUDA driver requirements) in comments inside the environment files to keep setup friction low.
+Pin any experiment-specific extras via additional `requirements-*.txt` files or pip-compile inputs as the project grows.

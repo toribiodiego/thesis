@@ -1,0 +1,14 @@
+# Base environment for DQN reproduction work.
+torch==2.4.1
+torchvision==0.19.1
+numpy==1.26.4
+scipy==1.13.1
+gymnasium[accept-rom-license]==0.29.1
+ale-py==0.8.1
+AutoROM.accept-rom-license==0.6.1
+opencv-python==4.10.0.84
+tqdm==4.66.4
+typing-extensions==4.12.2
+matplotlib==3.9.1
+rich==13.7.1
+omegaconf==2.3.0

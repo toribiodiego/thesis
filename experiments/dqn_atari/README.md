@@ -1,12 +1,10 @@
 # DQN Atari Experiment
 
-This directory will host the scripts, configs, and notes for reproducing the original DQN Atari results.
+Experiment-specific assets that sit on top of the shared `src/` modules.
 
-Planned contents:
+## Layout
+- `configs/` – `base.yaml` plus per-game overrides; see `configs/README.md`.
+- `scripts/` – Shell entry points like `run_dqn.sh` (training), with planned `eval` and `dry_run` helpers.
+- `notes.md` – Chronological experiment log for hyperparameter tweaks and observations.
 
-- `configs/` – Shared base config plus per-game overrides.
-- `scripts/train.py` – Entry point for training runs.
-- `scripts/eval.py` – Evaluation harness that generates episode rollouts and score tables.
-- `notes.md` – Chronological experiment log (hyperparameter adjustments, observations, follow-ups).
-
-All core implementation lives under `src/`, keeping experiment directories thin and focused on wiring plus documentation.
+Core implementations (agents, replay, env wrappers) stay under `src/`, keeping this directory focused on wiring, configs, and documentation.
