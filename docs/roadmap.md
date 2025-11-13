@@ -56,10 +56,10 @@ See `docs/papers/dqn_2013_notes.md` for details.
 Establish the experimental foundation by selecting 2–3 representative Atari games (Pong, Breakout, Beam Rider), pinning all dependencies (Python, PyTorch, Gymnasium/ALE, ROMs), and creating config files plus a launch script. Define a consistent evaluation protocol (ε-eval, termination policy, frame budgets). Complete when a random-policy dry run successfully produces preprocessed frames, action lists, and a minimal evaluation report.
 
 **Checklist:**
-- [ ] Choose initial 2–3 games from the paper for reproduction (recommended: Pong, Breakout, Beam Rider) and create config stubs at `experiments/dqn_atari/configs/{pong,breakout,beam_rider}.yaml`, plus note the chosen games in `experiments/dqn_atari/README.md`.
-    - [ ] docs: Add selected Atari games (Pong, Breakout, Beam Rider) and config stubs
-- [ ] Record official game IDs (Gymnasium/ALE names like `ALE/Pong-v5`, `ALE/Breakout-v5`, `ALE/BeamRider-v5`) in `experiments/dqn_atari/README.md` as a table with an action_set column (use minimal) and ROM acquisition instructions (add `scripts/setup_roms.sh` calling `python -m AutoROM --accept-license`).
-    - [ ] docs: Document ALE v5 env IDs, minimal action set, and AutoROM setup script
+- [X] Choose initial 2–3 games from the paper for reproduction (recommended: Pong, Breakout, Beam Rider) and create config stubs at `experiments/dqn_atari/configs/{pong,breakout,beam_rider}.yaml`, plus note the chosen games in `experiments/dqn_atari/README.md`.
+    - [X] docs: Add selected Atari games (Pong, Breakout, Beam Rider) and config stubs
+- [X] Record official game IDs (Gymnasium/ALE names like `ALE/Pong-v5`, `ALE/Breakout-v5`, `ALE/BeamRider-v5`) in `experiments/dqn_atari/README.md` as a table with an action_set column (use minimal) and ROM acquisition instructions (add `scripts/setup_roms.sh` calling `python -m AutoROM --accept-license`).
+    - [X] docs: Document ALE v5 env IDs, minimal action set, and AutoROM setup script
 - [ ] Pin env versions by adding exact versions to `requirements.txt` (e.g., Python 3.10.13, PyTorch 2.4.1+cu121, Gymnasium 0.29.1, ale-py 0.8.1) and documenting ALE runtime settings in the README (e.g., `repeat_action_probability=0.0`, `frameskip=4`, `full_action_space=false`); include `scripts/capture_env.sh` to write `experiments/dqn_atari/system_info.txt`.
     - [ ] build: Pin Python/Torch/Gym/ALE versions; capture system info; document deterministic ALE settings
 - [ ] Define evaluation protocol in `experiments/dqn_atari/configs/base.yaml`: ε-greedy evaluation with small ε (e.g., `eval.epsilon=0.05` or greedy toggle), termination policy (full episode for eval; training may treat life-loss as terminal), `eval.episodes=10` per checkpoint, reward clipping to {−1,0,+1}, and per-game frame budgets (e.g., 10–20M for main runs, smaller for smoke tests).
