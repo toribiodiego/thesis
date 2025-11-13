@@ -77,6 +77,47 @@ def test_dqn_gradient_flow():
         assert not torch.isinf(param.grad).any(), f"Inf gradient for {name}"
 
 
+def test_dqn_mse_backward():
+    """Test backward pass with MSE loss across multiple action sizes."""
+    # Test game-specific action space sizes
+    action_configs = [
+        ('Breakout', 4),
+        ('Pong', 6),
+        ('BeamRider', 9)
+    ]
+
+    for game_name, num_actions in action_configs:
+        model = DQN(num_actions=num_actions)
+        batch_size = 2
+
+        # Create input
+        x = torch.rand(batch_size, 4, 84, 84)
+
+        # Forward pass
+        output = model(x)
+        q_values = output['q_values']
+
+        # Create target Q-values
+        target_q = torch.rand(batch_size, num_actions)
+
+        # MSE loss
+        loss = torch.nn.functional.mse_loss(q_values, target_q)
+
+        # Backward pass
+        loss.backward()
+
+        # Check loss is finite
+        assert torch.isfinite(loss), f"{game_name}: Loss is not finite"
+
+        # Check all gradients exist and are finite
+        for name, param in model.named_parameters():
+            assert param.grad is not None, f"{game_name}: No gradient for {name}"
+            assert torch.isfinite(param.grad).all(), f"{game_name}: Non-finite gradient in {name}"
+
+        # Clear gradients for next iteration
+        model.zero_grad()
+
+
 def test_dqn_from_env():
     """Test DQN can be created from environment."""
     # Mock environment object
@@ -163,13 +204,16 @@ if __name__ == "__main__":
     print("Running DQN model tests...")
 
     test_dqn_output_shape()
-    print("✓ Output shape test passed")
+    print("✓ Output shape test passed (Breakout=4, Pong=6, BeamRider=9, etc.)")
 
     test_dqn_no_nans()
     print("✓ No NaNs/Infs test passed")
 
     test_dqn_gradient_flow()
     print("✓ Gradient flow test passed")
+
+    test_dqn_mse_backward()
+    print("✓ MSE backward test passed (Breakout, Pong, BeamRider)")
 
     test_dqn_from_env()
     print("✓ from_env test passed")
