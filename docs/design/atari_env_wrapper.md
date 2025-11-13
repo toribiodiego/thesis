@@ -36,11 +36,15 @@ Final Environment
 - `noop_max`: Maximum number of no-ops (default: 30)
 
 **Behavior:**
-- On reset: Execute random number of no-ops (1 to `noop_max`)
+- On reset: Execute random number of no-ops (0 to `noop_max` inclusive)
+- Follows Bellemare/Mnih evaluation protocol specification
 - Action 0 must be NOOP (verified via assertion)
 - If episode ends during no-ops, reset again
+- Set `noop_max=0` to disable no-op resets entirely
 
 **Config:** `config.env.max_noop_start`
+
+**Note:** The range is [0, noop_max] inclusive, meaning the agent could start immediately (0 no-ops) or after up to 30 no-ops, providing maximum diversity in initial states.
 
 ### 2. MaxAndSkipEnv
 
@@ -317,11 +321,13 @@ assert obs.dtype == np.uint8
 **Diagnosis:**
 - `NoopResetEnv` disabled or `noop_max=0`
 - Seed not changing across episodes
+- Episodes always starting with same number of no-ops
 
 **Solution:**
-- Set `config.env.max_noop_start=30`
+- Set `config.env.max_noop_start=30` (Bellemare/Mnih protocol)
 - Ensure `NoopResetEnv` is first wrapper applied
-- Use different seeds: `env.reset(seed=seed + episode)`
+- Verify range is [0, noop_max] inclusive (not [1, noop_max])
+- Each reset samples uniformly from [0, 30] for maximum diversity
 
 **Verification:**
 ```json
@@ -330,6 +336,11 @@ assert obs.dtype == np.uint8
   "noop_max": 30
 }
 ```
+
+**Expected behavior:**
+- Some episodes start immediately (0 no-ops)
+- Some episodes have up to 30 no-op delay
+- Uniform distribution provides diverse initial states
 
 ### Memory Issues
 

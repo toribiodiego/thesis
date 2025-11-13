@@ -132,15 +132,23 @@ class NoopResetEnv(gym.Wrapper):
     """
     Sample initial states by taking random number of no-ops on reset.
 
+    Following Bellemare/Mnih evaluation protocol: execute between 0 and noop_max
+    no-op actions at the start of each episode to create diverse initial states.
+
     No-op is assumed to be action 0. This wrapper helps create more
-    diverse starting states for training.
+    diverse starting states for training and evaluation.
 
     Args:
         env: Gymnasium environment
         noop_max: Maximum number of no-ops to execute (default: 30)
+                  Actual number is sampled uniformly from [0, noop_max]
 
     Returns:
-        Observation after executing random number of no-ops
+        Observation after executing 0-noop_max no-ops
+
+    Note:
+        Bellemare et al. evaluation protocol uses noop_max=30.
+        Set noop_max=0 to disable no-op resets entirely.
     """
 
     def __init__(self, env: gym.Env, noop_max: int = 30):
@@ -153,13 +161,20 @@ class NoopResetEnv(gym.Wrapper):
         """
         Reset environment and perform random number of no-op actions.
 
+        Samples uniformly from [0, noop_max] inclusive, matching the
+        Bellemare/Mnih evaluation protocol specification.
+
         Returns:
             Observation after no-ops and info dict
         """
         obs, info = self.env.reset(**kwargs)
 
-        # Sample random number of no-ops to execute
-        noops = np.random.randint(1, self.noop_max + 1)
+        if self.noop_max == 0:
+            # No-op resets disabled
+            return obs, info
+
+        # Sample random number of no-ops to execute (0 to noop_max inclusive)
+        noops = np.random.randint(0, self.noop_max + 1)
 
         for _ in range(noops):
             obs, _, terminated, truncated, info = self.env.step(self.noop_action)
