@@ -187,12 +187,16 @@ class NoopResetEnv(gym.Wrapper):
 
 class EpisodeLifeEnv(gym.Wrapper):
     """
-    Treat loss of life as episode end during training.
+    OPTIONAL: Treat loss of life as episode end during training.
+
+    DEFAULT BEHAVIOR: Full-episode termination (life loss does NOT end episode).
+    This wrapper is OPTIONAL and only applied when episode_life=True in config.
 
     This wrapper makes the agent learn to preserve lives, which can lead to
-    better performance. However, it should NOT be used during evaluation.
+    better performance in some games. However, it is NOT required by the DQN
+    paper and should NOT be used during evaluation.
 
-    Termination behavior:
+    Termination behavior when enabled:
     - Training: Episode ends when agent loses a life (terminated=True)
     - True episode end tracked internally for proper resets
     - Lives reset to initial count on true episode end
@@ -200,9 +204,12 @@ class EpisodeLifeEnv(gym.Wrapper):
     Args:
         env: Gymnasium environment
 
-    Note:
-        This wrapper should only be used during training, not evaluation.
-        For evaluation, use the unwrapped environment or set episode_life=False.
+    Important:
+        - DEFAULT: episode_life=False (full episodes, life loss NOT terminal)
+        - OPTIONAL: episode_life=True (life loss as terminal, training optimization)
+        - NEVER use during evaluation (always use episode_life=False for eval)
+        - This wrapper is controlled by config.training.episode_life (training)
+          and config.eval.episode_life (evaluation, should always be False)
     """
 
     def __init__(self, env: gym.Env):
@@ -450,16 +457,21 @@ def make_atari_env(
     Create Atari environment with preprocessing and frame stacking.
 
     Applies wrappers in order:
-    1. NoopResetEnv - Random no-op starts (1-30 no-ops on reset)
+    1. NoopResetEnv - Random no-op starts (0-30 no-ops on reset)
     2. MaxAndSkipEnv - Action repeat (4x) with max-pooling over last 2 frames
-    3. EpisodeLifeEnv - Treat life loss as episode end (training only)
+    3. EpisodeLifeEnv - OPTIONAL: Treat life loss as episode end (only if episode_life=True)
     4. RewardClipper - Clip rewards to {-1, 0, +1}
     5. AtariPreprocessing - Grayscale conversion and resize to 84×84
     6. FrameStack - Stack last 4 frames in channels-first format
 
-    Termination policy:
-    - Training (episode_life=True): Episode ends on life loss
-    - Evaluation (episode_life=False): Episode ends only on game over
+    Episode Termination Policy (controlled by episode_life parameter):
+    - DEFAULT (episode_life=False): Full-episode termination only on game over
+    - OPTIONAL (episode_life=True): Episode ends on life loss (training optimization)
+
+    The default behavior is full-episode termination. The episode_life wrapper is
+    only applied when explicitly enabled via episode_life=True. This is typically
+    used during training to help agents learn to preserve lives, but is NOT
+    required by the DQN paper and should NEVER be used during evaluation.
 
     Args:
         env_id: Gymnasium environment ID (e.g., "ALE/Pong-v5")
@@ -467,7 +479,7 @@ def make_atari_env(
         num_stack: Number of frames to stack (default: 4)
         frame_skip: Action repeat count (default: 4)
         clip_rewards: Whether to clip rewards to {-1, 0, +1} (default: True)
-        episode_life: Treat life loss as episode end for training (default: False)
+        episode_life: OPTIONAL: Treat life loss as episode end (default: False)
         noop_max: Maximum number of no-ops on reset (default: 30)
         save_samples: Whether to save sample frame stacks
         sample_dir: Directory to save samples
@@ -476,9 +488,10 @@ def make_atari_env(
     Returns:
         Wrapped environment with preprocessing and frame stacking
 
-    Note:
-        For evaluation, set episode_life=False to get true episode returns.
-        For training, set episode_life=True to help agent learn to preserve lives.
+    Important:
+        - DEFAULT: episode_life=False (full episodes, recommended for eval)
+        - For training: episode_life=True is optional and can improve performance
+        - For evaluation: ALWAYS use episode_life=False to get true episode returns
     """
     # Create base environment
     env = gym.make(env_id, **env_kwargs)

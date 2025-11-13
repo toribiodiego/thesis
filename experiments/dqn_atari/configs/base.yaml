@@ -41,13 +41,21 @@ eval:
   # Evaluation protocol settings
   epsilon: 0.05  # Small ε-greedy for evaluation (use 0.0 for fully greedy)
   episodes: 10  # Number of episodes to run per evaluation checkpoint
-  episode_life: false  # Full episode termination for eval (no life loss as terminal)
+  # Episode termination policy for evaluation:
+  # - episode_life: false (DEFAULT) -> Full episode termination only on game over
+  # - episode_life: true -> Treat life loss as terminal (NOT recommended for eval)
+  episode_life: false  # DEFAULT: Full episodes for evaluation
   deterministic: false  # Set true for fully greedy evaluation (overrides epsilon)
 
 training:
   # Training protocol settings
   total_frames: 10000000  # 10M frames (Pong baseline)
-  episode_life: true  # Treat life loss as terminal during training
+  # Episode termination policy for training:
+  # - episode_life: false (DEFAULT) -> Full episode termination only on game over
+  # - episode_life: true -> Treat life loss as terminal (optional training optimization)
+  # NOTE: Many implementations use episode_life=true during training to help agents
+  # learn to preserve lives, but this is NOT required and can be disabled.
+  episode_life: true  # OPTIONAL: Life loss as terminal (set false for pure full-episode training)
   train_frequency: 4  # Train every 4 steps
   reward_clip: true  # Clip rewards to {-1, 0, +1}
 
