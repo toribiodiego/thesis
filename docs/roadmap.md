@@ -127,8 +127,8 @@ CNN mapping (4×84×84) to Q-values: Conv(16,8×8,s4) → Conv(32,4×4,s2) → F
 Circular buffer storing ~1M transitions (s,a,r,s',done). Store as uint8, convert to float32 on sample. Support 50k warm-up. Complete when sampling returns correct shapes, respects episode boundaries, and integrates with GPU training.
 
 **Checklist:**
-- [ ] Implement a circular replay buffer (capacity e.g., `1_000_000`) that stores tuples `(s_t, a_t, r_t, s_{t+1}, done_t)` with a ring write index and per-step episode boundary markers to prevent cross-episode samples.
-    - [ ] feat: Add uniform replay buffer with circular storage and episode boundary tracking
+- [X] Implement a circular replay buffer (capacity e.g., `1_000_000`) that stores tuples `(s_t, a_t, r_t, s_{t+1}, done_t)` with a ring write index and per-step episode boundary markers to prevent cross-episode samples.
+    - [X] feat: Add uniform replay buffer with circular storage and episode boundary tracking
 - [ ] Provide a minimal API: `append(state, action, reward, next_state, done)`, `sample(batch_size) -> dict(tensors)`, and `__len__`; include input validation and graceful handling when the buffer has fewer than `batch_size` valid indices.
     - [ ] feat: Expose append/sample/len API with basic validation
 - [ ] Optimize memory layout: store frames (and frame stacks) as `uint8` to save RAM, keep a contiguous frame array plus indices for stacking, convert to `float32` only on sample, and normalize to `[0,1]` (configurable).
