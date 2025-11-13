@@ -11,13 +11,11 @@ env:
   frameskip: 4
   repeat_action_probability: 0.0
   max_noop_start: 30
-  episode_life: true  # treat life loss as terminal during training
 
 preprocess:
   frame_size: 84
   grayscale: true
   stack_size: 4
-  clip_rewards: true
   normalize: false
 
 agent:
@@ -38,14 +36,32 @@ exploration:
   epsilon_start: 1.0
   epsilon_end: 0.1
   epsilon_decay_frames: 1000000
-  eval_epsilon: 0.05
 
-train_loop:
-  total_frames: 10000000
-  train_frequency: 4
-  log_interval_frames: 10000
-  eval_interval_frames: 250000
-  checkpoint_interval_frames: 1000000
+eval:
+  # Evaluation protocol settings
+  epsilon: 0.05  # Small ε-greedy for evaluation (use 0.0 for fully greedy)
+  episodes: 10  # Number of episodes to run per evaluation checkpoint
+  episode_life: false  # Full episode termination for eval (no life loss as terminal)
+  deterministic: false  # Set true for fully greedy evaluation (overrides epsilon)
+
+training:
+  # Training protocol settings
+  total_frames: 10000000  # 10M frames (Pong baseline)
+  episode_life: true  # Treat life loss as terminal during training
+  train_frequency: 4  # Train every 4 steps
+  reward_clip: true  # Clip rewards to {-1, 0, +1}
+
+  # Frame budgets per game (can override in per-game configs)
+  frame_budget:
+    pong: 10000000  # 10M frames
+    breakout: 20000000  # 20M frames
+    beam_rider: 20000000  # 20M frames
+    smoke_test: 100000  # 100K frames for quick testing
+
+intervals:
+  log_frames: 10000
+  eval_frames: 250000
+  checkpoint_frames: 1000000
 
 logging:
   use_wandb: false
