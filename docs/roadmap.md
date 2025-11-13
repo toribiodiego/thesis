@@ -139,8 +139,8 @@ Circular buffer storing ~1M transitions (s,a,r,s',done). Store as uint8, convert
     - [X] feat: Add boundary-safe uniform sampler with no replacement
 - [X] Device transfer and speed: on `sample`, assemble stacks, convert to `float32`, normalize (or leave in 0–255 if configured), move tensors to GPU if available, and optionally use pinned host memory for faster H2D copies.
     - [X] perf: Add device move, optional pinned memory, and normalization toggle
-- [ ] Add tests: fill buffer past `batch_size`, call `sample`, verify exact shapes and dtypes, ensure no cross-episode indices, check wrap-around correctness at buffer edges, and assert reproducibility with a fixed RNG seed.
-    - [ ] test: Add shape/boundary/repro tests for sampling and ring wrap-around
+- [X] Add tests: fill buffer past `batch_size`, call `sample`, verify exact shapes and dtypes, ensure no cross-episode indices, check wrap-around correctness at buffer edges, and assert reproducibility with a fixed RNG seed.
+    - [X] test: Add shape/boundary/repro tests for sampling and ring wrap-around
 - [ ] Capture replay design in `docs/design/replay_buffer.md`: diagram memory layout, document sampling pseudocode, warm-up policy, config flags, and known failure modes (e.g., episode leakage, dtype mismatch) with troubleshooting steps.
     - [ ] docs: Reference the commands/tests used to validate the buffer and instructions for dumping sample batches for inspection.
 
