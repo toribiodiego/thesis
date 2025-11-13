@@ -91,8 +91,8 @@ Build wrapper transforming raw 210×160×3 frames to 84×84 grayscale, stacking 
     - [X] feat: Add no-op reset logic to the wrapper with config toggles and documentation
 - [X] Explicitly document that full-episode termination is the default (life-loss termination only when the config enables it) and ensure training/eval configs reflect this.
     - [X] docs: Note default terminal behavior in wrapper docs/config comments
-- [ ] Clarify preprocessing documentation: describe the two-frame max-pooling, the 84×84 resize/crop policy (score bar kept or removed), and state that reward clipping defaults to ON per the paper.
-    - [ ] docs: Update wrapper design note to outline pooling/cropping choices and reward clipping default
+- [X] Clarify preprocessing documentation: describe the two-frame max-pooling, the 84×84 resize/crop policy (score bar kept or removed), and state that reward clipping defaults to ON per the paper.
+    - [X] docs: Update wrapper design note to outline pooling/cropping choices and reward clipping default
 - [X] Produce debug artifacts: write a short random rollout log recording obs shape, action repeat behavior, and clipped reward stats; save preprocessed stacks under `experiments/dqn_atari/artifacts/frames/<game>/` and the rollout log in the corresponding run directory.
     - [X] feat: Emit rollout debug log and per-game preprocessed frame artifacts
 - [X] Capture the wrapper specification + troubleshooting guide in `docs/design/atari_env_wrapper.md`: summarize preprocessing pipeline, config flags, artifact locations, and common failure modes (e.g., life-loss mismatch, flicker, reward clipping) so future debugging/design reviews have a single reference.
