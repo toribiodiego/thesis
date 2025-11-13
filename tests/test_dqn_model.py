@@ -199,6 +199,122 @@ def test_dqn_device_transfer():
     assert output['q_values'].device.type == 'cpu'
 
 
+def test_dqn_save_checkpoint(tmp_path):
+    """Test saving checkpoint with metadata."""
+    model = DQN(num_actions=6)
+    checkpoint_path = tmp_path / "test_checkpoint.pt"
+
+    # Save with metadata
+    meta = {'step': 10000, 'episode': 100, 'score': 15.5}
+    model.save_checkpoint(str(checkpoint_path), meta=meta)
+
+    # Check file exists
+    assert checkpoint_path.exists()
+
+    # Load and verify contents
+    checkpoint = torch.load(checkpoint_path)
+    assert 'model_state_dict' in checkpoint
+    assert 'num_actions' in checkpoint
+    assert 'meta' in checkpoint
+    assert checkpoint['num_actions'] == 6
+    assert checkpoint['meta'] == meta
+
+
+def test_dqn_load_checkpoint(tmp_path):
+    """Test loading checkpoint restores model correctly."""
+    # Create and save original model
+    original_model = DQN(num_actions=6)
+    checkpoint_path = tmp_path / "test_checkpoint.pt"
+    meta = {'step': 5000}
+    original_model.save_checkpoint(str(checkpoint_path), meta=meta)
+
+    # Load checkpoint
+    loaded_model, loaded_meta = DQN.load_checkpoint(str(checkpoint_path))
+
+    # Check metadata
+    assert loaded_meta == meta
+
+    # Check num_actions
+    assert loaded_model.num_actions == 6
+
+    # Check state dicts match
+    original_state = original_model.state_dict()
+    loaded_state = loaded_model.state_dict()
+
+    assert set(original_state.keys()) == set(loaded_state.keys())
+
+    for key in original_state.keys():
+        assert torch.allclose(original_state[key], loaded_state[key]), \
+            f"Mismatch in {key}"
+
+
+def test_dqn_checkpoint_strict_loading(tmp_path):
+    """Test strict key matching in checkpoint loading."""
+    model = DQN(num_actions=4)
+    checkpoint_path = tmp_path / "test_checkpoint.pt"
+    model.save_checkpoint(str(checkpoint_path))
+
+    # Load with strict=True (default) should work
+    loaded_model, _ = DQN.load_checkpoint(str(checkpoint_path), strict=True)
+    assert loaded_model.num_actions == 4
+
+    # Load with strict=False should also work
+    loaded_model, _ = DQN.load_checkpoint(str(checkpoint_path), strict=False)
+    assert loaded_model.num_actions == 4
+
+
+def test_dqn_checkpoint_device_safe(tmp_path):
+    """Test checkpoint can be loaded on different device."""
+    model = DQN(num_actions=6)
+    checkpoint_path = tmp_path / "test_checkpoint.pt"
+    model.save_checkpoint(str(checkpoint_path))
+
+    # Load on CPU
+    loaded_model, _ = DQN.load_checkpoint(str(checkpoint_path), device='cpu')
+
+    # Check all params are on CPU
+    for param in loaded_model.parameters():
+        assert param.device.type == 'cpu'
+
+    # Check float32 dtype maintained
+    for param in loaded_model.parameters():
+        assert param.dtype == torch.float32
+
+
+def test_dqn_checkpoint_forward_equivalence(tmp_path):
+    """Test loaded model produces same output as original."""
+    # Create original model
+    original_model = DQN(num_actions=6)
+    checkpoint_path = tmp_path / "test_checkpoint.pt"
+    original_model.save_checkpoint(str(checkpoint_path))
+
+    # Load checkpoint
+    loaded_model, _ = DQN.load_checkpoint(str(checkpoint_path))
+
+    # Set both to eval mode
+    original_model.eval()
+    loaded_model.eval()
+
+    # Test with same input
+    x = torch.rand(2, 4, 84, 84)
+
+    with torch.no_grad():
+        original_output = original_model(x)
+        loaded_output = loaded_model(x)
+
+    # Check outputs match
+    assert torch.allclose(
+        original_output['q_values'],
+        loaded_output['q_values'],
+        atol=1e-6
+    )
+    assert torch.allclose(
+        original_output['features'],
+        loaded_output['features'],
+        atol=1e-6
+    )
+
+
 if __name__ == "__main__":
     # Run tests manually
     print("Running DQN model tests...")
@@ -229,5 +345,27 @@ if __name__ == "__main__":
 
     test_dqn_device_transfer()
     print("✓ Device transfer test passed")
+
+    # Checkpoint tests (require tmp_path from pytest)
+    import tempfile
+    import pathlib
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_path = pathlib.Path(tmp_dir)
+
+        test_dqn_save_checkpoint(tmp_path)
+        print("✓ Checkpoint save test passed")
+
+        test_dqn_load_checkpoint(tmp_path)
+        print("✓ Checkpoint load test passed")
+
+        test_dqn_checkpoint_strict_loading(tmp_path)
+        print("✓ Checkpoint strict loading test passed")
+
+        test_dqn_checkpoint_device_safe(tmp_path)
+        print("✓ Checkpoint device-safe loading test passed")
+
+        test_dqn_checkpoint_forward_equivalence(tmp_path)
+        print("✓ Checkpoint forward equivalence test passed")
 
     print("\nAll tests passed! ✓")

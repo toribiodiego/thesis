@@ -156,6 +156,63 @@ class DQN(nn.Module):
             assert actual_feat_shape == expected_feat_shape, \
                 f"Expected features shape {expected_feat_shape}, got {actual_feat_shape}"
 
+    def save_checkpoint(self, path: str, meta: dict = None):
+        """
+        Save model checkpoint with metadata.
+
+        Args:
+            path: Path to save checkpoint
+            meta: Optional metadata dict (e.g., step, episode, config)
+
+        Example:
+            >>> model.save_checkpoint('checkpoints/model_10k.pt',
+            ...                       {'step': 10000, 'episode': 100})
+        """
+        checkpoint = {
+            'model_state_dict': self.state_dict(),
+            'num_actions': self.num_actions,
+        }
+
+        # Add metadata if provided
+        if meta is not None:
+            checkpoint['meta'] = meta
+
+        torch.save(checkpoint, path)
+
+    @classmethod
+    def load_checkpoint(cls, path: str, device: str = 'cpu', strict: bool = True):
+        """
+        Load model from checkpoint.
+
+        Args:
+            path: Path to checkpoint file
+            device: Device to load model on ('cpu', 'cuda', etc.)
+            strict: Whether to strictly enforce state_dict key matching
+
+        Returns:
+            Tuple of (model, meta) where meta is the saved metadata dict
+
+        Example:
+            >>> model, meta = DQN.load_checkpoint('checkpoints/model_10k.pt')
+            >>> print(f"Loaded from step {meta['step']}")
+        """
+        checkpoint = torch.load(path, map_location=device)
+
+        # Create model with correct action space size
+        num_actions = checkpoint['num_actions']
+        model = cls(num_actions)
+
+        # Load state dict with strict key matching
+        model.load_state_dict(checkpoint['model_state_dict'], strict=strict)
+
+        # Move to device and ensure float32
+        model = model.to(device)
+
+        # Extract metadata
+        meta = checkpoint.get('meta', {})
+
+        return model, meta
+
     @classmethod
     def from_env(cls, env):
         """
