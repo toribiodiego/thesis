@@ -881,6 +881,167 @@ def test_replay_buffer_sampling_deterministic():
     assert np.allclose(batch1['next_states'], batch2['next_states'])
 
 
+def test_replay_buffer_device_cpu():
+    """Test device transfer to CPU returns PyTorch tensors."""
+    import torch
+
+    buffer = ReplayBuffer(capacity=100, obs_shape=(4, 84, 84), min_size=10, device='cpu')
+
+    state = np.random.randint(0, 255, size=(4, 84, 84), dtype=np.uint8)
+
+    # Add transitions
+    for i in range(20):
+        buffer.append(state, i, float(i), state, False)
+
+    # Sample
+    batch = buffer.sample(batch_size=5)
+
+    # Check returns PyTorch tensors
+    assert isinstance(batch['states'], torch.Tensor)
+    assert isinstance(batch['actions'], torch.Tensor)
+    assert isinstance(batch['rewards'], torch.Tensor)
+    assert isinstance(batch['next_states'], torch.Tensor)
+    assert isinstance(batch['dones'], torch.Tensor)
+
+    # Check device
+    assert batch['states'].device.type == 'cpu'
+    assert batch['actions'].device.type == 'cpu'
+
+    # Check shapes
+    assert batch['states'].shape == (5, 4, 84, 84)
+    assert batch['actions'].shape == (5,)
+
+
+def test_replay_buffer_device_cuda():
+    """Test device transfer to CUDA if available."""
+    import torch
+
+    if not torch.cuda.is_available():
+        pytest.skip("CUDA not available")
+
+    buffer = ReplayBuffer(capacity=100, obs_shape=(4, 84, 84), min_size=10, device='cuda')
+
+    state = np.random.randint(0, 255, size=(4, 84, 84), dtype=np.uint8)
+
+    # Add transitions
+    for i in range(20):
+        buffer.append(state, i, float(i), state, False)
+
+    # Sample
+    batch = buffer.sample(batch_size=5)
+
+    # Check device
+    assert batch['states'].device.type == 'cuda'
+    assert batch['actions'].device.type == 'cuda'
+    assert batch['rewards'].device.type == 'cuda'
+    assert batch['next_states'].device.type == 'cuda'
+    assert batch['dones'].device.type == 'cuda'
+
+
+def test_replay_buffer_pinned_memory():
+    """Test pinned memory for faster GPU transfer."""
+    import torch
+
+    if not torch.cuda.is_available():
+        pytest.skip("CUDA not available")
+
+    buffer = ReplayBuffer(
+        capacity=100,
+        obs_shape=(4, 84, 84),
+        min_size=10,
+        device='cuda',
+        pin_memory=True
+    )
+
+    state = np.random.randint(0, 255, size=(4, 84, 84), dtype=np.uint8)
+
+    # Add transitions
+    for i in range(20):
+        buffer.append(state, i, float(i), state, False)
+
+    # Sample (should use pinned memory internally)
+    batch = buffer.sample(batch_size=5)
+
+    # Check data is on CUDA
+    assert batch['states'].device.type == 'cuda'
+    assert batch['actions'].device.type == 'cuda'
+
+
+def test_replay_buffer_no_device_returns_numpy():
+    """Test that without device, returns NumPy arrays."""
+    import torch
+
+    buffer = ReplayBuffer(capacity=100, obs_shape=(4, 84, 84), min_size=10)
+
+    state = np.random.randint(0, 255, size=(4, 84, 84), dtype=np.uint8)
+
+    # Add transitions
+    for i in range(20):
+        buffer.append(state, i, float(i), state, False)
+
+    # Sample
+    batch = buffer.sample(batch_size=5)
+
+    # Check returns NumPy arrays
+    assert isinstance(batch['states'], np.ndarray)
+    assert isinstance(batch['actions'], np.ndarray)
+    assert isinstance(batch['rewards'], np.ndarray)
+    assert isinstance(batch['next_states'], np.ndarray)
+    assert isinstance(batch['dones'], np.ndarray)
+
+
+def test_replay_buffer_device_dtype_preservation():
+    """Test dtype is preserved when moving to device."""
+    import torch
+
+    buffer = ReplayBuffer(capacity=100, obs_shape=(4, 84, 84), min_size=10, device='cpu')
+
+    state = np.random.randint(0, 255, size=(4, 84, 84), dtype=np.uint8)
+
+    # Add transitions
+    for i in range(20):
+        buffer.append(state, i, float(i), state, False)
+
+    # Sample
+    batch = buffer.sample(batch_size=5)
+
+    # Check dtypes
+    assert batch['states'].dtype == torch.float32
+    assert batch['actions'].dtype == torch.int64
+    assert batch['rewards'].dtype == torch.float32
+    assert batch['next_states'].dtype == torch.float32
+    assert batch['dones'].dtype == torch.bool
+
+
+def test_replay_buffer_device_with_normalization():
+    """Test device transfer works with normalization."""
+    import torch
+
+    buffer = ReplayBuffer(
+        capacity=100,
+        obs_shape=(4, 84, 84),
+        min_size=10,
+        device='cpu',
+        normalize=True
+    )
+
+    state = np.full((4, 84, 84), 255, dtype=np.uint8)
+
+    # Add transitions
+    for i in range(20):
+        buffer.append(state, i, float(i), state, False)
+
+    # Sample
+    batch = buffer.sample(batch_size=5)
+
+    # Check normalization applied
+    assert batch['states'].max().item() == 1.0
+    assert batch['states'].min().item() == 1.0  # All 255 → 1.0
+
+    # Check is tensor
+    assert isinstance(batch['states'], torch.Tensor)
+
+
 if __name__ == "__main__":
     # Run tests manually
     print("Running replay buffer tests...")
@@ -1001,5 +1162,23 @@ if __name__ == "__main__":
 
     test_replay_buffer_sampling_deterministic()
     print("✓ Sampling deterministic test passed")
+
+    test_replay_buffer_device_cpu()
+    print("✓ Device CPU transfer test passed")
+
+    test_replay_buffer_device_cuda()
+    print("✓ Device CUDA transfer test passed (or skipped)")
+
+    test_replay_buffer_pinned_memory()
+    print("✓ Pinned memory test passed (or skipped)")
+
+    test_replay_buffer_no_device_returns_numpy()
+    print("✓ No device returns NumPy test passed")
+
+    test_replay_buffer_device_dtype_preservation()
+    print("✓ Device dtype preservation test passed")
+
+    test_replay_buffer_device_with_normalization()
+    print("✓ Device with normalization test passed")
 
     print("\nAll tests passed! ✓")

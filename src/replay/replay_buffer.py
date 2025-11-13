@@ -10,7 +10,8 @@ Features:
 """
 
 import numpy as np
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional, Union
+import torch
 
 
 class ReplayBuffer:
@@ -29,6 +30,8 @@ class ReplayBuffer:
                    If False: uint8 [0,255] → float32 [0,255]
         min_size: Minimum number of transitions before sampling is allowed (default 50_000)
                   Used for warm-up phase to ensure sufficient exploration before training
+        device: Target device for sampled tensors ('cpu', 'cuda', etc.). If None, returns NumPy arrays
+        pin_memory: If True, use pinned memory for faster host-to-device transfer (only for GPU)
 
     Memory layout:
         - observations: (capacity, *obs_shape) array in uint8
@@ -44,13 +47,17 @@ class ReplayBuffer:
         obs_shape: Tuple[int, ...] = (4, 84, 84),
         dtype: np.dtype = np.uint8,
         normalize: bool = True,
-        min_size: int = 50_000
+        min_size: int = 50_000,
+        device: Optional[Union[str, torch.device]] = None,
+        pin_memory: bool = False
     ):
         self.capacity = capacity
         self.obs_shape = obs_shape
         self.dtype = dtype
         self.normalize = normalize  # Whether to normalize to [0,1] on sample
         self.min_size = min_size  # Minimum buffer size before sampling is allowed
+        self.device = torch.device(device) if device is not None else None
+        self.pin_memory = pin_memory  # Use pinned memory for faster GPU transfer
 
         # Circular buffer index
         self.index = 0
@@ -187,23 +194,27 @@ class ReplayBuffer:
 
         return valid
 
-    def sample(self, batch_size: int) -> Dict[str, np.ndarray]:
+    def sample(self, batch_size: int) -> Dict[str, Union[np.ndarray, torch.Tensor]]:
         """
         Sample a batch of transitions from the buffer.
 
         Samples without replacement from valid indices only (respects episode boundaries).
         Converts observations from uint8 to float32 and optionally normalizes to [0,1].
+        If device is specified, returns PyTorch tensors on the target device.
 
         Args:
             batch_size: Number of transitions to sample
 
         Returns:
             Dictionary containing:
-                - 'states': (batch_size, *obs_shape) float32 array
-                - 'actions': (batch_size,) int64 array
-                - 'rewards': (batch_size,) float32 array
-                - 'next_states': (batch_size, *obs_shape) float32 array
-                - 'dones': (batch_size,) bool array
+                - 'states': (batch_size, *obs_shape) float32 array/tensor
+                - 'actions': (batch_size,) int64 array/tensor
+                - 'rewards': (batch_size,) float32 array/tensor
+                - 'next_states': (batch_size, *obs_shape) float32 array/tensor
+                - 'dones': (batch_size,) bool array/tensor
+
+            If self.device is None: returns NumPy arrays
+            If self.device is set: returns PyTorch tensors on specified device
 
         Raises:
             ValueError: If batch_size > number of valid indices
@@ -213,6 +224,7 @@ class ReplayBuffer:
             - Sampling is uniform without replacement within a batch
             - Observations converted from uint8 to float32 on sample
             - If self.normalize=True: values scaled to [0,1], else [0,255]
+            - If pin_memory=True and device is GPU, uses pinned memory for faster transfer
         """
         # Get all valid indices
         valid_indices = self._get_valid_indices()
@@ -250,6 +262,31 @@ class ReplayBuffer:
         if self.normalize:
             states = states / 255.0
             next_states = next_states / 255.0
+
+        # If device specified, convert to PyTorch tensors and move to device
+        if self.device is not None:
+            # Convert to tensors (on CPU first, potentially with pinned memory)
+            if self.pin_memory and self.device.type == 'cuda':
+                # Use pinned memory for faster H2D transfer
+                states_tensor = torch.from_numpy(states).pin_memory()
+                next_states_tensor = torch.from_numpy(next_states).pin_memory()
+                actions_tensor = torch.from_numpy(actions).pin_memory()
+                rewards_tensor = torch.from_numpy(rewards).pin_memory()
+                dones_tensor = torch.from_numpy(dones).pin_memory()
+            else:
+                # Regular tensors
+                states_tensor = torch.from_numpy(states)
+                next_states_tensor = torch.from_numpy(next_states)
+                actions_tensor = torch.from_numpy(actions)
+                rewards_tensor = torch.from_numpy(rewards)
+                dones_tensor = torch.from_numpy(dones)
+
+            # Move to target device
+            states = states_tensor.to(self.device, non_blocking=True)
+            next_states = next_states_tensor.to(self.device, non_blocking=True)
+            actions = actions_tensor.to(self.device, non_blocking=True)
+            rewards = rewards_tensor.to(self.device, non_blocking=True)
+            dones = dones_tensor.to(self.device, non_blocking=True)
 
         return {
             'states': states,
