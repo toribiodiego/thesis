@@ -89,6 +89,8 @@ Build wrapper transforming raw 210×160×3 frames to 84×84 grayscale, stacking 
     - [X] docs: Document termination (life-loss vs full-episode), no-op starts, and auto-fire behavior
 - [X] Produce debug artifacts: write a short random rollout log recording obs shape, action repeat behavior, and clipped reward stats; save preprocessed stacks under `experiments/dqn_atari/artifacts/frames/<game>/` and the rollout log in the corresponding run directory.
     - [X] feat: Emit rollout debug log and per-game preprocessed frame artifacts
+- [X] Capture the wrapper specification + troubleshooting guide in `docs/design/atari_env_wrapper.md`: summarize preprocessing pipeline, config flags, artifact locations, and common failure modes (e.g., life-loss mismatch, flicker, reward clipping) so future debugging/design reviews have a single reference.
+    - [X] docs: Outline regeneration steps for artifacts (`scripts/run_dqn.sh --dry-run`), expected tensor shapes, and how to toggle key behaviors via config.
 
 ---
 
@@ -108,6 +110,8 @@ CNN mapping (4×84×84) to Q-values: Conv(16,8×8,s4) → Conv(32,4×4,s2) → F
     - [ ] test: Add forward/grad tests across multiple action sizes
 - [ ] Implement save/load helpers: `save_checkpoint(path, state_dict, meta)` and `load_checkpoint(path)` for model-only, plus convenience `from_env(action_space_n)` constructor; ensure strict key matching and device-safe loading.
     - [ ] feat: Add checkpoint save/load and environment-aware constructor
+- [ ] Document architecture decisions in `docs/design/dqn_model.md`: layer-by-layer tensor shapes, init choices, dtype/device expectations, summary utility usage, and common debugging tips (e.g., NaN traces, mismatched action dims).
+    - [ ] docs: Include commands to regenerate summaries/tests (`pytest tests/test_dqn_model.py`, `python scripts/model_summary.py`) and guidance on inspecting saved checkpoints.
 
 ---
 
@@ -131,6 +135,8 @@ Circular buffer storing ~1M transitions (s,a,r,s',done). Store as uint8, convert
     - [ ] perf: Add device move, optional pinned memory, and normalization toggle
 - [ ] Add tests: fill buffer past `batch_size`, call `sample`, verify exact shapes and dtypes, ensure no cross-episode indices, check wrap-around correctness at buffer edges, and assert reproducibility with a fixed RNG seed.
     - [ ] test: Add shape/boundary/repro tests for sampling and ring wrap-around
+- [ ] Capture replay design in `docs/design/replay_buffer.md`: diagram memory layout, document sampling pseudocode, warm-up policy, config flags, and known failure modes (e.g., episode leakage, dtype mismatch) with troubleshooting steps.
+    - [ ] docs: Reference the commands/tests used to validate the buffer and instructions for dumping sample batches for inspection.
 
 ---
 
@@ -156,6 +162,8 @@ TD target: *y = r + γ(1−done)×maxₐ′ Q_target(s′,a′)*. MSE or Huber l
     - [ ] test: Add toy-batch loss decrease and target-sync schedule tests
 - [ ] Minimal metrics logging from the update step: loss, mean |TD error|, grad norm, learning rate, and update count for downstream plotting.
     - [ ] chore: Log core update metrics (loss, TD-error, grad-norm, lr)
+- [ ] Summarize the Q-learning update flow in `docs/design/dqn_training.md`: include the TD-loss equation, optimizer config, target-sync policy, logging expectations, and debugging tactics for instability (e.g., exploding TD error, stale targets, NaNs).
+    - [ ] docs: Note how to rerun unit tests/debug scripts and which config flags control the behaviors described.
 
 ---
 
@@ -181,6 +189,8 @@ TD target: *y = r + γ(1−done)×maxₐ′ Q_target(s′,a′)*. MSE or Huber l
     - [ ] chore: Write run metadata (config, seed, commit) to run folder
 - [ ] Run a smoke test (~200,000 frames) to verify end-to-end stability: confirm logs grow, checkpoints appear, eval runs trigger, and quick plots render without errors.
     - [ ] test: Add smoke-test script to validate loop, logging, checkpoints, and eval cadence
+- [ ] Document the orchestration in `docs/design/training_loop_runtime.md`: describe the control flow (action select → env step → replay append → optimize → eval), logging schema, evaluation cadence, smoke-test procedure, and knobs for troubleshooting (epsilon schedule, frame counters, eval triggers).
+    - [ ] docs: Include command examples (`python src/train_dqn.py ...`, `scripts/run_dqn.sh --dry-run`, smoke-test runner) and guidance for interpreting logs/metrics during debugging.
 
 ---
 
@@ -200,6 +210,8 @@ Save/restore models, optimizer, replay position, counters, ε, RNG states. Suppo
     - [ ] docs: Document deterministic flags and performance implications
 - [ ] Create a smoke test: run ~10k steps, save a checkpoint, resume from it, and verify identical ε, rewards, and selected actions for a fixed number of frames (allow tiny FP tolerance); emit a short comparison report (match/ mismatch counts, checksums).
     - [ ] test: Add save/resume determinism test with metric comparison and checksum report
+- [ ] Capture checkpoint/resume procedures in `docs/design/checkpointing.md`: list saved tensors, metadata schema, resume CLI usage, deterministic seeding requirements, and debugging steps for mismatched states.
+    - [ ] docs: Provide commands for creating/restoring checkpoints and a checklist for verifying deterministic resumes.
 
 ---
 
@@ -221,6 +233,8 @@ Base config + per-game overrides. Merge utility. CLI: `python train_dqn.py --cfg
     - [ ] chore: Auto-create standard run subfolders (logs, checkpoints, artifacts)
 - [ ] Validate schema on load: assert positive ints, γ in [0,1], known optimizer names, valid env IDs/action_set, nonzero frameskip; reject unknown fields and fail fast with a helpful error.
     - [ ] build: Add strict config schema validation with clear error messages
+- [ ] Summarize config/CLI conventions in `docs/design/config_cli.md`: explain file hierarchy, override precedence, required flags, schema validation, and how merged configs/meta snapshots are stored.
+    - [ ] docs: Include example commands, troubleshooting tips for schema errors, and pointers to generated config artifacts.
 
 ---
 
@@ -240,6 +254,8 @@ Dedicated eval loop: greedy or low-ε, compute mean/median/std returns. Capture 
     - [ ] feat: Add periodic evaluation trigger with proper train/eval mode switching
 - [ ] Write structured outputs: append a row per eval to CSV/JSONL with `step, mean_return, median_return, std_return, min_return, max_return, episodes, eval_epsilon`; save raw per-episode returns to a sidecar file for later analysis.
     - [ ] chore: Persist eval summaries and per-episode details to CSV/JSONL files
+- [ ] Document the evaluation harness in `docs/design/eval_harness.md`: describe loop structure, metric definitions, video capture settings, scheduling triggers, output file schemas, and debugging steps for desyncs or video corruption.
+    - [ ] docs: Include CLI examples for manual eval runs and instructions for re-rendering videos/metrics.
 
 ---
 
@@ -267,6 +283,8 @@ Structured logging (TensorBoard/W&B/CSV). Plotting script: reward vs frames, los
     - [ ] perf: Add log downsampling/rolling aggregation for scalable plotting
 - [ ] Include sanity tests and examples: run plotting on a small synthetic log to verify figures render and files are created; validate CSV headers and TensorBoard/W&B export parsing paths.
     - [ ] test: Add plotting smoke tests and log parser checks
+- [ ] Document the logging/plotting stack in `docs/design/logging_pipeline.md`: cover metric naming standards, log storage layout, plotting script usage, aggregation semantics, and strategies for handling large logs.
+    - [ ] docs: Reference sample commands (`python scripts/plot_results.py ...`) and expected outputs for both single-run and multi-seed cases.
 
 ---
 
@@ -286,6 +304,8 @@ Finalize game list (Pong, Breakout, Beam Rider + optional others), frame budgets
     - [ ] docs: Document per-game acceptance thresholds and evaluation window
 - [ ] Consolidate the plan in one place: ensure `experiments/dqn_atari/README.md` contains the selected games, frame budgets, eval cadence, runtime estimates link/CSV, and acceptance criteria; link to configs and runs directories.
     - [ ] chore: Finalize and cross-link game suite plan in README
+- [ ] Archive the planning decisions in `docs/design/game_suite_plan.md`: capture chosen games, rationale, budgets, eval cadence, runtime assumptions, and acceptance thresholds so future contributors see how the suite was selected.
+    - [ ] docs: Link to the README table, runtime CSV, and any scripts used to estimate budgets.
 
 ---
 
