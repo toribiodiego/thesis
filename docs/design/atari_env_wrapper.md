@@ -9,11 +9,11 @@ The environment preprocessing follows the DQN 2013 paper specification. Wrappers
 ```
 Base Environment (ALE/Game-v5)
     ↓
-1. NoopResetEnv          - Random no-op starts (1-30 steps)
+1. NoopResetEnv          - Random no-op starts (0-30 steps)
     ↓
 2. MaxAndSkipEnv         - Action repeat (4x) + max-pooling
     ↓
-3. EpisodeLifeEnv        - Life loss as terminal (training only)
+3. EpisodeLifeEnv        - OPTIONAL: Life loss as terminal (only if episode_life=True)
     ↓
 4. RewardClipper         - Clip rewards to {-1, 0, +1}
     ↓
@@ -24,7 +24,46 @@ Base Environment (ALE/Game-v5)
 Final Environment
 ```
 
+**Important:** Step 3 (EpisodeLifeEnv) is OPTIONAL and only applied when `episode_life=True`.
+The default behavior is full-episode termination (episode_life=False).
+
 **Implementation:** `src/envs/atari_wrappers.py`
+
+## Default Termination Behavior
+
+**Key Point:** Full-episode termination is the DEFAULT. Episodes end only on game over.
+
+### Episode Life Wrapper Policy
+
+The `EpisodeLifeEnv` wrapper is **OPTIONAL** and controlled by the `episode_life` parameter:
+
+- **DEFAULT (episode_life=False):**
+  - Full-episode termination only
+  - Life loss does NOT end the episode
+  - Recommended for evaluation (always use False)
+  - Can be used for training (pure full-episode learning)
+
+- **OPTIONAL (episode_life=True):**
+  - Life loss treated as episode termination
+  - Optional training optimization (helps agent learn to preserve lives)
+  - NOT required by the DQN paper
+  - NEVER use during evaluation
+
+### Configuration Guidelines
+
+```yaml
+# Training mode
+training:
+  episode_life: false  # DEFAULT: Full episodes (pure DQN paper approach)
+  # OR
+  episode_life: true   # OPTIONAL: Life loss as terminal (common optimization)
+
+# Evaluation mode (ALWAYS use false)
+eval:
+  episode_life: false  # REQUIRED: Full episodes for true returns
+```
+
+**Why this matters:** Using `episode_life=True` during evaluation will produce incorrect episode returns because the episode will end prematurely on life loss instead of game over.
 
 ## Wrapper Specifications
 
@@ -54,35 +93,44 @@ Final Environment
 - `skip`: Number of action repeats (default: 4)
 
 **Behavior:**
-- Repeat each action K times (default: 4)
-- Accumulate rewards over all steps
-- Store last 2 frames in buffer
+- Repeat each action K times (default: 4) and accumulate rewards
+- Store last 2 **raw RGB frames** (before preprocessing) in buffer
 - Return element-wise maximum of last 2 frames
+- Max-pooling applied to raw frames ensures flicker reduction
 - Exit early if episode terminates
 
-**Why max-pooling?** Many Atari games flicker sprites on alternating frames due to hardware limitations. Max-pooling ensures all objects are visible.
+**Why max-pooling over last 2 frames?** Atari games flicker sprites on alternating frames due to hardware limitations (too many sprites per scanline). Taking the element-wise maximum of the last 2 frames ensures all objects are visible in the returned frame.
 
 **Config:** `config.env.frameskip`
 
 ### 3. EpisodeLifeEnv
 
-**Purpose:** Treat life loss as episode end during training.
+**Purpose:** OPTIONAL: Treat life loss as episode end during training.
 
-**Parameters:** None
+**Parameters:** None (controlled by `episode_life` parameter in `make_atari_env`)
 
-**Behavior:**
+**DEFAULT BEHAVIOR:** This wrapper is NOT applied by default. Full-episode termination is the default behavior (life loss does NOT end the episode).
+
+**Behavior when enabled (episode_life=True):**
 - Track lives via `env.unwrapped.ale.lives()`
 - When lives decrease: set `terminated=True`
 - Track true episode end internally via `was_real_done`
 - On reset: Only reset env if true episode ended, else NOOP step
 
-**Important:** Only use during training! For evaluation, disable this wrapper to get true episode returns.
+**Important:**
+- **DEFAULT:** `episode_life=False` (full episodes, life loss NOT terminal)
+- **OPTIONAL:** `episode_life=True` (life loss as terminal, training optimization)
+- This is an optional training optimization NOT required by the DQN paper
+- NEVER use during evaluation! Always set `episode_life=False` for eval
 
-**Config:** `config.training.episode_life`
+**Config:**
+- `config.training.episode_life` (training mode, optional optimization)
+- `config.eval.episode_life` (evaluation mode, must be False)
 
 **Usage:**
-- Training: `episode_life=True`
-- Evaluation: `episode_life=False`
+- Training (optional): `episode_life=True` (helps agent learn to preserve lives)
+- Training (default): `episode_life=False` (pure full-episode training)
+- Evaluation (required): `episode_life=False` (true episode returns)
 
 ### 4. RewardClipper
 
@@ -96,7 +144,9 @@ Final Environment
 - Negative rewards → -1
 - Zero rewards → 0
 
-**Config:** `config.training.reward_clip`
+**Default:** Reward clipping is **ON by default** as specified in the DQN 2013 paper. This normalizes reward scales across different Atari games.
+
+**Config:** `config.training.reward_clip` (default: `true`)
 
 **Ablation:** Set to `false` to study effect of reward clipping.
 
@@ -110,8 +160,11 @@ Final Environment
 
 **Behavior:**
 - Convert RGB to grayscale using OpenCV luminance formula: `Y = 0.299*R + 0.587*G + 0.114*B`
-- Resize to 84×84 using bilinear interpolation
+- Resize to 84×84 using bilinear interpolation (no cropping)
+- Full frame is resized including score bar (score information is kept)
 - Return uint8 [0, 255] for memory efficiency
+
+**Resize vs Crop:** This implementation uses **resize** (not crop). The original 210×160 frame is resized to 84×84, preserving the entire frame including the score bar. The DQN 2013 paper does not specify cropping, so the score information remains visible to the agent.
 
 **Config:** `config.preprocess.frame_size`
 
@@ -160,7 +213,7 @@ env:
   id: "ALE/Pong-v5"
   frameskip: 4                    # MaxAndSkipEnv (disable Gym's built-in)
   repeat_action_probability: 0.0   # Deterministic
-  max_noop_start: 30              # NoopResetEnv
+  max_noop_start: 30              # NoopResetEnv (0-30 no-ops)
 
 preprocess:
   frame_size: 84                   # AtariPreprocessing
@@ -168,11 +221,16 @@ preprocess:
   stack_size: 4                    # FrameStack
 
 training:
-  episode_life: true               # EpisodeLifeEnv (training only)
+  # Episode termination policy:
+  # - episode_life: false (DEFAULT) -> Full episode, life loss NOT terminal
+  # - episode_life: true (OPTIONAL) -> Life loss as terminal (training optimization)
+  episode_life: true               # OPTIONAL: EpisodeLifeEnv (not required by DQN paper)
   reward_clip: true                # RewardClipper
 
 eval:
-  episode_life: false              # Full episodes for evaluation
+  # Episode termination policy for evaluation:
+  # - episode_life: false (REQUIRED) -> Full episodes for true returns
+  episode_life: false              # DEFAULT: Full episodes for evaluation
 ```
 
 ## Artifact Locations
@@ -416,15 +474,15 @@ Before training, verify wrapper setup:
 **Correct order:**
 1. NoopResetEnv (before any frame modifications)
 2. MaxAndSkipEnv (on raw RGB frames for max-pooling)
-3. EpisodeLifeEnv (before reward/frame processing)
-4. RewardClipper (before observations change)
-5. AtariPreprocessing (grayscale + resize)
+3. EpisodeLifeEnv (OPTIONAL, before reward/frame processing)
+4. RewardClipper (independent of frame processing)
+5. AtariPreprocessing (grayscale + resize to 84×84)
 6. FrameStack (last, stacks preprocessed frames)
 
-**Why?**
-- Max-pooling must happen on RGB frames (before grayscale conversion)
-- Reward clipping independent of frame processing
-- Frame stacking must be last to stack preprocessed frames
+**Why this order?**
+- **Max-pooling before preprocessing:** Must operate on raw RGB frames (210×160×3) before grayscale conversion. Max-pooling on grayscale would not properly reduce flicker.
+- **Reward clipping independent:** Can be applied anytime, placed after episode life for clarity.
+- **Frame stacking last:** Must stack the final preprocessed 84×84 grayscale frames, not raw or intermediate frames.
 
 ## Related Documentation
 
