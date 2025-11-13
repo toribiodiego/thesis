@@ -87,10 +87,10 @@ Build wrapper transforming raw 210×160×3 frames to 84×84 grayscale, stacking 
     - [X] feat: Add configurable reward clipping to {-1,0,+1}
 - [X] Align episode termination with evaluation policy: allow training to treat life loss as terminal, use full-episode termination for evaluation, and support optional no-op starts and auto-fire reset where needed; document choices in the wrapper docstring.
     - [X] docs: Document termination (life-loss vs full-episode), no-op starts, and auto-fire behavior
-- [ ] Implement random no-op resets (0–30 actions) at episode start with a configurable `noop_max` (default 30) to match Bellemare/Mnih evaluation protocol.
-    - [ ] feat: Add no-op reset logic to the wrapper with config toggles and documentation
-- [ ] Explicitly document that full-episode termination is the default (life-loss termination only when the config enables it) and ensure training/eval configs reflect this.
-    - [ ] docs: Note default terminal behavior in wrapper docs/config comments
+- [X] Implement random no-op resets (0–30 actions) at episode start with a configurable `noop_max` (default 30) to match Bellemare/Mnih evaluation protocol.
+    - [X] feat: Add no-op reset logic to the wrapper with config toggles and documentation
+- [X] Explicitly document that full-episode termination is the default (life-loss termination only when the config enables it) and ensure training/eval configs reflect this.
+    - [X] docs: Note default terminal behavior in wrapper docs/config comments
 - [ ] Clarify preprocessing documentation: describe the two-frame max-pooling, the 84×84 resize/crop policy (score bar kept or removed), and state that reward clipping defaults to ON per the paper.
     - [ ] docs: Update wrapper design note to outline pooling/cropping choices and reward clipping default
 - [X] Produce debug artifacts: write a short random rollout log recording obs shape, action repeat behavior, and clipped reward stats; save preprocessed stacks under `experiments/dqn_atari/artifacts/frames/<game>/` and the rollout log in the corresponding run directory.
