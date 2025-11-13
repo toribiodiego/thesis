@@ -128,6 +128,110 @@ class RewardClipper(gym.RewardWrapper):
             return 0.0
 
 
+class NoopResetEnv(gym.Wrapper):
+    """
+    Sample initial states by taking random number of no-ops on reset.
+
+    No-op is assumed to be action 0. This wrapper helps create more
+    diverse starting states for training.
+
+    Args:
+        env: Gymnasium environment
+        noop_max: Maximum number of no-ops to execute (default: 30)
+
+    Returns:
+        Observation after executing random number of no-ops
+    """
+
+    def __init__(self, env: gym.Env, noop_max: int = 30):
+        super().__init__(env)
+        self.noop_max = noop_max
+        self.noop_action = 0
+        assert env.unwrapped.get_action_meanings()[0] == "NOOP"
+
+    def reset(self, **kwargs):
+        """
+        Reset environment and perform random number of no-op actions.
+
+        Returns:
+            Observation after no-ops and info dict
+        """
+        obs, info = self.env.reset(**kwargs)
+
+        # Sample random number of no-ops to execute
+        noops = np.random.randint(1, self.noop_max + 1)
+
+        for _ in range(noops):
+            obs, _, terminated, truncated, info = self.env.step(self.noop_action)
+            if terminated or truncated:
+                # If episode ends during no-ops, reset again
+                obs, info = self.env.reset(**kwargs)
+
+        return obs, info
+
+
+class EpisodeLifeEnv(gym.Wrapper):
+    """
+    Treat loss of life as episode end during training.
+
+    This wrapper makes the agent learn to preserve lives, which can lead to
+    better performance. However, it should NOT be used during evaluation.
+
+    Termination behavior:
+    - Training: Episode ends when agent loses a life (terminated=True)
+    - True episode end tracked internally for proper resets
+    - Lives reset to initial count on true episode end
+
+    Args:
+        env: Gymnasium environment
+
+    Note:
+        This wrapper should only be used during training, not evaluation.
+        For evaluation, use the unwrapped environment or set episode_life=False.
+    """
+
+    def __init__(self, env: gym.Env):
+        super().__init__(env)
+        self.lives = 0
+        self.was_real_done = True
+
+    def step(self, action):
+        """
+        Execute action and check for life loss.
+
+        Returns:
+            obs, reward, terminated, truncated, info
+            terminated=True on life loss (but episode continues internally)
+        """
+        obs, reward, terminated, truncated, info = self.env.step(action)
+        self.was_real_done = terminated or truncated
+
+        # Check current lives
+        lives = self.env.unwrapped.ale.lives()
+        if 0 < lives < self.lives:
+            # Lost a life - treat as episode termination for training
+            terminated = True
+
+        self.lives = lives
+        return obs, reward, terminated, truncated, info
+
+    def reset(self, **kwargs):
+        """
+        Reset environment only on true episode end.
+
+        If last termination was due to life loss, continue current episode.
+        If last termination was true episode end, reset environment.
+        """
+        if self.was_real_done:
+            obs, info = self.env.reset(**kwargs)
+        else:
+            # Life was lost but episode continues - just step with NOOP
+            obs, _, _, _, info = self.env.step(0)
+
+        self.lives = self.env.unwrapped.ale.lives()
+        return obs, info
+
+
 class AtariPreprocessing(gym.ObservationWrapper):
     """
     Preprocess Atari frames: RGB (210×160×3) → grayscale 84×84.
@@ -321,6 +425,8 @@ def make_atari_env(
     num_stack: int = 4,
     frame_skip: int = 4,
     clip_rewards: bool = True,
+    episode_life: bool = False,
+    noop_max: int = 30,
     save_samples: bool = False,
     sample_dir: Optional[Path] = None,
     **env_kwargs
@@ -329,10 +435,16 @@ def make_atari_env(
     Create Atari environment with preprocessing and frame stacking.
 
     Applies wrappers in order:
-    1. MaxAndSkipEnv - Action repeat (4x) with max-pooling over last 2 frames
-    2. RewardClipper - Clip rewards to {-1, 0, +1}
-    3. AtariPreprocessing - Grayscale conversion and resize to 84×84
-    4. FrameStack - Stack last 4 frames in channels-first format
+    1. NoopResetEnv - Random no-op starts (1-30 no-ops on reset)
+    2. MaxAndSkipEnv - Action repeat (4x) with max-pooling over last 2 frames
+    3. EpisodeLifeEnv - Treat life loss as episode end (training only)
+    4. RewardClipper - Clip rewards to {-1, 0, +1}
+    5. AtariPreprocessing - Grayscale conversion and resize to 84×84
+    6. FrameStack - Stack last 4 frames in channels-first format
+
+    Termination policy:
+    - Training (episode_life=True): Episode ends on life loss
+    - Evaluation (episode_life=False): Episode ends only on game over
 
     Args:
         env_id: Gymnasium environment ID (e.g., "ALE/Pong-v5")
@@ -340,18 +452,31 @@ def make_atari_env(
         num_stack: Number of frames to stack (default: 4)
         frame_skip: Action repeat count (default: 4)
         clip_rewards: Whether to clip rewards to {-1, 0, +1} (default: True)
+        episode_life: Treat life loss as episode end for training (default: False)
+        noop_max: Maximum number of no-ops on reset (default: 30)
         save_samples: Whether to save sample frame stacks
         sample_dir: Directory to save samples
         **env_kwargs: Additional arguments for gym.make()
 
     Returns:
         Wrapped environment with preprocessing and frame stacking
+
+    Note:
+        For evaluation, set episode_life=False to get true episode returns.
+        For training, set episode_life=True to help agent learn to preserve lives.
     """
     # Create base environment
     env = gym.make(env_id, **env_kwargs)
 
+    # Apply no-op reset wrapper for diverse initial states
+    env = NoopResetEnv(env, noop_max=noop_max)
+
     # Apply action repeat with max-pooling wrapper (reduces flicker)
     env = MaxAndSkipEnv(env, skip=frame_skip)
+
+    # Apply episode life wrapper for training (if enabled)
+    if episode_life:
+        env = EpisodeLifeEnv(env)
 
     # Apply reward clipping wrapper
     env = RewardClipper(env, clip_rewards=clip_rewards)

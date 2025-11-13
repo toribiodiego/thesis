@@ -62,14 +62,28 @@ def load_config(config_path: str):
     return config
 
 
-def create_env(config, save_samples=False, sample_dir=None):
-    """Create Atari environment with preprocessing and frame stacking."""
+def create_env(config, save_samples=False, sample_dir=None, episode_life=None):
+    """
+    Create Atari environment with preprocessing and frame stacking.
+
+    Args:
+        config: Configuration object
+        save_samples: Whether to save sample frames
+        sample_dir: Directory to save samples
+        episode_life: Override episode_life setting (None = use config)
+    """
+    # Use episode_life from config if not overridden
+    if episode_life is None:
+        episode_life = config.training.episode_life
+
     env = make_atari_env(
         env_id=config.env.id,
         frame_size=config.preprocess.frame_size,
         num_stack=config.preprocess.stack_size,
         frame_skip=config.env.frameskip,
         clip_rewards=config.training.reward_clip,
+        episode_life=episode_life,
+        noop_max=config.env.max_noop_start,
         save_samples=save_samples,
         sample_dir=sample_dir,
         frameskip=1,  # Disable built-in frameskip, use MaxAndSkipEnv instead
@@ -103,8 +117,8 @@ def dry_run(config, seed, num_episodes=3):
     frames_dir = output_dir / "frames"
     frames_dir.mkdir(exist_ok=True)
 
-    # Create environment with sample saving enabled
-    env = create_env(config, save_samples=True, sample_dir=frames_dir)
+    # Create environment with sample saving enabled (use evaluation mode)
+    env = create_env(config, save_samples=True, sample_dir=frames_dir, episode_life=False)
 
     # Set seed
     set_seed(seed)
@@ -116,7 +130,9 @@ def dry_run(config, seed, num_episodes=3):
     print(f"Preprocessing: {config.preprocess.frame_size}x{config.preprocess.frame_size} grayscale")
     print(f"Frame stack: {config.preprocess.stack_size} frames")
     print(f"Frame skip: {config.env.frameskip} (action repeat with max-pooling)")
+    print(f"No-op max: {config.env.max_noop_start} (random no-ops on reset)")
     print(f"Reward clipping: {'enabled' if config.training.reward_clip else 'disabled'}")
+    print(f"Episode termination: full episode (life loss NOT terminal for dry run)")
 
     # Run random episodes
     episode_stats = []
