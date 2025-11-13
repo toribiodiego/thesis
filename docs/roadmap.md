@@ -81,8 +81,8 @@ Build wrapper transforming raw 210×160×3 frames to 84×84 grayscale, stacking 
 **Checklist:**
 - [X] Preprocess frames from RGB (210×160) to grayscale, resize/crop to 84×84, stack the last 4 frames as channels-first `(4,84,84)` using `uint8` storage and convert to `float32` on sample; save a few sample stacks as PNGs per game.
     - [X] feat: Add grayscale→84×84 preprocessing and 4-frame stack with sample PNG export
-- [ ] Implement action repeat/frame-skip (`k=4`) and elementwise max-pool over the last two raw frames before preprocessing to reduce flicker.
-    - [ ] feat: Add 4-step action repeat and last-2-frame max-pooling
+- [X] Implement action repeat/frame-skip (`k=4`) and elementwise max-pool over the last two raw frames before preprocessing to reduce flicker.
+    - [X] feat: Add 4-step action repeat and last-2-frame max-pooling
 - [ ] Apply reward clipping to the set {−1, 0, +1} with a config toggle to disable for ablations.
     - [ ] feat: Add configurable reward clipping to {-1,0,+1}
 - [ ] Align episode termination with evaluation policy: allow training to treat life loss as terminal, use full-episode termination for evaluation, and support optional no-op starts and auto-fire reset where needed; document choices in the wrapper docstring.
