@@ -329,6 +329,8 @@ Verify paper defaults (replay=1M, batch=32, LR=2.5e-4, γ=0.99, target=10k, RMSP
     - [ ] docs: Promote chosen stable baseline to per-game config and document selection rationale
 - [ ] Verify long-run viability: launch a sanity extension run to confirm the selected config can progress toward 20M frames without crashes or divergence; update the tuning summary with pass/fail.
     - [ ] test: Add long-run viability check entry and update tuning summary with result
+- [ ] Consolidate tuning decisions in `docs/design/tuning_strategy.md`: capture default hyperparameters, sweep grid rationale, stability criteria, and how to interpret tuning summary CSVs for future debugging.
+    - [ ] docs: Include commands for launching tuning runs, pointers to config presets, and troubleshooting tips for instability signals.
 
 ---
 
@@ -354,6 +356,8 @@ Execute complete training for each game with 3 seeds. Save logs, checkpoints, ar
     - [ ] docs: Save final plots and add pointers to best checkpoints per seed
 - [ ] Perform a completion audit: check that all seeds finished for all games, required files exist (final checkpoint, logs, eval summaries), and results are reproducible; record a brief audit report.
     - [ ] chore: Add completion audit report confirming artifacts and reproducibility status
+- [ ] Document run execution + artifact expectations in `docs/design/run_management.md`: outline directory conventions, required artifacts per seed, audit checklist, and links to aggregation scripts.
+    - [ ] docs: Provide a template for the completion audit report and instructions for verifying resumability/log completeness.
 
 ---
 
@@ -373,6 +377,8 @@ Compile results vs. paper. Compute mean/median over final 100 episodes. Generate
     - [ ] docs: Add match/lag flags and brief diagnoses to the summary outputs
 - [ ] Record environment and implementation differences that could affect comparability (Gym/Gymnasium vs ALE version, hardware precision, reward processing, action set, frameskip) and include them in a `results/summary/notes.md`.
     - [ ] docs: Document environment/implementation differences impacting score comparability
+- [ ] Maintain `docs/design/results_comparison.md` as a living reference: describe metrics definitions, table/plot formats, interpretation heuristics, and how to regenerate comparison artifacts.
+    - [ ] docs: Note the scripts/commands used for aggregation and any manual steps for validating percentages vs. paper baselines.
 
 ---
 
@@ -396,6 +402,8 @@ Test design choices (reward clipping, frame stack size, target network) on one g
     - [ ] docs: Add brief ablation report with rationale, results, and links to artifacts
 - [ ] Optionally add a convenience script `scripts/run_ablations.sh` to reproduce the set (configs, seeds, output paths) with a single command.
     - [ ] chore: Add ablation runner script for reproducible execution
+- [ ] Capture ablation design/interpretation guidance in `docs/design/ablations_plan.md`: list the experiments, hypotheses, runtime costs, artifact locations, and how to interpret deltas/stability flags.
+    - [ ] docs: Link to config files, plotting outputs, and the report section summarizing ablation findings.
 
 ---
 
@@ -413,6 +421,8 @@ Consolidate reproduction into structured report at `docs/reports/dqn_results.md`
     - [ ] docs: Add comparison to paper with explanations for matches/gaps
 - [ ] Add a concise "Lessons learned & future work" section outlining reproducibility takeaways and next steps (Double DQN, Prioritized Replay, dueling networks, multi-step targets).
     - [ ] docs: Include lessons learned and future work section in the report
+- [ ] Maintain `docs/design/report_outline.md` to track the structure of `docs/reports/dqn_results.md`, mapping each section to source artifacts, plots, and data files for quick updates or peer review.
+    - [ ] docs: Record which scripts regenerate each figure/table and any open questions/todo items for the report.
 
 ---
 
@@ -436,6 +446,8 @@ Ensure reliability and maintainability. Unit tests under `src/tests/`. Style com
     - [ ] build: Enable pytest-cov with reports and set a minimum coverage threshold
 - [ ] Optional static checks: enable mypy on `src/` with a minimal config (ignore missing imports for third-party libs) and add a type-check target to CI; annotate key modules (replay, model, training loop) incrementally.
     - [ ] build: Introduce mypy type checking and initial annotations for core modules
+- [ ] Summarize code-quality practices in `docs/design/code_quality.md`: detail testing strategy, lint/format tooling, coverage targets, type-check scope, and onboarding instructions for running the suite locally/CI.
+    - [ ] docs: Include command inventory (`pytest`, `black`, `isort`, `flake8`, `mypy`) and guidance for triaging failures.
 
 ---
 
@@ -457,6 +469,8 @@ End-to-end script (`scripts/reproduce_dqn.sh`) automating setup, install, ROM do
     - [ ] test: Add metric tolerance check against reference results with pass/fail output
 - [ ] Document usage: add a short section in `README.md` showing one-command reproduction and expected outputs, plus runtime notes and hardware assumptions.
     - [ ] docs: Document reproduce script usage, outputs, and assumptions
+- [ ] Maintain `docs/design/reproduce_recipe.md` detailing the script flow, required environment preconditions, reference metrics, and troubleshooting steps for failures.
+    - [ ] docs: Map each script stage to the underlying commands and artifacts it should create.
 
 ---
 
@@ -482,6 +496,8 @@ Script (`scripts/generate_report.py`) compiling artifacts into Markdown/HTML rep
     - [ ] feat: Add CLI flags for game/run selection, formats, and output directory
 - [ ] Add a smoke test using a small synthetic run directory to ensure the script completes and produces a minimal report; verify generated tables/links exist.
     - [ ] test: Add smoke test for report generation with synthetic artifacts
+- [ ] Document the automated reporting pipeline in `docs/design/reporting_pipeline.md`: outline required inputs, template structure, artifact dependencies, CLI usage, and known failure modes.
+    - [ ] docs: Map each report section to the scripts/plots it depends on and provide troubleshooting guidance for missing assets.
 
 ---
 
@@ -503,6 +519,8 @@ Clean temporary files, standardize structure (src/, experiments/, results/, docs
     - [ ] docs: Author top-level README with overview, install, quickstart, and citation
 - [ ] Perform a fresh-clone test: in a clean environment, run setup, download ROMs (if permitted), execute a short smoke run, and confirm outputs appear in the standard folders; add a helper `scripts/fresh_clone_check.sh` that automates these checks.
     - [ ] test: Add fresh-clone smoke test script and document pass criteria
+- [ ] Record the archival/organization policy in `docs/design/archive_plan.md`: define folder purposes, retention rules, ignore patterns, licensing decisions, and fresh-clone checklist so future cleanups stay consistent.
+    - [ ] docs: Link to `.gitignore`, `results/README.md`, and `scripts/fresh_clone_check.sh`, noting how to run the audit.
 
 ---
 
@@ -522,6 +540,8 @@ Integrate reproduction into thesis. Methods section: goals, setup, implementatio
     - [ ] docs: Add reproducibility reflection covering pinning, seeding, determinism, and logging
 - [ ] Add a Future Work section outlining extensions (Double DQN, Prioritized Replay, dueling networks, multi-step targets, distributional/Rainbow variants) and proposed next-step experiments with brief rationale.
     - [ ] docs: Add Future Work section with prioritized extensions and rationale
+- [ ] Maintain `docs/thesis/README.md` as the index between thesis sections and repository artifacts (configs, plots, videos); note how to regenerate each figure/table referenced in the manuscript.
+    - [ ] docs: Update the index whenever assets move or new sections are drafted to keep integration friction low.
 
 ---
 
