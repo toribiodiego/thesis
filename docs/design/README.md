@@ -5,5 +5,6 @@ Use this directory to capture architectural sketches, module dependency diagrams
 - Shared module responsibilities (`src/agents`, `src/envs`, etc.).
 - Configuration strategy (Hydra/OmegaConf layouts, default overrides).
 - Experiment lifecycle (training workflow, evaluation workflow, reporting pipeline).
+- Foundational setup references (e.g., `dqn_setup.md` for Subtask 1 outputs).
 
 Keeping design decisions explicit here makes it easier to evolve the codebase while maintaining reproducibility across experiments.
