@@ -333,12 +333,18 @@ def test_replay_buffer_sample_basic():
     assert batch['next_states'].shape == (batch_size, 4, 84, 84)
     assert batch['dones'].shape == (batch_size,)
 
-    # Check dtypes
-    assert batch['states'].dtype == np.uint8
+    # Check dtypes (observations converted to float32)
+    assert batch['states'].dtype == np.float32
     assert batch['actions'].dtype == np.int64
     assert batch['rewards'].dtype == np.float32
-    assert batch['next_states'].dtype == np.uint8
+    assert batch['next_states'].dtype == np.float32
     assert batch['dones'].dtype == bool
+
+    # Check normalization (default normalize=True)
+    assert batch['states'].min() >= 0.0
+    assert batch['states'].max() <= 1.0
+    assert batch['next_states'].min() >= 0.0
+    assert batch['next_states'].max() <= 1.0
 
 
 def test_replay_buffer_sample_insufficient_samples():
@@ -518,6 +524,106 @@ def test_replay_buffer_sample_full_capacity():
     assert len(batch['actions']) == capacity - 1
 
 
+def test_replay_buffer_normalize_true():
+    """Test normalization to [0, 1] when normalize=True."""
+    buffer = ReplayBuffer(capacity=100, obs_shape=(4, 84, 84), normalize=True)
+
+    # Create states with known values
+    state = np.full((4, 84, 84), 255, dtype=np.uint8)  # Max value
+    state_zero = np.zeros((4, 84, 84), dtype=np.uint8)  # Min value
+
+    # Add transitions
+    for i in range(5):
+        buffer.append(state, i, float(i), state_zero, False)
+
+    # Sample
+    batch = buffer.sample(batch_size=2)
+
+    # Check dtype
+    assert batch['states'].dtype == np.float32
+    assert batch['next_states'].dtype == np.float32
+
+    # Check normalization
+    # state=255 should become 1.0
+    # state_zero=0 should become 0.0
+    assert batch['states'].max() == 1.0
+    assert batch['next_states'].min() == 0.0
+    assert batch['next_states'].max() == 0.0  # All zeros
+
+
+def test_replay_buffer_normalize_false():
+    """Test no normalization when normalize=False."""
+    buffer = ReplayBuffer(capacity=100, obs_shape=(4, 84, 84), normalize=False)
+
+    # Create states with known values
+    state = np.full((4, 84, 84), 255, dtype=np.uint8)  # Max value
+    state_mid = np.full((4, 84, 84), 128, dtype=np.uint8)  # Mid value
+
+    # Add transitions
+    for i in range(5):
+        buffer.append(state, i, float(i), state_mid, False)
+
+    # Sample
+    batch = buffer.sample(batch_size=2)
+
+    # Check dtype (still float32)
+    assert batch['states'].dtype == np.float32
+    assert batch['next_states'].dtype == np.float32
+
+    # Check no normalization - values stay in [0, 255]
+    assert batch['states'].max() == 255.0
+    assert batch['next_states'].min() == 128.0
+    assert batch['next_states'].max() == 128.0
+
+
+def test_replay_buffer_uint8_storage_memory_efficiency():
+    """Test that observations are stored as uint8 in memory."""
+    buffer = ReplayBuffer(capacity=100, obs_shape=(4, 84, 84), normalize=True)
+
+    state = np.random.randint(0, 255, size=(4, 84, 84), dtype=np.uint8)
+
+    # Add transitions
+    for i in range(10):
+        buffer.append(state, i, float(i), state, False)
+
+    # Verify storage is uint8
+    assert buffer.observations.dtype == np.uint8
+
+    # But sampled data should be float32
+    batch = buffer.sample(batch_size=3)
+    assert batch['states'].dtype == np.float32
+    assert batch['next_states'].dtype == np.float32
+
+
+def test_replay_buffer_conversion_accuracy():
+    """Test uint8 to float32 conversion is accurate."""
+    buffer = ReplayBuffer(capacity=100, obs_shape=(4, 84, 84), normalize=True)
+
+    # Create state with specific values
+    state = np.array([[[0, 127, 255, 128]]], dtype=np.uint8)  # (1, 1, 4)
+    buffer.obs_shape = (1, 1, 4)  # Override for testing
+    buffer.observations = np.zeros((100, 1, 1, 4), dtype=np.uint8)
+
+    # Manually insert
+    buffer.observations[0] = state
+    buffer.observations[1] = state
+    buffer.actions[0] = 0
+    buffer.rewards[0] = 1.0
+    buffer.dones[0] = False
+    buffer.episode_starts[0] = True
+    buffer.episode_starts[1] = False
+    buffer.size = 2
+    buffer.index = 2
+
+    # Sample
+    batch = buffer.sample(batch_size=1)
+
+    # Check conversion accuracy
+    # 0 → 0.0, 127 → 0.498, 255 → 1.0, 128 → 0.502
+    expected = np.array([[[0.0, 127/255.0, 1.0, 128/255.0]]], dtype=np.float32)
+    assert np.allclose(batch['states'], expected, atol=1e-6)
+
+
 if __name__ == "__main__":
     # Run tests manually
     print("Running replay buffer tests...")
@@ -593,5 +699,17 @@ if __name__ == "__main__":
 
     test_replay_buffer_sample_full_capacity()
     print("✓ Sample full capacity test passed")
+
+    test_replay_buffer_normalize_true()
+    print("✓ Normalize true test passed")
+
+    test_replay_buffer_normalize_false()
+    print("✓ Normalize false test passed")
+
+    test_replay_buffer_uint8_storage_memory_efficiency()
+    print("✓ Uint8 storage memory efficiency test passed")
+
+    test_replay_buffer_conversion_accuracy()
+    print("✓ Conversion accuracy test passed")
 
     print("\nAll tests passed! ✓")

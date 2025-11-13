@@ -24,6 +24,9 @@ class ReplayBuffer:
         capacity: Maximum number of transitions to store (default 1_000_000)
         obs_shape: Shape of a single observation (H, W) or (C, H, W)
         dtype: Numpy dtype for observations (default uint8 for memory efficiency)
+        normalize: Whether to normalize observations to [0,1] on sample (default True)
+                   If True: uint8 [0,255] → float32 [0,1]
+                   If False: uint8 [0,255] → float32 [0,255]
 
     Memory layout:
         - observations: (capacity, *obs_shape) array in uint8
@@ -37,11 +40,13 @@ class ReplayBuffer:
         self,
         capacity: int = 1_000_000,
         obs_shape: Tuple[int, ...] = (4, 84, 84),
-        dtype: np.dtype = np.uint8
+        dtype: np.dtype = np.uint8,
+        normalize: bool = True
     ):
         self.capacity = capacity
         self.obs_shape = obs_shape
         self.dtype = dtype
+        self.normalize = normalize  # Whether to normalize to [0,1] on sample
 
         # Circular buffer index
         self.index = 0
@@ -183,16 +188,17 @@ class ReplayBuffer:
         Sample a batch of transitions from the buffer.
 
         Samples without replacement from valid indices only (respects episode boundaries).
+        Converts observations from uint8 to float32 and optionally normalizes to [0,1].
 
         Args:
             batch_size: Number of transitions to sample
 
         Returns:
             Dictionary containing:
-                - 'states': (batch_size, *obs_shape) uint8 array
+                - 'states': (batch_size, *obs_shape) float32 array
                 - 'actions': (batch_size,) int64 array
                 - 'rewards': (batch_size,) float32 array
-                - 'next_states': (batch_size, *obs_shape) uint8 array
+                - 'next_states': (batch_size, *obs_shape) float32 array
                 - 'dones': (batch_size,) bool array
 
         Raises:
@@ -201,7 +207,8 @@ class ReplayBuffer:
         Notes:
             - Only samples from valid indices (no episode boundaries crossed)
             - Sampling is uniform without replacement within a batch
-            - Returns data in uint8 format; caller should convert to float32 if needed
+            - Observations converted from uint8 to float32 on sample
+            - If self.normalize=True: values scaled to [0,1], else [0,255]
         """
         # Get all valid indices
         valid_indices = self._get_valid_indices()
@@ -221,15 +228,24 @@ class ReplayBuffer:
             replace=False
         )
 
-        # Gather transitions
-        states = self.observations[sampled_indices]
+        # Gather transitions (still in uint8)
+        states_uint8 = self.observations[sampled_indices]
         actions = self.actions[sampled_indices]
         rewards = self.rewards[sampled_indices]
         dones = self.dones[sampled_indices]
 
         # Get next states (index + 1)
         next_indices = (sampled_indices + 1) % self.capacity
-        next_states = self.observations[next_indices]
+        next_states_uint8 = self.observations[next_indices]
+
+        # Convert observations to float32
+        states = states_uint8.astype(np.float32)
+        next_states = next_states_uint8.astype(np.float32)
+
+        # Normalize to [0, 1] if configured
+        if self.normalize:
+            states = states / 255.0
+            next_states = next_states / 255.0
 
         return {
             'states': states,
