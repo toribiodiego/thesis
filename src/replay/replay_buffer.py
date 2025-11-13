@@ -178,6 +178,67 @@ class ReplayBuffer:
 
         return valid
 
+    def sample(self, batch_size: int) -> Dict[str, np.ndarray]:
+        """
+        Sample a batch of transitions from the buffer.
+
+        Samples without replacement from valid indices only (respects episode boundaries).
+
+        Args:
+            batch_size: Number of transitions to sample
+
+        Returns:
+            Dictionary containing:
+                - 'states': (batch_size, *obs_shape) uint8 array
+                - 'actions': (batch_size,) int64 array
+                - 'rewards': (batch_size,) float32 array
+                - 'next_states': (batch_size, *obs_shape) uint8 array
+                - 'dones': (batch_size,) bool array
+
+        Raises:
+            ValueError: If batch_size > number of valid indices
+
+        Notes:
+            - Only samples from valid indices (no episode boundaries crossed)
+            - Sampling is uniform without replacement within a batch
+            - Returns data in uint8 format; caller should convert to float32 if needed
+        """
+        # Get all valid indices
+        valid_indices = self._get_valid_indices()
+
+        # Check if we have enough valid samples
+        if len(valid_indices) < batch_size:
+            raise ValueError(
+                f"Not enough valid samples in buffer. "
+                f"Requested {batch_size}, but only {len(valid_indices)} valid samples available. "
+                f"Buffer size: {self.size}"
+            )
+
+        # Sample without replacement
+        sampled_indices = np.random.choice(
+            valid_indices,
+            size=batch_size,
+            replace=False
+        )
+
+        # Gather transitions
+        states = self.observations[sampled_indices]
+        actions = self.actions[sampled_indices]
+        rewards = self.rewards[sampled_indices]
+        dones = self.dones[sampled_indices]
+
+        # Get next states (index + 1)
+        next_indices = (sampled_indices + 1) % self.capacity
+        next_states = self.observations[next_indices]
+
+        return {
+            'states': states,
+            'actions': actions,
+            'rewards': rewards,
+            'next_states': next_states,
+            'dones': dones
+        }
+
     def __len__(self) -> int:
         """
         Return current number of transitions stored.
