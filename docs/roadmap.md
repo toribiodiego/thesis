@@ -87,6 +87,12 @@ Build wrapper transforming raw 210×160×3 frames to 84×84 grayscale, stacking 
     - [X] feat: Add configurable reward clipping to {-1,0,+1}
 - [X] Align episode termination with evaluation policy: allow training to treat life loss as terminal, use full-episode termination for evaluation, and support optional no-op starts and auto-fire reset where needed; document choices in the wrapper docstring.
     - [X] docs: Document termination (life-loss vs full-episode), no-op starts, and auto-fire behavior
+- [ ] Implement random no-op resets (0–30 actions) at episode start with a configurable `noop_max` (default 30) to match Bellemare/Mnih evaluation protocol.
+    - [ ] feat: Add no-op reset logic to the wrapper with config toggles and documentation
+- [ ] Explicitly document that full-episode termination is the default (life-loss termination only when the config enables it) and ensure training/eval configs reflect this.
+    - [ ] docs: Note default terminal behavior in wrapper docs/config comments
+- [ ] Clarify preprocessing documentation: describe the two-frame max-pooling, the 84×84 resize/crop policy (score bar kept or removed), and state that reward clipping defaults to ON per the paper.
+    - [ ] docs: Update wrapper design note to outline pooling/cropping choices and reward clipping default
 - [X] Produce debug artifacts: write a short random rollout log recording obs shape, action repeat behavior, and clipped reward stats; save preprocessed stacks under `experiments/dqn_atari/artifacts/frames/<game>/` and the rollout log in the corresponding run directory.
     - [X] feat: Emit rollout debug log and per-game preprocessed frame artifacts
 - [X] Capture the wrapper specification + troubleshooting guide in `docs/design/atari_env_wrapper.md`: summarize preprocessing pipeline, config flags, artifact locations, and common failure modes (e.g., life-loss mismatch, flicker, reward clipping) so future debugging/design reviews have a single reference.
@@ -156,6 +162,8 @@ TD target: *y = r + γ(1−done)×maxₐ′ Q_target(s′,a′)*. MSE or Huber l
     - [ ] build: Add optimizer setup and global-norm gradient clipping
 - [ ] Implement periodic target updates: call `hard_update_target()` every `C` environment steps (default `10_000`); track env step counter and log each sync step.
     - [ ] feat: Add step-scheduled hard target sync with logging
+- [ ] Document that the target network is a 2015 stability improvement (not present in the 2013 paper) and expose a config flag/notes on how to disable it for purist reproductions.
+    - [ ] docs: Add roadmap/config comments describing how to run without a target network
 - [ ] Schedule training frequency: perform one optimization step every `k=4` environment steps after replay warm-up; skip updates if `can_sample` is false; support configurable `train_every`.
     - [ ] feat: Add train-every-k update scheduler with warm-up gating
 - [ ] Add stability checks: unit test on a synthetic batch to confirm loss decreases over several updates; assert target updates occur at exact multiples of `C`; detect and warn on NaNs/Infs; log grad norm and LR per update.
@@ -185,6 +193,8 @@ TD target: *y = r + γ(1−done)×maxₐ′ Q_target(s′,a′)*. MSE or Huber l
     - [ ] feat: Add step/episode loggers and periodic/best checkpoints
 - [ ] Implement the evaluation routine: every E frames (default 250,000) run K episodes (default 10) with `eval_epsilon`; disable learning, set eval mode, log mean/median/std returns, and write plots/CSV to `results/`.
     - [ ] feat: Add periodic evaluation with summary metrics and result artifacts
+- [ ] Track the average max-Q over a fixed reference batch of saved states (as in the paper) to monitor learning progress even when rewards are noisy.
+    - [ ] feat: Add optional reference-state Q logging hook and plotting support
 - [ ] Persist reproducibility metadata for each run: save merged config snapshot, seed, and git commit hash beside logs and checkpoints (JSON/YAML).
     - [ ] chore: Write run metadata (config, seed, commit) to run folder
 - [ ] Run a smoke test (~200,000 frames) to verify end-to-end stability: confirm logs grow, checkpoints appear, eval runs trigger, and quick plots render without errors.
@@ -254,6 +264,8 @@ Dedicated eval loop: greedy or low-ε, compute mean/median/std returns. Capture 
     - [ ] feat: Add periodic evaluation trigger with proper train/eval mode switching
 - [ ] Write structured outputs: append a row per eval to CSV/JSONL with `step, mean_return, median_return, std_return, min_return, max_return, episodes, eval_epsilon`; save raw per-episode returns to a sidecar file for later analysis.
     - [ ] chore: Persist eval summaries and per-episode details to CSV/JSONL files
+- [ ] Ensure evaluation defaults follow the paper: greedy policy with `eval_epsilon=0.05`, ≥10 episodes for interim checks, and ~30 episodes for final reporting; make the episode count configurable via CLI/config.
+    - [ ] docs: State the ε=0.05 convention and recommended episode counts in the evaluation harness docs/config comments
 - [ ] Document the evaluation harness in `docs/design/eval_harness.md`: describe loop structure, metric definitions, video capture settings, scheduling triggers, output file schemas, and debugging steps for desyncs or video corruption.
     - [ ] docs: Include CLI examples for manual eval runs and instructions for re-rendering videos/metrics.
 
@@ -302,6 +314,8 @@ Finalize game list (Pong, Breakout, Beam Rider + optional others), frame budgets
     - [ ] feat: Add runtime estimator script and planning CSV for game budgets
 - [ ] Define objective acceptance criteria per game (e.g., target score or % of paper baseline, number of seeds, final eval window) and include them as `Target score / % baseline` columns in the README table.
     - [ ] docs: Document per-game acceptance thresholds and evaluation window
+- [ ] Add game-specific overrides called out in the paper (e.g., Space Invaders requires `frameskip=3` to avoid disappearing bullets) and ensure configs/README highlight any such deviations.
+    - [ ] feat: Provide per-game config knobs (like `frame_skip_override`) and document them in the plan
 - [ ] Consolidate the plan in one place: ensure `experiments/dqn_atari/README.md` contains the selected games, frame budgets, eval cadence, runtime estimates link/CSV, and acceptance criteria; link to configs and runs directories.
     - [ ] chore: Finalize and cross-link game suite plan in README
 - [ ] Archive the planning decisions in `docs/design/game_suite_plan.md`: capture chosen games, rationale, budgets, eval cadence, runtime assumptions, and acceptance thresholds so future contributors see how the suite was selected.
