@@ -1,0 +1,10 @@
+# Beam Rider-specific DQN configuration
+# Extends base.yaml with game-specific overrides
+
+env:
+  name: "ALE/BeamRider-v5"
+  game: "beam_rider"
+
+# Game-specific overrides (if needed)
+# training:
+#   frame_budget: 20000000  # 20M frames for Beam Rider

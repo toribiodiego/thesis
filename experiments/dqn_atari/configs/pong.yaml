@@ -1,0 +1,10 @@
+# Pong-specific DQN configuration
+# Extends base.yaml with game-specific overrides
+
+env:
+  name: "ALE/Pong-v5"
+  game: "pong"
+
+# Game-specific overrides (if needed)
+# training:
+#   frame_budget: 10000000  # 10M frames for Pong
