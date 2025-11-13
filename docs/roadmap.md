@@ -79,8 +79,8 @@ Establish the experimental foundation by selecting 2–3 representative Atari ga
 Build wrapper transforming raw 210×160×3 frames to 84×84 grayscale, stacking last 4 frames as (4,84,84). Apply 4-frame action repeat with max-pooling, clip rewards to {−1,0,+1}. Handle episode termination (life-loss vs full-episode). Complete when verified shapes, sample frame stacks, and rollout logs exist in `experiments/dqn_atari/artifacts/frames/`.
 
 **Checklist:**
-- [ ] Preprocess frames from RGB (210×160) to grayscale, resize/crop to 84×84, stack the last 4 frames as channels-first `(4,84,84)` using `uint8` storage and convert to `float32` on sample; save a few sample stacks as PNGs per game.
-    - [ ] feat: Add grayscale→84×84 preprocessing and 4-frame stack with sample PNG export
+- [X] Preprocess frames from RGB (210×160) to grayscale, resize/crop to 84×84, stack the last 4 frames as channels-first `(4,84,84)` using `uint8` storage and convert to `float32` on sample; save a few sample stacks as PNGs per game.
+    - [X] feat: Add grayscale→84×84 preprocessing and 4-frame stack with sample PNG export
 - [ ] Implement action repeat/frame-skip (`k=4`) and elementwise max-pool over the last two raw frames before preprocessing to reduce flicker.
     - [ ] feat: Add 4-step action repeat and last-2-frame max-pooling
 - [ ] Apply reward clipping to the set {−1, 0, +1} with a config toggle to disable for ablations.
