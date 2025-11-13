@@ -63,6 +63,42 @@ class DQN(nn.Module):
         self.fc = nn.Linear(conv_output_size, 256)
         self.q_head = nn.Linear(256, num_actions)
 
+        # Initialize weights with Kaiming normal (He initialization)
+        # Suitable for ReLU activations
+        self._initialize_weights()
+
+    def _initialize_weights(self):
+        """
+        Initialize network weights using Kaiming normal initialization.
+
+        Uses fan_out mode for conv and linear layers with ReLU activations.
+        Biases are initialized to zero.
+        """
+        for module in self.modules():
+            if isinstance(module, (nn.Conv2d, nn.Linear)):
+                # Kaiming normal initialization for layers with ReLU
+                nn.init.kaiming_normal_(
+                    module.weight,
+                    mode='fan_out',
+                    nonlinearity='relu'
+                )
+                if module.bias is not None:
+                    nn.init.zeros_(module.bias)
+
+    def to(self, device):
+        """
+        Move model to specified device and ensure float32 dtype.
+
+        Args:
+            device: torch.device or string ('cuda', 'cpu')
+
+        Returns:
+            Self for chaining
+        """
+        super().to(device)
+        # Ensure all parameters are float32
+        return self.float()
+
     def forward(self, x: torch.Tensor) -> dict:
         """
         Forward pass through the network.

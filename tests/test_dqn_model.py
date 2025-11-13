@@ -112,6 +112,52 @@ def test_dqn_channels_first():
         model(x_wrong)
 
 
+def test_dqn_initialization():
+    """Test DQN weights are properly initialized with Kaiming."""
+    model = DQN(num_actions=6)
+
+    # Check that weights are initialized (not all zeros or ones)
+    for name, param in model.named_parameters():
+        if 'weight' in name:
+            # Kaiming init should produce non-zero weights
+            assert not torch.all(param == 0), f"{name} is all zeros"
+            assert not torch.all(param == 1), f"{name} is all ones"
+            # Check reasonable variance (Kaiming produces std around sqrt(2/fan))
+            assert param.std() > 0.01, f"{name} has very low variance"
+            assert param.std() < 2.0, f"{name} has very high variance"
+        elif 'bias' in name:
+            # Biases should be initialized to zero
+            assert torch.all(param == 0), f"{name} bias not zero-initialized"
+
+
+def test_dqn_dtype():
+    """Test DQN parameters are float32."""
+    model = DQN(num_actions=4)
+
+    # All parameters should be float32
+    for name, param in model.named_parameters():
+        assert param.dtype == torch.float32, f"{name} is not float32: {param.dtype}"
+
+
+def test_dqn_device_transfer():
+    """Test DQN can be moved to device and maintains float32."""
+    model = DQN(num_actions=6)
+
+    # Test moving to CPU explicitly
+    model_cpu = model.to('cpu')
+    assert model_cpu is model  # Should return self
+
+    # Check all params are on CPU and float32
+    for param in model_cpu.parameters():
+        assert param.device.type == 'cpu'
+        assert param.dtype == torch.float32
+
+    # Test with input
+    x = torch.rand(1, 4, 84, 84)
+    output = model_cpu(x)
+    assert output['q_values'].device.type == 'cpu'
+
+
 if __name__ == "__main__":
     # Run tests manually
     print("Running DQN model tests...")
@@ -130,5 +176,14 @@ if __name__ == "__main__":
 
     test_dqn_channels_first()
     print("✓ Channels-first test passed")
+
+    test_dqn_initialization()
+    print("✓ Kaiming initialization test passed")
+
+    test_dqn_dtype()
+    print("✓ Float32 dtype test passed")
+
+    test_dqn_device_transfer()
+    print("✓ Device transfer test passed")
 
     print("\nAll tests passed! ✓")
