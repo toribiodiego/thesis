@@ -62,12 +62,14 @@ Establish the experimental foundation by selecting 2–3 representative Atari ga
     - [X] docs: Document ALE v5 env IDs, minimal action set, and AutoROM setup script
 - [X] Pin env versions by adding exact versions to `requirements.txt` (e.g., Python 3.10.13, PyTorch 2.4.1+cu121, Gymnasium 0.29.1, ale-py 0.8.1) and documenting ALE runtime settings in the README (e.g., `repeat_action_probability=0.0`, `frameskip=4`, `full_action_space=false`); include `scripts/capture_env.sh` to write `experiments/dqn_atari/system_info.txt`.
     - [X] build: Pin Python/Torch/Gym/ALE versions; capture system info; document deterministic ALE settings
-- [ ] Define evaluation protocol in `experiments/dqn_atari/configs/base.yaml`: ε-greedy evaluation with small ε (e.g., `eval.epsilon=0.05` or greedy toggle), termination policy (full episode for eval; training may treat life-loss as terminal), `eval.episodes=10` per checkpoint, reward clipping to {−1,0,+1}, and per-game frame budgets (e.g., 10–20M for main runs, smaller for smoke tests).
-    - [ ] feat: Add base eval/train protocol (ε=0.05, full-episode eval, life-loss training option, reward clipping, frame budgets)
+- [X] Define evaluation protocol in `experiments/dqn_atari/configs/base.yaml`: ε-greedy evaluation with small ε (e.g., `eval.epsilon=0.05` or greedy toggle), termination policy (full episode for eval; training may treat life-loss as terminal), `eval.episodes=10` per checkpoint, reward clipping to {−1,0,+1}, and per-game frame budgets (e.g., 10–20M for main runs, smaller for smoke tests).
+    - [X] feat: Add base eval/train protocol (ε=0.05, full-episode eval, life-loss training option, reward clipping, frame budgets)
 - [ ] Seed & reproducibility by introducing a unified `set_seed(seed, deterministic=False)` utility (`src/utils/repro.py`), wiring `--seed` in the entry point, and saving with each run the git commit hash, merged config, seed, and ALE settings as `meta.json` in the run directory.
     - [ ] feat: Add unified seeding utility and run metadata snapshot
 - [ ] Scaffold runs by creating per-game YAMLs under `experiments/dqn_atari/configs/` (common defaults + small per-game overrides) and adding `scripts/run_dqn.sh` that launches `src/train_dqn.py` with logging to `experiments/dqn_atari/runs/`; support a `--dry-run` path that executes a short random rollout, saves a few preprocessed frame stacks, lists available actions, and writes a minimal evaluation report.
     - [ ] feat: Add run launcher and random-policy dry run with frames, action list, and eval report
+- [ ] Capture Subtask 1 outputs in `docs/design/wp1_foundation.md`: outline selected games, pinned dependencies, evaluation protocol, seeding utility, ROM/setup commands, and dry-run instructions so onboarding contributors have a single reference.
+    - [ ] docs: Summarize required commands (`envs/setup_env.sh`, `scripts/setup_roms.sh`, `scripts/run_dqn.sh --dry-run`) plus troubleshooting tips.
 
 ---
 
