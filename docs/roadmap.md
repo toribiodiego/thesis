@@ -16,10 +16,27 @@ Re-implement and reproduce DeepMind's DQN (*Playing Atari with Deep Reinforcemen
 - `results/` – Plots, tables, experiment cards
 - `docs/` – Design docs, paper notes, experiment logs
 
-_Workflow note:_ When logging progress or landing commits tied to this roadmap, follow the prefixes in `docs/git_commit_guide.md` (e.g., `feat:`, `fix:`, `docs:`) so history stays readable.
+**Workflow:**
+- Follow commit prefixes in `docs/git_commit_guide.md` (feat/fix/docs/test/build/chore)
+- Mark completed checklist items as work progresses
+- Current focus: **M1 – Environment + tooling smoke test** (Subtask 1)
 
 ---
 
+## Key Hyperparameters (DQN 2013)
+
+- **Preprocessing:** 210×160×3 RGB → 84×84 grayscale, 4-frame stack
+- **Network:** Conv(16,8×8,s4) → Conv(32,4×4,s2) → FC(256) → linear(|A|)
+- **Replay:** 1M capacity, uniform sampling, 50k warm-up
+- **Optimizer:** RMSProp (ρ=0.95, ε=0.01), LR=2.5e-4
+- **Training:** γ=0.99, batch=32, target update every 10k steps, train every 4 steps
+- **Exploration:** ε: 1.0→0.1 over 1M frames
+- **Frame skip:** 4 (action repeated, rewards accumulated)
+- **Reward clipping:** {−1, 0, +1}
+
+See `docs/papers/dqn_2013_notes.md` for details.
+
+---
 ## Milestones
 
 | Milestone | Criteria | Status |
@@ -502,4 +519,4 @@ Integrate reproduction into thesis. Methods section: goals, setup, implementatio
 
 ---
 
-**Note:** Subtasks are ordered by implementation sequence. Update status as work progresses. Reference `docs/progress.md` for completed work and current context.
+**Note:** Subtasks are ordered by implementation sequence. Mark completed checklist items as work progresses.
