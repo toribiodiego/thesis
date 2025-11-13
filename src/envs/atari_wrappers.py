@@ -14,6 +14,75 @@ import gymnasium as gym
 import numpy as np
 
 
+class MaxAndSkipEnv(gym.Wrapper):
+    """
+    Action repeat with max-pooling over last 2 frames to reduce flicker.
+
+    Repeat each action for K steps (default: 4) and return the max-pooled
+    observation from the last two frames. This reduces flickering artifacts
+    common in Atari games.
+
+    Args:
+        env: Gymnasium environment
+        skip: Number of times to repeat action (default: 4)
+
+    Returns:
+        Max-pooled observation from last 2 frames, accumulated reward
+    """
+
+    def __init__(self, env: gym.Env, skip: int = 4):
+        super().__init__(env)
+        self._skip = skip
+        # Buffer to store last 2 frames for max-pooling
+        self._obs_buffer = np.zeros((2,) + env.observation_space.shape, dtype=np.uint8)
+
+    def step(self, action):
+        """
+        Repeat action for K steps, accumulate reward, and max-pool last 2 frames.
+
+        Args:
+            action: Action to repeat
+
+        Returns:
+            obs: Max-pooled observation from last 2 frames
+            total_reward: Accumulated reward over all steps
+            terminated: Whether episode terminated
+            truncated: Whether episode was truncated
+            info: Info dict from last step
+        """
+        total_reward = 0.0
+        terminated = truncated = False
+        info = {}
+
+        for i in range(self._skip):
+            obs, reward, terminated, truncated, info = self.env.step(action)
+            total_reward += reward
+
+            # Store last 2 frames in buffer for max-pooling
+            if i == self._skip - 2:
+                self._obs_buffer[0] = obs
+            elif i == self._skip - 1:
+                self._obs_buffer[1] = obs
+
+            # Exit early if episode ends
+            if terminated or truncated:
+                break
+
+        # Max-pool over last 2 frames (element-wise maximum)
+        # This reduces flickering by taking the brightest pixel at each position
+        max_frame = self._obs_buffer.max(axis=0)
+
+        return max_frame, total_reward, terminated, truncated, info
+
+    def reset(self, **kwargs):
+        """Reset environment and clear observation buffer."""
+        obs, info = self.env.reset(**kwargs)
+        # Fill buffer with initial observation
+        self._obs_buffer[0] = obs
+        self._obs_buffer[1] = obs
+        return obs, info
+
+
 class AtariPreprocessing(gym.ObservationWrapper):
     """
     Preprocess Atari frames: RGB (210×160×3) → grayscale 84×84.
@@ -205,6 +274,7 @@ def make_atari_env(
     env_id: str,
     frame_size: int = 84,
     num_stack: int = 4,
+    frame_skip: int = 4,
     save_samples: bool = False,
     sample_dir: Optional[Path] = None,
     **env_kwargs
@@ -212,10 +282,16 @@ def make_atari_env(
     """
     Create Atari environment with preprocessing and frame stacking.
 
+    Applies wrappers in order:
+    1. MaxAndSkipEnv - Action repeat (4x) with max-pooling over last 2 frames
+    2. AtariPreprocessing - Grayscale conversion and resize to 84×84
+    3. FrameStack - Stack last 4 frames in channels-first format
+
     Args:
         env_id: Gymnasium environment ID (e.g., "ALE/Pong-v5")
         frame_size: Target frame size (default: 84)
         num_stack: Number of frames to stack (default: 4)
+        frame_skip: Action repeat count (default: 4)
         save_samples: Whether to save sample frame stacks
         sample_dir: Directory to save samples
         **env_kwargs: Additional arguments for gym.make()
@@ -226,7 +302,10 @@ def make_atari_env(
     # Create base environment
     env = gym.make(env_id, **env_kwargs)
 
-    # Apply preprocessing wrapper
+    # Apply action repeat with max-pooling wrapper (reduces flicker)
+    env = MaxAndSkipEnv(env, skip=frame_skip)
+
+    # Apply preprocessing wrapper (grayscale + resize)
     env = AtariPreprocessing(env, frame_size=frame_size, grayscale=True)
 
     # Apply frame stacking wrapper

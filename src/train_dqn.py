@@ -68,9 +68,10 @@ def create_env(config, save_samples=False, sample_dir=None):
         env_id=config.env.id,
         frame_size=config.preprocess.frame_size,
         num_stack=config.preprocess.stack_size,
+        frame_skip=config.env.frameskip,
         save_samples=save_samples,
         sample_dir=sample_dir,
-        frameskip=config.env.frameskip,
+        frameskip=1,  # Disable built-in frameskip, use MaxAndSkipEnv instead
         repeat_action_probability=config.env.repeat_action_probability,
         full_action_space=False,  # Use minimal action set
     )
