@@ -13,6 +13,7 @@ import gymnasium as gym
 import numpy as np
 from omegaconf import OmegaConf
 
+from envs.atari_wrappers import make_atari_env
 from utils.repro import set_seed, save_run_metadata
 
 
@@ -61,10 +62,14 @@ def load_config(config_path: str):
     return config
 
 
-def create_env(config):
-    """Create Atari environment with configured settings."""
-    env = gym.make(
-        config.env.id,
+def create_env(config, save_samples=False, sample_dir=None):
+    """Create Atari environment with preprocessing and frame stacking."""
+    env = make_atari_env(
+        env_id=config.env.id,
+        frame_size=config.preprocess.frame_size,
+        num_stack=config.preprocess.stack_size,
+        save_samples=save_samples,
+        sample_dir=sample_dir,
         frameskip=config.env.frameskip,
         repeat_action_probability=config.env.repeat_action_probability,
         full_action_space=False,  # Use minimal action set
@@ -89,16 +94,6 @@ def dry_run(config, seed, num_episodes=3):
     print(f"Seed: {seed}")
     print()
 
-    # Create environment
-    env = create_env(config)
-
-    # Set seed
-    set_seed(seed)
-
-    # Get action space info
-    action_space_size = env.action_space.n
-    print(f"Action space size: {action_space_size}")
-
     # Create output directory
     output_dir = Path(config.experiment.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -106,9 +101,21 @@ def dry_run(config, seed, num_episodes=3):
     frames_dir = output_dir / "frames"
     frames_dir.mkdir(exist_ok=True)
 
+    # Create environment with sample saving enabled
+    env = create_env(config, save_samples=True, sample_dir=frames_dir)
+
+    # Set seed
+    set_seed(seed)
+
+    # Get action space info
+    action_space_size = env.action_space.n
+    print(f"Action space size: {action_space_size}")
+    print(f"Observation space: {env.observation_space.shape} (dtype: {env.observation_space.dtype})")
+    print(f"Preprocessing: {config.preprocess.frame_size}x{config.preprocess.frame_size} grayscale")
+    print(f"Frame stack: {config.preprocess.stack_size} frames")
+
     # Run random episodes
     episode_stats = []
-    all_frames = []
 
     for episode in range(num_episodes):
         obs, info = env.reset(seed=seed + episode)
@@ -117,11 +124,8 @@ def dry_run(config, seed, num_episodes=3):
         done = False
 
         print(f"\nEpisode {episode + 1}/{num_episodes}")
-        print(f"  Initial observation shape: {obs.shape}")
-
-        # Save first frame
-        if episode == 0:
-            all_frames.append(obs)
+        print(f"  Initial observation shape: {obs.shape} (dtype: {obs.dtype})")
+        print(f"  Value range: [{obs.min()}, {obs.max()}]")
 
         while not done:
             action = env.action_space.sample()
@@ -130,10 +134,6 @@ def dry_run(config, seed, num_episodes=3):
 
             episode_reward += reward
             episode_length += 1
-
-            # Save a few frames from first episode
-            if episode == 0 and len(all_frames) < 5 and episode_length % 10 == 0:
-                all_frames.append(obs)
 
         episode_stats.append({
             "episode": episode + 1,
@@ -145,10 +145,11 @@ def dry_run(config, seed, num_episodes=3):
 
     env.close()
 
-    # Save frame samples
-    print(f"\nSaving {len(all_frames)} frame samples to {frames_dir}/")
-    for i, frame in enumerate(all_frames):
-        np.save(frames_dir / f"frame_{i:03d}.npy", frame)
+    # Frame samples are automatically saved by FrameStack wrapper
+    print(f"\nPreprocessed frame samples saved to {frames_dir}/")
+    print(f"  - Shape: ({config.preprocess.stack_size}, {config.preprocess.frame_size}, {config.preprocess.frame_size})")
+    print(f"  - Format: uint8 [0, 255]")
+    print(f"  - Files: reset_*_frame_*.png")
 
     # Create action list
     action_info = {
