@@ -66,9 +66,9 @@ Establish the experimental foundation by selecting 2–3 representative Atari ga
     - [X] feat: Add base eval/train protocol (ε=0.05, full-episode eval, life-loss training option, reward clipping, frame budgets)
 - [X] Seed & reproducibility by introducing a unified `set_seed(seed, deterministic=False)` utility (`src/utils/repro.py`), wiring `--seed` in the entry point, and saving with each run the git commit hash, merged config, seed, and ALE settings as `meta.json` in the run directory.
     - [X] feat: Add unified seeding utility and run metadata snapshot
-- [ ] Scaffold runs by creating per-game YAMLs under `experiments/dqn_atari/configs/` (common defaults + small per-game overrides) and adding `scripts/run_dqn.sh` that launches `src/train_dqn.py` with logging to `experiments/dqn_atari/runs/`; support a `--dry-run` path that executes a short random rollout, saves a few preprocessed frame stacks, lists available actions, and writes a minimal evaluation report.
-    - [ ] feat: Add run launcher and random-policy dry run with frames, action list, and eval report
-- [ ] Capture Subtask 1 outputs in `docs/design/dqn_foundation_setup.md`: outline selected games, pinned dependencies, evaluation protocol, seeding utility, ROM/setup commands, and dry-run instructions so onboarding contributors have a single reference.
+- [X] Scaffold runs by creating per-game YAMLs under `experiments/dqn_atari/configs/` (common defaults + small per-game overrides) and adding `scripts/run_dqn.sh` that launches `src/train_dqn.py` with logging to `experiments/dqn_atari/runs/`; support a `--dry-run` path that executes a short random rollout, saves a few preprocessed frame stacks, lists available actions, and writes a minimal evaluation report.
+    - [X] feat: Add run launcher and random-policy dry run with frames, action list, and eval report
+- [ ] Capture Subtask 1 outputs in `docs/design/dqn_setup.md`: outline selected games, pinned dependencies, evaluation protocol, seeding utility, ROM/setup commands, and dry-run instructions so onboarding contributors have a single reference.
     - [ ] docs: Summarize required commands (`envs/setup_env.sh`, `scripts/setup_roms.sh`, `scripts/run_dqn.sh --dry-run`) plus troubleshooting tips.
 
 ---
