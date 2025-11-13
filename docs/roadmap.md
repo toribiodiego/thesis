@@ -133,8 +133,8 @@ Circular buffer storing ~1M transitions (s,a,r,s',done). Store as uint8, convert
     - [X] feat: Expose append/sample/len API with basic validation
 - [X] Optimize memory layout: store frames (and frame stacks) as `uint8` to save RAM, keep a contiguous frame array plus indices for stacking, convert to `float32` only on sample, and normalize to `[0,1]` (configurable).
     - [X] build: Store observations as uint8 and defer float32 conversion/normalization to sampling
-- [ ] Enforce warm-up: add a configurable pre-fill (default `50_000` random steps) before any optimization; expose `can_sample(min_size)` helper used by the training loop.
-    - [ ] feat: Add warm-up threshold and can_sample helper
+- [X] Enforce warm-up: add a configurable pre-fill (default `50_000` random steps) before any optimization; expose `can_sample(min_size)` helper used by the training loop.
+    - [X] feat: Add warm-up threshold and can_sample helper
 - [ ] Implement uniform sampling without replacement: draw valid indices that have `t, t-1, t-2, t-3` within the same episode and available `t+1` (for `s'`), rejecting indices near wrap/episode boundaries; return batches with shapes `s: (B,4,84,84)`, `a: (B,)`, `r: (B,)`, `s_next: (B,4,84,84)`, `done: (B,)`.
     - [ ] feat: Add boundary-safe uniform sampler with no replacement
 - [ ] Device transfer and speed: on `sample`, assemble stacks, convert to `float32`, normalize (or leave in 0–255 if configured), move tensors to GPU if available, and optionally use pinned host memory for faster H2D copies.
