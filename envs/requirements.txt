@@ -1,6 +1,7 @@
 # Base environment for DQN reproduction work.
-torch==2.4.1
-torchvision==0.19.1
+# Python 3.10.13 recommended
+torch==2.4.1+cu121
+torchvision==0.19.1+cu121
 numpy==1.26.4
 scipy==1.13.1
 gymnasium[accept-rom-license]==0.29.1

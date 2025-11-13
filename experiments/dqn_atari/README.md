@@ -24,6 +24,18 @@ Atari ROMs are required to run ALE environments. Install them using:
 
 This script calls `python -m AutoROM --accept-license` to download legally-redistributable Atari 2600 ROMs.
 
+## ALE Runtime Settings
+
+Deterministic configuration for reproducibility:
+
+| Setting                      | Value   | Purpose                                      |
+|------------------------------|---------|----------------------------------------------|
+| `repeat_action_probability`  | `0.0`   | Disable stochastic frame skipping            |
+| `frameskip`                  | `4`     | Action repeated 4 times, rewards accumulated |
+| `full_action_space`          | `false` | Use minimal action set per game              |
+
+These settings are applied when creating environments and ensure deterministic behavior across runs.
+
 ## Layout
 - `configs/` – `base.yaml` plus per-game overrides; see `configs/README.md`.
 - `scripts/` – Shell entry points like `run_dqn.sh` (training), with planned `eval` and `dry_run` helpers.
