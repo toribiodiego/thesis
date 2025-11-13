@@ -131,8 +131,8 @@ Circular buffer storing ~1M transitions (s,a,r,s',done). Store as uint8, convert
     - [X] feat: Add uniform replay buffer with circular storage and episode boundary tracking
 - [X] Provide a minimal API: `append(state, action, reward, next_state, done)`, `sample(batch_size) -> dict(tensors)`, and `__len__`; include input validation and graceful handling when the buffer has fewer than `batch_size` valid indices.
     - [X] feat: Expose append/sample/len API with basic validation
-- [ ] Optimize memory layout: store frames (and frame stacks) as `uint8` to save RAM, keep a contiguous frame array plus indices for stacking, convert to `float32` only on sample, and normalize to `[0,1]` (configurable).
-    - [ ] build: Store observations as uint8 and defer float32 conversion/normalization to sampling
+- [X] Optimize memory layout: store frames (and frame stacks) as `uint8` to save RAM, keep a contiguous frame array plus indices for stacking, convert to `float32` only on sample, and normalize to `[0,1]` (configurable).
+    - [X] build: Store observations as uint8 and defer float32 conversion/normalization to sampling
 - [ ] Enforce warm-up: add a configurable pre-fill (default `50_000` random steps) before any optimization; expose `can_sample(min_size)` helper used by the training loop.
     - [ ] feat: Add warm-up threshold and can_sample helper
 - [ ] Implement uniform sampling without replacement: draw valid indices that have `t, t-1, t-2, t-3` within the same episode and available `t+1` (for `s'`), rejecting indices near wrap/episode boundaries; return batches with shapes `s: (B,4,84,84)`, `a: (B,)`, `r: (B,)`, `s_next: (B,4,84,84)`, `done: (B,)`.
