@@ -27,6 +27,8 @@ class ReplayBuffer:
         normalize: Whether to normalize observations to [0,1] on sample (default True)
                    If True: uint8 [0,255] → float32 [0,1]
                    If False: uint8 [0,255] → float32 [0,255]
+        min_size: Minimum number of transitions before sampling is allowed (default 50_000)
+                  Used for warm-up phase to ensure sufficient exploration before training
 
     Memory layout:
         - observations: (capacity, *obs_shape) array in uint8
@@ -41,12 +43,14 @@ class ReplayBuffer:
         capacity: int = 1_000_000,
         obs_shape: Tuple[int, ...] = (4, 84, 84),
         dtype: np.dtype = np.uint8,
-        normalize: bool = True
+        normalize: bool = True,
+        min_size: int = 50_000
     ):
         self.capacity = capacity
         self.obs_shape = obs_shape
         self.dtype = dtype
         self.normalize = normalize  # Whether to normalize to [0,1] on sample
+        self.min_size = min_size  # Minimum buffer size before sampling is allowed
 
         # Circular buffer index
         self.index = 0
@@ -254,6 +258,33 @@ class ReplayBuffer:
             'next_states': next_states,
             'dones': dones
         }
+
+    def can_sample(self, batch_size: int = None) -> bool:
+        """
+        Check if buffer has enough samples for training.
+
+        Args:
+            batch_size: Optional batch size to check. If None, only checks min_size.
+
+        Returns:
+            True if buffer has at least min_size transitions and (if batch_size provided)
+            has enough valid indices to sample a batch.
+
+        Notes:
+            - Used by training loop to determine when to start optimization
+            - Enforces warm-up period before training begins
+            - If batch_size provided, also checks valid indices count
+        """
+        # Check if we've reached minimum size
+        if self.size < self.min_size:
+            return False
+
+        # If batch_size specified, check we have enough valid samples
+        if batch_size is not None:
+            valid_indices = self._get_valid_indices()
+            return len(valid_indices) >= batch_size
+
+        return True
 
     def __len__(self) -> int:
         """

@@ -624,6 +624,122 @@ def test_replay_buffer_conversion_accuracy():
     assert np.allclose(batch['states'], expected, atol=1e-6)
 
 
+def test_replay_buffer_can_sample_basic():
+    """Test can_sample helper returns False until min_size reached."""
+    buffer = ReplayBuffer(capacity=1000, obs_shape=(4, 84, 84), min_size=100)
+
+    state = np.random.randint(0, 255, size=(4, 84, 84), dtype=np.uint8)
+
+    # Initially can't sample
+    assert buffer.can_sample() == False
+
+    # Add transitions up to min_size - 1
+    for i in range(99):
+        buffer.append(state, i, float(i), state, False)
+
+    # Still can't sample (99 < 100)
+    assert buffer.can_sample() == False
+
+    # Add one more to reach min_size
+    buffer.append(state, 99, 99.0, state, False)
+
+    # Now can sample
+    assert buffer.can_sample() == True
+
+
+def test_replay_buffer_can_sample_with_batch_size():
+    """Test can_sample with batch_size parameter."""
+    buffer = ReplayBuffer(capacity=1000, obs_shape=(4, 84, 84), min_size=10)
+
+    state = np.random.randint(0, 255, size=(4, 84, 84), dtype=np.uint8)
+
+    # Add transitions to reach min_size
+    for i in range(15):
+        buffer.append(state, i, float(i), state, False)
+
+    # Buffer has min_size, but check batch_size
+    assert buffer.can_sample() == True
+
+    # Check if we have enough valid samples for batch_size=10
+    # Note: first transition is episode start, so valid count = size - 1
+    assert buffer.can_sample(batch_size=10) == True
+
+    # Check if we have enough for larger batch
+    # We have 14 valid samples (15 total - 1 episode start)
+    assert buffer.can_sample(batch_size=14) == True
+    assert buffer.can_sample(batch_size=15) == False  # Not enough valid
+
+
+def test_replay_buffer_can_sample_default_min_size():
+    """Test default min_size is 50_000."""
+    buffer = ReplayBuffer(capacity=100_000, obs_shape=(4, 84, 84))
+
+    assert buffer.min_size == 50_000
+
+    # Empty buffer can't sample
+    assert buffer.can_sample() == False
+
+
+def test_replay_buffer_can_sample_custom_min_size():
+    """Test custom min_size parameter."""
+    buffer = ReplayBuffer(capacity=1000, obs_shape=(4, 84, 84), min_size=500)
+
+    assert buffer.min_size == 500
+
+    state = np.random.randint(0, 255, size=(4, 84, 84), dtype=np.uint8)
+
+    # Add transitions below min_size
+    for i in range(499):
+        buffer.append(state, i, float(i), state, False)
+
+    assert buffer.can_sample() == False
+
+    # Add one more
+    buffer.append(state, 499, 499.0, state, False)
+
+    assert buffer.can_sample() == True
+
+
+def test_replay_buffer_warm_up_prevents_early_sampling():
+    """Test warm-up prevents sampling before min_size reached."""
+    buffer = ReplayBuffer(capacity=1000, obs_shape=(4, 84, 84), min_size=50)
+
+    state = np.random.randint(0, 255, size=(4, 84, 84), dtype=np.uint8)
+
+    # Add some transitions but not enough
+    for i in range(30):
+        buffer.append(state, i, float(i), state, False)
+
+    # can_sample should return False
+    assert buffer.can_sample() == False
+
+    # Even though we have enough for a small batch
+    assert buffer.can_sample(batch_size=5) == False
+
+
+def test_replay_buffer_can_sample_with_episodes():
+    """Test can_sample with multiple episodes considers valid indices."""
+    buffer = ReplayBuffer(capacity=1000, obs_shape=(4, 84, 84), min_size=20)
+
+    state = np.random.randint(0, 255, size=(4, 84, 84), dtype=np.uint8)
+
+    # Add 3 short episodes of 10 transitions each
+    for ep in range(3):
+        for i in range(10):
+            done = (i == 9)
+            buffer.append(state, ep * 10 + i, float(i), state, done)
+
+    # Buffer has 30 transitions, min_size is 20
+    assert len(buffer) == 30
+    assert buffer.can_sample() == True
+
+    # Check valid indices count
+    # Each episode: first is episode start (not valid), rest are valid
+    # Episode 1: 9 valid, Episode 2: 9 valid, Episode 3: 9 valid = 27 valid
+    assert buffer.can_sample(batch_size=27) == True
+    assert buffer.can_sample(batch_size=28) == False
+
+
 if __name__ == "__main__":
     # Run tests manually
     print("Running replay buffer tests...")
@@ -711,5 +827,23 @@ if __name__ == "__main__":
 
     test_replay_buffer_conversion_accuracy()
     print("✓ Conversion accuracy test passed")
+
+    test_replay_buffer_can_sample_basic()
+    print("✓ Can sample basic test passed")
+
+    test_replay_buffer_can_sample_with_batch_size()
+    print("✓ Can sample with batch size test passed")
+
+    test_replay_buffer_can_sample_default_min_size()
+    print("✓ Can sample default min_size test passed")
+
+    test_replay_buffer_can_sample_custom_min_size()
+    print("✓ Can sample custom min_size test passed")
+
+    test_replay_buffer_warm_up_prevents_early_sampling()
+    print("✓ Warm-up prevents early sampling test passed")
+
+    test_replay_buffer_can_sample_with_episodes()
+    print("✓ Can sample with episodes test passed")
 
     print("\nAll tests passed! ✓")
