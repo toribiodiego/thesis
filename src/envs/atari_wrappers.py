@@ -83,6 +83,51 @@ class MaxAndSkipEnv(gym.Wrapper):
         return obs, info
 
 
+class RewardClipper(gym.RewardWrapper):
+    """
+    Clip rewards to {-1, 0, +1} range.
+
+    Following DQN 2013 paper, all positive rewards are set to +1,
+    all negative rewards are set to -1, and zero rewards remain 0.
+    This helps stabilize learning across games with different reward scales.
+
+    Args:
+        env: Gymnasium environment
+        clip_rewards: If True, clip rewards. If False, pass through unchanged (default: True)
+
+    Example:
+        >>> env = RewardClipper(env, clip_rewards=True)
+        >>> # reward of +10 becomes +1
+        >>> # reward of -5 becomes -1
+        >>> # reward of 0 remains 0
+    """
+
+    def __init__(self, env: gym.Env, clip_rewards: bool = True):
+        super().__init__(env)
+        self.clip_rewards = clip_rewards
+
+    def reward(self, reward: float) -> float:
+        """
+        Clip reward to {-1, 0, +1}.
+
+        Args:
+            reward: Original reward value
+
+        Returns:
+            Clipped reward in {-1, 0, +1} if clipping enabled, else original reward
+        """
+        if not self.clip_rewards:
+            return reward
+
+        # Clip to {-1, 0, +1}
+        if reward > 0:
+            return 1.0
+        elif reward < 0:
+            return -1.0
+        else:
+            return 0.0
+
+
 class AtariPreprocessing(gym.ObservationWrapper):
     """
     Preprocess Atari frames: RGB (210×160×3) → grayscale 84×84.
@@ -275,6 +320,7 @@ def make_atari_env(
     frame_size: int = 84,
     num_stack: int = 4,
     frame_skip: int = 4,
+    clip_rewards: bool = True,
     save_samples: bool = False,
     sample_dir: Optional[Path] = None,
     **env_kwargs
@@ -284,14 +330,16 @@ def make_atari_env(
 
     Applies wrappers in order:
     1. MaxAndSkipEnv - Action repeat (4x) with max-pooling over last 2 frames
-    2. AtariPreprocessing - Grayscale conversion and resize to 84×84
-    3. FrameStack - Stack last 4 frames in channels-first format
+    2. RewardClipper - Clip rewards to {-1, 0, +1}
+    3. AtariPreprocessing - Grayscale conversion and resize to 84×84
+    4. FrameStack - Stack last 4 frames in channels-first format
 
     Args:
         env_id: Gymnasium environment ID (e.g., "ALE/Pong-v5")
         frame_size: Target frame size (default: 84)
         num_stack: Number of frames to stack (default: 4)
         frame_skip: Action repeat count (default: 4)
+        clip_rewards: Whether to clip rewards to {-1, 0, +1} (default: True)
         save_samples: Whether to save sample frame stacks
         sample_dir: Directory to save samples
         **env_kwargs: Additional arguments for gym.make()
@@ -304,6 +352,9 @@ def make_atari_env(
 
     # Apply action repeat with max-pooling wrapper (reduces flicker)
     env = MaxAndSkipEnv(env, skip=frame_skip)
+
+    # Apply reward clipping wrapper
+    env = RewardClipper(env, clip_rewards=clip_rewards)
 
     # Apply preprocessing wrapper (grayscale + resize)
     env = AtariPreprocessing(env, frame_size=frame_size, grayscale=True)

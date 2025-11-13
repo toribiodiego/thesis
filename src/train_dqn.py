@@ -69,6 +69,7 @@ def create_env(config, save_samples=False, sample_dir=None):
         frame_size=config.preprocess.frame_size,
         num_stack=config.preprocess.stack_size,
         frame_skip=config.env.frameskip,
+        clip_rewards=config.training.reward_clip,
         save_samples=save_samples,
         sample_dir=sample_dir,
         frameskip=1,  # Disable built-in frameskip, use MaxAndSkipEnv instead
@@ -114,6 +115,8 @@ def dry_run(config, seed, num_episodes=3):
     print(f"Observation space: {env.observation_space.shape} (dtype: {env.observation_space.dtype})")
     print(f"Preprocessing: {config.preprocess.frame_size}x{config.preprocess.frame_size} grayscale")
     print(f"Frame stack: {config.preprocess.stack_size} frames")
+    print(f"Frame skip: {config.env.frameskip} (action repeat with max-pooling)")
+    print(f"Reward clipping: {'enabled' if config.training.reward_clip else 'disabled'}")
 
     # Run random episodes
     episode_stats = []
