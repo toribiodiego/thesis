@@ -106,8 +106,8 @@ Build wrapper transforming raw 210×160×3 frames to 84×84 grayscale, stacking 
 CNN mapping (4×84×84) to Q-values: Conv(16,8×8,s4) → Conv(32,4×4,s2) → FC(256) → linear(|A|). Kaiming init, float32, channels-first. Complete when forward passes produce correct shapes without NaNs and checkpointing works.
 
 **Checklist:**
-- [ ] Implement DQN CNN with input `(4,84,84)`: Conv1 (16, 8×8, stride 4, ReLU) → Conv2 (32, 4×4, stride 2, ReLU) → flatten → FC(256, ReLU) → linear head of size `|A|`; channels-first tensors, return dict with `q_values` and optional `features` for debugging.
-    - [ ] feat: Add DQN model (Conv8x8s4→Conv4x4s2→FC256→Q-head)
+- [X] Implement DQN CNN with input `(4,84,84)`: Conv1 (16, 8×8, stride 4, ReLU) → Conv2 (32, 4×4, stride 2, ReLU) → flatten → FC(256, ReLU) → linear head of size `|A|`; channels-first tensors, return dict with `q_values` and optional `features` for debugging.
+    - [X] feat: Add DQN model (Conv8x8s4→Conv4x4s2→FC256→Q-head)
 - [ ] Set weight initialization and dtypes: use Kaiming normal (fan_out) for conv/linear with ReLU, zeros for biases; keep parameters in float32; expose a `to(device)` utility; ensure forward accepts `float32` inputs scaled to `[0,1]`.
     - [ ] build: Configure Kaiming init and float32 dtype for all layers
 - [ ] Add model summary and shape checks: implement a small `model_summary(module, input_shape)` printer and log parameter count; assert expected output shape `(B, |A|)` for a dummy batch; handle dynamic `|A|` from env.
