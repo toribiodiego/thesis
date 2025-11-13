@@ -116,8 +116,8 @@ CNN mapping (4×84×84) to Q-values: Conv(16,8×8,s4) → Conv(32,4×4,s2) → F
     - [X] test: Add forward/grad tests across multiple action sizes
 - [X] Implement save/load helpers: `save_checkpoint(path, state_dict, meta)` and `load_checkpoint(path)` for model-only, plus convenience `from_env(action_space_n)` constructor; ensure strict key matching and device-safe loading.
     - [X] feat: Add checkpoint save/load and environment-aware constructor
-- [ ] Document architecture decisions in `docs/design/dqn_model.md`: layer-by-layer tensor shapes, init choices, dtype/device expectations, summary utility usage, and common debugging tips (e.g., NaN traces, mismatched action dims).
-    - [ ] docs: Include commands to regenerate summaries/tests (`pytest tests/test_dqn_model.py`, `python scripts/model_summary.py`) and guidance on inspecting saved checkpoints.
+- [X] Document architecture decisions in `docs/design/dqn_model.md`: layer-by-layer tensor shapes, init choices, dtype/device expectations, summary utility usage, and common debugging tips (e.g., NaN traces, mismatched action dims).
+    - [X] docs: Include commands to regenerate summaries/tests (`pytest tests/test_dqn_model.py`, `python scripts/model_summary.py`) and guidance on inspecting saved checkpoints.
 
 ---
 
