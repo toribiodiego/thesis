@@ -110,8 +110,8 @@ CNN mapping (4×84×84) to Q-values: Conv(16,8×8,s4) → Conv(32,4×4,s2) → F
     - [X] feat: Add DQN model (Conv8x8s4→Conv4x4s2→FC256→Q-head)
 - [X] Set weight initialization and dtypes: use Kaiming normal (fan_out) for conv/linear with ReLU, zeros for biases; keep parameters in float32; expose a `to(device)` utility; ensure forward accepts `float32` inputs scaled to `[0,1]`.
     - [X] build: Configure Kaiming init and float32 dtype for all layers
-- [ ] Add model summary and shape checks: implement a small `model_summary(module, input_shape)` printer and log parameter count; assert expected output shape `(B, |A|)` for a dummy batch; handle dynamic `|A|` from env.
-    - [ ] chore: Add model summary utility and output-shape assertion
+- [X] Add model summary and shape checks: implement a small `model_summary(module, input_shape)` printer and log parameter count; assert expected output shape `(B, |A|)` for a dummy batch; handle dynamic `|A|` from env.
+    - [X] chore: Add model summary utility and output-shape assertion
 - [ ] Create forward-path unit tests: with random input `(B=2, 4, 84, 84)` verify no NaNs/Infs, correct shapes for action spaces (e.g., Pong=6, Breakout=4, BeamRider=9), and gradients flow with a dummy MSE loss/backward.
     - [ ] test: Add forward/grad tests across multiple action sizes
 - [ ] Implement save/load helpers: `save_checkpoint(path, state_dict, meta)` and `load_checkpoint(path)` for model-only, plus convenience `from_env(action_space_n)` constructor; ensure strict key matching and device-safe loading.
