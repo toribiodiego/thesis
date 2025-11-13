@@ -112,8 +112,8 @@ CNN mapping (4×84×84) to Q-values: Conv(16,8×8,s4) → Conv(32,4×4,s2) → F
     - [X] build: Configure Kaiming init and float32 dtype for all layers
 - [X] Add model summary and shape checks: implement a small `model_summary(module, input_shape)` printer and log parameter count; assert expected output shape `(B, |A|)` for a dummy batch; handle dynamic `|A|` from env.
     - [X] chore: Add model summary utility and output-shape assertion
-- [ ] Create forward-path unit tests: with random input `(B=2, 4, 84, 84)` verify no NaNs/Infs, correct shapes for action spaces (e.g., Pong=6, Breakout=4, BeamRider=9), and gradients flow with a dummy MSE loss/backward.
-    - [ ] test: Add forward/grad tests across multiple action sizes
+- [X] Create forward-path unit tests: with random input `(B=2, 4, 84, 84)` verify no NaNs/Infs, correct shapes for action spaces (e.g., Pong=6, Breakout=4, BeamRider=9), and gradients flow with a dummy MSE loss/backward.
+    - [X] test: Add forward/grad tests across multiple action sizes
 - [ ] Implement save/load helpers: `save_checkpoint(path, state_dict, meta)` and `load_checkpoint(path)` for model-only, plus convenience `from_env(action_space_n)` constructor; ensure strict key matching and device-safe loading.
     - [ ] feat: Add checkpoint save/load and environment-aware constructor
 - [ ] Document architecture decisions in `docs/design/dqn_model.md`: layer-by-layer tensor shapes, init choices, dtype/device expectations, summary utility usage, and common debugging tips (e.g., NaN traces, mismatched action dims).
