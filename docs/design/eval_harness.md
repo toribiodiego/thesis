@@ -1340,10 +1340,10 @@ assert model.training, "Model should be in training mode"
 # experiments/dqn_atari/configs/base.yaml
 evaluation:
   enabled: true
-  eval_every: 250000        # ✓ Every 250K frames
-  num_episodes: 10          # ✓ 10 for interim
-  epsilon: 0.05             # ✓ ε=0.05 (not 0.0)
-  deterministic: false      # ✓ Full episodes
+  eval_every: 250000        # DONE Every 250K frames
+  num_episodes: 10          # DONE 10 for interim
+  epsilon: 0.05             # DONE ε=0.05 (not 0.0)
+  deterministic: false      # DONE Full episodes
 ```
 
 **For final reporting:**

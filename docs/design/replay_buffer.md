@@ -153,17 +153,42 @@ def _is_valid_index(idx):
     if episode_starts[idx]:
         return False
 
-    # Next index must exist and be in same episode
+    # Terminal transitions (done=True) are always valid
+    # The next_state value doesn't matter because TD target = r when done=True
+    # The (1-done) term in the TD target computation zeros out the Q(s',a') bootstrap
+    if dones[idx]:
+        return True
+
+    # For non-terminal transitions: next index must exist and be in same episode
     next_idx = (idx + 1) % capacity
     if next_idx >= size:
         return False
 
-    # Check for wrap-around boundary crossing
-    if episode_starts[next_idx] and next_idx < idx:
-        return False  # Crossed episode boundary
+    # Check for episode boundary crossing
+    if episode_starts[next_idx]:
+        return False
 
     return True
 ```
+
+**Terminal Transition Handling:**
+
+Terminal transitions (done=True) are valid for sampling because the TD target for terminal states is just the reward:
+
+```
+TD target = r + γ * (1 - done) * max_a' Q(s', a')
+
+When done=True:
+TD target = r + γ * 0 * max_a' Q(s', a')
+         = r
+```
+
+The `(1-done)` term zeros out the next-state contribution, so the value returned for `next_states[i]` doesn't affect training. The buffer returns `observations[(idx+1) % capacity]` (which may be from the next episode), but this is safe because it's multiplied by zero in the loss computation.
+
+**Why this matters:**
+- Terminal transitions provide critical learning signal about episode-ending states
+- Without sampling terminal transitions, the agent can't learn values for states that lead to termination
+- The overlapping storage design (next_state = observations[idx+1]) is memory-efficient while still being correct
 
 ## Warm-Up Policy
 

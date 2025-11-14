@@ -76,7 +76,7 @@ experiments/dqn_atari/runs/pong_42/checkpoints/
 pytest tests/test_save_resume_determinism.py -v -s
 
 # Expected output:
-# ✓ PERFECT DETERMINISM - All metrics match exactly
+# DONE PERFECT DETERMINISM - All metrics match exactly
 ```
 
 **Need more details?** Jump to [Command-Line Interface](#command-line-interface) or [Deterministic Execution](#deterministic-execution).
@@ -536,12 +536,12 @@ WARNING: Git commit hash mismatch
 ### State Restoration
 
 What gets restored:
-- ✓ Model weights (online and target)
-- ✓ Optimizer state (momentum, learning rate, etc.)
-- ✓ Training counters (step, episode)
-- ✓ Epsilon value and scheduler state
-- ✓ Replay buffer (index, size, optionally full data)
-- ✓ RNG states (Python, NumPy, PyTorch, CUDA, environment)
+- DONE Model weights (online and target)
+- DONE Optimizer state (momentum, learning rate, etc.)
+- DONE Training counters (step, episode)
+- DONE Epsilon value and scheduler state
+- DONE Replay buffer (index, size, optionally full data)
+- DONE RNG states (Python, NumPy, PyTorch, CUDA, environment)
 
 ### Epsilon Schedule Restoration
 
@@ -636,11 +636,11 @@ def worker_init_fn(worker_id):
 ### What Gets Seeded
 
 `set_seed()` seeds all random number generators:
-- ✓ Python `random` module
-- ✓ NumPy `np.random`
-- ✓ PyTorch CPU (`torch.manual_seed`)
-- ✓ PyTorch CUDA (`torch.cuda.manual_seed_all`)
-- ✓ Environment (via `env.reset(seed=...)`)
+- DONE Python `random` module
+- DONE NumPy `np.random`
+- DONE PyTorch CPU (`torch.manual_seed`)
+- DONE PyTorch CUDA (`torch.cuda.manual_seed_all`)
+- DONE Environment (via `env.reset(seed=...)`)
 
 ### Deterministic Mode Configuration
 
@@ -668,10 +668,10 @@ Sets:
 - `torch.backends.cudnn.benchmark = False`
 
 Effects:
-- ✓ Ensures reproducible cuDNN operations
-- ✓ Disables autotuning that may vary between runs
-- ✗ ~10-20% slower training speed
-- ✗ No benefit on CPU-only training
+- DONE Ensures reproducible cuDNN operations
+- DONE Disables autotuning that may vary between runs
+- TODO ~10-20% slower training speed
+- TODO No benefit on CPU-only training
 
 **2. Strict Deterministic Mode (`strict=True`)**
 
@@ -680,11 +680,11 @@ Sets:
 - `torch.use_deterministic_algorithms(True)`
 
 Effects:
-- ✓ Enforces deterministic implementations for all operations
-- ✓ Helps debug sources of non-determinism
-- ✗ May raise errors for operations without deterministic implementations
-- ✗ Additional performance overhead
-- ✗ Not all PyTorch operations have deterministic versions
+- DONE Enforces deterministic implementations for all operations
+- DONE Helps debug sources of non-determinism
+- TODO May raise errors for operations without deterministic implementations
+- TODO Additional performance overhead
+- TODO Not all PyTorch operations have deterministic versions
 
 **3. Warn-Only Mode (`warn_only=True`)**
 
@@ -727,9 +727,9 @@ print(f"Determinism configured: {settings}")
 
 | Mode | Training Time | FPS | Reproducibility |
 |------|--------------|-----|-----------------|
-| Disabled (`enabled=False`) | 100% baseline | ~1000 FPS | ❌ Non-deterministic |
-| Basic (`enabled=True, strict=False`) | ~110-120% | ~850 FPS | ✓ Reproducible |
-| Strict (`enabled=True, strict=True`) | ~120-130% | ~800 FPS | ✓✓ Fully deterministic |
+| Disabled (`enabled=False`) | 100% baseline | ~1000 FPS | FAIL Non-deterministic |
+| Basic (`enabled=True, strict=False`) | ~110-120% | ~850 FPS | DONE Reproducible |
+| Strict (`enabled=True, strict=True`) | ~120-130% | ~800 FPS | DONEDONE Fully deterministic |
 
 **Recommendations:**
 
@@ -1117,28 +1117,28 @@ python train_dqn.py --resume checkpoints/best_model.pt
 
 **Checklist for Deterministic Resumes:**
 
-1. ✓ **Enable deterministic mode:**
+1. DONE **Enable deterministic mode:**
    ```python
    configure_determinism(enabled=True, strict=False)
    set_seed(seed, deterministic=True)
    ```
 
-2. ✓ **Save checkpoint with RNG states:**
+2. DONE **Save checkpoint with RNG states:**
    ```python
    rng_states = get_rng_states(env)
    checkpoint_path = manager.save_checkpoint(..., rng_states=rng_states)
    ```
 
-3. ✓ **Resume with RNG restoration:**
+3. DONE **Resume with RNG restoration:**
    ```python
    resumed = resume_from_checkpoint(..., env=env)  # RNG states auto-restored
    ```
 
-4. ✓ **Verify git commit hash matches:**
+4. DONE **Verify git commit hash matches:**
    - Check warning: "Git commit hash mismatch"
    - Ensure code version is identical
 
-5. ✓ **Check config compatibility:**
+5. DONE **Check config compatibility:**
    - Critical params must match (env ID, frame size, stack size)
    - Important params should match (learning rate, gamma, batch size)
 
@@ -1149,11 +1149,11 @@ python train_dqn.py --resume checkpoints/best_model.pt
 pytest tests/test_save_resume_determinism.py -v -s
 
 # Expected output:
-# ✓ PERFECT DETERMINISM - All metrics match exactly
+# DONE PERFECT DETERMINISM - All metrics match exactly
 # Epsilon Matches: 100.0%
 # Reward Matches: 100.0%
 # Action Matches: 100.0%
-# Checksum Match: ✓ PASS
+# Checksum Match: DONE PASS
 ```
 
 The smoke test:
@@ -1294,9 +1294,9 @@ from src.training import verify_checkpoint_integrity
 is_valid = verify_checkpoint_integrity('checkpoints/checkpoint_10000.pt')
 
 if is_valid:
-    print("✓ Checkpoint is valid")
+    print("DONE Checkpoint is valid")
 else:
-    print("✗ Checkpoint is corrupted")
+    print("TODO Checkpoint is corrupted")
 ```
 
 **Inspect Checkpoint Contents:**
@@ -1456,11 +1456,11 @@ To confirm RNG states were restored, check console output:
 
 ```
 Restoring RNG states for reproducibility...
-  ✓ Python random state restored
-  ✓ NumPy random state restored
-  ✓ PyTorch random state restored
-  ✓ CUDA random state restored
-  ✓ Environment random state restored
+  DONE Python random state restored
+  DONE NumPy random state restored
+  DONE PyTorch random state restored
+  DONE CUDA random state restored
+  DONE Environment random state restored
 ```
 
 ### Finding Metadata in Resumed Runs

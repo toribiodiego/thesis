@@ -109,11 +109,11 @@ Resume training from a saved checkpoint using the `--resume` flag.
 ```
 
 **What Gets Restored:**
-- ✓ Model weights (online and target Q-networks)
-- ✓ Optimizer state (momentum buffers, learning rate)
-- ✓ Training counters (step, episode, epsilon)
-- ✓ Replay buffer state (write index and size)
-- ✓ RNG states (Python, NumPy, PyTorch, CUDA, environment)
+- DONE Model weights (online and target Q-networks)
+- DONE Optimizer state (momentum buffers, learning rate)
+- DONE Training counters (step, episode, epsilon)
+- DONE Replay buffer state (write index and size)
+- DONE RNG states (Python, NumPy, PyTorch, CUDA, environment)
 
 **Expected Output on Resume:**
 ```
@@ -134,9 +134,9 @@ Restoring epsilon scheduler...
   Setting frame counter to: 1000000
 
 Restoring RNG states for reproducibility...
-  ✓ Python random state restored
-  ✓ NumPy random state restored
-  ✓ PyTorch random state restored
+  DONE Python random state restored
+  DONE NumPy random state restored
+  DONE PyTorch random state restored
 
 Replay buffer state:
   Size: 1,000,000 / 1,000,000
@@ -177,7 +177,7 @@ experiments/dqn_atari/runs/pong_123/
 
 To verify a resume produces identical results:
 
-1. ✓ **Enable deterministic mode in config:**
+1. DONE **Enable deterministic mode in config:**
    ```yaml
    experiment:
      deterministic:
@@ -185,7 +185,7 @@ To verify a resume produces identical results:
        strict: false
    ```
 
-2. ✓ **Use same seed and config:**
+2. DONE **Use same seed and config:**
    ```bash
    # Original run
    ./run_dqn.sh config.yaml --seed 42
@@ -194,15 +194,15 @@ To verify a resume produces identical results:
    ./run_dqn.sh config.yaml --resume checkpoint.pt
    ```
 
-3. ✓ **Check git commit hash:**
+3. DONE **Check git commit hash:**
    - Resume warns if code version differs
    - Ensure working directory is clean (`git status`)
 
-4. ✓ **Verify RNG states restored:**
-   - Check console output: "✓ RNG states restored"
+4. DONE **Verify RNG states restored:**
+   - Check console output: "DONE RNG states restored"
    - Run smoke test: `pytest tests/test_save_resume_determinism.py -v -s`
 
-5. ✓ **Compare metrics after resume:**
+5. DONE **Compare metrics after resume:**
    - Epsilon values should match exactly
    - Actions should be identical
    - Rewards should be identical (with tiny FP tolerance)
@@ -213,11 +213,11 @@ To verify a resume produces identical results:
 pytest tests/test_save_resume_determinism.py -v -s
 
 # Expected output:
-# ✓ PERFECT DETERMINISM - All metrics match exactly
+# DONE PERFECT DETERMINISM - All metrics match exactly
 # Epsilon Matches: 100.0%
 # Reward Matches: 100.0%
 # Action Matches: 100.0%
-# Checksum Match: ✓ PASS
+# Checksum Match: DONE PASS
 ```
 
 See [docs/design/checkpointing.md](../../../docs/design/checkpointing.md) for complete checkpoint/resume documentation.

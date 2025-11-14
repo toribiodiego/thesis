@@ -307,11 +307,11 @@ def main(argv: Optional[List[str]] = None) -> Dict[str, Any]:
         
         # Handle special modes
         if args.print_config:
-            print("\n✓ Configuration loaded successfully")
+            print("\nDONE Configuration loaded successfully")
             sys.exit(0)
         
         if args.dry_run:
-            print("\n✓ Dry run complete - configuration validated")
+            print("\nDONE Dry run complete - configuration validated")
             sys.exit(0)
         
         # Print startup banner

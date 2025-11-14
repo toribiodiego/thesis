@@ -139,18 +139,18 @@ configure_determinism(enabled=False)
 When `set_seed(seed, deterministic=True)` is called:
 
 **RNG Sources:**
-- ✓ Python `random` module → `random.seed(seed)`
-- ✓ NumPy random → `np.random.seed(seed)`
-- ✓ PyTorch CPU → `torch.manual_seed(seed)`
-- ✓ PyTorch CUDA → `torch.cuda.manual_seed_all(seed)`
-- ✓ Environment → `env.reset(seed=seed)` (on every reset)
+- DONE Python `random` module → `random.seed(seed)`
+- DONE NumPy random → `np.random.seed(seed)`
+- DONE PyTorch CPU → `torch.manual_seed(seed)`
+- DONE PyTorch CUDA → `torch.cuda.manual_seed_all(seed)`
+- DONE Environment → `env.reset(seed=seed)` (on every reset)
 
 **Deterministic Flags (when `deterministic=True`):**
-- ✓ `torch.backends.cudnn.deterministic = True`
-- ✓ `torch.backends.cudnn.benchmark = False`
+- DONE `torch.backends.cudnn.deterministic = True`
+- DONE `torch.backends.cudnn.benchmark = False`
 
 **Strict Mode (when `configure_determinism(strict=True)`):**
-- ✓ `torch.use_deterministic_algorithms(True, warn_only=...)`
+- DONE `torch.use_deterministic_algorithms(True, warn_only=...)`
 
 ### RNG State Capture and Restoration
 
@@ -188,9 +188,9 @@ Benchmark results (DQN Pong, 1M frames, RTX 3090):
 
 | Mode | Training Time | FPS | Reproducibility |
 |------|--------------|-----|-----------------|
-| Disabled (`enabled=False`) | 100% baseline | ~1000 FPS | ❌ Non-deterministic |
-| Basic (`enabled=True, strict=False`) | ~110-120% | ~850 FPS | ✓ Reproducible |
-| Strict (`enabled=True, strict=True`) | ~120-130% | ~800 FPS | ✓✓ Fully deterministic |
+| Disabled (`enabled=False`) | 100% baseline | ~1000 FPS | FAIL Non-deterministic |
+| Basic (`enabled=True, strict=False`) | ~110-120% | ~850 FPS | DONE Reproducible |
+| Strict (`enabled=True, strict=True`) | ~120-130% | ~800 FPS | DONEDONE Fully deterministic |
 
 **Recommendations:**
 - **Production training:** `enabled=false` (fastest)
@@ -220,11 +220,11 @@ export PYTORCH_DETERMINISTIC=1
 pytest tests/test_save_resume_determinism.py -v -s
 
 # Expected output:
-# ✓ PERFECT DETERMINISM - All metrics match exactly
+# DONE PERFECT DETERMINISM - All metrics match exactly
 # Epsilon Matches: 100.0%
 # Reward Matches: 100.0%
 # Action Matches: 100.0%
-# Checksum Match: ✓ PASS
+# Checksum Match: DONE PASS
 ```
 
 **Manual verification:**

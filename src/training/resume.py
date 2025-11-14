@@ -280,13 +280,13 @@ def resume_from_checkpoint(
         print(f"\nRestoring RNG states for reproducibility...")
         try:
             set_rng_states(rng_states, env)
-            print(f"  ✓ Python random state restored")
-            print(f"  ✓ NumPy random state restored")
-            print(f"  ✓ PyTorch random state restored")
+            print(f"  DONE Python random state restored")
+            print(f"  DONE NumPy random state restored")
+            print(f"  DONE PyTorch random state restored")
             if 'torch_cuda' in rng_states and torch.cuda.is_available():
-                print(f"  ✓ CUDA random state restored")
+                print(f"  DONE CUDA random state restored")
             if 'env' in rng_states:
-                print(f"  ✓ Environment random state restored")
+                print(f"  DONE Environment random state restored")
         except Exception as e:
             warnings.warn(f"Failed to restore RNG states: {e}")
             print(f"  ⚠ RNG state restoration failed - training may not be fully deterministic")

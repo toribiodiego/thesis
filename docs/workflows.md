@@ -260,11 +260,11 @@ pytest tests/test_dqn_trainer.py -k "stability or nan" -v
 pytest tests/test_save_resume_determinism.py -v -s
 
 # Expected output:
-# ✓ PERFECT DETERMINISM - All metrics match exactly
+# DONE PERFECT DETERMINISM - All metrics match exactly
 # Epsilon Matches: 100.0%
 # Reward Matches: 100.0%
 # Action Matches: 100.0%
-# Checksum Match: ✓ PASS
+# Checksum Match: DONE PASS
 
 # Manual verification (two runs with same seed)
 # Run 1

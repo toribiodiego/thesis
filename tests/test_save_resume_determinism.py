@@ -248,7 +248,7 @@ def print_comparison_report(report: Dict[str, Any]):
     total = report['total_steps']
 
     print(f"\nTotal Steps: {total}")
-    print(f"\nChecksum Match: {'✓ PASS' if report['checksum_match'] else '✗ FAIL'}")
+    print(f"\nChecksum Match: {'DONE PASS' if report['checksum_match'] else 'TODO FAIL'}")
     print(f"  Baseline:  {report['baseline_checksum'][:16]}...")
     print(f"  Resumed:   {report['resumed_checksum'][:16]}...")
 
@@ -277,7 +277,7 @@ def print_comparison_report(report: Dict[str, Any]):
     )
 
     if all_match:
-        print("RESULT: ✓ PERFECT DETERMINISM - All metrics match exactly")
+        print("RESULT: DONE PERFECT DETERMINISM - All metrics match exactly")
     else:
         print("RESULT: ⚠ PARTIAL DETERMINISM - Some mismatches detected")
 
@@ -484,7 +484,7 @@ class TestSaveResumeDeterminism:
         assert report['action_mismatches'] == 0, \
             f"Action mismatches detected: {report['action_mismatches']} / {report['total_steps']}"
 
-        print("\n✓ All assertions passed - Determinism verified!\n")
+        print("\nDONE All assertions passed - Determinism verified!\n")
 
 
 if __name__ == '__main__':

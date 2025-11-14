@@ -343,7 +343,7 @@ Valid Atari environments (NoFrameskip-v4 variants):
 # Invalid config
 training:
   gamma: 0.99
-  unknown_param: 123  # ❌ ERROR
+  unknown_param: 123  # FAIL ERROR
 
 # Error message:
 # "Unknown fields in training: 'unknown_param'
@@ -364,10 +364,10 @@ training.gamma: must be in range [0.0, 1.0], got 1.5
 ```
 
 **Error includes**:
-- ✅ Exact field path (dot notation)
-- ✅ Constraint that was violated
-- ✅ Actual invalid value
-- ✅ List of valid options (for enums)
+- DONE Exact field path (dot notation)
+- DONE Constraint that was violated
+- DONE Actual invalid value
+- DONE List of valid options (for enums)
 
 ---
 
@@ -920,11 +920,11 @@ KNOWN_STRUCTURE = {
 
 To ensure exact reproducibility:
 
-✅ **Use specific seed**: `--seed 42`
-✅ **Track git commit**: Check `meta.json` has `git.dirty = false`
-✅ **Save config snapshot**: Automatically saved in run directory
-✅ **Record package versions**: Check `meta.json` for PyTorch version
-✅ **Note system info**: Document GPU model, CUDA version if needed
+DONE **Use specific seed**: `--seed 42`
+DONE **Track git commit**: Check `meta.json` has `git.dirty = false`
+DONE **Save config snapshot**: Automatically saved in run directory
+DONE **Record package versions**: Check `meta.json` for PyTorch version
+DONE **Note system info**: Document GPU model, CUDA version if needed
 
 **To reproduce a run exactly**:
 ```bash
