@@ -1,5 +1,33 @@
+# ============================================================================
 # Pong-specific DQN configuration
-# Extends base.yaml with game-specific overrides
+# ============================================================================
+#
+# Game: Pong (ALE/Pong-v5)
+# Difficulty: Easy (fastest convergence of selected games)
+# Expected training time: 10M frames (~12-24 hours on GPU)
+#
+# OVERRIDES from base.yaml:
+# - experiment.name: dqn_pong (for output directory naming)
+# - env.id: ALE/Pong-v5 (game selection)
+# - training.total_frames: 10M (Pong converges faster than other games)
+#
+# INHERITS from base.yaml:
+# - All hyperparameters (learning rate, batch size, etc.)
+# - Wrapper configuration (frame skip, stack size, etc.)
+# - Training protocol (episode_life, reward_clip, etc.)
+# - Evaluation settings
+#
+# WHEN TO USE:
+# - First DQN training run (easiest game)
+# - Validating training pipeline
+# - Quick convergence testing
+#
+# REFERENCE:
+# - Design doc: docs/design/dqn_setup.md
+# - Wrapper spec: docs/design/atari_env_wrapper.md
+# - Config guide: experiments/dqn_atari/configs/README.md
+#
+# ============================================================================
 
 defaults:
   - base
@@ -11,4 +39,4 @@ env:
   id: "ALE/Pong-v5"
 
 training:
-  total_frames: 10000000  # 10M frames for Pong
+  total_frames: 10000000  # 10M frames for Pong (faster convergence)

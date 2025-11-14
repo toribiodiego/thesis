@@ -1,5 +1,38 @@
+# ============================================================================
 # Breakout-specific DQN configuration
-# Extends base.yaml with game-specific overrides
+# ============================================================================
+#
+# Game: Breakout (ALE/Breakout-v5)
+# Difficulty: Moderate (requires strategic brick-breaking)
+# Expected training time: 20M frames (~24-48 hours on GPU)
+#
+# OVERRIDES from base.yaml:
+# - experiment.name: dqn_breakout (for output directory naming)
+# - env.id: ALE/Breakout-v5 (game selection)
+# - training.total_frames: 20M (Breakout needs more frames than Pong)
+#
+# INHERITS from base.yaml:
+# - All hyperparameters (learning rate, batch size, etc.)
+# - Wrapper configuration (frame skip, stack size, etc.)
+# - Training protocol (episode_life, reward_clip, etc.)
+# - Evaluation settings
+#
+# WHEN TO USE:
+# - After validating pipeline with Pong
+# - Testing on moderate-difficulty game
+# - Brick-breaking strategy learning
+#
+# NOTES:
+# - Breakout benefits from episode_life=true (preserving ball is important)
+# - May require longer training than Pong to see good performance
+# - Typical convergence: visible improvement after 5-10M frames
+#
+# REFERENCE:
+# - Design doc: docs/design/dqn_setup.md
+# - Wrapper spec: docs/design/atari_env_wrapper.md
+# - Config guide: experiments/dqn_atari/configs/README.md
+#
+# ============================================================================
 
 defaults:
   - base
@@ -11,4 +44,4 @@ env:
   id: "ALE/Breakout-v5"
 
 training:
-  total_frames: 20000000  # 20M frames for Breakout
+  total_frames: 20000000  # 20M frames for Breakout (moderate complexity)

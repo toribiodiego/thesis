@@ -1,4 +1,49 @@
-# Base configuration scaffold for DQN Atari experiments.
+# ============================================================================
+# Base DQN Atari Configuration
+# ============================================================================
+#
+# PURPOSE:
+# Default hyperparameters and runtime settings for DQN reproduction.
+# This file defines the complete configuration scaffold that all game-specific
+# configs inherit from via OmegaConf defaults mechanism.
+#
+# USAGE:
+# - Do NOT modify this file for game-specific settings
+# - Create per-game configs (pong.yaml, breakout.yaml) that inherit from this
+# - Override specific fields in per-game configs (env.id, total_frames, etc.)
+# - Use CLI overrides for quick parameter sweeps
+#
+# INHERITANCE:
+# Game-specific configs inherit all settings from this file:
+#   defaults:
+#     - base
+#
+# WHAT'S CONFIGURED:
+# - Experiment metadata (name, seed, output directory)
+# - Environment settings (game ID, frameskip, no-op starts)
+# - Preprocessing (frame size, grayscale, frame stacking)
+# - Agent hyperparameters (learning rate, batch size, replay capacity)
+# - Target network synchronization (2013 vs 2015 DQN toggle)
+# - Exploration schedule (epsilon-greedy parameters)
+# - Evaluation protocol (episodes, epsilon, episode_life policy)
+# - Training protocol (frame budget, episode_life, reward clipping)
+# - Logging intervals (checkpoints, evaluation, metrics)
+# - Hardware settings (device selection)
+#
+# KEY TOGGLES:
+# - training.episode_life: Life loss as terminal (true) vs full episodes (false)
+# - agent.target_update_interval: Target net sync (>0) vs disabled (0)
+# - training.reward_clip: Reward clipping on (true) vs off (false)
+# - env.max_noop_start: Random no-ops (30) vs deterministic starts (0)
+#
+# REFERENCE:
+# - Config guide: experiments/dqn_atari/configs/README.md
+# - Training spec: docs/design/dqn_training.md
+# - Wrapper spec: docs/design/atari_env_wrapper.md
+# - Quick start: docs/quick_start.md
+#
+# ============================================================================
+
 experiment:
   name: dqn_atari_base
   seed: 0
