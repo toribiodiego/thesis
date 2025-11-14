@@ -782,6 +782,337 @@ pong_456,pong,43,20.80,3.50,50000000,50000000,24.2,abc123d
 
 ---
 
+## W&B Artifact Workflow Reference
+
+Complete reference for W&B artifact uploads, naming conventions, and retrieval.
+
+### Artifact Naming Conventions
+
+All artifacts follow deterministic naming patterns for consistency:
+
+#### 1. Training Log Artifacts
+
+**Pattern**: `training_logs_step_{step}`
+
+**Examples**:
+- `training_logs_step_1000000` - Logs at 1M steps
+- `training_logs_step_2000000` - Logs at 2M steps
+- `training_logs_step_10000000` - Logs at 10M steps
+
+**Contains**:
+- `training_steps.csv` - Per-step metrics
+- `episodes.csv` - Per-episode metrics
+- Metadata: `{"step": 1000000, "game": "pong", "seed": 42}`
+
+**Upload Schedule**: Every 1M steps (configurable via `artifact_upload_interval`)
+
+#### 2. Plot Artifacts
+
+**Pattern**: `{game_name}_plots` or custom name
+
+**Examples**:
+- `pong_plots:v0` - First upload
+- `pong_plots:v1` - Second upload
+- `pong_plots:latest` - Latest version (alias)
+
+**Contains**:
+- Plot files: `{game}_episode_returns.{fmt}`, `{game}_training_loss.{fmt}`, etc.
+- Metadata: `{game}_plot_metadata.json`
+
+**Upload**: On-demand via `--upload-wandb` flag
+
+#### 3. Summary Table Artifacts
+
+**Pattern**: `results_summary`
+
+**Examples**:
+- `results_summary:v0` - First export
+- `results_summary:latest` - Latest export
+
+**Contains**:
+- `results_summary.csv` - All runs in CSV format
+- `results_summary.md` - Markdown table grouped by game
+
+**Upload**: Via `export_results_table.py --upload-wandb`
+
+### Artifact Versioning
+
+W&B automatically versions artifacts on each upload:
+
+```
+First upload:    pong_plots:v0
+Second upload:   pong_plots:v1
+Third upload:    pong_plots:v2
+Latest alias:    pong_plots:latest
+```
+
+**Accessing versions**:
+```bash
+# Download latest version
+wandb artifact get entity/project/pong_plots:latest
+
+# Download specific version
+wandb artifact get entity/project/pong_plots:v1
+
+# Compare versions in W&B UI
+# Navigate to: Artifacts → pong_plots → Version History
+```
+
+### Artifact Structure in W&B
+
+**Organization**:
+```
+W&B Project: dqn-atari
+├── Run: pong_seed42_20231114_120000
+│   ├── Artifacts (Produced)
+│   │   ├── training_logs_step_1000000:v0
+│   │   ├── training_logs_step_2000000:v0
+│   │   └── pong_plots:v0
+│   └── Metrics
+│       ├── train/loss
+│       ├── episode/return
+│       └── eval/mean_return
+└── Run: pong_seed43_20231114_120001
+    ├── Artifacts (Produced)
+    │   ├── training_logs_step_1000000:v0
+    │   └── pong_plots:v0
+    └── Metrics
+        └── ...
+```
+
+### Viewing Artifacts in W&B Dashboard
+
+**Navigate to artifacts**:
+1. Open project: `https://wandb.ai/<entity>/<project>`
+2. Click specific run
+3. Click "Artifacts" tab
+4. View "Artifacts produced by this run"
+
+**Artifact details view**:
+- Files list (with download links)
+- Metadata (upload time, size, uploader)
+- Version history
+- Usage (which runs consumed this artifact)
+
+### Downloading Artifacts
+
+#### Via W&B CLI
+
+**Download latest:**
+```bash
+wandb artifact get <entity>/<project>/training_logs_step_1000000:latest
+```
+
+**Download to specific directory:**
+```bash
+wandb artifact get <entity>/<project>/pong_plots:v2 \
+  --root plots/downloaded/
+```
+
+**Download all versions:**
+```bash
+for v in v0 v1 v2; do
+  wandb artifact get <entity>/<project>/pong_plots:$v \
+    --root plots/version_$v/
+done
+```
+
+#### Via Python API
+
+```python
+import wandb
+
+# Initialize API
+api = wandb.Api()
+
+# Download specific artifact
+artifact = api.artifact('entity/project/pong_plots:latest')
+artifact_dir = artifact.download()
+
+print(f"Downloaded to: {artifact_dir}")
+
+# Access files
+import os
+files = os.listdir(artifact_dir)
+print(f"Files: {files}")
+
+# Load metadata
+import json
+with open(os.path.join(artifact_dir, 'pong_plot_metadata.json')) as f:
+    metadata = json.load(f)
+    print(f"Commit: {metadata['commit_hash']}")
+```
+
+#### Via Plotting Script
+
+```bash
+# Download and re-generate plots from W&B logs
+python scripts/plot_results.py \
+  --wandb-project dqn-atari \
+  --wandb-run abc123 \
+  --wandb-artifact training_logs_step_10000000:latest \
+  --output plots/pong
+```
+
+### Upload Workflow
+
+#### Automatic Log Uploads (During Training)
+
+**Configuration**:
+```python
+logger = MetricsLogger(
+    log_dir="results/logs/pong/run_123",
+    enable_wandb=True,
+    upload_artifacts=True,
+    wandb_config={
+        "project": "dqn-atari",
+        "entity": "my-team",
+        "artifact_upload_interval": 1_000_000  # Upload every 1M steps
+    }
+)
+```
+
+**Triggers**:
+- Automatic: Every `artifact_upload_interval` steps
+- On demand: `logger.upload_logs_as_artifacts(step=1000000)`
+- Final: On `logger.close()` (uploads final state)
+
+**What happens**:
+1. Check if step is upload interval (e.g., 1M, 2M, 3M)
+2. Flush all backends to ensure CSVs are up-to-date
+3. Collect CSV file paths
+4. Create artifact with name `training_logs_step_{step}`
+5. Upload to W&B (async, doesn't block training)
+6. Continue training
+
+#### Manual Plot Uploads (After Training)
+
+**Upload plots from local files:**
+```bash
+python scripts/plot_results.py \
+  --episodes results/logs/pong/run_123/csv/episodes.csv \
+  --steps results/logs/pong/run_123/csv/training_steps.csv \
+  --output plots/pong \
+  --upload-wandb \
+  --wandb-project dqn-atari \
+  --wandb-upload-run abc123  # W&B run ID
+```
+
+**Upload results table:**
+```bash
+python scripts/export_results_table.py \
+  --runs-dir results/logs/pong/ \
+  --output results/summary \
+  --upload-wandb \
+  --wandb-project dqn-atari
+```
+
+### Artifact Metadata
+
+Each artifact includes custom metadata for searchability:
+
+**Training logs metadata**:
+```json
+{
+  "step": 1000000,
+  "game": "pong",
+  "seed": 42,
+  "commit_hash": "abc123def",
+  "upload_time": "2025-11-14T12:34:56"
+}
+```
+
+**Plot metadata**:
+```json
+{
+  "generated_at": "2025-11-14T12:34:56",
+  "smoothing_window": 100,
+  "commit_hash": "abc123def",
+  "num_episodes": 1250,
+  "total_frames": 10000000
+}
+```
+
+**Access metadata in W&B UI**:
+- Artifact page → "Metadata" section
+- Filter/search artifacts by metadata fields
+
+### Best Practices
+
+1. **Consistent naming**: Always use deterministic artifact names
+2. **Version tracking**: Use version aliases (`latest`, `best`, `v0`, `v1`)
+3. **Metadata**: Include game, seed, step, commit hash
+4. **Upload frequency**: Balance storage costs vs. recovery granularity
+   - Logs: Every 1M steps (default)
+   - Plots: On-demand after training
+   - Summaries: Once per experiment batch
+
+5. **Storage management**:
+   - W&B artifacts are versioned (old versions retained)
+   - Use W&B storage quota monitoring
+   - Delete old artifact versions if needed
+
+6. **Offline workflows**:
+   - Use `WANDB_MODE=offline` during training
+   - Sync later with `wandb sync results/logs/pong/run_123/wandb/`
+
+### Naming Convention Summary
+
+| Artifact Type | Pattern | Example | Upload Trigger |
+|---------------|---------|---------|----------------|
+| Training Logs | `training_logs_step_{step}` | `training_logs_step_1000000` | Every 1M steps |
+| Plots | `{game}_plots` | `pong_plots:v0` | On-demand |
+| Multi-format Plots | `{game}_plots_{format}` | `pong_plots_all:v0` | On-demand |
+| Summary Tables | `results_summary` | `results_summary:v0` | On-demand |
+| Checkpoints* | `checkpoint_step_{step}` | `checkpoint_step_1000000` | Per checkpoint save |
+
+*Checkpoint uploads require separate integration (not covered in this document)
+
+### Viewing and Comparing Artifacts
+
+**Compare runs via artifacts**:
+1. Navigate to project → "Artifacts" tab
+2. Select artifact type (e.g., "training_logs")
+3. View which runs produced this artifact
+4. Compare metadata across runs
+
+**Search artifacts**:
+```python
+import wandb
+
+api = wandb.Api()
+
+# Find all log artifacts at 1M steps
+artifacts = api.artifacts(
+    type_name="logs",
+    name="training_logs_step_1000000"
+)
+
+for artifact in artifacts:
+    print(f"Run: {artifact.logged_by().name}")
+    print(f"Metadata: {artifact.metadata}")
+```
+
+### Troubleshooting
+
+**Artifact upload fails**:
+- Check network connection
+- Verify W&B login: `wandb login --verify`
+- Check file sizes (>1GB may timeout)
+- Use `WANDB_SILENT=true` to reduce log noise
+
+**Artifact not found**:
+- Verify artifact name (case-sensitive)
+- Check W&B project/entity name
+- Ensure artifact was actually uploaded (check run page)
+
+**Version conflicts**:
+- W&B auto-increments versions (v0, v1, v2)
+- Use `:latest` alias for most recent
+- Check version history in W&B UI
+
+---
+
 ## Integration with Training Loop
 
 ### Example: DQN Trainer
