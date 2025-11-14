@@ -2,6 +2,19 @@
 
 Comprehensive guide to the Atari preprocessing pipeline for DQN reproduction. This document covers the wrapper chain, configuration options, expected outputs, and troubleshooting common issues.
 
+---
+
+**Prerequisites:**
+- Completed [DQN Setup](dqn_setup.md) - ROMs installed and environment working
+- Gymnasium basics - Understanding env.step() and env.reset()
+
+**Related Docs:**
+- [DQN Model](dqn_model.md) - Expected input shape (4, 84, 84)
+- [Episode Handling](episode_handling.md) - Life-loss termination vs full episodes
+- [Training Loop](training_loop_runtime.md) - Frame counting and training/eval modes
+
+---
+
 ## Wrapper Chain
 
 The environment preprocessing follows the DQN 2013 paper specification. Wrappers are applied in this order:

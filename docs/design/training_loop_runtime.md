@@ -2,6 +2,20 @@
 
 Comprehensive guide to DQN training loop control flow, component orchestration, logging schema, evaluation cadence, and troubleshooting. This document describes how all training components work together during execution.
 
+---
+
+**Prerequisites:**
+- Completed all component docs: [Model](dqn_model.md), [Replay](replay_buffer.md), [Training](dqn_training.md)
+- Understand [Episode Handling](episode_handling.md) - Training vs evaluation modes
+- Read [Atari Wrappers](atari_env_wrapper.md) - Frame preprocessing pipeline
+
+**Related Docs:**
+- [Checkpointing](checkpointing.md) - Checkpoint/resume integration
+- [Scripts README](../../experiments/dqn_atari/scripts/README.md) - CLI usage
+- [Test README](../../tests/README.md) - Running smoke tests
+
+---
+
 ## Table of Contents
 
 1. [Overview](#overview)

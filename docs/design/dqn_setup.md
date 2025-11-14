@@ -2,6 +2,20 @@
 
 Central reference for everything completed in Subtask 1 (game selection, pinned dependencies, evaluation settings, seeding, and dry-run tooling). Update this file whenever the foundation changes so collaborators know exactly how to bootstrap the project.
 
+---
+
+**Prerequisites:**
+- Python 3.10+ installed
+- CUDA-capable GPU (optional, but recommended)
+- Git for version control
+
+**Related Docs:**
+- [Quick Start Guide](../quick_start.md) - Step-by-step setup walkthrough
+- [Atari Wrappers](atari_env_wrapper.md) - Environment preprocessing
+- [Scripts README](../../experiments/dqn_atari/scripts/README.md) - CLI tools
+
+---
+
 ## Selected Games
 
 Three Atari games chosen for initial DQN reproduction:

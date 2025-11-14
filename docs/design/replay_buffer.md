@@ -1,5 +1,19 @@
 # Replay Buffer Design
 
+---
+
+**Prerequisites:**
+- Completed [DQN Setup](dqn_setup.md) - Environment configured and dependencies installed
+- Understand [Atari Wrappers](atari_env_wrapper.md) - Frame preprocessing and stacking
+- Optional: [DQN Paper Section 3](../papers/dqn_2013_notes.md) - Experience replay background
+
+**Related Docs:**
+- [DQN Training](dqn_training.md) - How sampled batches are used for Q-learning
+- [Training Loop](training_loop_runtime.md) - Replay integration with optimization
+- [Checkpointing](checkpointing.md) - Saving/loading replay buffer state
+
+---
+
 ## Overview
 
 The replay buffer implements uniform experience replay for DQN training, storing transitions in a circular buffer with episode boundary tracking. It provides memory-efficient storage (uint8), deferred float32 conversion, configurable normalization, device transfer to GPU, and warm-up enforcement.

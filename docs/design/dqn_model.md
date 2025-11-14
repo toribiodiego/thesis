@@ -1,5 +1,19 @@
 # DQN Model Architecture
 
+---
+
+**Prerequisites:**
+- Completed [DQN Setup](dqn_setup.md) - PyTorch environment ready
+- Understand [Atari Wrappers](atari_env_wrapper.md) - Input frame shape (4, 84, 84)
+- Basic CNN knowledge - Convolution operations and tensor shapes
+
+**Related Docs:**
+- [DQN Training](dqn_training.md) - How the model is used for Q-learning updates
+- [Training Loop](training_loop_runtime.md) - Online vs target network usage
+- [Checkpointing](checkpointing.md) - Saving/loading model weights
+
+---
+
 ## Overview
 
 This document describes the DQN (Deep Q-Network) CNN architecture implementation following Mnih et al. 2013. The model maps stacked Atari frames to Q-values for action selection.
