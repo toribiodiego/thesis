@@ -15,8 +15,10 @@ Comprehensive test coverage for DQN implementation. All tests can be run from th
 | `test_seeding.py` | ~350 | 17 | Deterministic seeding, RNG state management (Subtask 7) |
 | `test_determinism.py` | ~350 | 20 | Determinism configuration, cuDNN flags (Subtask 7) |
 | `test_save_resume_determinism.py` | ~550 | 1 | End-to-end save/resume smoke test (Subtask 7) |
+| `test_metrics_logger.py` | ~900 | 28 | Multi-backend logging (TensorBoard/W&B/CSV), flush, artifacts (Subtask 10) |
+| `test_plot_results.py` | ~490 | 20 | Plotting script, CSV loading, smoothing, metadata (Subtask 10) |
 
-**Total:** 287+ unit tests across all modules
+**Total:** 335+ unit tests across all modules
 
 ---
 
@@ -238,6 +240,236 @@ pytest tests/ --durations=10
 
 **Tests:** `test_checkpoint.py`, `test_resume.py`, `test_seeding.py`, `test_determinism.py`, `test_save_resume_determinism.py`
 
+---
+
+## Logging & Plotting Tests (Subtask 10)
+
+### Metrics Logger Tests
+
+**File:** `test_metrics_logger.py` (28 tests, ~900 lines)
+
+**Run all logging tests:**
+```bash
+# Full test suite
+pytest tests/test_metrics_logger.py -v
+
+# Specific backend tests
+pytest tests/test_metrics_logger.py -k "tensorboard" -v
+pytest tests/test_metrics_logger.py -k "wandb" -v
+pytest tests/test_metrics_logger.py -k "csv" -v
+```
+
+**Test coverage:**
+
+**TensorBoard Backend:**
+```bash
+# Run TensorBoard-specific tests
+pytest tests/test_metrics_logger.py::test_tensorboard_backend_initialization -v
+pytest tests/test_metrics_logger.py::test_tensorboard_backend_log_scalar -v
+pytest tests/test_metrics_logger.py::test_tensorboard_backend_log_scalars -v
+pytest tests/test_metrics_logger.py::test_tensorboard_backend_handles_none_values -v
+```
+
+**W&B Backend:**
+```bash
+# Run W&B-specific tests (with graceful degradation)
+pytest tests/test_metrics_logger.py::test_wandb_backend_handles_import_error -v
+pytest tests/test_metrics_logger.py::test_wandb_backend_disabled_operations -v
+
+# Note: W&B tests handle missing wandb package gracefully
+# No need to install wandb for tests to pass
+```
+
+**CSV Backend:**
+```bash
+# Run CSV-specific tests
+pytest tests/test_metrics_logger.py::test_csv_backend_initialization -v
+pytest tests/test_metrics_logger.py::test_csv_backend_log_step_metrics -v
+pytest tests/test_metrics_logger.py::test_csv_backend_log_episode_metrics -v
+pytest tests/test_metrics_logger.py::test_csv_backend_multiple_writes -v
+```
+
+**MetricsLogger Integration:**
+```bash
+# Test unified logging interface
+pytest tests/test_metrics_logger.py -k "metrics_logger" -v
+
+# Test specific features
+pytest tests/test_metrics_logger.py -k "flush" -v        # Periodic flushing
+pytest tests/test_metrics_logger.py -k "artifact" -v     # W&B artifact uploads
+pytest tests/test_metrics_logger.py -k "consistency" -v  # Multi-backend consistency
+```
+
+**Verify:**
+- TensorBoard event file creation and writing
+- W&B graceful degradation when package missing
+- CSV file format and multi-write correctness
+- Periodic flush mechanism (every 1000 steps)
+- W&B artifact upload intervals (every 1M steps)
+- Backend failure handling (one backend fails, others continue)
+- Standardized metric keys across all backends
+
+### Plotting Tests
+
+**File:** `test_plot_results.py` (20 tests, ~490 lines)
+
+**Run all plotting tests:**
+```bash
+# Full test suite
+pytest tests/test_plot_results.py -v
+
+# Specific component tests
+pytest tests/test_plot_results.py -k "load" -v       # Data loading
+pytest tests/test_plot_results.py -k "smooth" -v     # Smoothing algorithms
+pytest tests/test_plot_results.py -k "plot" -v       # Plot generation
+```
+
+**Test coverage:**
+
+**Data Loading:**
+```bash
+# CSV loading and parsing
+pytest tests/test_plot_results.py::test_load_csv_data -v
+pytest tests/test_plot_results.py::test_load_csv_data_file_not_found -v
+pytest tests/test_plot_results.py::test_load_csv_data_handles_none_values -v
+```
+
+**Smoothing:**
+```bash
+# Smoothing algorithms
+pytest tests/test_plot_results.py::test_smooth_curve_moving_average -v
+pytest tests/test_plot_results.py::test_smooth_curve_exponential -v
+pytest tests/test_plot_results.py::test_smooth_curve_insufficient_data -v
+pytest tests/test_plot_results.py::test_smooth_curve_invalid_method -v
+```
+
+**Plot Generation:**
+```bash
+# Individual plot types
+pytest tests/test_plot_results.py::test_plot_episode_returns -v
+pytest tests/test_plot_results.py::test_plot_training_loss -v
+pytest tests/test_plot_results.py::test_plot_evaluation_scores -v
+pytest tests/test_plot_results.py::test_plot_epsilon_schedule -v
+
+# Multi-format output
+pytest tests/test_plot_results.py::test_plot_multiple_formats -v
+```
+
+**Integration:**
+```bash
+# Full plotting pipeline
+pytest tests/test_plot_results.py::test_plot_all_metrics -v
+pytest tests/test_plot_results.py::test_plot_all_metrics_partial_data -v
+
+# Edge cases
+pytest tests/test_plot_results.py::test_plot_with_nan_values -v
+pytest tests/test_plot_results.py::test_plot_empty_data_warning -v
+```
+
+**Metadata:**
+```bash
+# Plot metadata generation and saving
+pytest tests/test_plot_results.py::test_plot_metadata_saved -v
+pytest tests/test_plot_results.py::test_plot_no_metadata -v
+pytest tests/test_plot_results.py::test_plot_deterministic_filenames -v
+```
+
+**Verify:**
+- CSV data loading with NaN/None value handling
+- Moving average and exponential smoothing correctness
+- All plot types generate correctly (returns, loss, eval, epsilon)
+- Multi-format output (PNG, PDF, SVG)
+- Metadata JSON generation with commit hash and timestamp
+- Directory auto-creation for output
+- Deterministic filename generation
+- Empty data and NaN value handling
+
+### Offline/Sandbox Mode
+
+**W&B Tests** run in offline mode by default (no network required):
+
+```bash
+# All W&B tests work offline
+export WANDB_MODE=offline
+pytest tests/test_metrics_logger.py -k "wandb" -v
+
+# Or with W&B completely disabled
+export WANDB_DISABLED=true
+pytest tests/test_metrics_logger.py -v
+```
+
+**No W&B installation required:**
+- Tests gracefully handle missing `wandb` package
+- W&B backend tests verify graceful degradation
+- All other tests pass without W&B
+
+### Synthetic Log Testing
+
+Tests use **synthetic/mock data** (no real training required):
+
+```bash
+# Tests create temporary CSV files with synthetic data
+pytest tests/test_plot_results.py -v
+
+# Tests use pytest fixtures for temporary directories
+# All test files are cleaned up automatically
+```
+
+**Synthetic data includes:**
+- Random episode returns with realistic distributions
+- Training loss with decreasing trend
+- Epsilon decay schedules
+- Evaluation scores with increasing performance
+
+### Common Test Patterns
+
+**Test with custom data:**
+```python
+import tempfile
+import csv
+from pathlib import Path
+from scripts.plot_results import load_csv_data, plot_episode_returns
+
+# Create synthetic CSV
+temp_dir = Path(tempfile.mkdtemp())
+csv_path = temp_dir / 'episodes.csv'
+
+with open(csv_path, 'w', newline='') as f:
+    writer = csv.DictWriter(f, fieldnames=['step', 'episode', 'return', 'length'])
+    writer.writeheader()
+    for i in range(100):
+        writer.writerow({
+            'step': (i+1) * 1000,
+            'episode': i+1,
+            'return': 10.0 + i * 0.1,  # Increasing returns
+            'length': 500
+        })
+
+# Load and plot
+data = load_csv_data(csv_path)
+plot_episode_returns(
+    data,
+    output_path=temp_dir / 'plot',
+    formats=['png']
+)
+
+# Verify plot exists
+assert (temp_dir / 'plot.png').exists()
+```
+
+### Test Performance
+
+**Typical runtimes:**
+- Metrics logger tests: ~1.5 seconds (28 tests)
+- Plotting tests: ~6.7 seconds (20 tests)
+- Combined: ~8 seconds (48 tests)
+
+**All tests use mocks/fixtures:**
+- No real training runs
+- No network requests (W&B offline mode)
+- Temporary directories (auto-cleanup)
+- Fast execution suitable for CI/CD
+
 **Checkpoint Tests** (`test_checkpoint.py`):
 ```bash
 # Run all checkpoint tests
@@ -429,8 +661,10 @@ pytest tests/ --collect-only  # Should list all tests
 - `src.utils.seeding`: 17 tests
 - `src.utils.determinism`: 20 tests
 - Integration (save/resume): 1 test
+- `src.training.metrics_logger`: 28 tests
+- `scripts.plot_results`: 20 tests
 
-**Total:** 287+ tests
+**Total:** 335+ tests
 
 **Average Test Runtime:**
 - Unit tests: < 1s each
