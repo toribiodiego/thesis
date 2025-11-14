@@ -33,24 +33,168 @@ Logging Pipeline
 └── Artifact Management    # W&B artifact uploads
 ```
 
+### Backend Interaction Model
+
+The three backends operate **independently** and **in parallel**:
+
+```
+MetricsLogger.log_step(step=1000, loss=0.5, ...)
+    │
+    ├──→ TensorBoardBackend.log_scalar("train/loss", 0.5, step=1000)
+    │    └─→ writes to: results/logs/<game>/<run_id>/tensorboard/events.out.tfevents.*
+    │
+    ├──→ WandBBackend.log({"train/loss": 0.5}, step=1000)
+    │    └─→ uploads to: W&B cloud (wandb.ai/<entity>/<project>/<run_id>)
+    │
+    └──→ CSVBackend.log_step_metric(step=1000, loss=0.5, ...)
+         └─→ writes to: results/logs/<game>/<run_id>/csv/training_steps.csv
+```
+
+**Key Properties**:
+1. **Fail-safe**: If one backend fails (e.g., W&B network error), others continue
+2. **Async**: TensorBoard/W&B write asynchronously; CSV writes synchronously
+3. **No dependencies**: Backends don't communicate with each other
+4. **Unified keys**: All backends receive identical metric names (train/loss, episode/return, etc.)
+
+### File System Layout
+
+```
+results/
+└── logs/
+    └── <game>/              # e.g., "pong"
+        └── <run_id>/        # e.g., "pong_seed42_20231114_120000"
+            ├── tensorboard/
+            │   └── events.out.tfevents.1699977600.hostname
+            ├── csv/
+            │   ├── training_steps.csv    # Per-step metrics
+            │   └── episodes.csv          # Per-episode metrics
+            ├── wandb/                    # W&B local cache (optional)
+            │   └── run-<wandb_id>/
+            └── checkpoints/              # Model checkpoints (separate system)
+                └── checkpoint_250000.pt
+```
+
+**Directory Creation**:
+- `MetricsLogger.__init__()` creates all directories on first initialization
+- If W&B is disabled, `wandb/` directory is not created
+- Parent directories are created recursively (`mkdir -p` behavior)
+
 ### Data Flow
 
 ```
 Training Loop
     ↓
-MetricsLogger.log_step()     # Per-step metrics
-MetricsLogger.log_episode()  # Per-episode metrics
-MetricsLogger.log_evaluation() # Evaluation metrics
+MetricsLogger.log_step()     # Per-step metrics (loss, epsilon, FPS)
+MetricsLogger.log_episode()  # Per-episode metrics (return, length)
+MetricsLogger.log_evaluation() # Evaluation metrics (mean return, std)
     ↓
-[TensorBoard] [W&B] [CSV]    # Multi-backend logging
+    ├─→ TensorBoard: Async write to event file
+    ├─→ W&B: Async upload to cloud (batched)
+    └─→ CSV: Sync write to file (buffered)
     ↓
 Periodic Flush (every 1K steps)
+    │
+    ├─→ TensorBoard: writer.flush()
+    ├─→ W&B: No-op (already batched)
+    └─→ CSV: file.flush() + os.fsync()
     ↓
 Artifact Upload (every 1M steps) → W&B
+    │
+    └─→ Upload CSV files as W&B artifact
+        Artifact name: "training_logs_step_{step}"
+        Contains: training_steps.csv, episodes.csv, metadata
     ↓
-plot_results.py              # Generate plots
-export_results_table.py      # Summary tables
+Training Complete
+    ↓
+logger.close() - Final flush + cleanup
+    ↓
+plot_results.py              # Generate plots from CSV/W&B artifacts
+export_results_table.py      # Summary tables from run directories
 ```
+
+### Backend Configuration
+
+Each backend is configured independently:
+
+#### TensorBoard Backend
+
+```python
+# Enable/disable
+enable_tensorboard=True
+
+# Output directory (automatically created)
+log_dir = "results/logs/<game>/<run_id>/tensorboard"
+
+# Usage: view with TensorBoard
+# $ tensorboard --logdir results/logs/pong/
+```
+
+**Config Fields**:
+```yaml
+logging:
+  enable_tensorboard: true
+  tensorboard_dir: "results/logs/{game}/{run_id}/tensorboard"
+```
+
+#### W&B Backend
+
+```python
+# Enable/disable
+enable_wandb=True
+
+# Configuration
+wandb_config={
+    "project": "dqn-atari",      # W&B project name
+    "entity": "my-team",          # W&B team/username (optional)
+    "run_id": "pong_seed42",      # Unique run identifier
+    "config": {...}               # Training hyperparameters
+}
+```
+
+**Config Fields**:
+```yaml
+logging:
+  enable_wandb: true
+  wandb_project: "dqn-atari"
+  wandb_entity: "my-team"      # optional
+  wandb_run_id: null           # auto-generated if null
+  upload_artifacts: true       # Enable artifact uploads
+  artifact_upload_interval: 1000000  # Upload every 1M steps
+```
+
+**Environment Variables**:
+```bash
+# W&B API key (required)
+export WANDB_API_KEY="your_key_here"
+
+# Optional: offline mode (no cloud sync)
+export WANDB_MODE=offline
+
+# Optional: disable W&B entirely
+export WANDB_DISABLED=true
+```
+
+#### CSV Backend
+
+```python
+# Enable/disable
+enable_csv=True
+
+# Output directory (automatically created)
+log_dir = "results/logs/<game>/<run_id>/csv"
+```
+
+**Config Fields**:
+```yaml
+logging:
+  enable_csv: true
+  csv_dir: "results/logs/{game}/{run_id}/csv"
+  flush_interval: 1000  # Flush every N steps
+```
+
+**Output Files**:
+- `training_steps.csv` - Per-step metrics (step, loss, epsilon, learning_rate, grad_norm, fps)
+- `episodes.csv` - Per-episode metrics (step, episode, return, length)
 
 ---
 
@@ -590,20 +734,151 @@ class DQNTrainer:
 
 ## Troubleshooting
 
-### W&B Not Logging
+### Backend Failure Handling
 
-**Symptoms**: No W&B logs appear in dashboard.
+#### What Happens When a Backend Fails?
+
+The logging system is designed to **fail gracefully**. If one backend fails, the others continue operating:
+
+```python
+# Example: W&B fails due to network error
+logger.log_step(step=1000, loss=0.5, ...)
+    ├─→ TensorBoard: ✅ Success
+    ├─→ W&B: ❌ Network timeout (logs warning, continues)
+    └─→ CSV: ✅ Success
+```
+
+**Behavior**:
+1. **Exception Handling**: Each backend wraps operations in try/except
+2. **Warning Messages**: Failures print warnings to stderr but don't raise exceptions
+3. **Disable on Repeated Failures**: After 10 consecutive failures, backend auto-disables
+4. **CSV Always Works**: CSV backend has no external dependencies
+
+#### TensorBoard Backend Issues
+
+**Symptoms**: No TensorBoard logs / `tensorboard` command fails.
 
 **Causes**:
-- W&B package not installed
-- Not logged in (`wandb login`)
-- Network issues
+- TensorBoard not installed
+- Corrupted event files
+- Wrong log directory
 
 **Fix**:
 ```bash
-pip install wandb
-wandb login
+# Install TensorBoard
+pip install tensorboard
+
+# Verify files exist
+ls -la results/logs/pong/pong_seed42/tensorboard/
+
+# Launch TensorBoard
+tensorboard --logdir results/logs/pong/
+
+# If corrupted, delete and restart training
+rm -rf results/logs/pong/pong_seed42/tensorboard/*
 ```
+
+**Disabling TensorBoard**:
+```python
+logger = MetricsLogger(
+    log_dir="results/logs/pong/run_123",
+    enable_tensorboard=False  # Disable if not needed
+)
+```
+
+#### W&B Backend Issues
+
+**Symptoms**: No W&B logs appear in dashboard.
+
+**Common Causes & Fixes**:
+
+1. **Not Installed**:
+```bash
+pip install wandb
+```
+
+2. **Not Logged In**:
+```bash
+wandb login
+# Or set API key directly:
+export WANDB_API_KEY="your_key_here"
+```
+
+3. **Network Issues** (transient):
+- W&B retries automatically
+- If persistent, check firewall/proxy settings
+- Consider using `WANDB_MODE=offline` (see below)
+
+4. **Offline Mode** (no internet):
+```bash
+# Run in offline mode
+export WANDB_MODE=offline
+
+# Later, sync offline runs
+wandb sync results/logs/pong/pong_seed42/wandb/
+```
+
+5. **Wrong Project/Entity**:
+```python
+# Verify configuration
+wandb_config = {
+    "project": "dqn-atari",     # Must exist in W&B
+    "entity": "my-team",         # Optional; your username by default
+    "run_id": "pong_seed42"
+}
+```
+
+6. **Artifact Upload Failures**:
+- Large files may timeout (>100MB warning is issued)
+- Check network bandwidth
+- Consider increasing `artifact_upload_interval`
+
+**Disabling W&B**:
+```python
+# In code:
+logger = MetricsLogger(
+    log_dir="results/logs/pong/run_123",
+    enable_wandb=False
+)
+
+# Or via environment variable:
+export WANDB_DISABLED=true
+```
+
+#### CSV Backend Issues
+
+**Symptoms**: Missing CSV files / corrupted data.
+
+**Causes**:
+- Disk full
+- Permission errors
+- Process killed mid-write
+
+**Fix**:
+```bash
+# Check disk space
+df -h results/
+
+# Check permissions
+ls -la results/logs/pong/pong_seed42/csv/
+
+# Check file integrity (should have header + data rows)
+head -5 results/logs/pong/pong_seed42/csv/training_steps.csv
+
+# If corrupted, delete and restart
+rm results/logs/pong/pong_seed42/csv/*.csv
+```
+
+**Recovery**:
+- If training crashes mid-write, CSVs may be incomplete
+- Use `flush_interval=1000` (default) to minimize data loss
+- Consider more frequent flushing for critical experiments:
+  ```python
+  logger = MetricsLogger(
+      log_dir="...",
+      flush_interval=500  # Flush more frequently
+  )
+  ```
 
 ### Missing Plots
 
@@ -614,21 +889,105 @@ wandb login
 - Empty CSV files
 - Missing required columns
 
+**Diagnosis**:
+```bash
+# Check CSV exists
+ls -la results/logs/pong/pong_seed42/csv/episodes.csv
+
+# Check file is not empty
+wc -l results/logs/pong/pong_seed42/csv/episodes.csv
+
+# Check columns
+head -1 results/logs/pong/pong_seed42/csv/episodes.csv
+# Should see: step,episode,return,length
+```
+
 **Fix**:
-- Check CSV paths
-- Verify `step`, `return`, `loss` columns exist
+- Verify CSV paths in command
+- Ensure training ran long enough to generate episodes
+- Check for correct column names (case-sensitive)
 
 ### Large File Warnings
 
-**Symptoms**: "Large CSV file" warning.
+**Symptoms**: "Large CSV file (XX.X MB). Consider using --downsample for faster plotting."
+
+**When This Happens**:
+- Long training runs (50M+ frames)
+- High logging frequency
+- Multiple seeds aggregated
 
 **Fix**:
 ```bash
-# Downsample to 10K points
+# Downsample to 10K points (faster plotting, minimal information loss)
 python scripts/plot_results.py \
   --episodes large_file.csv \
   --downsample 10000 \
   --output plots/
+
+# Adjust warning threshold
+python scripts/plot_results.py \
+  --episodes large_file.csv \
+  --warn-size-mb 200 \  # Only warn if >200 MB
+  --output plots/
+```
+
+**Performance Impact**:
+- Files >100 MB: Plotting may take 10-30 seconds
+- Files >500 MB: May cause memory issues; use `--downsample`
+- Files >1 GB: Strongly recommend downsampling
+
+### W&B Artifact Upload Slow
+
+**Symptoms**: "Warning: Uploading large artifact (XXX.X MB). This may take some time."
+
+**Causes**:
+- Large CSV files (>100 MB)
+- Slow network connection
+- Frequent uploads
+
+**Fix**:
+```python
+# Increase upload interval (default: 1M steps)
+logger = MetricsLogger(
+    log_dir="...",
+    upload_artifacts=True,
+    # Upload every 5M steps instead of 1M
+    wandb_config={
+        "artifact_upload_interval": 5_000_000
+    }
+)
+```
+
+**Alternative**:
+- Disable automatic uploads during training
+- Upload manually after training completes:
+  ```bash
+  python scripts/export_results_table.py \
+    --runs-dir results/logs/pong/ \
+    --output results/summary \
+    --upload-wandb \
+    --wandb-project dqn-atari
+  ```
+
+### Permission Denied Errors
+
+**Symptoms**: `PermissionError: [Errno 13] Permission denied: 'results/logs/...'`
+
+**Causes**:
+- Running as different user
+- Incorrect file permissions
+- NFS/shared filesystem issues
+
+**Fix**:
+```bash
+# Check ownership
+ls -la results/logs/pong/
+
+# Fix permissions
+chmod -R u+rwX results/logs/pong/
+
+# On NFS: disable file locking for CSV (use with caution)
+# Only if above fixes don't work
 ```
 
 ---
