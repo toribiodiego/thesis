@@ -102,20 +102,38 @@ tail -f experiments/dqn_atari/runs/pong_123/logs/episodes.csv
 
 ## Documentation
 
-### Roadmap
-- **[docs/roadmap.md](docs/roadmap.md)** – Complete project plan with 21 subtasks and progress tracking
+**New to the project?** Start with the [Quick Start](#quick-start) above, then explore:
 
-### Design Docs
-Core implementation specifications and guides:
+### Navigation Hub
+- **[docs/index.md](docs/index.md)** - Complete documentation index with navigation guide
+- **[docs/workflows.md](docs/workflows.md)** - Task-oriented guides for common operations
+- **[docs/troubleshooting.md](docs/troubleshooting.md)** - Quick reference for problem diagnosis and solutions
 
-- **[docs/design/dqn_setup.md](docs/design/dqn_setup.md)** – Environment setup, dependencies, and ROM installation
-- **[docs/design/atari_env_wrapper.md](docs/design/atari_env_wrapper.md)** – Wrapper chain specification and preprocessing pipeline
-- **[docs/design/dqn_model.md](docs/design/dqn_model.md)** – Q-network architecture and forward pass details
-- **[docs/design/replay_buffer.md](docs/design/replay_buffer.md)** – Experience replay storage and sampling
-- **[docs/design/dqn_training.md](docs/design/dqn_training.md)** – Q-learning update flow, loss functions, and debugging guide
-- **[docs/design/episode_handling.md](docs/design/episode_handling.md)** – Episode management, termination policies, training vs. evaluation
-- **[docs/design/training_loop_runtime.md](docs/design/training_loop_runtime.md)** – Training loop orchestration, logging, evaluation, troubleshooting
-- **[docs/design/checkpointing.md](docs/design/checkpointing.md)** – Checkpoint/resume system, saved tensors, metadata schema, deterministic seeding, verification procedures
+### Planning & Progress
+- **[docs/roadmap.md](docs/roadmap.md)** - Complete project plan with 21 subtasks and progress tracking
+- **[docs/changelog.md](docs/changelog.md)** - Timeline of major completions and updates
+
+### Design Documentation
+Core implementation specifications (read in this order):
+
+**Setup & Environment:**
+- **[docs/design/dqn_setup.md](docs/design/dqn_setup.md)** - Environment setup, dependencies, ROM installation, deterministic mode
+- **[docs/design/atari_env_wrapper.md](docs/design/atari_env_wrapper.md)** - Wrapper chain specification and preprocessing pipeline
+
+**Core Components:**
+- **[docs/design/dqn_model.md](docs/design/dqn_model.md)** - Q-network architecture and forward pass details
+- **[docs/design/replay_buffer.md](docs/design/replay_buffer.md)** - Experience replay storage and sampling
+- **[docs/design/dqn_training.md](docs/design/dqn_training.md)** - Q-learning update flow, loss functions, debugging
+
+**Training & Evaluation:**
+- **[docs/design/episode_handling.md](docs/design/episode_handling.md)** - Episode management, termination policies, training vs. evaluation
+- **[docs/design/training_loop_runtime.md](docs/design/training_loop_runtime.md)** - Training loop orchestration, logging, evaluation, troubleshooting
+- **[docs/design/checkpointing.md](docs/design/checkpointing.md)** - Checkpoint/resume system, metadata schema, deterministic seeding
+
+### Quick References
+- **[experiments/dqn_atari/README.md](experiments/dqn_atari/README.md)** - Experiment setup and game selection
+- **[experiments/dqn_atari/scripts/README.md](experiments/dqn_atari/scripts/README.md)** - CLI tools and script usage
+- **[tests/README.md](tests/README.md)** - Test suite documentation and running instructions
 
 ### Running DQN
 
