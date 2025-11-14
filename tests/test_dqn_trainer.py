@@ -6,6 +6,9 @@ Verifies:
 - Target network initialization
 - Gradient freezing
 - Parameter copying
+- TD target computation
+- Q-value selection
+- Loss computation (MSE and Huber)
 """
 
 import torch
@@ -16,7 +19,8 @@ from src.training import (
     init_target_network,
     compute_td_targets,
     select_q_values,
-    compute_td_loss_components
+    compute_td_loss_components,
+    compute_dqn_loss
 )
 
 
@@ -533,6 +537,229 @@ def test_q_selection_shape_consistency():
             f"Batch size {batch_size}: expected shape ({batch_size},), got {q_selected.shape}"
 
 
+# ============================================================================
+# Loss Computation Tests
+# ============================================================================
+
+def test_compute_dqn_loss_mse_basic():
+    """Test basic MSE loss computation."""
+    # Create simple tensors
+    batch_size = 4
+    q_selected = torch.tensor([1.0, 2.0, 3.0, 4.0], requires_grad=True)
+    td_targets = torch.tensor([1.5, 2.5, 2.5, 3.5])
+
+    # Compute loss
+    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+
+    # Check keys
+    assert 'loss' in loss_dict
+    assert 'td_error' in loss_dict
+    assert 'td_error_std' in loss_dict
+
+    # Loss should be a scalar
+    assert loss_dict['loss'].shape == torch.Size([])
+
+    # Loss should have gradients
+    assert loss_dict['loss'].requires_grad
+
+    # TD error should be detached
+    assert not loss_dict['td_error'].requires_grad
+    assert not loss_dict['td_error_std'].requires_grad
+
+    # Expected MSE: mean([(1-1.5)^2, (2-2.5)^2, (3-2.5)^2, (4-3.5)^2])
+    # = mean([0.25, 0.25, 0.25, 0.25]) = 0.25
+    expected_loss = 0.25
+    assert torch.allclose(loss_dict['loss'], torch.tensor(expected_loss), atol=1e-6)
+
+    # Expected TD error: mean([0.5, 0.5, 0.5, 0.5]) = 0.5
+    expected_td_error = 0.5
+    assert torch.allclose(loss_dict['td_error'], torch.tensor(expected_td_error), atol=1e-6)
+
+
+def test_compute_dqn_loss_huber_basic():
+    """Test basic Huber loss computation."""
+    batch_size = 4
+    q_selected = torch.tensor([1.0, 2.0, 3.0, 4.0], requires_grad=True)
+    td_targets = torch.tensor([1.5, 2.5, 2.5, 3.5])
+
+    # Compute Huber loss
+    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type='huber', huber_delta=1.0)
+
+    # Loss should be a scalar with gradients
+    assert loss_dict['loss'].shape == torch.Size([])
+    assert loss_dict['loss'].requires_grad
+
+    # Huber loss should be <= MSE for small errors (all errors are 0.5 < delta=1.0)
+    # For errors smaller than delta, Huber is quadratic: 0.5 * error^2
+    # For our case: 0.5 * mean([0.25, 0.25, 0.25, 0.25]) = 0.125
+    expected_huber = 0.125
+    assert torch.allclose(loss_dict['loss'], torch.tensor(expected_huber), atol=1e-6)
+
+
+def test_compute_dqn_loss_gradient_flow():
+    """Test that gradients flow through loss."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+
+    # Create batch
+    batch_size = 4
+    states = torch.randn(batch_size, 4, 84, 84)
+    actions = torch.tensor([0, 2, 1, 5])
+    rewards = torch.tensor([1.0, 0.0, -1.0, 0.5])
+    next_states = torch.randn(batch_size, 4, 84, 84)
+    dones = torch.tensor([False, False, True, False])
+
+    # Compute loss components
+    q_selected, td_targets = compute_td_loss_components(
+        states, actions, rewards, next_states, dones,
+        online_net, target_net, gamma=0.99
+    )
+
+    # Compute loss
+    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+
+    # Backward
+    loss_dict['loss'].backward()
+
+    # Online network should have gradients
+    has_gradients = False
+    for param in online_net.parameters():
+        if param.grad is not None:
+            has_gradients = True
+            break
+
+    assert has_gradients, "Gradients should flow through online network"
+
+
+def test_compute_dqn_loss_td_error_stats():
+    """Test TD error statistics computation."""
+    # Create batch with known TD errors
+    q_selected = torch.tensor([1.0, 2.0, 3.0, 4.0], requires_grad=True)
+    td_targets = torch.tensor([2.0, 3.0, 3.0, 5.0])  # Errors: [1.0, 1.0, 0.0, 1.0]
+
+    # Compute loss
+    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+
+    # Expected mean TD error: mean([1.0, 1.0, 0.0, 1.0]) = 0.75
+    expected_mean = 0.75
+    assert torch.allclose(loss_dict['td_error'], torch.tensor(expected_mean), atol=1e-6)
+
+    # Expected std: std([1.0, 1.0, 0.0, 1.0]) = 0.5
+    expected_std = 0.5
+    assert torch.allclose(loss_dict['td_error_std'], torch.tensor(expected_std), atol=1e-6)
+
+
+def test_compute_dqn_loss_invalid_type():
+    """Test that invalid loss type raises error."""
+    q_selected = torch.tensor([1.0, 2.0], requires_grad=True)
+    td_targets = torch.tensor([1.5, 2.5])
+
+    with pytest.raises(ValueError, match="Unknown loss_type"):
+        compute_dqn_loss(q_selected, td_targets, loss_type='invalid')
+
+
+def test_compute_dqn_loss_shape_mismatch():
+    """Test that shape mismatch raises error."""
+    q_selected = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
+    td_targets = torch.tensor([1.5, 2.5])  # Different size
+
+    with pytest.raises(AssertionError, match="Shape mismatch"):
+        compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+
+
+def test_compute_dqn_loss_gradient_assertions():
+    """Test gradient requirements are validated."""
+    # q_selected without gradients (should fail)
+    q_selected = torch.tensor([1.0, 2.0], requires_grad=False)
+    td_targets = torch.tensor([1.5, 2.5])
+
+    with pytest.raises(AssertionError, match="should have gradients"):
+        compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+
+    # td_targets with gradients (should fail)
+    q_selected = torch.tensor([1.0, 2.0], requires_grad=True)
+    td_targets = torch.tensor([1.5, 2.5], requires_grad=True)
+
+    with pytest.raises(AssertionError, match="should be detached"):
+        compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+
+
+def test_compute_dqn_loss_huber_delta():
+    """Test Huber loss with different delta values."""
+    # Large errors to test delta effect
+    q_selected = torch.tensor([0.0, 5.0, 10.0], requires_grad=True)
+    td_targets = torch.tensor([1.0, 1.0, 1.0])  # Errors: [1.0, 4.0, 9.0]
+
+    # Small delta (more linear for large errors)
+    loss_dict_small = compute_dqn_loss(q_selected, td_targets, loss_type='huber', huber_delta=0.5)
+
+    # Large delta (more quadratic, closer to MSE)
+    loss_dict_large = compute_dqn_loss(q_selected, td_targets, loss_type='huber', huber_delta=10.0)
+
+    # Both should be valid scalars
+    assert loss_dict_small['loss'].shape == torch.Size([])
+    assert loss_dict_large['loss'].shape == torch.Size([])
+
+    # TD errors should be the same regardless of loss type
+    assert torch.allclose(loss_dict_small['td_error'], loss_dict_large['td_error'])
+
+
+def test_compute_dqn_loss_zero_td_error():
+    """Test loss when TD error is zero (perfect predictions)."""
+    q_selected = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
+    td_targets = torch.tensor([1.0, 2.0, 3.0])  # Perfect match
+
+    # MSE loss
+    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+
+    # Loss should be zero
+    assert torch.allclose(loss_dict['loss'], torch.tensor(0.0), atol=1e-6)
+
+    # TD error should be zero
+    assert torch.allclose(loss_dict['td_error'], torch.tensor(0.0), atol=1e-6)
+
+
+def test_compute_dqn_loss_batch_sizes():
+    """Test loss computation across different batch sizes."""
+    for batch_size in [1, 2, 8, 32]:
+        q_selected = torch.randn(batch_size, requires_grad=True)
+        td_targets = torch.randn(batch_size)
+
+        # MSE
+        loss_dict_mse = compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+        assert loss_dict_mse['loss'].shape == torch.Size([])
+
+        # Huber
+        loss_dict_huber = compute_dqn_loss(q_selected, td_targets, loss_type='huber')
+        assert loss_dict_huber['loss'].shape == torch.Size([])
+
+
+def test_compute_dqn_loss_mse_vs_huber():
+    """Test MSE vs Huber loss behavior for small and large errors."""
+    # Small errors (Huber should be similar to MSE)
+    q_selected_small = torch.tensor([1.0, 1.1, 0.9], requires_grad=True)
+    td_targets_small = torch.tensor([1.0, 1.0, 1.0])
+
+    mse_small = compute_dqn_loss(q_selected_small, td_targets_small, loss_type='mse')
+    huber_small = compute_dqn_loss(q_selected_small.clone().detach().requires_grad_(True),
+                                   td_targets_small, loss_type='huber', huber_delta=1.0)
+
+    # For small errors, Huber and MSE should be close
+    # Note: Huber is 0.5*error^2 for |error| < delta, so it's 0.5 * MSE
+    assert huber_small['loss'] < mse_small['loss']
+
+    # Large errors (Huber should be smaller than MSE due to linear region)
+    q_selected_large = torch.tensor([0.0, 10.0, 20.0], requires_grad=True)
+    td_targets_large = torch.tensor([1.0, 1.0, 1.0])
+
+    mse_large = compute_dqn_loss(q_selected_large, td_targets_large, loss_type='mse')
+    huber_large = compute_dqn_loss(q_selected_large.clone().detach().requires_grad_(True),
+                                   td_targets_large, loss_type='huber', huber_delta=1.0)
+
+    # For large errors, Huber should be much smaller than MSE
+    assert huber_large['loss'] < mse_large['loss']
+
+
 if __name__ == "__main__":
     # Run tests manually
     print("Running DQN trainer tests...")
@@ -611,5 +838,40 @@ if __name__ == "__main__":
 
     test_q_selection_shape_consistency()
     print("✓ Q-selection shape consistency test passed")
+
+    # Loss computation tests
+    print("\nLoss Computation Tests:")
+    test_compute_dqn_loss_mse_basic()
+    print("✓ Compute DQN loss MSE basic test passed")
+
+    test_compute_dqn_loss_huber_basic()
+    print("✓ Compute DQN loss Huber basic test passed")
+
+    test_compute_dqn_loss_gradient_flow()
+    print("✓ Compute DQN loss gradient flow test passed")
+
+    test_compute_dqn_loss_td_error_stats()
+    print("✓ Compute DQN loss TD error stats test passed")
+
+    test_compute_dqn_loss_invalid_type()
+    print("✓ Compute DQN loss invalid type test passed")
+
+    test_compute_dqn_loss_shape_mismatch()
+    print("✓ Compute DQN loss shape mismatch test passed")
+
+    test_compute_dqn_loss_gradient_assertions()
+    print("✓ Compute DQN loss gradient assertions test passed")
+
+    test_compute_dqn_loss_huber_delta()
+    print("✓ Compute DQN loss Huber delta test passed")
+
+    test_compute_dqn_loss_zero_td_error()
+    print("✓ Compute DQN loss zero TD error test passed")
+
+    test_compute_dqn_loss_batch_sizes()
+    print("✓ Compute DQN loss batch sizes test passed")
+
+    test_compute_dqn_loss_mse_vs_huber()
+    print("✓ Compute DQN loss MSE vs Huber test passed")
 
     print("\nAll tests passed! ✓")

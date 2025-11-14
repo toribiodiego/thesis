@@ -5,10 +5,12 @@ Provides utilities for:
 - Hard target network updates
 - TD target computation
 - Q-learning loss computation
+- MSE and Huber loss functions
 """
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from typing import Optional, Dict, Tuple
 
 
@@ -228,3 +230,72 @@ def compute_td_loss_components(
     td_targets = compute_td_targets(rewards, next_states, dones, target_net, gamma)
 
     return q_selected, td_targets
+
+
+def compute_dqn_loss(
+    q_selected: torch.Tensor,
+    td_targets: torch.Tensor,
+    loss_type: str = 'mse',
+    huber_delta: float = 1.0
+) -> Dict[str, torch.Tensor]:
+    """
+    Compute DQN loss with configurable loss function.
+
+    Supports MSE loss (default) or Huber loss (smooth L1).
+    Returns loss and auxiliary statistics for monitoring.
+
+    Args:
+        q_selected: Selected Q-values Q(s, a), shape (B,), with gradients
+        td_targets: TD target values y, shape (B,), detached
+        loss_type: Loss function type, 'mse' or 'huber' (default: 'mse')
+        huber_delta: Delta parameter for Huber loss (default: 1.0)
+
+    Returns:
+        Dictionary containing:
+            - 'loss': Scalar loss tensor (with gradients)
+            - 'td_error': Mean absolute TD error |Q(s,a) - y| (detached)
+            - 'td_error_std': Standard deviation of TD errors (detached)
+
+    Notes:
+        - MSE loss: L = mean((Q(s,a) - y)^2)
+        - Huber loss: L = smooth_l1_loss with delta parameter
+        - TD error is computed as |Q(s,a) - y| for monitoring
+        - All auxiliary stats are detached (no gradients)
+
+    Example:
+        >>> q_selected, td_targets = compute_td_loss_components(...)
+        >>> loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+        >>> loss = loss_dict['loss']
+        >>> loss.backward()
+        >>> # Monitor TD error
+        >>> print(f"Mean TD error: {loss_dict['td_error'].item():.4f}")
+    """
+    # Validate inputs
+    assert q_selected.shape == td_targets.shape, \
+        f"Shape mismatch: q_selected {q_selected.shape} vs td_targets {td_targets.shape}"
+    assert q_selected.requires_grad, "q_selected should have gradients"
+    assert not td_targets.requires_grad, "td_targets should be detached"
+
+    # Compute loss based on type
+    if loss_type == 'mse':
+        # Mean Squared Error loss
+        loss = F.mse_loss(q_selected, td_targets, reduction='mean')
+    elif loss_type == 'huber':
+        # Huber loss (smooth L1)
+        # PyTorch's smooth_l1_loss uses delta=1.0 by default
+        # For custom delta, we use huber_loss with specified delta
+        loss = F.huber_loss(q_selected, td_targets, reduction='mean', delta=huber_delta)
+    else:
+        raise ValueError(f"Unknown loss_type: {loss_type}. Use 'mse' or 'huber'.")
+
+    # Compute TD error statistics (for monitoring)
+    with torch.no_grad():
+        td_errors = torch.abs(q_selected - td_targets)  # |Q(s,a) - y|
+        mean_td_error = td_errors.mean()
+        std_td_error = td_errors.std()
+
+    return {
+        'loss': loss,
+        'td_error': mean_td_error,
+        'td_error_std': std_td_error
+    }

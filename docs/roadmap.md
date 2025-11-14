@@ -156,8 +156,8 @@ TD target: *y = r + γ(1−done)×maxₐ′ Q_target(s′,a′)*. MSE or Huber l
     - [X] feat: Initialize online/target Q-nets and hard-copy sync helper
 - [X] Compute TD targets per minibatch using `y = r + γ * (1 - done) * max_a' Q_target(s', a')` under `no_grad`, and gather `Q_online(s, a)` with `gather` for chosen actions; ensure correct broadcasting and shapes `(B,)` after squeeze.
     - [X] feat: Implement TD target computation and online Q selection
-- [ ] Add configurable loss: default MSE on `(Q_selected - y)` with `reduction='mean'`, optional Huber (δ=1.0) via config flag; return loss and aux stats (mean |TD error|).
-    - [ ] feat: Add MSE/Huber loss with TD-error metrics
+- [X] Add configurable loss: default MSE on `(Q_selected - y)` with `reduction='mean'`, optional Huber (δ=1.0) via config flag; return loss and aux stats (mean |TD error|).
+    - [X] feat: Add MSE/Huber loss with TD-error metrics
 - [ ] Configure optimizer and hyperparameters: RMSProp (ρ=0.95, ε=1e-2) or Adam via config; LR `2.5e-4`, γ `0.99`, batch size `32`; apply global-norm gradient clipping (e.g., `10.0`) right before `optimizer.step()`.
     - [ ] build: Add optimizer setup and global-norm gradient clipping
 - [ ] Implement periodic target updates: call `hard_update_target()` every `C` environment steps (default `10_000`); track env step counter and log each sync step.

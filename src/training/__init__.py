@@ -5,7 +5,8 @@ from .dqn_trainer import (
     init_target_network,
     compute_td_targets,
     select_q_values,
-    compute_td_loss_components
+    compute_td_loss_components,
+    compute_dqn_loss
 )
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     'init_target_network',
     'compute_td_targets',
     'select_q_values',
-    'compute_td_loss_components'
+    'compute_td_loss_components',
+    'compute_dqn_loss'
 ]
