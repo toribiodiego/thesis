@@ -142,8 +142,10 @@ class ReplayBuffer:
 
         An index is valid if:
         1. It's within the current buffer size
-        2. It's not an episode start (we need state at t-1 for frame stacking)
-        3. The next index (t+1) exists and is in the same episode
+        2. It's not an episode start (we need previous states for frame stacking)
+        3. For non-terminal transitions: next index exists and is in same episode
+        4. For terminal transitions (done=True): always valid (next_state doesn't
+           matter since TD target = r when done=True)
 
         Args:
             idx: Index to check
@@ -159,15 +161,17 @@ class ReplayBuffer:
         if self.episode_starts[idx]:
             return False
 
-        # Check if next index exists and is in same episode
+        # Terminal transitions are valid - next_state doesn't matter for TD target
+        if self.dones[idx]:
+            return True
+
+        # For non-terminal transitions, check if next index exists and is in same episode
         next_idx = (idx + 1) % self.capacity
         if next_idx >= self.size:
             return False
 
-        # If next index is an episode start and we've wrapped around,
-        # it means we've crossed an episode boundary
-        if self.episode_starts[next_idx] and next_idx < idx:
-            # Wrapped around and next is episode start = boundary crossing
+        # If next index is an episode start, we've crossed an episode boundary
+        if self.episode_starts[next_idx]:
             return False
 
         return True
