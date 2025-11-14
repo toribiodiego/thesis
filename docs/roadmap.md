@@ -215,8 +215,8 @@ Save/restore models, optimizer, replay position, counters, ε, RNG states. Suppo
 **Checklist:**
 - [X] Implement checkpoint structure that saves online/target weights, optimizer state, step counter, episode counter, ε value, replay buffer write index and content (or snapshot pointer), and RNG states (torch, numpy, random, env) to `experiments/dqn_atari/checkpoints/checkpoint_{steps}.pt`; write atomically (temp file → rename) and include a small `meta` dict (schema version, timestamp, commit hash).
     - [X] feat: Add atomic checkpoint save with models, optimizer, replay position, RNG states, and run metadata
-- [ ] Add resume logic via `--resume path/to/checkpoint.pt` that restores device-safe tensors, optimizer, step/episode counters, ε schedule state, RNG states, and (if present) replay buffer; validate config compatibility and warn on commit/hash mismatch; resume training seamlessly from the next step.
-    - [ ] feat: Implement robust resume path restoring counters, schedules, and replay buffer
+- [X] Add resume logic via `--resume path/to/checkpoint.pt` that restores device-safe tensors, optimizer, step/episode counters, ε schedule state, RNG states, and (if present) replay buffer; validate config compatibility and warn on commit/hash mismatch; resume training seamlessly from the next step.
+    - [X] feat: Implement robust resume path restoring counters, schedules, and replay buffer
 - [ ] Centralize deterministic seeding with `set_seed(seed, deterministic=True)` to seed Python, NumPy, Torch (CPU/GPU), and the env on every reset; record the seed in run metadata and propagate to workers if using multiprocessing.
     - [ ] feat: Add deterministic seeding utility and metadata recording
 - [ ] Control randomness for reproducibility by setting `torch.backends.cudnn.deterministic=True`, `torch.backends.cudnn.benchmark=False`, and optionally `torch.use_deterministic_algorithms(True)` behind a config flag; document potential performance trade-offs.

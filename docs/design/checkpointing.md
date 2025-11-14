@@ -346,6 +346,161 @@ Tests cover:
 - Best model tracking
 - Checkpoint rotation (keep_last_n)
 
+## Resume Training
+
+### CLI Integration
+
+Add resume arguments to your training script:
+
+```python
+from src.training import add_resume_args
+
+parser = argparse.ArgumentParser()
+add_resume_args(parser)
+args = parser.parse_args()
+
+# Usage:
+# python train_dqn.py --resume checkpoints/checkpoint_1000000.pt
+# python train_dqn.py --resume checkpoints/checkpoint_1000000.pt --strict-resume
+```
+
+### Full Resume Example
+
+```python
+from src.training import resume_from_checkpoint, CheckpointManager, EpsilonScheduler
+from src.models.dqn import DQN
+from src.replay import ReplayBuffer
+
+# Initialize fresh objects
+online_model = DQN(num_actions=6)
+target_model = DQN(num_actions=6)
+optimizer = torch.optim.RMSprop(online_model.parameters(), lr=2.5e-4)
+epsilon_scheduler = EpsilonScheduler(
+    epsilon_start=1.0,
+    epsilon_end=0.1,
+    decay_frames=1_000_000
+)
+replay_buffer = ReplayBuffer(capacity=1_000_000)
+
+# Resume from checkpoint
+resumed = resume_from_checkpoint(
+    checkpoint_path=args.resume,
+    online_model=online_model,
+    target_model=target_model,
+    optimizer=optimizer,
+    epsilon_scheduler=epsilon_scheduler,
+    replay_buffer=replay_buffer,
+    env=env,
+    config=config,
+    device='cuda',
+    strict_config=args.strict_resume
+)
+
+# Extract resumed state
+start_step = resumed['next_step']  # Resume from next step
+episode_count = resumed['episode']
+current_epsilon = resumed['epsilon']
+
+print(f"Resuming training from step {start_step}")
+
+# Continue training loop
+for step in range(start_step, total_steps):
+    # Training continues normally...
+    epsilon = epsilon_scheduler.get_epsilon(step)
+    # ...
+```
+
+### Config Validation
+
+Resume validates configuration compatibility automatically:
+
+**Critical Parameters (must match):**
+- Environment ID
+- Frame size
+- Frame stack size
+
+**Important Parameters (warnings only):**
+- Learning rate
+- Discount factor (gamma)
+- Batch size
+- Target update interval
+- Replay capacity
+
+**Strict Mode:**
+```bash
+# Enforce strict config match (error on mismatch)
+python train_dqn.py --resume checkpoint.pt --strict-resume
+```
+
+**Warnings Example:**
+```
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  CRITICAL: Environment ID mismatch - checkpoint: ALE/Pong-v5, current: ALE/Breakout-v5
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+WARNING: Learning rate differs - checkpoint: 0.00025, current: 0.0001
+```
+
+### Git Hash Verification
+
+Resume automatically checks for code changes:
+
+```
+WARNING: Git commit hash mismatch
+  Checkpoint was saved at commit: abc1234
+  Current commit: def5678
+  Code changes may affect reproducibility
+```
+
+### State Restoration
+
+What gets restored:
+- ✓ Model weights (online and target)
+- ✓ Optimizer state (momentum, learning rate, etc.)
+- ✓ Training counters (step, episode)
+- ✓ Epsilon value and scheduler state
+- ✓ Replay buffer (index, size, optionally full data)
+- ✓ RNG states (Python, NumPy, PyTorch, CUDA, environment)
+
+### Epsilon Schedule Restoration
+
+The epsilon scheduler state is fully restored:
+
+```python
+# Checkpoint saved at step=500,000 with epsilon=0.55
+# After resume:
+assert epsilon_scheduler.frame_counter == 500_000
+assert epsilon_scheduler.current_epsilon == 0.55
+assert epsilon_scheduler.get_epsilon(500_000) == 0.55
+
+# Training continues with correct decay
+epsilon_scheduler.get_epsilon(600_000)  # Returns 0.51
+```
+
+### Troubleshooting Resume
+
+**Error: FileNotFoundError**
+- Check checkpoint path is correct
+- Use absolute paths or relative to working directory
+
+**Error: Config incompatibility**
+- Review warnings for critical mismatches
+- Use `--strict-resume` to enforce compatibility
+- Ensure checkpoint matches current architecture
+
+**Warning: Epsilon mismatch**
+- Minor differences (< 0.01) are normal due to floating point
+- Large differences indicate scheduler misconfiguration
+
+**Warning: Unable to verify git hash**
+- Not in a git repository
+- Checkpoint saved outside git repo
+- Acceptable if not tracking code versions
+
+**Replay buffer not restored**
+- Check if checkpoint saved with `save_replay_buffer=True`
+- Default only saves index/size (buffer refills during warm-up)
+
 ## Related Documentation
 
 - [Training Loop](training_loop_runtime.md) - Integration with training loop

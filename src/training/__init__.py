@@ -81,6 +81,14 @@ from .checkpoint_utils import (
     verify_checkpoint_integrity
 )
 
+# Resume functionality
+from .resume import (
+    resume_from_checkpoint,
+    validate_config_compatibility,
+    check_git_hash_mismatch,
+    add_resume_args
+)
+
 __all__ = [
     # Target network
     'hard_update_target',
@@ -126,5 +134,10 @@ __all__ = [
     # Checkpoint utilities
     'get_rng_states',
     'set_rng_states',
-    'verify_checkpoint_integrity'
+    'verify_checkpoint_integrity',
+    # Resume
+    'resume_from_checkpoint',
+    'validate_config_compatibility',
+    'check_git_hash_mismatch',
+    'add_resume_args'
 ]

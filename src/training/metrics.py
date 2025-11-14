@@ -250,6 +250,10 @@ class EpsilonScheduler:
         # Precompute slope for efficiency
         self.slope = (epsilon_end - epsilon_start) / decay_frames
 
+        # State for resume (can be set when loading checkpoint)
+        self.frame_counter = 0
+        self.current_epsilon = epsilon_start
+
     def get_epsilon(self, current_frame: int) -> float:
         """
         Get epsilon for current training frame with linear decay.
