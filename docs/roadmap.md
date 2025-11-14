@@ -194,8 +194,8 @@ The target network is a 2015 Nature paper improvement (Mnih et al.). The origina
     - [X] docs: Document training/eval termination policy and optional no-op starts
 - [X] Add structured logging under `experiments/dqn_atari/runs/`: per-step (loss moving average, ε, learning rate, replay size, grad norm) and per-episode (return, length, FPS, rolling mean over last N); save checkpoints on a fixed cadence and on best eval score.
     - [X] feat: Add step/episode loggers and periodic/best checkpoints
-- [ ] Implement the evaluation routine: every E frames (default 250,000) run K episodes (default 10) with `eval_epsilon`; disable learning, set eval mode, log mean/median/std returns, and write plots/CSV to `results/`.
-    - [ ] feat: Add periodic evaluation with summary metrics and result artifacts
+- [X] Implement the evaluation routine: every E frames (default 250,000) run K episodes (default 10) with `eval_epsilon`; disable learning, set eval mode, log mean/median/std returns, and write plots/CSV to `results/`.
+    - [X] feat: Add periodic evaluation with summary metrics and result artifacts
 - [ ] Track the average max-Q over a fixed reference batch of saved states (as in the paper) to monitor learning progress even when rewards are noisy.
     - [ ] feat: Add optional reference-state Q logging hook and plotting support
 - [ ] Persist reproducibility metadata for each run: save merged config snapshot, seed, and git commit hash beside logs and checkpoints (JSON/YAML).

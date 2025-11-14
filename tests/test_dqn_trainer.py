@@ -3136,6 +3136,248 @@ def test_checkpoint_manager_load():
         assert metadata['metadata']['epsilon'] == 0.5
 
 
+# ============================================================================
+# Evaluation Tests
+# ============================================================================
+
+def test_evaluate_basic():
+    """Test evaluate function runs and returns statistics."""
+    from src.training import evaluate
+    from src.models import DQN
+    from unittest.mock import Mock
+
+    # Mock environment
+    env = Mock()
+    env.action_space.n = 6
+    env.action_space.sample.return_value = 0
+
+    # Mock reset and step
+    dummy_state = np.random.randint(0, 255, (4, 84, 84), dtype=np.uint8)
+    env.reset.return_value = (dummy_state, {})
+    env.step.return_value = (dummy_state, 1.0, False, False, {})
+
+    # Create model
+    model = DQN(num_actions=6)
+
+    # Run evaluation (will loop indefinitely without termination, so mock it)
+    # Let's fix the mock to terminate after a few steps
+    step_count = [0]
+    def mock_step(action):
+        step_count[0] += 1
+        done = step_count[0] >= 10  # Terminate after 10 steps
+        return (dummy_state, 1.0, done, False, {})
+
+    env.step.side_effect = mock_step
+
+    # Evaluate
+    results = evaluate(env, model, num_episodes=2, eval_epsilon=0.05, device='cpu')
+
+    # Check results structure
+    assert 'mean_return' in results
+    assert 'median_return' in results
+    assert 'std_return' in results
+    assert 'min_return' in results
+    assert 'max_return' in results
+    assert 'mean_length' in results
+    assert 'episode_returns' in results
+    assert 'episode_lengths' in results
+    assert results['num_episodes'] == 2
+
+
+def test_evaluate_greedy():
+    """Test evaluate with greedy policy (epsilon=0)."""
+    from src.training import evaluate
+    from src.models import DQN
+    from unittest.mock import Mock
+
+    env = Mock()
+    env.action_space.n = 6
+    dummy_state = np.random.randint(0, 255, (4, 84, 84), dtype=np.uint8)
+    env.reset.return_value = (dummy_state, {})
+
+    step_count = [0]
+    def mock_step(action):
+        step_count[0] += 1
+        done = step_count[0] >= 5
+        if done:
+            step_count[0] = 0  # Reset for next episode
+        return (dummy_state, 1.0, done, False, {})
+
+    env.step.side_effect = mock_step
+
+    model = DQN(num_actions=6)
+
+    # Greedy evaluation
+    results = evaluate(env, model, num_episodes=1, eval_epsilon=0.0, device='cpu')
+
+    assert results['num_episodes'] == 1
+    assert len(results['episode_returns']) == 1
+
+
+def test_evaluation_scheduler_interval():
+    """Test EvaluationScheduler triggers at correct intervals."""
+    from src.training import EvaluationScheduler
+
+    scheduler = EvaluationScheduler(eval_interval=250000, num_episodes=10)
+
+    # Should not evaluate at step 0
+    assert not scheduler.should_evaluate(0)
+
+    # Should not evaluate before interval
+    assert not scheduler.should_evaluate(100000)
+
+    # Should evaluate at interval
+    assert scheduler.should_evaluate(250000)
+
+    # Should not evaluate twice at same step
+    scheduler.record_evaluation(250000, {'mean_return': 20.0})
+    assert not scheduler.should_evaluate(250000)
+
+    # Should evaluate at next interval
+    assert scheduler.should_evaluate(500000)
+
+
+def test_evaluation_scheduler_tracking():
+    """Test EvaluationScheduler tracks evaluation history."""
+    from src.training import EvaluationScheduler
+
+    scheduler = EvaluationScheduler(eval_interval=250000)
+
+    # Record evaluations
+    scheduler.record_evaluation(250000, {'mean_return': 15.0})
+    scheduler.record_evaluation(500000, {'mean_return': 20.0})
+    scheduler.record_evaluation(750000, {'mean_return': 25.0})
+
+    # Check history
+    assert len(scheduler.eval_steps) == 3
+    assert len(scheduler.eval_returns) == 3
+    assert scheduler.get_best_return() == 25.0
+
+
+def test_evaluation_scheduler_trend():
+    """Test EvaluationScheduler detects performance trends."""
+    from src.training import EvaluationScheduler
+
+    scheduler = EvaluationScheduler()
+
+    # Record improving trend
+    scheduler.record_evaluation(250000, {'mean_return': 10.0})
+    scheduler.record_evaluation(500000, {'mean_return': 15.0})
+    scheduler.record_evaluation(750000, {'mean_return': 20.0})
+
+    assert scheduler.get_recent_trend(n=3) == 'improving'
+
+    # Record declining trend
+    scheduler.record_evaluation(1000000, {'mean_return': 15.0})
+
+    trend = scheduler.get_recent_trend(n=3)
+    assert trend in ['declining', 'stable']
+
+
+def test_evaluation_logger_csv():
+    """Test EvaluationLogger writes CSV correctly."""
+    from src.training import EvaluationLogger
+    import tempfile
+    import os
+    import csv
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        logger = EvaluationLogger(log_dir=tmpdir)
+
+        # Log evaluation
+        results = {
+            'mean_return': 20.5,
+            'median_return': 21.0,
+            'std_return': 2.5,
+            'min_return': 15.0,
+            'max_return': 25.0,
+            'mean_length': 1200.5,
+            'episode_returns': [15.0, 20.0, 25.0],
+            'episode_lengths': [1000, 1200, 1400],
+            'num_episodes': 3
+        }
+
+        logger.log_evaluation(step=250000, results=results, epsilon=0.5)
+
+        # Check CSV exists
+        csv_path = os.path.join(tmpdir, 'evaluations.csv')
+        assert os.path.exists(csv_path)
+
+        # Read CSV
+        with open(csv_path, 'r') as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+
+        assert len(rows) == 1
+        assert int(rows[0]['step']) == 250000
+        assert float(rows[0]['mean_return']) == 20.5
+
+
+def test_evaluation_logger_json():
+    """Test EvaluationLogger writes detailed JSON."""
+    from src.training import EvaluationLogger
+    import tempfile
+    import os
+    import json
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        logger = EvaluationLogger(log_dir=tmpdir)
+
+        results = {
+            'mean_return': 20.5,
+            'median_return': 21.0,
+            'std_return': 2.5,
+            'min_return': 15.0,
+            'max_return': 25.0,
+            'mean_length': 1200.5,
+            'episode_returns': [15.0, 20.0, 25.0],
+            'episode_lengths': [1000, 1200, 1400],
+            'num_episodes': 3
+        }
+
+        logger.log_evaluation(step=250000, results=results)
+
+        # Check JSON exists
+        json_path = os.path.join(tmpdir, 'detailed', 'eval_step_250000.json')
+        assert os.path.exists(json_path)
+
+        # Read JSON
+        with open(json_path, 'r') as f:
+            data = json.load(f)
+
+        assert data['step'] == 250000
+        assert data['statistics']['mean_return'] == 20.5
+        assert len(data['episode_returns']) == 3
+
+
+def test_evaluation_logger_get_all_results():
+    """Test EvaluationLogger retrieves all results."""
+    from src.training import EvaluationLogger
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        logger = EvaluationLogger(log_dir=tmpdir)
+
+        # Log multiple evaluations
+        for step in [250000, 500000, 750000]:
+            results = {
+                'mean_return': step / 10000,
+                'median_return': step / 10000,
+                'std_return': 1.0,
+                'min_return': 10.0,
+                'max_return': 30.0,
+                'mean_length': 1000.0,
+                'episode_returns': [10.0, 20.0, 30.0],
+                'episode_lengths': [1000, 1000, 1000],
+                'num_episodes': 3
+            }
+            logger.log_evaluation(step=step, results=results)
+
+        # Retrieve all results
+        all_results = logger.get_all_results()
+        assert len(all_results) == 3
+
+
 if __name__ == "__main__":
     # Run tests manually
     print("Running DQN trainer tests...")

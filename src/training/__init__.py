@@ -22,7 +22,10 @@ from .dqn_trainer import (
     training_step,
     StepLogger,
     EpisodeLogger,
-    CheckpointManager
+    CheckpointManager,
+    evaluate,
+    EvaluationScheduler,
+    EvaluationLogger
 )
 
 __all__ = [
@@ -47,5 +50,8 @@ __all__ = [
     'training_step',
     'StepLogger',
     'EpisodeLogger',
-    'CheckpointManager'
+    'CheckpointManager',
+    'evaluate',
+    'EvaluationScheduler',
+    'EvaluationLogger'
 ]
