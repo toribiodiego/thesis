@@ -10,18 +10,35 @@ import numpy as np
 import torch
 
 
-def set_seed(seed: int, deterministic: bool = False) -> None:
+def set_seed(seed: int, deterministic: bool = False, env: Any = None) -> None:
     """
-    Set random seeds for Python, NumPy, and PyTorch for reproducibility.
+    Set random seeds for Python, NumPy, PyTorch, and optionally environment for reproducibility.
+
+    This is the centralized seeding function that should be called:
+    - Once at the start of training with the base seed
+    - On every environment reset (with episode-specific seed)
+    - When resuming from a checkpoint (to restore state)
 
     Args:
         seed: Random seed value
         deterministic: If True, enables deterministic operations in PyTorch.
                       This may reduce performance but ensures full reproducibility.
                       Note: Some operations still may not be deterministic on GPU.
+        env: Optional environment object to seed (will call env.reset(seed=seed) if provided)
 
     Example:
+        >>> # Initial seeding
         >>> set_seed(42, deterministic=True)
+        >>>
+        >>> # Seed environment on reset
+        >>> obs, info = set_seed(42 + episode, env=env)
+        >>>
+        >>> # With multiprocessing workers
+        >>> set_seed(base_seed + worker_id, deterministic=True)
+
+    Note:
+        When using multiprocessing, each worker should call set_seed with a unique
+        seed derived from the base seed (e.g., base_seed + worker_id).
     """
     random.seed(seed)
     np.random.seed(seed)
@@ -35,6 +52,41 @@ def set_seed(seed: int, deterministic: bool = False) -> None:
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
         # Note: This may impact performance but ensures reproducibility
+
+    # Seed environment if provided (returns reset observation)
+    if env is not None:
+        return env.reset(seed=seed)
+
+    return None
+
+
+def seed_env(env: Any, seed: int) -> tuple:
+    """
+    Seed environment and return reset observation.
+
+    Convenience function for seeding environment during episode resets.
+    This is equivalent to calling env.reset(seed=seed) but makes the
+    intent clearer and pairs with set_seed() for full reproducibility.
+
+    Args:
+        env: Environment object with reset() method that accepts seed parameter
+        seed: Random seed value for the environment
+
+    Returns:
+        Tuple of (observation, info) from env.reset()
+
+    Example:
+        >>> # Seed environment for episode 0
+        >>> obs, info = seed_env(env, base_seed + 0)
+        >>>
+        >>> # Seed environment for episode 1
+        >>> obs, info = seed_env(env, base_seed + 1)
+
+    Note:
+        For full determinism, call set_seed() before the first seed_env() call
+        to ensure Python, NumPy, and PyTorch are also seeded.
+    """
+    return env.reset(seed=seed)
 
 
 def get_git_info() -> Dict[str, str]:

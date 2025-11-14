@@ -501,6 +501,175 @@ epsilon_scheduler.get_epsilon(600_000)  # Returns 0.51
 - Check if checkpoint saved with `save_replay_buffer=True`
 - Default only saves index/size (buffer refills during warm-up)
 
+## Deterministic Seeding
+
+### Centralized Seeding Function
+
+The `set_seed()` function provides centralized seeding for all random number generators:
+
+```python
+from src.utils import set_seed
+
+# Initial seeding (once at training start)
+set_seed(seed=42, deterministic=True)
+
+# Seed with environment reset
+obs, info = set_seed(seed=42 + episode, env=env)
+
+# For multiprocessing workers
+set_seed(seed=base_seed + worker_id, deterministic=True)
+```
+
+### When to Call set_seed()
+
+**1. Training Initialization**
+```python
+# Once at the very start of training
+set_seed(args.seed, deterministic=args.deterministic)
+```
+
+**2. Every Environment Reset**
+```python
+# Use episode-specific seed for each reset
+for episode in range(num_episodes):
+    obs, info = env.reset(seed=base_seed + episode)
+    # Or use convenience function:
+    obs, info = seed_env(env, base_seed + episode)
+```
+
+**3. After Resume from Checkpoint**
+```python
+# RNG states are restored automatically by resume_from_checkpoint()
+# But you can manually seed if needed:
+set_seed(checkpoint['seed'])
+```
+
+**4. Multiprocessing Workers**
+```python
+def worker_init_fn(worker_id):
+    """Initialize worker with unique seed."""
+    worker_seed = base_seed + worker_id
+    set_seed(worker_seed, deterministic=True)
+```
+
+### What Gets Seeded
+
+`set_seed()` seeds all random number generators:
+- ✓ Python `random` module
+- ✓ NumPy `np.random`
+- ✓ PyTorch CPU (`torch.manual_seed`)
+- ✓ PyTorch CUDA (`torch.cuda.manual_seed_all`)
+- ✓ Environment (via `env.reset(seed=...)`)
+
+### Deterministic Mode
+
+Enable deterministic operations for full reproducibility:
+
+```python
+set_seed(42, deterministic=True)
+```
+
+This sets:
+- `torch.backends.cudnn.deterministic = True`
+- `torch.backends.cudnn.benchmark = False`
+
+**Performance Impact:**
+- Deterministic mode may reduce training speed by 10-20%
+- Use for reproducibility experiments and debugging
+- Disable for production training runs
+
+**Optional Strict Determinism:**
+```python
+# For strictest determinism (may not work with all operations)
+torch.use_deterministic_algorithms(True)
+```
+
+### Seed Recording in Metadata
+
+Seeds are automatically recorded in run metadata:
+
+```python
+from src.utils import save_run_metadata
+
+save_run_metadata(
+    output_dir='runs/pong_123',
+    config=config,
+    seed=42  # Recorded in meta.json
+)
+```
+
+The metadata file (`meta.json`) includes:
+```json
+{
+  "seed": 42,
+  "git": {
+    "commit": "abc123",
+    "branch": "main",
+    "dirty": false
+  },
+  "config": {...}
+}
+```
+
+### Episode-Specific Seeding Pattern
+
+For deterministic episode sequences:
+
+```python
+base_seed = 42
+
+# Episode 0: seed=42
+obs, info = env.reset(seed=base_seed + 0)
+# ... run episode ...
+
+# Episode 1: seed=43
+obs, info = env.reset(seed=base_seed + 1)
+# ... run episode ...
+
+# Episode 2: seed=44
+obs, info = env.reset(seed=base_seed + 2)
+# ... run episode ...
+```
+
+This ensures:
+- Each episode has deterministic behavior
+- Episodes can be reproduced individually
+- Different episodes have different randomness
+
+### Testing Determinism
+
+Verify deterministic behavior:
+
+```bash
+# Run seeding tests
+pytest tests/test_seeding.py -v
+```
+
+Tests verify:
+- Python/NumPy/PyTorch seeding
+- Environment seeding
+- Deterministic flags
+- Multiprocessing isolation
+- Resume reproducibility
+
+### Troubleshooting Determinism
+
+**Non-deterministic results after seeding:**
+1. Check that `deterministic=True` is set
+2. Verify environment supports seeding
+3. Some CUDA operations are inherently non-deterministic
+4. Check for uninitialized random calls
+
+**Different results on CPU vs GPU:**
+- GPU operations may have numerical differences
+- Use `torch.backends.cudnn.deterministic=True`
+- Some operations don't have deterministic implementations
+
+**Multiprocessing issues:**
+- Ensure each worker calls `set_seed(base_seed + worker_id)`
+- Workers inherit parent's seed if not explicitly set
+- Use `worker_init_fn` for DataLoader workers
+
 ## Related Documentation
 
 - [Training Loop](training_loop_runtime.md) - Integration with training loop
