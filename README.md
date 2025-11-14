@@ -115,6 +115,7 @@ Core implementation specifications and guides:
 - **[docs/design/dqn_training.md](docs/design/dqn_training.md)** – Q-learning update flow, loss functions, and debugging guide
 - **[docs/design/episode_handling.md](docs/design/episode_handling.md)** – Episode management, termination policies, training vs. evaluation
 - **[docs/design/training_loop_runtime.md](docs/design/training_loop_runtime.md)** – Training loop orchestration, logging, evaluation, troubleshooting
+- **[docs/design/checkpointing.md](docs/design/checkpointing.md)** – Checkpoint/resume system, saved tensors, metadata schema, deterministic seeding, verification procedures
 
 ### Running DQN
 
