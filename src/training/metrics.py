@@ -6,7 +6,7 @@ import torch.nn as nn
 from dataclasses import dataclass
 from typing import Optional, Dict
 
-from .loss import compute_td_loss_components, compute_dqn_loss
+from .loss import compute_td_loss_components, compute_dqn_loss, compute_td_targets, select_q_values
 from .optimization import clip_gradients
 from .stability import detect_nan_inf
 from .target_network import hard_update_target

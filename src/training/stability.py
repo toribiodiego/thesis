@@ -5,6 +5,8 @@ import torch
 import torch.nn as nn
 from typing import List, Tuple, Dict
 
+from .loss import compute_td_targets, select_q_values
+
 
 def detect_nan_inf(tensor: torch.Tensor, name: str = "tensor") -> bool:
     """
