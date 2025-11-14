@@ -88,6 +88,22 @@ Q-learning update flow, loss functions, and training pipeline.
 
 ---
 
+### [Episode Handling](design/episode_handling.md)
+Episode management, termination policies, and training vs. evaluation modes.
+
+**What's inside:**
+- Episode termination policies (terminated vs. truncated)
+- Life-loss as terminal during training (EpisodicLifeEnv wrapper)
+- Full episodes during evaluation (no life-loss wrapper)
+- No-op starts for stochastic initial states
+- Episode tracking and metrics (return, length, rolling averages)
+- Training vs. evaluation environment differences
+- Configuration and common pitfalls
+
+**When to read:** Implementing training/eval loops, understanding episode resets, debugging episode metrics
+
+---
+
 ## Configuration Reference
 
 ### [Config Documentation](../experiments/dqn_atari/configs/README.md)

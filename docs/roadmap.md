@@ -190,8 +190,8 @@ The target network is a 2015 Nature paper improvement (Mnih et al.). The origina
     - [X] feat: Integrate frame-skip execution and reward accumulation with accurate frame counters
 - [X] Build the main step loop: (1) select action via ε-greedy from the online Q-net, (2) step env with frame-skip, (3) append transition to replay, (4) if warm-up done and `t % train_every == 0` then sample → compute loss → backprop → optimizer step, (5) if `t % target_update == 0` then hard-sync target.
     - [X] feat: Implement training loop with scheduled optimization and target sync
-- [ ] Handle episodes consistently: reset on terminal; optionally treat life-loss as terminal during training; run full episodes during evaluation; optionally support no-op starts; record per-episode return and length.
-    - [ ] docs: Document training/eval termination policy and optional no-op starts
+- [X] Handle episodes consistently: reset on terminal; optionally treat life-loss as terminal during training; run full episodes during evaluation; optionally support no-op starts; record per-episode return and length.
+    - [X] docs: Document training/eval termination policy and optional no-op starts
 - [ ] Add structured logging under `experiments/dqn_atari/runs/`: per-step (loss moving average, ε, learning rate, replay size, grad norm) and per-episode (return, length, FPS, rolling mean over last N); save checkpoints on a fixed cadence and on best eval score.
     - [ ] feat: Add step/episode loggers and periodic/best checkpoints
 - [ ] Implement the evaluation routine: every E frames (default 250,000) run K episodes (default 10) with `eval_epsilon`; disable learning, set eval mode, log mean/median/std returns, and write plots/CSV to `results/`.
