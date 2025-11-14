@@ -10,7 +10,10 @@ from .dqn_trainer import (
     configure_optimizer,
     clip_gradients,
     TargetNetworkUpdater,
-    TrainingScheduler
+    TrainingScheduler,
+    detect_nan_inf,
+    validate_loss_decrease,
+    verify_target_sync_schedule
 )
 
 __all__ = [
@@ -23,5 +26,8 @@ __all__ = [
     'configure_optimizer',
     'clip_gradients',
     'TargetNetworkUpdater',
-    'TrainingScheduler'
+    'TrainingScheduler',
+    'detect_nan_inf',
+    'validate_loss_decrease',
+    'verify_target_sync_schedule'
 ]

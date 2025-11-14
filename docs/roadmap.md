@@ -169,8 +169,8 @@ The target network is a 2015 Nature paper improvement (Mnih et al.). The origina
     - [X] docs: Add roadmap/config comments describing how to run without a target network
 - [X] Schedule training frequency: perform one optimization step every `k=4` environment steps after replay warm-up; skip updates if `can_sample` is false; support configurable `train_every`.
     - [X] feat: Add train-every-k update scheduler with warm-up gating
-- [ ] Add stability checks: unit test on a synthetic batch to confirm loss decreases over several updates; assert target updates occur at exact multiples of `C`; detect and warn on NaNs/Infs; log grad norm and LR per update.
-    - [ ] test: Add toy-batch loss decrease and target-sync schedule tests
+- [X] Add stability checks: unit test on a synthetic batch to confirm loss decreases over several updates; assert target updates occur at exact multiples of `C`; detect and warn on NaNs/Infs; log grad norm and LR per update.
+    - [X] test: Add toy-batch loss decrease and target-sync schedule tests
 - [ ] Minimal metrics logging from the update step: loss, mean |TD error|, grad norm, learning rate, and update count for downstream plotting.
     - [ ] chore: Log core update metrics (loss, TD-error, grad-norm, lr)
 - [ ] Summarize the Q-learning update flow in `docs/design/dqn_training.md`: include the TD-loss equation, optimizer config, target-sync policy, logging expectations, and debugging tactics for instability (e.g., exploding TD error, stale targets, NaNs).

@@ -18,7 +18,7 @@ Verifies:
 import torch
 import pytest
 from src.models import DQN
-from src.memory import ReplayBuffer
+from src.replay import ReplayBuffer
 from src.training import (
     hard_update_target,
     init_target_network,
@@ -29,7 +29,10 @@ from src.training import (
     configure_optimizer,
     clip_gradients,
     TargetNetworkUpdater,
-    TrainingScheduler
+    TrainingScheduler,
+    detect_nan_inf,
+    validate_loss_decrease,
+    verify_target_sync_schedule
 )
 
 
@@ -1624,6 +1627,354 @@ def test_training_scheduler_repr():
     assert "training_steps=0" in repr_str
 
 
+# ============================================================================
+# Stability Check Tests
+# ============================================================================
+
+
+def test_detect_nan_inf_no_issues():
+    """Test detect_nan_inf returns False for normal tensors."""
+    tensor = torch.randn(32)
+    assert not detect_nan_inf(tensor, "normal_tensor")
+
+
+def test_detect_nan_inf_detects_nan():
+    """Test detect_nan_inf detects NaN values."""
+    tensor = torch.tensor([1.0, 2.0, float('nan'), 4.0])
+    assert detect_nan_inf(tensor, "nan_tensor")
+
+
+def test_detect_nan_inf_detects_inf():
+    """Test detect_nan_inf detects Inf values."""
+    tensor = torch.tensor([1.0, 2.0, float('inf'), 4.0])
+    assert detect_nan_inf(tensor, "inf_tensor")
+
+
+def test_detect_nan_inf_detects_neg_inf():
+    """Test detect_nan_inf detects negative Inf values."""
+    tensor = torch.tensor([1.0, 2.0, float('-inf'), 4.0])
+    assert detect_nan_inf(tensor, "neg_inf_tensor")
+
+
+def test_detect_nan_inf_multidimensional():
+    """Test detect_nan_inf works with multidimensional tensors."""
+    # Normal tensor
+    tensor = torch.randn(4, 8, 16)
+    assert not detect_nan_inf(tensor, "normal_3d")
+
+    # With NaN
+    tensor[2, 3, 5] = float('nan')
+    assert detect_nan_inf(tensor, "nan_3d")
+
+
+def test_detect_nan_inf_zero_tensor():
+    """Test detect_nan_inf handles zero tensors correctly."""
+    tensor = torch.zeros(32)
+    assert not detect_nan_inf(tensor, "zero_tensor")
+
+
+def test_validate_loss_decrease_basic():
+    """Test validate_loss_decrease with synthetic batch."""
+    # Create networks
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net, learning_rate=0.01)
+
+    # Create synthetic batch (small batch for quick test)
+    batch_size = 8
+    states = torch.randn(batch_size, 4, 84, 84)
+    actions = torch.randint(0, 6, (batch_size,))
+    rewards = torch.randn(batch_size)
+    next_states = torch.randn(batch_size, 4, 84, 84)
+    dones = torch.zeros(batch_size)
+
+    # Validate loss decreases
+    success, info = validate_loss_decrease(
+        compute_dqn_loss, online_net, optimizer,
+        states, actions, rewards, next_states, dones, target_net,
+        num_updates=10
+    )
+
+    assert success, f"Loss did not decrease: {info}"
+    assert info['loss_decreased']
+    assert not info['nan_inf_detected']
+    assert info['final_loss'] < info['initial_loss']
+    assert len(info['loss_history']) == 10
+
+
+def test_validate_loss_decrease_huber():
+    """Test validate_loss_decrease with Huber loss."""
+    # Create networks
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net, learning_rate=0.01)
+
+    # Create synthetic batch
+    batch_size = 8
+    states = torch.randn(batch_size, 4, 84, 84)
+    actions = torch.randint(0, 6, (batch_size,))
+    rewards = torch.randn(batch_size)
+    next_states = torch.randn(batch_size, 4, 84, 84)
+    dones = torch.zeros(batch_size)
+
+    # Validate with Huber loss
+    success, info = validate_loss_decrease(
+        compute_dqn_loss, online_net, optimizer,
+        states, actions, rewards, next_states, dones, target_net,
+        num_updates=10, loss_type='huber'
+    )
+
+    assert success, f"Loss did not decrease with Huber: {info}"
+    assert info['loss_decreased']
+    assert not info['nan_inf_detected']
+
+
+def test_validate_loss_decrease_fewer_updates():
+    """Test validate_loss_decrease with fewer updates."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net, learning_rate=0.01)
+
+    batch_size = 8
+    states = torch.randn(batch_size, 4, 84, 84)
+    actions = torch.randint(0, 6, (batch_size,))
+    rewards = torch.randn(batch_size)
+    next_states = torch.randn(batch_size, 4, 84, 84)
+    dones = torch.zeros(batch_size)
+
+    success, info = validate_loss_decrease(
+        compute_dqn_loss, online_net, optimizer,
+        states, actions, rewards, next_states, dones, target_net,
+        num_updates=5
+    )
+
+    assert len(info['loss_history']) == 5
+    # Loss should still decrease with fewer updates
+    assert info['initial_loss'] > 0
+
+
+def test_validate_loss_decrease_terminal_states():
+    """Test validate_loss_decrease with terminal states."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net, learning_rate=0.01)
+
+    batch_size = 8
+    states = torch.randn(batch_size, 4, 84, 84)
+    actions = torch.randint(0, 6, (batch_size,))
+    rewards = torch.randn(batch_size)
+    next_states = torch.randn(batch_size, 4, 84, 84)
+    dones = torch.ones(batch_size)  # All terminal
+
+    success, info = validate_loss_decrease(
+        compute_dqn_loss, online_net, optimizer,
+        states, actions, rewards, next_states, dones, target_net,
+        num_updates=10
+    )
+
+    # Should still work with terminal states
+    assert not info['nan_inf_detected']
+    assert len(info['loss_history']) == 10
+
+
+def test_validate_loss_decrease_different_gamma():
+    """Test validate_loss_decrease with different gamma values."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net, learning_rate=0.01)
+
+    batch_size = 8
+    states = torch.randn(batch_size, 4, 84, 84)
+    actions = torch.randint(0, 6, (batch_size,))
+    rewards = torch.randn(batch_size)
+    next_states = torch.randn(batch_size, 4, 84, 84)
+    dones = torch.zeros(batch_size)
+
+    # Test with gamma=0.95
+    success, info = validate_loss_decrease(
+        compute_dqn_loss, online_net, optimizer,
+        states, actions, rewards, next_states, dones, target_net,
+        num_updates=10, gamma=0.95
+    )
+
+    assert not info['nan_inf_detected']
+    assert len(info['loss_history']) == 10
+
+
+def test_validate_loss_decrease_larger_batch():
+    """Test validate_loss_decrease with standard DQN batch size."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net, learning_rate=0.01)
+
+    # Standard DQN batch size
+    batch_size = 32
+    states = torch.randn(batch_size, 4, 84, 84)
+    actions = torch.randint(0, 6, (batch_size,))
+    rewards = torch.randn(batch_size)
+    next_states = torch.randn(batch_size, 4, 84, 84)
+    dones = torch.zeros(batch_size)
+
+    success, info = validate_loss_decrease(
+        compute_dqn_loss, online_net, optimizer,
+        states, actions, rewards, next_states, dones, target_net,
+        num_updates=10
+    )
+
+    assert success, f"Loss did not decrease with batch_size=32: {info}"
+    assert info['loss_decreased']
+
+
+def test_validate_loss_decrease_info_keys():
+    """Test validate_loss_decrease returns expected info keys."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net, learning_rate=0.01)
+
+    batch_size = 8
+    states = torch.randn(batch_size, 4, 84, 84)
+    actions = torch.randint(0, 6, (batch_size,))
+    rewards = torch.randn(batch_size)
+    next_states = torch.randn(batch_size, 4, 84, 84)
+    dones = torch.zeros(batch_size)
+
+    success, info = validate_loss_decrease(
+        compute_dqn_loss, online_net, optimizer,
+        states, actions, rewards, next_states, dones, target_net,
+        num_updates=5
+    )
+
+    # Verify all expected keys are present
+    expected_keys = {'initial_loss', 'final_loss', 'loss_history',
+                     'loss_decreased', 'nan_inf_detected'}
+    assert set(info.keys()) == expected_keys
+
+
+def test_verify_target_sync_schedule_basic():
+    """Test verify_target_sync_schedule with basic interval."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    updater = TargetNetworkUpdater(update_interval=1000)
+
+    success, info = verify_target_sync_schedule(
+        updater, online_net, target_net, max_steps=5000, expected_interval=1000
+    )
+
+    assert success, f"Target sync schedule incorrect: {info}"
+    assert info['schedule_correct']
+    assert info['count_correct']
+    assert info['update_steps'] == [1000, 2000, 3000, 4000, 5000]
+    assert info['expected_steps'] == [1000, 2000, 3000, 4000, 5000]
+
+
+def test_verify_target_sync_schedule_10k_interval():
+    """Test verify_target_sync_schedule with 10k interval (DQN default)."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    updater = TargetNetworkUpdater(update_interval=10000)
+
+    success, info = verify_target_sync_schedule(
+        updater, online_net, target_net, max_steps=50000, expected_interval=10000
+    )
+
+    assert success, f"Target sync schedule incorrect: {info}"
+    assert info['update_steps'] == [10000, 20000, 30000, 40000, 50000]
+
+
+def test_verify_target_sync_schedule_small_interval():
+    """Test verify_target_sync_schedule with small interval."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    updater = TargetNetworkUpdater(update_interval=100)
+
+    success, info = verify_target_sync_schedule(
+        updater, online_net, target_net, max_steps=500, expected_interval=100
+    )
+
+    assert success
+    assert len(info['update_steps']) == 5
+    assert info['update_steps'] == [100, 200, 300, 400, 500]
+
+
+def test_verify_target_sync_schedule_partial_interval():
+    """Test verify_target_sync_schedule when max_steps not multiple of interval."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    updater = TargetNetworkUpdater(update_interval=1000)
+
+    # max_steps=4500 should give updates at 1000, 2000, 3000, 4000 only
+    success, info = verify_target_sync_schedule(
+        updater, online_net, target_net, max_steps=4500, expected_interval=1000
+    )
+
+    assert success
+    assert info['update_steps'] == [1000, 2000, 3000, 4000]
+    assert len(info['update_steps']) == 4
+
+
+def test_verify_target_sync_schedule_no_duplicates():
+    """Test verify_target_sync_schedule has no duplicate updates."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    updater = TargetNetworkUpdater(update_interval=500)
+
+    success, info = verify_target_sync_schedule(
+        updater, online_net, target_net, max_steps=2000, expected_interval=500
+    )
+
+    # Check no duplicates
+    assert len(info['update_steps']) == len(set(info['update_steps']))
+    assert success
+
+
+def test_verify_target_sync_schedule_count():
+    """Test verify_target_sync_schedule count correctness."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    updater = TargetNetworkUpdater(update_interval=1000)
+
+    success, info = verify_target_sync_schedule(
+        updater, online_net, target_net, max_steps=10000, expected_interval=1000
+    )
+
+    assert info['count_correct']
+    assert len(info['update_steps']) == 10
+    assert len(info['expected_steps']) == 10
+
+
+def test_verify_target_sync_schedule_info_keys():
+    """Test verify_target_sync_schedule returns expected info keys."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    updater = TargetNetworkUpdater(update_interval=1000)
+
+    success, info = verify_target_sync_schedule(
+        updater, online_net, target_net, max_steps=3000, expected_interval=1000
+    )
+
+    expected_keys = {'update_steps', 'expected_steps', 'schedule_correct', 'count_correct'}
+    assert set(info.keys()) == expected_keys
+
+
+def test_verify_target_sync_schedule_different_intervals():
+    """Test verify_target_sync_schedule with various intervals."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+
+    intervals = [100, 500, 1000, 5000]
+    for interval in intervals:
+        updater = TargetNetworkUpdater(update_interval=interval)
+        max_steps = interval * 5
+
+        success, info = verify_target_sync_schedule(
+            updater, online_net, target_net, max_steps=max_steps,
+            expected_interval=interval
+        )
+
+        assert success, f"Failed for interval={interval}: {info}"
+        assert len(info['update_steps']) == 5
+
+
 if __name__ == "__main__":
     # Run tests manually
     print("Running DQN trainer tests...")
@@ -1868,5 +2219,70 @@ if __name__ == "__main__":
 
     test_training_scheduler_repr()
     print("✓ Training scheduler repr test passed")
+
+    # Stability check tests
+    print("\nStability Check Tests:")
+    test_detect_nan_inf_no_issues()
+    print("✓ Detect NaN/Inf no issues test passed")
+
+    test_detect_nan_inf_detects_nan()
+    print("✓ Detect NaN/Inf detects NaN test passed")
+
+    test_detect_nan_inf_detects_inf()
+    print("✓ Detect NaN/Inf detects Inf test passed")
+
+    test_detect_nan_inf_detects_neg_inf()
+    print("✓ Detect NaN/Inf detects negative Inf test passed")
+
+    test_detect_nan_inf_multidimensional()
+    print("✓ Detect NaN/Inf multidimensional test passed")
+
+    test_detect_nan_inf_zero_tensor()
+    print("✓ Detect NaN/Inf zero tensor test passed")
+
+    test_validate_loss_decrease_basic()
+    print("✓ Validate loss decrease basic test passed")
+
+    test_validate_loss_decrease_huber()
+    print("✓ Validate loss decrease Huber test passed")
+
+    test_validate_loss_decrease_fewer_updates()
+    print("✓ Validate loss decrease fewer updates test passed")
+
+    test_validate_loss_decrease_terminal_states()
+    print("✓ Validate loss decrease terminal states test passed")
+
+    test_validate_loss_decrease_different_gamma()
+    print("✓ Validate loss decrease different gamma test passed")
+
+    test_validate_loss_decrease_larger_batch()
+    print("✓ Validate loss decrease larger batch test passed")
+
+    test_validate_loss_decrease_info_keys()
+    print("✓ Validate loss decrease info keys test passed")
+
+    test_verify_target_sync_schedule_basic()
+    print("✓ Verify target sync schedule basic test passed")
+
+    test_verify_target_sync_schedule_10k_interval()
+    print("✓ Verify target sync schedule 10k interval test passed")
+
+    test_verify_target_sync_schedule_small_interval()
+    print("✓ Verify target sync schedule small interval test passed")
+
+    test_verify_target_sync_schedule_partial_interval()
+    print("✓ Verify target sync schedule partial interval test passed")
+
+    test_verify_target_sync_schedule_no_duplicates()
+    print("✓ Verify target sync schedule no duplicates test passed")
+
+    test_verify_target_sync_schedule_count()
+    print("✓ Verify target sync schedule count test passed")
+
+    test_verify_target_sync_schedule_info_keys()
+    print("✓ Verify target sync schedule info keys test passed")
+
+    test_verify_target_sync_schedule_different_intervals()
+    print("✓ Verify target sync schedule different intervals test passed")
 
     print("\nAll tests passed! ✓")
