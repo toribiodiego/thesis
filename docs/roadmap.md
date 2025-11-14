@@ -173,8 +173,8 @@ The target network is a 2015 Nature paper improvement (Mnih et al.). The origina
     - [X] test: Add toy-batch loss decrease and target-sync schedule tests
 - [X] Minimal metrics logging from the update step: loss, mean |TD error|, grad norm, learning rate, and update count for downstream plotting.
     - [X] chore: Log core update metrics (loss, TD-error, grad-norm, lr)
-- [ ] Summarize the Q-learning update flow in `docs/design/dqn_training.md`: include the TD-loss equation, optimizer config, target-sync policy, logging expectations, and debugging tactics for instability (e.g., exploding TD error, stale targets, NaNs).
-    - [ ] docs: Note how to rerun unit tests/debug scripts and which config flags control the behaviors described.
+- [X] Summarize the Q-learning update flow in `docs/design/dqn_training.md`: include the TD-loss equation, optimizer config, target-sync policy, logging expectations, and debugging tactics for instability (e.g., exploding TD error, stale targets, NaNs).
+    - [X] docs: Note how to rerun unit tests/debug scripts and which config flags control the behaviors described.
 
 ---
 
