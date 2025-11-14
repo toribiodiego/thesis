@@ -80,6 +80,63 @@ python -c 'import ale_py; print(ale_py.roms.list())'
 
 **Note:** You must accept the license terms for ROM redistribution. See AutoROM documentation for details.
 
+## `smoke_test.sh`
+
+Run end-to-end smoke test (~200K frames) to verify training loop stability.
+
+**Purpose:** Quick validation that all training components work together correctly without running full multi-million frame experiments.
+
+**Usage:**
+```bash
+./experiments/dqn_atari/scripts/smoke_test.sh [config] [seed]
+```
+
+**Arguments:**
+- `[config]`: Optional config file path (default: `experiments/dqn_atari/configs/pong.yaml`)
+- `[seed]`: Optional random seed (default: 0)
+
+**Examples:**
+
+```bash
+# Default: Pong with seed 0, 200K frames
+./experiments/dqn_atari/scripts/smoke_test.sh
+
+# Custom config and seed
+./experiments/dqn_atari/scripts/smoke_test.sh \
+  experiments/dqn_atari/configs/breakout.yaml 42
+```
+
+**What it validates:**
+- Training loop executes without errors
+- Logs are created and grow (training_steps.csv, episodes.csv)
+- Checkpoints appear (if save interval reached)
+- Evaluation runs trigger and complete
+- Reference-state Q logging works
+- Metrics are recorded correctly
+
+**Outputs:**
+- `experiments/dqn_atari/runs/smoke_test_{seed}/`
+  - `metadata.json` - Run metadata
+  - `git_info.txt` - Git state snapshot
+  - `logs/training_steps.csv` - Per-step metrics
+  - `logs/episodes.csv` - Per-episode metrics
+  - `logs/reference_q_values.csv` - Q-value tracking
+  - `eval/evaluations.csv` - Evaluation results
+  - `checkpoints/*.pt` - Model checkpoints (if save interval reached)
+
+**Duration:** ~5-10 minutes on CPU (depends on hardware)
+
+**When to run:**
+- After implementing new training components
+- Before starting long training runs
+- After environment/dependency changes
+- To verify end-to-end pipeline integrity
+- As part of CI/CD validation
+
+**Exit codes:**
+- 0: All validations passed
+- 1: Smoke test failed (missing outputs, errors during training)
+
 ## `capture_env.sh`
 
 Capture system and environment information for reproducibility tracking.
@@ -153,6 +210,17 @@ Quick reference table for script inputs, outputs, and side effects.
 | **Environment vars** | None |
 | **Dependencies** | • Python with AutoROM package<br>• Internet connection for ROM download |
 
+### `smoke_test.sh`
+
+| Category | Details |
+|----------|---------|
+| **Inputs** | • Config file path (optional, default: pong.yaml)<br>• Random seed (optional, default: 0) |
+| **Outputs** | • `runs/smoke_test_{seed}/metadata.json` - Run metadata<br>• `runs/smoke_test_{seed}/git_info.txt` - Git state<br>• `runs/smoke_test_{seed}/logs/*.csv` - Training/episode/Q metrics<br>• `runs/smoke_test_{seed}/eval/evaluations.csv` - Eval results<br>• `runs/smoke_test_{seed}/checkpoints/*.pt` - Model checkpoints |
+| **Side effects** | • Cleans previous smoke test run with same seed<br>• Creates ~200K frame training run<br>• Uses CPU device for portability |
+| **Exit codes** | • 0: All validations passed<br>• 1: Missing outputs or training errors |
+| **Environment vars** | None |
+| **Dependencies** | • All DQN training dependencies<br>• Mock environment (no ROMs needed) |
+
 ### `capture_env.sh`
 
 | Category | Details |
@@ -195,6 +263,7 @@ experiments/dqn_atari/
 |--------|---------|---------------|
 | `run_dqn.sh` | 0 | Config not found (2), Python error (1), CUDA OOM (137) |
 | `setup_roms.sh` | 0 | AutoROM not installed (1), Network error (1) |
+| `smoke_test.sh` | 0 | Training error (1), Missing outputs (1) |
 | `capture_env.sh` | 0 | Not in git repo (1), Git command failed (1) |
 
 ### Standard Output/Error Behavior
@@ -208,6 +277,11 @@ experiments/dqn_atari/
 - Progress messages to stdout
 - AutoROM download progress
 - Verification message on completion
+
+**`smoke_test.sh`:**
+- Progress updates every 10K steps
+- Validation checklist at end
+- Final pass/fail status
 
 **`capture_env.sh`:**
 - Brief status message to stdout
