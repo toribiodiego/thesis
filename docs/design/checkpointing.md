@@ -1239,6 +1239,255 @@ if 'replay_buffer_state' in checkpoint:
     print(f"Full buffer saved: {has_data}")
 ```
 
+## Metadata Files in Resumed Runs
+
+### Run Metadata (`meta.json`)
+
+Every training run creates a `meta.json` file in the run directory:
+
+```
+experiments/dqn_atari/runs/pong_123/meta.json
+```
+
+**Schema:**
+
+```json
+{
+  "seed": 42,
+  "git": {
+    "commit": "a1b2c3d4e5f6...",
+    "branch": "main",
+    "dirty": false
+  },
+  "config": {
+    "experiment": {...},
+    "env": {...},
+    "agent": {...},
+    "training": {...}
+  },
+  "ale_settings": {
+    "frameskip": 4,
+    "repeat_action_probability": 0.0,
+    "max_noop_start": 30
+  },
+  "extra": {
+    "created_at": "2025-01-15T10:30:00",
+    "python_version": "3.10.13",
+    "pytorch_version": "2.4.1+cu121"
+  }
+}
+```
+
+### Checkpoint Metadata
+
+Each checkpoint file (`.pt`) contains embedded metadata:
+
+**Checkpoint structure:**
+
+```python
+checkpoint = {
+    # Metadata
+    'schema_version': '1.0.0',
+    'timestamp': '2025-01-15T10:30:45.123456',
+    'commit_hash': 'a1b2c3d',
+
+    # Training state
+    'step': 1000000,
+    'episode': 5000,
+    'epsilon': 0.5,
+
+    # Model and optimizer
+    'online_model_state_dict': {...},
+    'target_model_state_dict': {...},
+    'optimizer_state_dict': {...},
+
+    # RNG states (for determinism)
+    'rng_states': {
+        'python_random': (...),
+        'numpy_random': (...),
+        'torch_cpu': tensor(...),
+        'torch_cuda': [...],  # If CUDA
+        'env': {...}  # If supported
+    },
+
+    # Replay buffer
+    'replay_buffer_state': {
+        'index': 250000,
+        'size': 250000,
+        'capacity': 1000000,
+        'obs_shape': (4, 84, 84)
+    },
+
+    # Optional user metadata
+    'metadata': {
+        'config': {...},
+        'notes': 'Manual checkpoint'
+    }
+}
+```
+
+### Metadata Before vs After Resume
+
+**Before Resume (Original Run):**
+
+```json
+// meta.json created at run start
+{
+  "seed": 42,
+  "git": {
+    "commit": "abc123",
+    "branch": "main",
+    "dirty": false
+  },
+  "config": {...}
+}
+```
+
+Checkpoint at step 1M:
+```python
+{
+    'timestamp': '2025-01-15T10:30:45',
+    'commit_hash': 'abc123',
+    'step': 1000000,
+    'rng_states': {...}  # Captured at save
+}
+```
+
+**After Resume:**
+
+The resumed run continues using the same `meta.json` (no changes).
+The checkpoint loaded contains the saved RNG states, which are restored:
+
+```python
+# Resume restores from checkpoint
+loaded = torch.load('checkpoint_1000000.pt')
+
+# RNG states restored
+set_rng_states(loaded['rng_states'], env)
+
+# Training continues from step 1,000,001
+# All random operations now deterministic from this point
+```
+
+**Verification:**
+
+To confirm RNG states were restored, check console output:
+
+```
+Restoring RNG states for reproducibility...
+  ✓ Python random state restored
+  ✓ NumPy random state restored
+  ✓ PyTorch random state restored
+  ✓ CUDA random state restored
+  ✓ Environment random state restored
+```
+
+### Finding Metadata in Resumed Runs
+
+**Run metadata:**
+
+```bash
+# View run metadata
+cat experiments/dqn_atari/runs/pong_123/meta.json | jq
+
+# Check git commit
+jq '.git.commit' experiments/dqn_atari/runs/pong_123/meta.json
+
+# Check seed
+jq '.seed' experiments/dqn_atari/runs/pong_123/meta.json
+```
+
+**Checkpoint metadata:**
+
+```python
+import torch
+
+# Load checkpoint
+checkpoint = torch.load('checkpoint_1000000.pt', weights_only=False)
+
+# Check metadata
+print(f"Schema: {checkpoint['schema_version']}")
+print(f"Saved at: {checkpoint['timestamp']}")
+print(f"Commit: {checkpoint['commit_hash']}")
+print(f"Step: {checkpoint['step']}")
+
+# Check RNG states present
+print(f"RNG states saved: {'rng_states' in checkpoint}")
+if 'rng_states' in checkpoint:
+    print(f"  Python random: {'python_random' in checkpoint['rng_states']}")
+    print(f"  NumPy random: {'numpy_random' in checkpoint['rng_states']}")
+    print(f"  PyTorch CPU: {'torch_cpu' in checkpoint['rng_states']}")
+    print(f"  CUDA: {'torch_cuda' in checkpoint['rng_states']}")
+    print(f"  Environment: {'env' in checkpoint['rng_states']}")
+```
+
+**Expected fields after resume:**
+
+| Field | Location | Purpose | Expected on Resume |
+|-------|----------|---------|-------------------|
+| `seed` | `meta.json` | Base random seed | Same as original |
+| `git.commit` | `meta.json` | Code version | Same (warns if different) |
+| `timestamp` | Checkpoint | Save time | From checkpoint |
+| `step` | Checkpoint | Training step | Loaded and used |
+| `epsilon` | Checkpoint | Exploration rate | Restored to scheduler |
+| `rng_states` | Checkpoint | RNG states | Restored to all sources |
+| `replay_buffer_state` | Checkpoint | Buffer state | Index/size restored |
+
+### Troubleshooting Metadata Issues
+
+**Issue: Git commit hash mismatch**
+
+Resume shows:
+```
+WARNING: Git commit hash mismatch
+  Checkpoint was saved at commit: abc123
+  Current commit: def456
+  Code changes may affect reproducibility
+```
+
+**Solution:**
+```bash
+# Check current commit
+git rev-parse HEAD
+
+# Check checkpoint commit
+python -c "import torch; print(torch.load('checkpoint.pt', weights_only=False)['commit_hash'])"
+
+# Return to checkpoint commit
+git checkout abc123
+
+# Or accept non-deterministic resume
+# (training will continue but may not be bit-for-bit reproducible)
+```
+
+**Issue: Missing RNG states in checkpoint**
+
+```python
+checkpoint = torch.load('checkpoint.pt', weights_only=False)
+assert 'rng_states' not in checkpoint  # Old checkpoint!
+```
+
+**Solution:**
+- Old checkpoints don't have RNG states
+- Resume will work but won't be deterministic
+- Re-run with updated checkpoint code
+- Or accept non-deterministic resume
+
+**Issue: Metadata not found**
+
+```bash
+ls experiments/dqn_atari/runs/pong_123/meta.json
+# No such file
+```
+
+**Solution:**
+- `meta.json` created by `save_run_metadata()`
+- Add to training script initialization:
+  ```python
+  from src.utils import save_run_metadata
+  save_run_metadata(output_dir, config, seed, ale_settings)
+  ```
+
 ## Related Documentation
 
 - [Training Loop](training_loop_runtime.md) - Integration with training loop
