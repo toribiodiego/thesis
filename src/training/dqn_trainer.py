@@ -1224,3 +1224,162 @@ def perform_update_step(
     )
 
     return metrics
+
+
+# ============================================================================
+# Epsilon-Greedy Exploration
+# ============================================================================
+
+class EpsilonScheduler:
+    """
+    Epsilon-greedy exploration scheduler with linear decay.
+
+    Supports linear decay from epsilon_start to epsilon_end over a specified
+    number of frames, with separate epsilon for training and evaluation.
+
+    Parameters
+    ----------
+    epsilon_start : float
+        Initial epsilon value (default: 1.0, fully random exploration)
+    epsilon_end : float
+        Final epsilon value after decay (default: 0.1)
+    decay_frames : int
+        Number of frames over which to decay epsilon (default: 1,000,000)
+    eval_epsilon : float
+        Fixed epsilon for evaluation mode (default: 0.05)
+
+    Usage
+    -----
+    >>> scheduler = EpsilonScheduler(epsilon_start=1.0, epsilon_end=0.1, decay_frames=1000000)
+    >>> epsilon = scheduler.get_epsilon(current_frame=500000)  # Returns 0.55
+    >>> eval_eps = scheduler.get_eval_epsilon()  # Returns 0.05
+    """
+
+    def __init__(
+        self,
+        epsilon_start: float = 1.0,
+        epsilon_end: float = 0.1,
+        decay_frames: int = 1_000_000,
+        eval_epsilon: float = 0.05
+    ):
+        assert 0.0 <= epsilon_start <= 1.0, f"epsilon_start must be in [0,1], got {epsilon_start}"
+        assert 0.0 <= epsilon_end <= 1.0, f"epsilon_end must be in [0,1], got {epsilon_end}"
+        assert epsilon_start >= epsilon_end, f"epsilon_start must be >= epsilon_end"
+        assert decay_frames > 0, f"decay_frames must be positive, got {decay_frames}"
+        assert 0.0 <= eval_epsilon <= 1.0, f"eval_epsilon must be in [0,1], got {eval_epsilon}"
+
+        self.epsilon_start = epsilon_start
+        self.epsilon_end = epsilon_end
+        self.decay_frames = decay_frames
+        self.eval_epsilon = eval_epsilon
+
+        # Precompute slope for efficiency
+        self.slope = (epsilon_end - epsilon_start) / decay_frames
+
+    def get_epsilon(self, current_frame: int) -> float:
+        """
+        Get epsilon for current training frame with linear decay.
+
+        Parameters
+        ----------
+        current_frame : int
+            Current environment frame count (not update count)
+
+        Returns
+        -------
+        float
+            Epsilon value in [epsilon_end, epsilon_start]
+
+        Examples
+        --------
+        >>> scheduler = EpsilonScheduler(1.0, 0.1, 1000000)
+        >>> scheduler.get_epsilon(0)
+        1.0
+        >>> scheduler.get_epsilon(500000)
+        0.55
+        >>> scheduler.get_epsilon(1000000)
+        0.1
+        >>> scheduler.get_epsilon(2000000)  # Clamps to epsilon_end
+        0.1
+        """
+        if current_frame >= self.decay_frames:
+            return self.epsilon_end
+
+        # Linear interpolation: start + slope * frames
+        epsilon = self.epsilon_start + self.slope * current_frame
+
+        # Clamp to [epsilon_end, epsilon_start] for numerical stability
+        return max(self.epsilon_end, min(self.epsilon_start, epsilon))
+
+    def get_eval_epsilon(self) -> float:
+        """
+        Get fixed epsilon for evaluation mode.
+
+        Returns
+        -------
+        float
+            Fixed epsilon for evaluation (no decay)
+        """
+        return self.eval_epsilon
+
+    def to_dict(self) -> dict:
+        """Export scheduler configuration as dictionary."""
+        return {
+            'epsilon_start': self.epsilon_start,
+            'epsilon_end': self.epsilon_end,
+            'decay_frames': self.decay_frames,
+            'eval_epsilon': self.eval_epsilon
+        }
+
+
+def select_epsilon_greedy_action(
+    network: torch.nn.Module,
+    state: torch.Tensor,
+    epsilon: float,
+    num_actions: int
+) -> int:
+    """
+    Select action using epsilon-greedy policy.
+
+    With probability epsilon, choose random action.
+    With probability (1 - epsilon), choose greedy action (argmax Q-value).
+
+    Parameters
+    ----------
+    network : torch.nn.Module
+        Q-network for computing Q-values
+    state : torch.Tensor
+        Current state observation, shape (C, H, W) or (1, C, H, W)
+    epsilon : float
+        Exploration probability in [0, 1]
+    num_actions : int
+        Number of available actions
+
+    Returns
+    -------
+    int
+        Selected action index
+
+    Examples
+    --------
+    >>> network = DQNModel(num_actions=6)
+    >>> state = torch.rand(4, 84, 84)  # Single state
+    >>> action = select_epsilon_greedy_action(network, state, epsilon=0.1, num_actions=6)
+    >>> assert 0 <= action < 6
+    """
+    if torch.rand(1).item() < epsilon:
+        # Explore: random action
+        return torch.randint(0, num_actions, (1,)).item()
+    else:
+        # Exploit: greedy action
+        network.eval()
+        with torch.no_grad():
+            # Ensure state has batch dimension
+            if state.dim() == 3:
+                state = state.unsqueeze(0)  # (C,H,W) -> (1,C,H,W)
+
+            output = network(state)
+            q_values = output['q_values']  # (1, num_actions)
+            action = q_values.argmax(dim=1).item()
+        network.train()
+        return action

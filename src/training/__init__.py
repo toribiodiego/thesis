@@ -15,7 +15,9 @@ from .dqn_trainer import (
     validate_loss_decrease,
     verify_target_sync_schedule,
     UpdateMetrics,
-    perform_update_step
+    perform_update_step,
+    EpsilonScheduler,
+    select_epsilon_greedy_action
 )
 
 __all__ = [
@@ -33,5 +35,7 @@ __all__ = [
     'validate_loss_decrease',
     'verify_target_sync_schedule',
     'UpdateMetrics',
-    'perform_update_step'
+    'perform_update_step',
+    'EpsilonScheduler',
+    'select_epsilon_greedy_action'
 ]

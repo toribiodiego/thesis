@@ -2331,6 +2331,246 @@ def test_perform_update_step_sets_train_mode():
     assert metrics is not None
 
 
+# ============================================================================
+# Epsilon-Greedy Exploration Tests
+# ============================================================================
+
+def test_epsilon_scheduler_initialization():
+    """Test EpsilonScheduler initializes with correct defaults."""
+    from src.training import EpsilonScheduler
+
+    scheduler = EpsilonScheduler()
+    assert scheduler.epsilon_start == 1.0
+    assert scheduler.epsilon_end == 0.1
+    assert scheduler.decay_frames == 1_000_000
+    assert scheduler.eval_epsilon == 0.05
+
+
+def test_epsilon_scheduler_custom_params():
+    """Test EpsilonScheduler with custom parameters."""
+    from src.training import EpsilonScheduler
+
+    scheduler = EpsilonScheduler(
+        epsilon_start=0.8,
+        epsilon_end=0.05,
+        decay_frames=500_000,
+        eval_epsilon=0.01
+    )
+    assert scheduler.epsilon_start == 0.8
+    assert scheduler.epsilon_end == 0.05
+    assert scheduler.decay_frames == 500_000
+    assert scheduler.eval_epsilon == 0.01
+
+
+def test_epsilon_scheduler_linear_decay():
+    """Test epsilon decays linearly from start to end."""
+    from src.training import EpsilonScheduler
+
+    scheduler = EpsilonScheduler(epsilon_start=1.0, epsilon_end=0.1, decay_frames=1_000_000)
+
+    # Test key points on decay schedule
+    assert scheduler.get_epsilon(0) == 1.0
+    assert abs(scheduler.get_epsilon(250_000) - 0.775) < 1e-6
+    assert abs(scheduler.get_epsilon(500_000) - 0.55) < 1e-6
+    assert abs(scheduler.get_epsilon(750_000) - 0.325) < 1e-6
+    assert scheduler.get_epsilon(1_000_000) == 0.1
+
+
+def test_epsilon_scheduler_clamps_after_decay():
+    """Test epsilon stays at epsilon_end after decay period."""
+    from src.training import EpsilonScheduler
+
+    scheduler = EpsilonScheduler(epsilon_start=1.0, epsilon_end=0.1, decay_frames=1_000_000)
+
+    # After decay period, should clamp to epsilon_end
+    assert scheduler.get_epsilon(1_000_000) == 0.1
+    assert scheduler.get_epsilon(2_000_000) == 0.1
+    assert scheduler.get_epsilon(10_000_000) == 0.1
+
+
+def test_epsilon_scheduler_eval_epsilon():
+    """Test get_eval_epsilon returns fixed value."""
+    from src.training import EpsilonScheduler
+
+    scheduler = EpsilonScheduler(eval_epsilon=0.05)
+    assert scheduler.get_eval_epsilon() == 0.05
+
+    # Eval epsilon should not change regardless of training frames
+    assert scheduler.get_eval_epsilon() == 0.05
+    assert scheduler.get_eval_epsilon() == 0.05
+
+
+def test_epsilon_scheduler_to_dict():
+    """Test scheduler exports configuration as dict."""
+    from src.training import EpsilonScheduler
+
+    scheduler = EpsilonScheduler(
+        epsilon_start=0.9,
+        epsilon_end=0.05,
+        decay_frames=800_000,
+        eval_epsilon=0.01
+    )
+
+    config = scheduler.to_dict()
+    assert config['epsilon_start'] == 0.9
+    assert config['epsilon_end'] == 0.05
+    assert config['decay_frames'] == 800_000
+    assert config['eval_epsilon'] == 0.01
+
+
+def test_epsilon_scheduler_invalid_params():
+    """Test scheduler raises on invalid parameters."""
+    from src.training import EpsilonScheduler
+    import pytest
+
+    # epsilon_start > 1.0
+    with pytest.raises(AssertionError):
+        EpsilonScheduler(epsilon_start=1.5)
+
+    # epsilon_end < 0.0
+    with pytest.raises(AssertionError):
+        EpsilonScheduler(epsilon_end=-0.1)
+
+    # epsilon_start < epsilon_end
+    with pytest.raises(AssertionError):
+        EpsilonScheduler(epsilon_start=0.05, epsilon_end=0.1)
+
+    # decay_frames <= 0
+    with pytest.raises(AssertionError):
+        EpsilonScheduler(decay_frames=0)
+
+    # eval_epsilon > 1.0
+    with pytest.raises(AssertionError):
+        EpsilonScheduler(eval_epsilon=1.5)
+
+
+def test_select_epsilon_greedy_action_random():
+    """Test epsilon-greedy selects random actions with high epsilon."""
+    from src.training import select_epsilon_greedy_action
+    from src.models import DQN
+
+    network = DQN(num_actions=6)
+    state = torch.rand(4, 84, 84)
+
+    # With epsilon=1.0, should always explore (random actions)
+    actions = [select_epsilon_greedy_action(network, state, epsilon=1.0, num_actions=6) for _ in range(100)]
+
+    # Should get variety of actions (not all the same)
+    unique_actions = set(actions)
+    assert len(unique_actions) > 1  # Should have at least 2 different actions
+
+    # All actions should be valid
+    assert all(0 <= a < 6 for a in actions)
+
+
+def test_select_epsilon_greedy_action_greedy():
+    """Test epsilon-greedy selects greedy actions with epsilon=0."""
+    from src.training import select_epsilon_greedy_action
+    from src.models import DQN
+
+    network = DQN(num_actions=6)
+    state = torch.rand(4, 84, 84)
+
+    # With epsilon=0.0, should always exploit (greedy)
+    actions = [select_epsilon_greedy_action(network, state, epsilon=0.0, num_actions=6) for _ in range(100)]
+
+    # All actions should be the same (greedy choice)
+    assert len(set(actions)) == 1
+
+    # Action should be valid
+    assert 0 <= actions[0] < 6
+
+
+def test_select_epsilon_greedy_action_mixed():
+    """Test epsilon-greedy mixes random and greedy actions."""
+    from src.training import select_epsilon_greedy_action
+    from src.models import DQN
+    import torch
+
+    network = DQN(num_actions=6)
+    state = torch.rand(4, 84, 84)
+
+    # Set seed for reproducibility
+    torch.manual_seed(42)
+
+    # With epsilon=0.5, should get mix of random and greedy
+    actions = [select_epsilon_greedy_action(network, state, epsilon=0.5, num_actions=6) for _ in range(1000)]
+
+    # Should have some variety (not all greedy)
+    unique_actions = set(actions)
+    assert len(unique_actions) > 1
+
+    # All actions should be valid
+    assert all(0 <= a < 6 for a in actions)
+
+
+def test_select_epsilon_greedy_action_batch_dim():
+    """Test epsilon-greedy handles states with and without batch dim."""
+    from src.training import select_epsilon_greedy_action
+    from src.models import DQN
+
+    network = DQN(num_actions=6)
+
+    # State without batch dimension
+    state_3d = torch.rand(4, 84, 84)
+    action_3d = select_epsilon_greedy_action(network, state_3d, epsilon=0.0, num_actions=6)
+    assert 0 <= action_3d < 6
+
+    # State with batch dimension
+    state_4d = torch.rand(1, 4, 84, 84)
+    action_4d = select_epsilon_greedy_action(network, state_4d, epsilon=0.0, num_actions=6)
+    assert 0 <= action_4d < 6
+
+
+def test_select_epsilon_greedy_action_network_mode():
+    """Test epsilon-greedy preserves network training mode."""
+    from src.training import select_epsilon_greedy_action
+    from src.models import DQN
+
+    network = DQN(num_actions=6)
+    state = torch.rand(4, 84, 84)
+
+    # Start in training mode
+    network.train()
+    assert network.training
+
+    # Select action
+    action = select_epsilon_greedy_action(network, state, epsilon=0.0, num_actions=6)
+
+    # Should still be in training mode
+    assert network.training
+
+
+def test_epsilon_scheduler_monotonic_decrease():
+    """Test epsilon decreases monotonically during decay period."""
+    from src.training import EpsilonScheduler
+
+    scheduler = EpsilonScheduler(epsilon_start=1.0, epsilon_end=0.1, decay_frames=1_000_000)
+
+    prev_epsilon = 1.0
+    for frame in range(0, 1_000_001, 10_000):
+        epsilon = scheduler.get_epsilon(frame)
+        assert epsilon <= prev_epsilon
+        prev_epsilon = epsilon
+
+
+def test_epsilon_scheduler_edge_cases():
+    """Test epsilon scheduler edge cases."""
+    from src.training import EpsilonScheduler
+
+    # Same start and end (no decay)
+    scheduler = EpsilonScheduler(epsilon_start=0.5, epsilon_end=0.5, decay_frames=1_000_000)
+    assert scheduler.get_epsilon(0) == 0.5
+    assert scheduler.get_epsilon(500_000) == 0.5
+    assert scheduler.get_epsilon(1_000_000) == 0.5
+
+    # Very short decay period
+    scheduler_short = EpsilonScheduler(epsilon_start=1.0, epsilon_end=0.1, decay_frames=10)
+    assert scheduler_short.get_epsilon(0) == 1.0
+    assert scheduler_short.get_epsilon(5) == 0.55
+    assert scheduler_short.get_epsilon(10) == 0.1
+
+
 if __name__ == "__main__":
     # Run tests manually
     print("Running DQN trainer tests...")

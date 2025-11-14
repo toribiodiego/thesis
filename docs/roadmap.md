@@ -184,8 +184,8 @@ The target network is a 2015 Nature paper improvement (Mnih et al.). The origina
 ε-greedy (1.0→0.1 over 1M frames). Main loop: select action, step env, append transition, periodic optimization, target sync. Log losses/rewards/ε. Periodic eval (250k frames, ε=0.05). Complete when ~200k-frame runs execute reliably with logs and checkpoints.
 
 **Checklist:**
-- [ ] Implement ε-greedy exploration with a configurable linear schedule: start ε=1.0, decay to 0.1 over the first 1,000,000 frames (option to continue to 0.01), and use a separate `eval_epsilon` (e.g., 0.05) only during evaluation; expose all as config and log ε per step.
-    - [ ] feat: Add configurable ε schedules (train and eval) with per-step logging
+- [X] Implement ε-greedy exploration with a configurable linear schedule: start ε=1.0, decay to 0.1 over the first 1,000,000 frames (option to continue to 0.01), and use a separate `eval_epsilon` (e.g., 0.05) only during evaluation; expose all as config and log ε per step.
+    - [X] feat: Add configurable ε schedules (train and eval) with per-step logging
 - [ ] Ensure action repeat/frame-skip integration: execute the chosen action for k frames (default 4), accumulate clipped reward from the wrapper, and count environment frames correctly (not decisions); record effective FPS.
     - [ ] feat: Integrate frame-skip execution and reward accumulation with accurate frame counters
 - [ ] Build the main step loop: (1) select action via ε-greedy from the online Q-net, (2) step env with frame-skip, (3) append transition to replay, (4) if warm-up done and `t % train_every == 0` then sample → compute loss → backprop → optimizer step, (5) if `t % target_update == 0` then hard-sync target.
