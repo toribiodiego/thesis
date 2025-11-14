@@ -17,6 +17,7 @@ Verifies:
 
 import torch
 import pytest
+import numpy as np
 from src.models import DQN
 from src.replay import ReplayBuffer
 from src.training import (
@@ -2700,6 +2701,166 @@ def test_frame_counter_different_frameskips():
     counter8 = FrameCounter(frameskip=8)
     counter8.step(num_steps=10)
     assert counter8.frames == 80
+
+
+# ============================================================================
+# Training Step Integration Tests
+# ============================================================================
+
+def test_training_step_basic_execution():
+    """Test training_step executes without errors."""
+    from src.training import (
+        training_step, EpsilonScheduler, TargetNetworkUpdater,
+        TrainingScheduler, FrameCounter, configure_optimizer, init_target_network
+    )
+    from src.models import DQN
+    from src.replay import ReplayBuffer
+    from unittest.mock import Mock
+
+    # Mock environment with Atari-like observations
+    env = Mock()
+    env.action_space.n = 6
+    num_actions = 6
+
+    # Mock step to return proper Atari-like observations
+    dummy_next_state = np.random.randint(0, 255, (4, 84, 84), dtype=np.uint8)
+    env.step.return_value = (dummy_next_state, 1.0, False, False, {})
+
+    # Create networks
+    online_net = DQN(num_actions=num_actions)
+    target_net = init_target_network(online_net, num_actions=num_actions)
+
+    # Create optimizer
+    optimizer = configure_optimizer(online_net, learning_rate=0.00025)
+
+    # Create replay buffer (use small min_size for quick testing)
+    replay_buffer = ReplayBuffer(capacity=1000, obs_shape=(4, 84, 84), min_size=10)
+
+    # Create schedulers
+    epsilon_scheduler = EpsilonScheduler()
+    target_updater = TargetNetworkUpdater(update_interval=100)
+    training_scheduler = TrainingScheduler(train_every=4)
+    frame_counter = FrameCounter(frameskip=1)
+
+    # Create dummy Atari-like state
+    state = np.random.randint(0, 255, (4, 84, 84), dtype=np.uint8)
+
+    # Execute training step
+    result = training_step(
+        env=env,
+        online_net=online_net,
+        target_net=target_net,
+        optimizer=optimizer,
+        replay_buffer=replay_buffer,
+        epsilon_scheduler=epsilon_scheduler,
+        target_updater=target_updater,
+        training_scheduler=training_scheduler,
+        frame_counter=frame_counter,
+        state=state,
+        num_actions=num_actions,
+        device='cpu'
+    )
+
+    # Check result structure
+    assert 'next_state' in result
+    assert 'reward' in result
+    assert 'terminated' in result
+    assert 'truncated' in result
+    assert 'epsilon' in result
+    assert 'metrics' in result
+    assert 'target_updated' in result
+    assert 'trained' in result
+    assert 'action' in result
+
+    # Check epsilon is valid
+    assert 0.0 <= result['epsilon'] <= 1.0
+
+    # Check action is valid
+    assert 0 <= result['action'] < num_actions
+
+    # Verify env.step was called
+    assert env.step.called
+
+
+def test_training_step_triggers_training_after_warmup():
+    """Test training_step triggers optimization after replay warmup."""
+    from src.training import (
+        training_step, EpsilonScheduler, TargetNetworkUpdater,
+        TrainingScheduler, FrameCounter, configure_optimizer, init_target_network
+    )
+    from src.models import DQN
+    from src.replay import ReplayBuffer
+    from unittest.mock import Mock
+
+    # Mock environment
+    env = Mock()
+    env.action_space.n = 6
+    num_actions = 6
+
+    # Mock step to return Atari-like observations
+    dummy_next_state = np.random.randint(0, 255, (4, 84, 84), dtype=np.uint8)
+    env.step.return_value = (dummy_next_state, 1.0, False, False, {})
+
+    # Create networks and components
+    online_net = DQN(num_actions=num_actions)
+    target_net = init_target_network(online_net, num_actions=num_actions)
+    optimizer = configure_optimizer(online_net, learning_rate=0.00025)
+
+    # Small replay buffer for quick warmup
+    replay_buffer = ReplayBuffer(capacity=1000, obs_shape=(4, 84, 84), min_size=50)
+
+    epsilon_scheduler = EpsilonScheduler()
+    target_updater = TargetNetworkUpdater(update_interval=100)
+    training_scheduler = TrainingScheduler(train_every=4)
+    frame_counter = FrameCounter(frameskip=1)
+
+    # Fill replay buffer with dummy transitions
+    dummy_state = np.random.randint(0, 255, (4, 84, 84), dtype=np.uint8)
+
+    for _ in range(60):  # Fill past min_size
+        replay_buffer.append(dummy_state, 0, 0.0, dummy_state, False)
+
+    # Now execute training step
+    result = training_step(
+        env=env,
+        online_net=online_net,
+        target_net=target_net,
+        optimizer=optimizer,
+        replay_buffer=replay_buffer,
+        epsilon_scheduler=epsilon_scheduler,
+        target_updater=target_updater,
+        training_scheduler=training_scheduler,
+        frame_counter=frame_counter,
+        state=dummy_state,
+        num_actions=num_actions,
+        device='cpu'
+    )
+
+    # First step should not train (step goes 0→1, train_every=4)
+    assert result['trained'] == False
+    assert frame_counter.steps == 1
+
+    # Execute 3 more training steps to reach step 4
+    for _ in range(3):
+        result = training_step(
+            env=env,
+            online_net=online_net,
+            target_net=target_net,
+            optimizer=optimizer,
+            replay_buffer=replay_buffer,
+            epsilon_scheduler=epsilon_scheduler,
+            target_updater=target_updater,
+            training_scheduler=training_scheduler,
+            frame_counter=frame_counter,
+            state=dummy_state,
+            num_actions=num_actions,
+            device='cpu'
+        )
+
+    # Should have trained at step 4
+    assert frame_counter.steps == 4
+    assert result['trained'] == True
+    assert result['metrics'] is not None
 
 
 if __name__ == "__main__":

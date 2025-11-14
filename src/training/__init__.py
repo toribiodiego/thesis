@@ -18,7 +18,8 @@ from .dqn_trainer import (
     perform_update_step,
     EpsilonScheduler,
     select_epsilon_greedy_action,
-    FrameCounter
+    FrameCounter,
+    training_step
 )
 
 __all__ = [
@@ -39,5 +40,6 @@ __all__ = [
     'perform_update_step',
     'EpsilonScheduler',
     'select_epsilon_greedy_action',
-    'FrameCounter'
+    'FrameCounter',
+    'training_step'
 ]
