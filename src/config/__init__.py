@@ -24,6 +24,16 @@ from .cli import (
     main
 )
 
+from .run_manager import (
+    create_run_dir,
+    create_run_subdirs,
+    save_config_snapshot,
+    get_git_info,
+    save_metadata,
+    setup_run_directory,
+    print_run_info
+)
+
 __all__ = [
     # Config loader
     'load_config',
@@ -44,5 +54,13 @@ __all__ = [
     'validate_config',
     'setup_from_args',
     'print_startup_banner',
-    'main'
+    'main',
+    # Run manager
+    'create_run_dir',
+    'create_run_subdirs',
+    'save_config_snapshot',
+    'get_git_info',
+    'save_metadata',
+    'setup_run_directory',
+    'print_run_info'
 ]

@@ -240,8 +240,8 @@ Base config + per-game overrides. Merge utility. CLI: `python train_dqn.py --cfg
     - [X] feat: Add config merge utility with nested override and resolved-config logging
 - [X] Provide a CLI entry point to launch experiments with a single command: `python train_dqn.py --cfg experiments/dqn_atari/configs/pong.yaml --seed 123 --resume path/to/checkpoint.pt` and allow optional `--set key.subkey=value` overrides.
     - [X] feat: Add CLI flags for --cfg, --seed, --resume, and inline overrides
-- [ ] Auto-save the merged config snapshot to each run folder (`experiments/dqn_atari/runs/<game>/<timestamp>/config.yaml`) alongside `meta.json`; include commit hash and seed.
-    - [ ] chore: Persist merged config and metadata to each run directory
+- [X] Auto-save the merged config snapshot to each run folder (`experiments/dqn_atari/runs/<game>/<timestamp>/config.yaml`) alongside `meta.json`; include commit hash and seed.
+    - [X] chore: Persist merged config and metadata to each run directory
 - [ ] Create dynamic run paths automatically (logs, checkpoints, artifacts) under `experiments/dqn_atari/runs/<game>/<timestamp>/`; ensure folders are created on startup.
     - [ ] chore: Auto-create standard run subfolders (logs, checkpoints, artifacts)
 - [ ] Validate schema on load: assert positive ints, γ in [0,1], known optimizer names, valid env IDs/action_set, nonzero frameskip; reject unknown fields and fail fast with a helpful error.

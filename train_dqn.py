@@ -21,14 +21,21 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from src.config.cli import main
+from src.config.run_manager import setup_run_directory, print_run_info
 
 
 if __name__ == '__main__':
     # Load and validate configuration
     config = main()
-    
+
+    # Setup run directory and save config/metadata
+    paths = setup_run_directory(config)
+    print_run_info(paths)
+
     # TODO: Implement training loop
-    # For now, just confirm config loaded successfully
-    print("✓ Configuration loaded and validated successfully")
+    # For now, just confirm setup completed successfully
+    print("✓ Run directory created and configuration saved")
+    print(f"✓ Config snapshot: {paths['config_file']}")
+    print(f"✓ Metadata: {paths['meta_file']}")
     print("\nTraining loop not yet implemented (will be added in future subtasks)")
-    print("This CLI is ready to integrate with the training loop implementation.")
+    print("Run directory is ready for training.")
