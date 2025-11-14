@@ -282,8 +282,8 @@ Dedicated eval loop: greedy or low-ε, compute mean/median/std returns. Capture 
 Structured logging through TensorBoard, Weights & Biases (W&B), and CSV. Plotting script: reward vs frames, loss vs updates, eval trends, ε schedule. Multi-seed aggregation. Upload relevant artifacts (plots, CSVs, checkpoints) to W&B for long-term storage. Complete when full pipeline (logs → plots → artifact uploads) works with one command.
 
 **Checklist:**
-- [ ] Implement unified logging hooks that emit metrics simultaneously to TensorBoard, W&B, and CSV: per-step (loss, epsilon, learning rate, replay size, FPS) plus per-episode (return, length, rolling mean). Ensure consistent metric naming across backends.
-    - [ ] feat: Add multi-backend logging (TensorBoard/W&B/CSV) with standardized keys
+- [X] Implement unified logging hooks that emit metrics simultaneously to TensorBoard, W&B, and CSV: per-step (loss, epsilon, learning rate, replay size, FPS) plus per-episode (return, length, rolling mean). Ensure consistent metric naming across backends.
+    - [X] feat: Add multi-backend logging (TensorBoard/W&B/CSV) with standardized keys
 - [ ] Persist complete episode histories and evaluation summaries locally under `results/logs/<game>/<run_id>/`, flush on a fixed cadence, and mirror the key CSV files to W&B as artifacts after each eval/checkpoint.
     - [ ] chore: Add periodic flush, deterministic filenames, and W&B artifact uploads for logs
 - [ ] Create `scripts/plot_results.py` to generate figures (reward vs frames, loss vs updates, eval score vs frames, epsilon schedule) from either local CSVs or W&B artifact downloads; support PNG and optional PDF/SVG outputs.

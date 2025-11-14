@@ -54,6 +54,15 @@ from .logging import (
     CheckpointManager
 )
 
+# Multi-backend metrics logging
+from .metrics_logger import (
+    MetricsLogger,
+    MetricKeys,
+    TensorBoardBackend,
+    WandBBackend,
+    CSVBackend
+)
+
 # Evaluation
 from .evaluation import (
     evaluate,
@@ -121,6 +130,12 @@ __all__ = [
     'StepLogger',
     'EpisodeLogger',
     'CheckpointManager',
+    # Multi-backend metrics logging
+    'MetricsLogger',
+    'MetricKeys',
+    'TensorBoardBackend',
+    'WandBBackend',
+    'CSVBackend',
     # Evaluation
     'evaluate',
     'EvaluationScheduler',
