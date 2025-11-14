@@ -56,3 +56,9 @@ results/
 # Logs
 *.log
 logs/
+
+# Environment variables
+.env
+
+# Weights & Biases
+wandb/
