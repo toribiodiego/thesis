@@ -236,8 +236,8 @@ Base config + per-game overrides. Merge utility. CLI: `python train_dqn.py --cfg
 **Checklist:**
 - [X] Create base and per-game config files: add `experiments/dqn_atari/configs/base.yaml` for global defaults (network, replay, optimizer, target_update, eval cadence) and `experiments/dqn_atari/configs/{pong,breakout,beam_rider}.yaml` that override only env-specific fields (e.g., `env_id`, `action_set`, `frame_budget`).
     - [X] docs: Add base and per-game YAML configs with clear comments on each field
-- [ ] Implement a lightweight config loader that merges base + game overrides, supports nested keys, and returns a dict/dataclass; print the resolved config at startup for traceability.
-    - [ ] feat: Add config merge utility with nested override and resolved-config logging
+- [X] Implement a lightweight config loader that merges base + game overrides, supports nested keys, and returns a dict/dataclass; print the resolved config at startup for traceability.
+    - [X] feat: Add config merge utility with nested override and resolved-config logging
 - [ ] Provide a CLI entry point to launch experiments with a single command: `python train_dqn.py --cfg experiments/dqn_atari/configs/pong.yaml --seed 123 --resume path/to/checkpoint.pt` and allow optional `--set key.subkey=value` overrides.
     - [ ] feat: Add CLI flags for --cfg, --seed, --resume, and inline overrides
 - [ ] Auto-save the merged config snapshot to each run folder (`experiments/dqn_atari/runs/<game>/<timestamp>/config.yaml`) alongside `meta.json`; include commit hash and seed.
