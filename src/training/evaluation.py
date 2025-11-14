@@ -131,6 +131,12 @@ def evaluate(
     Runs the agent in evaluation mode (no learning) and computes
     performance statistics over multiple episodes.
 
+    DQN Paper Evaluation Protocol (Mnih et al., 2015):
+    - eval_epsilon = 0.05 (mostly greedy with 5% random exploration)
+    - num_episodes ≥ 10 for interim checks during training
+    - num_episodes ≈ 30 for final reporting and paper results
+    - No EpisodicLifeEnv wrapper (full episodes, all lives)
+
     Parameters
     ----------
     env : gym.Env
@@ -138,9 +144,9 @@ def evaluate(
     model : torch.nn.Module
         Q-network to evaluate
     num_episodes : int
-        Number of episodes to run (default: 10)
+        Number of episodes to run (default: 10 for interim, 30 for final reporting)
     eval_epsilon : float
-        Exploration rate during evaluation (default: 0.05, use 0.0 for greedy)
+        Exploration rate during evaluation (default: 0.05 per DQN paper, use 0.0 for pure greedy)
     num_actions : int
         Number of available actions (if None, inferred from env)
     device : str
@@ -338,14 +344,20 @@ class EvaluationScheduler:
     Triggers evaluation at regular intervals (frame-based or wall-clock)
     and tracks evaluation history with metadata.
 
+    DQN Paper Evaluation Protocol (Mnih et al., 2015):
+    - Evaluate every 250K frames (eval_interval=250_000)
+    - Use 10 episodes for interim checks (num_episodes=10)
+    - Use 30 episodes for final reporting (num_episodes=30)
+    - Use ε=0.05 during evaluation (eval_epsilon=0.05)
+
     Parameters
     ----------
     eval_interval : int
-        Steps between evaluations (default: 250,000)
+        Steps between evaluations (default: 250,000 per DQN paper)
     num_episodes : int
-        Number of episodes per evaluation (default: 10)
+        Number of episodes per evaluation (default: 10 for interim, 30 for final)
     eval_epsilon : float
-        Exploration rate during evaluation (default: 0.05)
+        Exploration rate during evaluation (default: 0.05 per DQN paper)
     wall_clock_interval : float
         Optional wall-clock time between evaluations in seconds (default: None)
         If set, evaluations trigger based on elapsed time instead of steps

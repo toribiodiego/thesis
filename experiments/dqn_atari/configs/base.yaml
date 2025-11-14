@@ -195,15 +195,20 @@ exploration:
 evaluation:
   # Evaluation frequency
   enabled: true  # Enable periodic evaluation
-  eval_every: 250000  # Evaluate every 250K environment frames
+  eval_every: 250000  # Evaluate every 250K environment frames (DQN paper protocol)
 
-  # Evaluation episodes
-  num_episodes: 10  # Number of episodes per evaluation (interim checks)
-  # Note: Use 30 episodes for final reporting (DQN paper)
+  # Evaluation episodes (DQN paper: Mnih et al., 2015)
+  num_episodes: 10  # Number of episodes per evaluation
+  # Paper protocol:
+  # - 10 episodes: Interim checks during training (default)
+  # - 30 episodes: Final reporting for paper results
+  # Override with --set evaluation.num_episodes=30 for final runs
 
-  # Evaluation mode
-  epsilon: 0.05  # ε-greedy with ε=0.05 during eval (mostly greedy)
-  deterministic: false  # If true, use pure greedy (ε=0)
+  # Evaluation mode (DQN paper protocol)
+  epsilon: 0.05  # ε-greedy with ε=0.05 during eval (mostly greedy, paper standard)
+  # Paper uses 0.05 (5% random exploration) instead of pure greedy (0.0)
+  # This provides some stochasticity while still measuring learned policy
+  deterministic: false  # If true, use pure greedy (ε=0) instead of paper default
 
   # Video capture
   record_video: true  # Record videos during evaluation
