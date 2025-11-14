@@ -127,6 +127,92 @@ pip install -r requirements.txt
   experiments/dqn_atari/configs/pong.yaml --seed 123
 ```
 
+## Inputs/Outputs Reference
+
+Quick reference table for script inputs, outputs, and side effects.
+
+### `run_dqn.sh`
+
+| Category | Details |
+|----------|---------|
+| **Inputs** | • Config file path (required)<br>• CLI flags: --dry-run, --seed, --dry-run-episodes, --device, --training.*, --agent.* |
+| **Outputs** | **Dry run mode:**<br>• `runs/{game}_{seed}/frames/*.png` - Preprocessed frame samples<br>• `runs/{game}_{seed}/rollout_log.json` - Debug log with shapes/stats<br>• `runs/{game}_{seed}/meta.json` - Git hash, config, seed<br>• `runs/{game}_{seed}/action_list.json` - Action space info<br><br>**Training mode:**<br>• `runs/{game}_{seed}/checkpoints/*.pt` - Model weights<br>• `runs/{game}_{seed}/logs/` - Training metrics<br>• `runs/{game}_{seed}/reference_states.pt` - Q-value tracking batch<br>• `runs/{game}_{seed}/config.yaml` - Merged config |
+| **Side effects** | • Changes working directory to repository root<br>• Uses GPU if available (unless --device cpu)<br>• Creates timestamped run directory |
+| **Exit codes** | • 0: Success<br>• Non-zero: Error (Python exception, config error, CUDA OOM) |
+| **Environment vars** | None required |
+| **Dependencies** | • Python packages from requirements.txt<br>• Atari ROMs installed via setup_roms.sh |
+
+### `setup_roms.sh`
+
+| Category | Details |
+|----------|---------|
+| **Inputs** | None (accepts AutoROM license automatically) |
+| **Outputs** | • ROMs installed to ale-py package directory<br>• Terminal output showing installation progress |
+| **Side effects** | • Downloads ~50 Atari 2600 ROMs (~10MB)<br>• Installs ROMs system-wide for ale-py<br>• Accepts license terms automatically |
+| **Exit codes** | • 0: Success<br>• 1: AutoROM installation failed or not available |
+| **Environment vars** | None |
+| **Dependencies** | • Python with AutoROM package<br>• Internet connection for ROM download |
+
+### `capture_env.sh`
+
+| Category | Details |
+|----------|---------|
+| **Inputs** | None (reads system and Python environment state) |
+| **Outputs** | • `experiments/dqn_atari/system_info.txt` - Complete environment snapshot |
+| **Side effects** | • Overwrites existing system_info.txt if present<br>• Reads git repository state |
+| **Exit codes** | • 0: Success<br>• 1: Git command failed or not in repository |
+| **Environment vars** | None |
+| **Dependencies** | • Git repository<br>• Python environment with packages installed |
+
+### Output Directory Structure
+
+```
+experiments/dqn_atari/
+├── runs/
+│   └── {game}_{seed}/              # Run directory (e.g., pong_123)
+│       ├── frames/                  # Dry run only
+│       │   ├── reset_0_frame_0.png
+│       │   ├── reset_0_frame_1.png
+│       │   └── ...
+│       ├── checkpoints/             # Training only
+│       │   ├── step_1000000.pt
+│       │   ├── step_2000000.pt
+│       │   └── ...
+│       ├── logs/                    # Training only
+│       │   ├── training.log
+│       │   └── metrics.csv
+│       ├── rollout_log.json         # Dry run only
+│       ├── action_list.json         # Dry run only
+│       ├── meta.json                # Both modes
+│       ├── config.yaml              # Both modes
+│       └── reference_states.pt      # Training only (after 50K frames)
+└── system_info.txt                  # From capture_env.sh
+```
+
+### Return Codes Summary
+
+| Script | Success | Common Errors |
+|--------|---------|---------------|
+| `run_dqn.sh` | 0 | Config not found (2), Python error (1), CUDA OOM (137) |
+| `setup_roms.sh` | 0 | AutoROM not installed (1), Network error (1) |
+| `capture_env.sh` | 0 | Not in git repo (1), Git command failed (1) |
+
+### Standard Output/Error Behavior
+
+**`run_dqn.sh`:**
+- Dry run: Minimal output (episode counts, frame shapes)
+- Training: Periodic metrics (loss, TD error, episode returns)
+- Errors: Python tracebacks to stderr
+
+**`setup_roms.sh`:**
+- Progress messages to stdout
+- AutoROM download progress
+- Verification message on completion
+
+**`capture_env.sh`:**
+- Brief status message to stdout
+- Full output written to file (not terminal)
+
 ## Common Workflows
 
 ### First-time setup
