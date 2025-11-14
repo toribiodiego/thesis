@@ -10,8 +10,13 @@ Comprehensive test coverage for DQN implementation. All tests can be run from th
 | `test_replay_buffer.py` | ~400 | 15+ | Circular buffer, sampling, episode boundaries, memory efficiency |
 | `test_dqn_trainer.py` | 4,127 | 163+ | **Complete training infrastructure** (Subtask 5-6) |
 | `test_atari_wrappers.py` | ~300 | 20+ | Preprocessing pipeline, frame stacking, reward clipping |
+| `test_checkpoint.py` | ~500 | 16 | Checkpoint save/load, atomic writes, best model tracking (Subtask 7) |
+| `test_resume.py` | ~560 | 15 | Resume from checkpoint, config validation, RNG restoration (Subtask 7) |
+| `test_seeding.py` | ~350 | 17 | Deterministic seeding, RNG state management (Subtask 7) |
+| `test_determinism.py` | ~350 | 20 | Determinism configuration, cuDNN flags (Subtask 7) |
+| `test_save_resume_determinism.py` | ~550 | 1 | End-to-end save/resume smoke test (Subtask 7) |
 
-**Total:** 218+ unit tests across all modules
+**Total:** 287+ unit tests across all modules
 
 ---
 
@@ -229,6 +234,80 @@ pytest tests/ --durations=10
 - Reference Q tracking
 - Metadata persistence
 
+### Subtask 7: Checkpoint/Resume & Deterministic Seeding
+
+**Tests:** `test_checkpoint.py`, `test_resume.py`, `test_seeding.py`, `test_determinism.py`, `test_save_resume_determinism.py`
+
+**Checkpoint Tests** (`test_checkpoint.py`):
+```bash
+# Run all checkpoint tests
+pytest tests/test_checkpoint.py -v
+
+# Test specific features
+pytest tests/test_checkpoint.py -k "save" -v          # Save functionality
+pytest tests/test_checkpoint.py -k "load" -v          # Load functionality
+pytest tests/test_checkpoint.py -k "best" -v          # Best model tracking
+pytest tests/test_checkpoint.py -k "atomic" -v        # Atomic writes
+```
+
+**Resume Tests** (`test_resume.py`):
+```bash
+# Run all resume tests
+pytest tests/test_resume.py -v
+
+# Test specific features
+pytest tests/test_resume.py -k "config" -v            # Config validation
+pytest tests/test_resume.py -k "rng" -v               # RNG state restoration
+pytest tests/test_resume.py -k "epsilon" -v           # Epsilon scheduler restoration
+pytest tests/test_resume.py -k "device" -v            # Device mapping
+```
+
+**Seeding Tests** (`test_seeding.py`):
+```bash
+# Run all seeding tests
+pytest tests/test_seeding.py -v
+
+# Test specific RNG sources
+pytest tests/test_seeding.py -k "python" -v           # Python random
+pytest tests/test_seeding.py -k "numpy" -v            # NumPy random
+pytest tests/test_seeding.py -k "torch" -v            # PyTorch random
+pytest tests/test_seeding.py -k "env" -v              # Environment seeding
+```
+
+**Determinism Tests** (`test_determinism.py`):
+```bash
+# Run all determinism configuration tests
+pytest tests/test_determinism.py -v
+
+# Test specific modes
+pytest tests/test_determinism.py -k "basic" -v        # Basic deterministic mode
+pytest tests/test_determinism.py -k "strict" -v       # Strict mode
+pytest tests/test_determinism.py -k "status" -v       # Status checking
+```
+
+**Save/Resume Determinism Smoke Test** (`test_save_resume_determinism.py`):
+```bash
+# Run end-to-end determinism verification (5000 steps)
+pytest tests/test_save_resume_determinism.py -v -s
+
+# Expected output:
+# ✓ PERFECT DETERMINISM - All metrics match exactly
+# Epsilon Matches: 100.0%
+# Reward Matches: 100.0%
+# Action Matches: 100.0%
+# Checksum Match: ✓ PASS
+```
+
+**Verify:**
+- Checkpoint save/load correctness
+- Atomic write safety
+- Best model tracking
+- Config validation on resume
+- RNG state capture and restoration
+- Epsilon scheduler state restoration
+- Deterministic mode configuration
+- End-to-end determinism verification
+
 ---
 
 ## Adding New Tests
@@ -345,8 +424,13 @@ pytest tests/ --collect-only  # Should list all tests
 - `src.replay`: 15+ tests
 - `src.training`: 163+ tests
 - `src.envs`: 20+ tests
+- `src.training.checkpoint`: 16 tests
+- `src.training.resume`: 15 tests
+- `src.utils.seeding`: 17 tests
+- `src.utils.determinism`: 20 tests
+- Integration (save/resume): 1 test
 
-**Total:** 218+ tests
+**Total:** 287+ tests
 
 **Average Test Runtime:**
 - Unit tests: < 1s each
