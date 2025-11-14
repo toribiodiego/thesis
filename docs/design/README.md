@@ -8,3 +8,16 @@ Use this directory to capture architectural sketches, module dependency diagrams
 - Foundational setup references (e.g., `dqn_setup.md` for Subtask 1 outputs).
 
 Keeping design decisions explicit here makes it easier to evolve the codebase while maintaining reproducibility across experiments.
+
+## Available Design Documents
+
+- [DQN Setup](dqn_setup.md) - Environment setup, game selection, and reproducibility
+- [Atari Environment Wrapper](atari_env_wrapper.md) - Preprocessing, frame stacking, reward clipping
+- [DQN Model](dqn_model.md) - CNN architecture and weight initialization
+- [Replay Buffer](replay_buffer.md) - Circular buffer with uniform sampling
+- [DQN Training](dqn_training.md) - TD targets, loss computation, and optimization
+- [Training Loop Runtime](training_loop_runtime.md) - Main training loop orchestration
+- [Episode Handling](episode_handling.md) - Life-loss vs full-episode termination
+- [Checkpointing](checkpointing.md) - Save/resume and deterministic seeding
+- [Config & CLI](config_cli.md) - Configuration system and command-line interface
+- [Evaluation Harness](eval_harness.md) - Periodic evaluation, metrics, and video capture
