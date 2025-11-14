@@ -19,7 +19,12 @@ Re-implement and reproduce DeepMind's DQN (*Playing Atari with Deep Reinforcemen
 **Workflow:**
 - Follow commit prefixes in `docs/git_commit_guide.md` (feat/fix/docs/test/build/chore)
 - Mark completed checklist items as work progresses
-- Current focus: **M1 – Environment + tooling smoke test** (Subtask 1)
+- Current focus: **Subtask 11 – Integration & First Training Runs**
+
+**Progress Summary**:
+- Subtasks 1-10: **Complete** (335+ tests, all passing)
+- Infrastructure ready: environment, wrappers, model, replay, training loop, checkpointing, config system, evaluation, logging/plotting
+- Next step: Integrate logging into training and launch first full runs
 
 ---
 
@@ -41,10 +46,33 @@ See `docs/papers/dqn_2013_notes.md` for details.
 
 | Milestone | Criteria | Status |
 |-----------|----------|--------|
-| **M1** | Environment + tooling smoke test passes | Pending |
-| **M2** | CartPole DQN converges (>195 reward) | Pending |
-| **M3** | Pong score ≥ paper benchmark | Pending |
+| **M1** | Environment + tooling smoke test passes | **Complete** |
+| **M2** | Training infrastructure complete (Subtasks 1-10) | **Complete** |
+| **M3** | First full Pong training run (10M frames) | **Next** |
 | **M4** | Three-game suite reproduced with reports | Pending |
+
+**Current Status**: All training infrastructure is complete. Ready to integrate MetricsLogger into training loop and launch first real training runs.
+
+---
+
+## Next Steps (Practical Focus)
+
+**Immediate (Subtask 11)**:
+1. Integrate MetricsLogger into DQNTrainer
+2. Add logging config to YAML files
+3. Run smoke test with all logging backends
+4. Launch first full Pong training (10M frames)
+5. Generate plots and verify end-to-end pipeline
+6. Document game suite plan
+
+**Near-term (Subtask 12)**:
+1. Train Breakout and Beam Rider (50M frames each, 3 seeds)
+2. Verify stability across games
+3. Aggregate results and generate multi-seed plots
+4. Compare against paper baselines
+5. Upload all artifacts to W&B
+
+**Future Work** (Subtasks 13-21 provide detailed planning for ablations, reporting, code quality, and thesis integration - these can be tackled iteratively as needed)
 
 ---
 
@@ -305,56 +333,60 @@ Structured logging through TensorBoard, Weights & Biases (W&B), and CSV. Plottin
 
 ---
 
-### Subtask 11 — Game Suite Plan & Training Budgets
+### Subtask 11 — Integration & First Training Runs
 
 **Objective:**
-Finalize the Atari game suite (Pong, Breakout, Beam Rider + optional others), frame budgets, evaluation cadence, target scores, and runtime expectations. Keep the plan centralized in `docs/design/game_suite_plan.md`, with surfaced summaries in `experiments/dqn_atari/README.md` and the per-game configs under `experiments/dqn_atari/configs/`. Complete when the suite definition, overrides, and planning artifacts reflect the refactored code structure.
+Integrate MetricsLogger into DQN training loop, launch first full-length training runs on Pong (10M frames), verify all logging/checkpointing/evaluation systems work end-to-end, and document game suite plan with target scores. Complete when Pong training finishes successfully with complete logs, plots, and artifacts.
 
 **Checklist:**
-- [ ] Update `experiments/dqn_atari/README.md` to list the chosen games (Pong, Breakout, Beam Rider as baseline; optional Space Invaders, Seaquest, Enduro, Q*bert) with references to their config files in `experiments/dqn_atari/configs/`.
-    - [ ] docs: Record selected games plus config paths in README (post-refactor layout)
-- [ ] Embed a table `Game | Env ID | Frames (train) | Eval cadence | Target score / % baseline | Notes` in `docs/design/game_suite_plan.md`, and link this table from the README so there’s a single authoritative source for budgets/criteria.
-    - [ ] docs: Maintain the table in `docs/design/game_suite_plan.md` and cross-link from README
-- [ ] Provide per-game overrides in `experiments/dqn_atari/configs/<game>.yaml` for frame budgets, evaluation cadence, and any special settings (e.g., Space Invaders `frameskip=3`); document each override inside the YAML header comment and in the plan doc.
-    - [ ] feat/docs: Add/annotate per-game overrides (frame budgets, eval cadence, frameskip exceptions)
-- [ ] Add a runtime estimator script under `experiments/dqn_atari/scripts/estimate_runtime.py` (or similar) that reads FPS assumptions plus frame budgets and emits `experiments/dqn_atari/planning/game_plan.csv` with `game,fps,frames,estimated_hours,hardware`. Mention this CSV in the README and plan doc.
-    - [ ] feat: Add runtime estimator script + planning CSV and reference them in docs
-- [ ] Define acceptance criteria (target score or % of paper baseline, number of seeds, eval window) directly in `docs/design/game_suite_plan.md`, and ensure `experiments/dqn_atari/README.md` links to that section so updates stay centralized.
-    - [ ] docs: Document acceptance thresholds in the plan doc and reference from README
-- [ ] Consolidate all planning guidance (game rationale, overrides, runtime assumptions, evaluation cadence) inside `docs/design/game_suite_plan.md`, and update the README with a short summary + pointer rather than duplicating tables.
-    - [ ] chore: Finalize the plan doc and make README a concise entry point post-refactor
+- [ ] Integrate MetricsLogger into DQNTrainer: instantiate logger from config, call `log_step()` during training steps, call `log_episode()` on episode completion, call `log_evaluation()` after eval runs, and call `close()` on shutdown.
+    - [ ] feat: Wire MetricsLogger into training loop with TensorBoard/W&B/CSV backends
+- [ ] Add logging configuration to training configs (enable_tensorboard, enable_wandb, wandb_project, flush_interval, upload_artifacts) and ensure defaults work for local-only development.
+    - [ ] feat: Add logging config section to base.yaml and per-game configs
+- [ ] Test logging integration with smoke test: run 200K frame training with all backends enabled, verify CSV files exist, TensorBoard events are written, and W&B uploads work (or gracefully degrade if offline).
+    - [ ] test: Add smoke test for integrated logging with all backends
+- [ ] Launch first full Pong training run (10M frames, seed 42): monitor logs in real-time, verify checkpoints save every 1M steps, confirm evaluation runs at specified intervals, and check W&B artifact uploads.
+    - [ ] feat: Execute first full-length training run and document any issues
+- [ ] Generate plots from completed run: use `scripts/plot_results.py` to create learning curves, loss plots, eval trends, and epsilon schedule; verify metadata bundle and W&B uploads work.
+    - [ ] test: Validate end-to-end plotting pipeline on real training data
+- [ ] Document game suite plan in `docs/design/game_suite_plan.md`: list chosen games (Pong, Breakout, Beam Rider), target scores from paper, frame budgets (10M for Pong, 50M for others), evaluation cadence (every 250K steps), and expected runtimes.
+    - [ ] docs: Create game suite plan with targets and budgets
+- [ ] Update experiment configs with finalized frame budgets and evaluation settings based on first Pong run experience; document any deviations from paper defaults.
+    - [ ] chore: Adjust configs based on initial training run learnings
+- [ ] Verify resume functionality on Pong run: interrupt training mid-run, resume from checkpoint, verify metrics/RNG continuity, and document any issues.
+    - [ ] test: Exercise resume on real training run (not just unit tests)
 
 ---
 
-### Subtask 12 — Hyper-Parameter Tuning & Stability Verification
+### Subtask 12 — Multi-Game Training & Results Collection
 
 **Objective:**
-Verify paper defaults (replay=1M, batch=32, LR=2.5e-4, γ=0.99, target=10k, RMSProp). Run ≤2M-frame stability tests. Limited sweep if unstable. Complete when stable baseline confirmed for each game.
+Execute full-length training runs for game suite (Pong, Breakout, Beam Rider) across multiple seeds, verify stability, collect results, and generate comparison tables against paper baselines. Complete when all games have finished runs with aggregated metrics and plots.
 
 **Checklist:**
-- [ ] Initialize tuning with paper-default hyperparameters: replay capacity 1,000,000; batch size 32; learning rate 2.5e-4; γ=0.99; target update 10,000 steps; train frequency 4; optimizer RMSProp (ρ=0.95, ε=1e-2); capture these as a named preset in `experiments/dqn_atari/configs/tuning/base_paper.yaml`.
-    - [ ] feat: Add paper-default tuning preset (replay=1M, batch=32, LR=2.5e-4, γ=0.99, target=10k, train_every=4, RMSProp)
-- [ ] Run short stability smoke tests (≤ 2M frames per game) using the preset to check for NaNs/Infs, exploding gradients, or stuck returns; enable assertions/warnings and log anomaly counters.
-    - [ ] test: Add ≤2M-frame stability smoke tests with NaN/Inf detection and gradient norm checks
-- [ ] Define a minimal sweep space for instability cases: limited LR grid (e.g., {1e-4, 2.5e-4, 5e-4}), ε schedule variants (final ε ∈ {0.1, 0.01}), and reward clipping on/off; encode each trial as a small YAML under `experiments/dqn_atari/configs/tuning/`.
-    - [ ] feat: Add compact tuning configs for LR, ε-schedule, and reward clipping toggles
-- [ ] Constrain sweep size to ≤5 runs per game and record each run's config hash, seed, and metrics; name runs deterministically (`experiments/dqn_atari/runs/tuning/<game>/<paramset>_<seed>`) and persist summaries under `experiments/dqn_atari/planning/tuning_summary_<game>.csv`.
-    - [ ] chore: Enforce ≤5 runs per game with deterministic run IDs and per-game tuning summaries in the planning folder
-- [ ] Track stability metrics and early learning signals: log moving-average return, loss variance, TD-error stats, gradient norms, and replay utilization; mark a run unstable if NaNs/Infs or divergence thresholds are exceeded.
-    - [ ] feat: Log stability indicators (loss variance, TD-error, grad-norm, replay usage) with instability flags
-- [ ] Select the final stable baseline per game: choose the best stable config by mean eval return at a fixed frame budget (e.g., 2M), promote it to `experiments/dqn_atari/configs/{game}.yaml`, and record rationale in a short note.
-    - [ ] docs: Promote chosen stable baseline to per-game config and document selection rationale
-- [ ] Verify long-run viability: launch a sanity extension run to confirm the selected config can progress toward 20M frames without crashes or divergence; update the tuning summary with pass/fail.
-    - [ ] test: Add long-run viability check entry and update tuning summary with result
-- [ ] Consolidate tuning decisions in `docs/design/tuning_strategy.md`: capture default hyperparameters, sweep grid rationale, stability criteria, and how to interpret tuning summary CSVs for future debugging.
-    - [ ] docs: Include commands for launching tuning runs, pointers to config presets, and troubleshooting tips for instability signals.
+- [ ] Launch Breakout and Beam Rider training (50M frames each, 3 seeds per game): use same configs as Pong, monitor for stability issues (NaN/Inf, gradient explosions), document any hyperparameter adjustments needed.
+    - [ ] feat: Execute full training suite with stability monitoring
+- [ ] Verify paper-default hyperparameters work across all games: replay=1M, batch=32, LR=2.5e-4, gamma=0.99, target_update=10k, RMSProp(rho=0.95, eps=0.01); if instability occurs, run limited sweep (2-3 LR values, 2M frames) and document in `docs/design/stability_notes.md`.
+    - [ ] test: Confirm stability or document minimal tuning adjustments
+- [ ] Aggregate results using `scripts/export_results_table.py`: generate `results/summary/results_summary.csv` and `.md` with columns (game, seed, mean_return, std_return, frames, wall_time, commit_hash); upload to W&B.
+    - [ ] feat: Export aggregated results table for all completed runs
+- [ ] Generate multi-seed plots using `scripts/plot_results.py --multi-seed`: create learning curves with 95% CI for each game, save to `results/plots/<game>/multi_seed/`.
+    - [ ] feat: Create publication-quality multi-seed aggregation plots
+- [ ] Compare against paper baselines: create comparison table with columns (Game, Our Score, Paper Score, % of Paper, Status); document in `results/summary/paper_comparison.md` with brief analysis of gaps.
+    - [ ] docs: Document results comparison with paper and note discrepancies
+- [ ] Exercise resume on each game: interrupt one run per game mid-training, resume from checkpoint, verify metrics continuity; document pass/fail in `docs/design/run_management.md`.
+    - [ ] test: Verify resume works on real multi-hour training runs
+- [ ] Upload all artifacts to W&B: checkpoints at 1M intervals, final plots, aggregated tables, and metadata bundles; ensure naming follows conventions from Subtask 10.
+    - [ ] chore: Complete W&B artifact uploads with proper naming
+- [ ] Document runtime performance: record actual FPS, wall-clock time per game/seed, GPU utilization; save to `results/summary/runtime_stats.csv` for future planning.
+    - [ ] docs: Capture performance metrics for reproducibility
 
 ---
 
-### Subtask 13 — Full Training Runs & Result Collection
+### Subtask 13 — Optional Ablations & Analysis (Deferred)
 
 **Objective:**
-Execute full-length DQN training for each selected game across three seeds, storing artifacts under `experiments/dqn_atari/runs/<game>/seed_<n>/`, mirroring key outputs to W&B, and aggregating results into `results/aggregates/`. Completion means all planned runs finished, artifacts are audited, and summaries/plots exist locally and in W&B.
+Quantify the effect of key design choices (reward clipping, target network, frame stack size) on a benchmark game (Pong). Each ablation runs 5M frames, producing comparable results. This subtask can be tackled after baseline results are complete.
 
 **Checklist:**
 - [ ] Launch baseline training for each game with seeds `{0,1,2}` via `experiments/dqn_atari/scripts/run_dqn.sh` (or equivalent CLI). Ensure deterministic run directories `experiments/dqn_atari/runs/<game>/seed_<n>/` and matching W&B run names/tags.
