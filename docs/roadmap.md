@@ -365,13 +365,15 @@ Structured logging through TensorBoard, Weights & Biases (W&B), and CSV. Plottin
 Integrate MetricsLogger into DQN training loop, launch first full-length training runs on Pong (10M frames), verify all logging/checkpointing/evaluation systems work end-to-end, and document game suite plan with target scores. Complete when Pong training finishes successfully with complete logs, plots, and artifacts.
 
 **Checklist:**
-- [X] Integrate MetricsLogger into DQNTrainer: instantiate logger from config, call `log_step()` during training steps, call `log_episode()` on episode completion, call `log_evaluation()` after eval runs, and call `close()` on shutdown.
+- [X] Implement complete training script (`train_dqn.py`) with main training loop: environment setup, network initialization, training step execution, episode handling, periodic evaluation, checkpoint saving, and logging integration.
+    - [X] feat: Create train_dqn.py with full DQN training loop
+- [X] Integrate MetricsLogger into training loop: instantiate logger from config, call `log_step()` during training steps, call `log_episode()` on episode completion, call `log_evaluation()` after eval runs, and call `close()` on shutdown.
     - [X] feat: Wire MetricsLogger into training loop with TensorBoard/W&B/CSV backends
 - [X] Add logging configuration to training configs (enable_tensorboard, enable_wandb, wandb_project, flush_interval, upload_artifacts) and ensure defaults work for local-only development.
     - [X] feat: Add logging config section to base.yaml and per-game configs
-- [X] Update config schema validation to accept new logging backend fields.
+- [X] Update config schema validation to accept new logging backend fields (tensorboard, csv, wandb) and their parameters.
     - [X] fix: Update schema validator with tensorboard, csv, wandb fields
-- [X] Fix environment setup: register ALE environments, correct API calls for make_atari_env, configure_optimizer, ReplayBuffer.
+- [X] Fix environment setup and API compatibility: register ALE environments in make_atari_env, correct parameter names for make_atari_env, configure_optimizer, and ReplayBuffer initialization.
     - [X] fix: Register ALE environments and fix API compatibility
 - [ ] Test logging integration with smoke test: run 200K frame training with all backends enabled, verify CSV files exist, TensorBoard events are written, and W&B uploads work (or gracefully degrade if offline).
     - [ ] test: Execute smoke test for integrated logging with all backends
@@ -413,32 +415,8 @@ Execute full-length training runs for game suite (Pong, Breakout, Beam Rider) ac
 
 ---
 
-### Subtask 13 — Optional Ablations & Analysis (Deferred)
 
-**Objective:**
-Quantify the effect of key design choices (reward clipping, target network, frame stack size) on a benchmark game (Pong). Each ablation runs 5M frames, producing comparable results. This subtask can be tackled after baseline results are complete.
-
-**Checklist:**
-- [ ] Launch baseline training for each game with seeds `{0,1,2}` via `experiments/dqn_atari/scripts/run_dqn.sh` (or equivalent CLI). Ensure deterministic run directories `experiments/dqn_atari/runs/<game>/seed_<n>/` and matching W&B run names/tags.
-    - [ ] feat: Automate run ID + W&B tagging so local/W&B records stay aligned
-- [ ] Confirm each run directory contains the standardized layout (config/meta/git info, `logs/`, `checkpoints/`, `eval/`, `artifacts/`, `reference_q/`); describe this structure in `docs/design/run_management.md` and keep it in sync with reality.
-    - [ ] chore: Keep run-management doc updated with any folder/filename changes
-- [ ] Maintain continuous logging (reward/loss/ε/FPS/runtime) with periodic flush/rotation across TensorBoard, CSV, and W&B; alert when any backend drifts.
-    - [ ] feat: Monitor logging health and fix divergences promptly
-- [ ] Save checkpoints every 1M frames (plus “best eval”) and upload them as W&B artifacts (`checkpoints/<game>/seed_<n>`). Capture optional replay/frame samples for later analysis.
-    - [ ] feat: Script checkpoint artifact creation + upload; record storage URIs
-- [ ] Exercise resume at least once per game: interrupt, resume with `--resume`, and verify counters/RNG states/metrics remain continuous. Log the outcome in `docs/design/run_management.md`.
-    - [ ] test: Document pass/fail evidence for the resume drill
-- [ ] Aggregate per-run metrics on completion: write `results/aggregates/<game>/seed_metrics.csv` and a cross-seed summary (`summary.csv` + Markdown). Mirror these outputs to W&B (tables or artifacts) with commit/seed metadata.
-    - [ ] feat: Produce deterministic aggregate files + W&B uploads
-- [ ] Generate final plots (learning curves, eval trends, epsilon schedules) under `results/plots/<game>/` via Subtask 10 tooling and attach the same bundles to each W&B run or run-group.
-    - [ ] docs: Add a short README per game pointing to best checkpoints and plot locations
-- [ ] Run a completion audit (stored in `experiments/dqn_atari/planning/completion_audit.md`): verify all seeds finished, required local + W&B artifacts exist, and note any anomalies/follow-ups.
-    - [ ] chore: Keep the audit log current and linked from `docs/design/run_management.md`
-
----
-
-### Subtask 14 — Results Comparison & Paper Replication Tables
+### Subtask 13 — Results Comparison & Paper Replication Tables
 
 **Objective:**
 Compare reproduced scores against the original DQN paper. Aggregate final-eval statistics, build Markdown/CSV tables, generate comparison plots, and upload the outputs to both `results/summary/` and W&B reports. Highlight gaps with diagnoses. Completion = reproducible tables/plots exist locally and in W&B, with documented interpretation guidance.
@@ -461,7 +439,7 @@ Compare reproduced scores against the original DQN paper. Aggregate final-eval s
 
 ---
 
-### Subtask 15 — Minimal Ablations & Sensitivity Analysis
+### Subtask 14 — Minimal Ablations & Sensitivity Analysis
 
 **Objective:**
 Quantify the effect of key design choices (reward clipping, frame stack size, target network, etc.) on a benchmark game (Pong or Breakout). Each ablation runs ~5M frames across fixed seeds, producing comparable logs/plots/tables locally and in W&B. Completion requires documented findings and reproducible configs/scripts.
@@ -511,14 +489,14 @@ Quantify the effect of key design choices (reward clipping, frame stack size, ta
 
 ---
 
-### Subtask 17 — Code Quality, Testing, and Documentation
+### Subtask 16 — Code Quality, Testing, and Documentation
 
 **Objective:**
 Guarantee reliability and contributor readiness by maintaining a comprehensive automated test suite, enforcing lint/format/type-check standards, tracking coverage, and documenting how to run all tooling. Completion = clean local + CI runs plus up-to-date guidance in `docs/design/code_quality.md` and `tests/README.md`.
 
 **Checklist:**
-- [ ] Expand unit/integration tests under `tests/` (replay buffer, env wrappers, model, training loop, evaluation) using seeded fixtures and pytest markers (`slow`, `gpu`, etc.). Update `tests/README.md` with commands for full runs and targeted suites (`pytest tests/test_dqn_trainer.py -k resume`).
-    - [ ] test: Keep the README in sync with new tests/markers as they land
+- [X] Expand unit/integration tests under `tests/` (replay buffer, env wrappers, model, training loop, evaluation) using seeded fixtures and pytest markers (`slow`, `gpu`, etc.). Update `tests/README.md` with commands for full runs and targeted suites (`pytest tests/test_dqn_trainer.py -k resume`).
+    - [X] test: Comprehensive test coverage with 335+ tests across all modules
 - [ ] Add/maintain CI workflows (e.g., GitHub Actions) that set up the venv, install deps, run `pytest` (with coverage), and upload artifacts; provide a matching local runner script (`scripts/run_tests.sh`) for convenience.
     - [ ] chore: Ensure CI + local scripts stay aligned as dependencies change
 - [ ] Enforce style with Black, isort, and Ruff/flake8 via `pyproject.toml` + `pre-commit`; document the commands and expected versions in the code-quality doc.
@@ -534,14 +512,14 @@ Guarantee reliability and contributor readiness by maintaining a comprehensive a
 
 ---
 
-### Subtask 18 — Reproduction Recipe Script
+### Subtask 17 — Reproduction Recipe Script
 
 **Objective:**
 Ship a one-command reproduction script (`scripts/reproduce_dqn.sh` + optional Python driver) that automates env setup, dependency install, ROM download, training, evaluation, plotting, and W&B artifact uploads. Completion means anyone can run the script on a fresh machine and reproduce a baseline run with documented outputs/metrics.
 
 **Checklist:**
-- [ ] Implement `scripts/reproduce_dqn.sh` to (1) create/activate `.venv`, (2) install requirements, (3) download ROMs via `python -m AutoROM --accept-license`, (4) launch a baseline training run (e.g., Pong) with deterministic seed, (5) run evaluation + plotting, and (6) upload artifacts to W&B.
-    - [ ] feat: Ensure each stage exits on failure and logs progress clearly
+- [ ] Implement `scripts/reproduce_dqn.sh` to orchestrate existing component scripts: (1) `envs/setup_env.sh` for venv creation and dependency install, (2) `experiments/dqn_atari/scripts/setup_roms.sh` for ROM download, (3) `train_dqn.py` for training execution, (4) `scripts/plot_results.py` for visualization, (5) optional W&B artifact uploads.
+    - [ ] feat: Create unified reproduction wrapper that chains existing scripts
 - [ ] Make the script configurable via flags (`--game`, `--seed`, `--frames`, `--disable-wandb`), auto-create directories (`experiments/dqn_atari/runs`, `results/`), and avoid manual path edits.
     - [ ] chore: Provide sensible defaults + overrides documented in `docs/design/reproduce_recipe.md`
 - [ ] Capture environment provenance (pip freeze, Python/CUDA/Torch versions, ROM status) into `experiments/dqn_atari/system_info.txt`, plus run metadata (`meta.json`, `git_info.txt`). Include these files in any W&B artifact uploads.
@@ -557,7 +535,7 @@ Ship a one-command reproduction script (`scripts/reproduce_dqn.sh` + optional Py
 
 ---
 
-### Subtask 19 — Automated Report Generation
+### Subtask 18 — Automated Report Generation
 
 **Objective:**
 Script (`scripts/generate_report.py`) compiling artifacts into Markdown/HTML report. Include curves, tables, videos, hardware info, commit hash. Output to `results/reports/<game>_<timestamp>.md`. Optional PDF export. Complete when report script auto-generates complete summary.
@@ -584,22 +562,22 @@ Script (`scripts/generate_report.py`) compiling artifacts into Markdown/HTML rep
 
 ---
 
-### Subtask 20 — Repository Organization & Archival
+### Subtask 19 — Repository Organization & Archival
 
 **Objective:**
 Keep the repository tidy and reproducible: standardized layout, documented retention rules, ignores/LFS config, licensing, README, and a fresh-clone smoke test. Completion means `docs/design/archive_plan.md` describes the structure, `.gitignore`/`.gitattributes` enforce it, and `scripts/fresh_clone_check.sh` passes.
 
 **Checklist:**
+- [X] Ensure top-level structure matches the intended layout (`src/`, `experiments/`, `results/`, `docs/`, `scripts/`, `tests/`, `.claude/`, etc.) and update README + archive plan if folders move/rename.
+    - [X] chore: Repository structure is well-organized and documented
+- [X] Maintain `.gitignore` / `.gitattributes` (and LFS config if needed) to exclude generated artifacts (`results/**`, `experiments/**/runs/**/checkpoints/**`, media files, caches). Document the rationale in the archive plan.
+    - [X] build: .gitignore properly configured for generated artifacts
+- [X] Keep README concise but complete: overview, paper reference, install/setup (venv + ROMs), quickstart commands (train/eval/plot/report), testing instructions, and links to design docs/results.
+    - [X] docs: README is comprehensive with setup, usage, and navigation
 - [ ] Prune temporary artifacts (old logs, massive checkpoints beyond retention policy, cache files) and document the retention rule in `results/README.md` + `docs/design/archive_plan.md`.
     - [ ] chore: Automate pruning where possible and note exceptions
-- [ ] Ensure top-level structure matches the intended layout (`src/`, `experiments/`, `results/`, `docs/`, `scripts/`, `tests/`, `.claude/`, etc.) and update README + archive plan if folders move/rename.
-    - [ ] chore: Keep the structure diagram current
-- [ ] Maintain `.gitignore` / `.gitattributes` (and LFS config if needed) to exclude generated artifacts (`results/**`, `experiments/**/runs/**/checkpoints/**`, media files, caches). Document the rationale in the archive plan.
-    - [ ] build: Update ignore lists when new artifact types appear
 - [ ] Ensure LICENSE files cover code (e.g., MIT) and docs/assets (e.g., CC-BY), and reference them from README.
     - [ ] docs: Keep licensing explicit for code vs. thesis assets
-- [ ] Keep README concise but complete: overview, paper reference, install/setup (venv + ROMs), quickstart commands (train/eval/plot/report), testing instructions, and links to design docs/results.
-    - [ ] docs: Revisit README whenever workflows change
 - [ ] Maintain `scripts/fresh_clone_check.sh` (or similar) that clones the repo, runs env setup, downloads ROMs (if allowed), executes the smoke test, and verifies outputs. Document pass criteria in the archive plan.
     - [ ] test: Run the fresh-clone script periodically (or via CI) and log results
 - [ ] Keep `docs/design/archive_plan.md` authoritative: folder purposes, retention policies, ignore rules, licensing decisions, fresh-clone checklist, and references to helper scripts.
@@ -609,7 +587,7 @@ Keep the repository tidy and reproducible: standardized layout, documented reten
 
 ---
 
-### Subtask 21 — Thesis Integration & Final Write-Up
+### Subtask 20 — Thesis Integration & Final Write-Up
 
 **Objective:**
 Integrate the DQN reproduction into the thesis manuscript: Methods (setup/implementation), Results (plots/tables/videos), Discussion (discrepancies, reproducibility), and Future Work. Keep `docs/thesis/` synchronized with repo artifacts so figures/tables can be regenerated easily.
