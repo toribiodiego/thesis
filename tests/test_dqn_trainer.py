@@ -3947,3 +3947,180 @@ if __name__ == "__main__":
     print("✓ Perform update step sets train mode test passed")
 
     print("\nAll tests passed! ✓")
+
+
+# ============================================================================
+# Metadata and Reproducibility Tests
+# ============================================================================
+
+def test_get_git_commit_hash():
+    """Test get_git_commit_hash returns a hash or 'unknown'."""
+    from src.training import get_git_commit_hash
+
+    commit_hash = get_git_commit_hash()
+    
+    # Should be either a hash or 'unknown'
+    assert isinstance(commit_hash, str)
+    assert len(commit_hash) > 0
+
+
+def test_get_git_status():
+    """Test get_git_status returns complete status dict."""
+    from src.training import get_git_status
+
+    status = get_git_status()
+
+    # Check all required fields
+    assert 'commit_hash' in status
+    assert 'commit_hash_full' in status
+    assert 'branch' in status
+    assert 'dirty' in status
+
+    # Types should be correct
+    assert isinstance(status['commit_hash'], str)
+    assert isinstance(status['commit_hash_full'], str)
+    assert isinstance(status['branch'], str)
+    assert isinstance(status['dirty'], bool)
+
+
+def test_metadata_writer_json():
+    """Test MetadataWriter writes JSON metadata."""
+    from src.training import MetadataWriter
+    import tempfile
+    import os
+    import json
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        writer = MetadataWriter(run_dir=tmpdir)
+
+        config = {'learning_rate': 0.00025, 'batch_size': 32}
+        writer.write_metadata(config=config, seed=123, format='json')
+
+        # Check metadata.json exists
+        metadata_path = os.path.join(tmpdir, 'metadata.json')
+        assert os.path.exists(metadata_path)
+
+        # Load and verify
+        with open(metadata_path, 'r') as f:
+            metadata = json.load(f)
+
+        assert metadata['seed'] == 123
+        assert metadata['config']['learning_rate'] == 0.00025
+        assert 'git' in metadata
+        assert 'timestamp' in metadata
+        assert 'python_version' in metadata
+        assert 'pytorch_version' in metadata
+
+
+def test_metadata_writer_git_info():
+    """Test MetadataWriter creates git_info.txt."""
+    from src.training import MetadataWriter
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        writer = MetadataWriter(run_dir=tmpdir)
+        writer.write_metadata(seed=42)
+
+        # Check git_info.txt exists
+        git_info_path = os.path.join(tmpdir, 'git_info.txt')
+        assert os.path.exists(git_info_path)
+
+        # Read content
+        with open(git_info_path, 'r') as f:
+            content = f.read()
+
+        assert 'Commit:' in content
+        assert 'Branch:' in content
+        assert 'Dirty:' in content
+
+
+def test_metadata_writer_config_separate():
+    """Test MetadataWriter can write config to separate file."""
+    from src.training import MetadataWriter
+    import tempfile
+    import os
+    import json
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        writer = MetadataWriter(run_dir=tmpdir)
+
+        config = {'env': 'Pong', 'total_frames': 10000000}
+        writer.write_config(config=config, format='json')
+
+        # Check config.json exists
+        config_path = os.path.join(tmpdir, 'config.json')
+        assert os.path.exists(config_path)
+
+        # Load and verify
+        with open(config_path, 'r') as f:
+            loaded_config = json.load(f)
+
+        assert loaded_config['env'] == 'Pong'
+        assert loaded_config['total_frames'] == 10000000
+
+
+def test_metadata_writer_load_metadata():
+    """Test MetadataWriter can load written metadata."""
+    from src.training import MetadataWriter
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        writer = MetadataWriter(run_dir=tmpdir)
+
+        config = {'gamma': 0.99}
+        writer.write_metadata(config=config, seed=456, format='json')
+
+        # Load metadata
+        loaded = writer.load_metadata(format='json')
+
+        assert loaded['seed'] == 456
+        assert loaded['config']['gamma'] == 0.99
+        assert 'git' in loaded
+
+
+def test_metadata_writer_extra_fields():
+    """Test MetadataWriter can include extra metadata."""
+    from src.training import MetadataWriter
+    import tempfile
+    import json
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        writer = MetadataWriter(run_dir=tmpdir)
+
+        extra = {'device': 'cuda', 'gpu_count': 2, 'hostname': 'server01'}
+        writer.write_metadata(seed=789, extra=extra, format='json')
+
+        # Load and verify extra fields
+        metadata_path = os.path.join(tmpdir, 'metadata.json')
+        with open(metadata_path, 'r') as f:
+            metadata = json.load(f)
+
+        assert metadata['device'] == 'cuda'
+        assert metadata['gpu_count'] == 2
+        assert metadata['hostname'] == 'server01'
+
+
+def test_metadata_writer_creates_directory():
+    """Test MetadataWriter creates run directory if it doesn't exist."""
+    from src.training import MetadataWriter
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        run_dir = os.path.join(tmpdir, 'runs', 'pong_123')
+        
+        # Directory doesn't exist yet
+        assert not os.path.exists(run_dir)
+
+        # Create writer
+        writer = MetadataWriter(run_dir=run_dir)
+
+        # Directory should now exist
+        assert os.path.exists(run_dir)
+
+
+if __name__ == "__main__":
+    # Run tests manually
+    print("Running DQN trainer tests...")

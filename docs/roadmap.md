@@ -198,8 +198,8 @@ The target network is a 2015 Nature paper improvement (Mnih et al.). The origina
     - [X] feat: Add periodic evaluation with summary metrics and result artifacts
 - [X] Track the average max-Q over a fixed reference batch of saved states (as in the paper) to monitor learning progress even when rewards are noisy.
     - [X] feat: Add optional reference-state Q logging hook and plotting support
-- [ ] Persist reproducibility metadata for each run: save merged config snapshot, seed, and git commit hash beside logs and checkpoints (JSON/YAML).
-    - [ ] chore: Write run metadata (config, seed, commit) to run folder
+- [X] Persist reproducibility metadata for each run: save merged config snapshot, seed, and git commit hash beside logs and checkpoints (JSON/YAML).
+    - [X] chore: Write run metadata (config, seed, commit) to run folder
 - [ ] Run a smoke test (~200,000 frames) to verify end-to-end stability: confirm logs grow, checkpoints appear, eval runs trigger, and quick plots render without errors.
     - [ ] test: Add smoke-test script to validate loop, logging, checkpoints, and eval cadence
 - [ ] Document the orchestration in `docs/design/training_loop_runtime.md`: describe the control flow (action select → env step → replay append → optimize → eval), logging schema, evaluation cadence, smoke-test procedure, and knobs for troubleshooting (epsilon schedule, frame counters, eval triggers).

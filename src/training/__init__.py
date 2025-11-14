@@ -27,7 +27,10 @@ from .dqn_trainer import (
     EvaluationScheduler,
     EvaluationLogger,
     ReferenceStateQTracker,
-    ReferenceQLogger
+    ReferenceQLogger,
+    get_git_commit_hash,
+    get_git_status,
+    MetadataWriter
 )
 
 __all__ = [
@@ -57,5 +60,8 @@ __all__ = [
     'EvaluationScheduler',
     'EvaluationLogger',
     'ReferenceStateQTracker',
-    'ReferenceQLogger'
+    'ReferenceQLogger',
+    'get_git_commit_hash',
+    'get_git_status',
+    'MetadataWriter'
 ]
