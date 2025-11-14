@@ -481,32 +481,221 @@ python scripts/plot_results.py \
 - Individual seed curves (optional)
 - Statistics: mean, std, min, max, CI
 
-### Plot Metadata
+### Plot Metadata Bundle
 
-Plots automatically include metadata for reproducibility:
+Every plot generation creates a **metadata bundle** for full reproducibility. The bundle consists of:
+
+1. **Plot files** (PNG/PDF/SVG)
+2. **Metadata JSON** (parameters and provenance)
+
+#### Metadata JSON Schema
 
 ```json
 {
   "game_name": "pong",
   "smoothing_window": 100,
-  "formats": ["png", "pdf"],
-  "commit_hash": "abc123def",
-  "generated_at": "2025-11-14T12:00:00"
+  "smoothing_method": "moving_average",
+  "formats": ["png", "pdf", "svg"],
+  "commit_hash": "abc123def456789",
+  "generated_at": "2025-11-14T12:34:56",
+  "data_sources": {
+    "episodes_csv": "results/logs/pong/pong_seed42/csv/episodes.csv",
+    "steps_csv": "results/logs/pong/pong_seed42/csv/training_steps.csv"
+  },
+  "num_episodes": 1250,
+  "num_steps": 500000,
+  "total_frames": 10000000
 }
 ```
 
-Saved to: `{output_dir}/{game_name}_plot_metadata.json`
+**File Location**: `{output_dir}/{game_name}_plot_metadata.json`
 
-### W&B Plot Upload
+**Example**: `plots/pong/pong_plot_metadata.json`
+
+#### Why Metadata Matters
+
+1. **Reproducibility**: Know exactly how plots were generated
+2. **Provenance**: Track which data sources were used
+3. **Version Control**: Git commit hash links plots to code version
+4. **Comparison**: Compare smoothing parameters across experiments
+5. **Publication**: Document figure generation for papers
+
+#### Metadata Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `game_name` | string | Game identifier (e.g., "pong") |
+| `smoothing_window` | int | Window size for smoothing |
+| `smoothing_method` | string | "moving_average" or "exponential" |
+| `formats` | list[str] | Output formats generated |
+| `commit_hash` | string | Git commit hash (or "unknown") |
+| `generated_at` | string | ISO 8601 timestamp |
+| `data_sources` | dict | Paths to input CSV files |
+| `num_episodes` | int | Number of episodes in data |
+| `num_steps` | int | Number of training steps |
+| `total_frames` | int | Total environment frames |
+
+#### Automatic Generation
+
+Metadata is generated automatically by `plot_all_metrics()`:
+
+```python
+from scripts.plot_results import plot_all_metrics, load_csv_data
+
+# Load data
+episodes_data = load_csv_data("runs/pong/csv/episodes.csv")
+steps_data = load_csv_data("runs/pong/csv/training_steps.csv")
+
+# Generate plots with metadata
+plot_files, metadata_file = plot_all_metrics(
+    episodes_data=episodes_data,
+    steps_data=steps_data,
+    output_dir=Path("plots/pong"),
+    game_name="pong",
+    smoothing_window=100,
+    formats=["png", "pdf"],
+    save_metadata=True  # Default: True
+)
+
+print(f"Saved {len(plot_files)} plots")
+print(f"Metadata: {metadata_file}")
+```
+
+#### Disabling Metadata
+
+To disable metadata saving (not recommended):
 
 ```bash
-# Upload plots as W&B artifacts
 python scripts/plot_results.py \
-  --episodes runs/pong_123/logs/csv/episodes.csv \
+  --episodes data.csv \
+  --output plots/ \
+  --no-metadata
+```
+
+### W&B Artifact Upload Workflow
+
+The W&B artifact system provides **versioned storage** for plots, logs, and metadata.
+
+#### Artifact Types
+
+1. **Log Artifacts** (`training_logs_step_{step}`)
+   - Contains: CSV files (training_steps.csv, episodes.csv)
+   - Upload interval: Every 1M steps (configurable)
+   - Purpose: Incremental log backups
+
+2. **Plot Artifacts** (`{game_name}_plots`)
+   - Contains: Plot files (PNG/PDF/SVG) + metadata JSON
+   - Upload: On-demand via `--upload-wandb` flag
+   - Purpose: Share publication-quality figures
+
+3. **Summary Artifacts** (`results_summary`)
+   - Contains: Aggregated results tables (CSV/Markdown)
+   - Upload: Via `export_results_table.py --upload-wandb`
+   - Purpose: Compare multiple runs/seeds
+
+#### Upload Plot Bundle to W&B
+
+**Basic upload:**
+```bash
+python scripts/plot_results.py \
+  --episodes results/logs/pong/run_123/csv/episodes.csv \
   --output plots/pong \
   --upload-wandb \
   --wandb-project dqn-atari \
   --wandb-upload-run abc123
+```
+
+**What gets uploaded:**
+- `pong_episode_returns.png`
+- `pong_training_loss.png`
+- `pong_evaluation_scores.png`
+- `pong_epsilon_schedule.png`
+- `pong_plot_metadata.json`
+
+**Artifact name**: `pong_plots` (or custom via script)
+
+**Multi-format upload:**
+```bash
+python scripts/plot_results.py \
+  --episodes results/logs/pong/run_123/csv/episodes.csv \
+  --output plots/pong \
+  --formats png pdf svg \
+  --upload-wandb \
+  --wandb-project dqn-atari \
+  --wandb-upload-run abc123
+```
+
+Uploads all formats: PNG, PDF, SVG (total: 12 files + metadata)
+
+#### Viewing Artifacts in W&B
+
+1. Navigate to: `https://wandb.ai/<entity>/<project>/runs/<run_id>`
+2. Click "Artifacts" tab
+3. Find artifact (e.g., `pong_plots:v0`)
+4. Download individual files or entire artifact
+
+#### Download Artifacts
+
+**Via W&B CLI:**
+```bash
+# Download specific artifact
+wandb artifact get <entity>/<project>/pong_plots:latest
+
+# Download to specific directory
+wandb artifact get <entity>/<project>/pong_plots:v2 \
+  --root plots/downloaded/
+```
+
+**Via Python API:**
+```python
+import wandb
+
+api = wandb.Api()
+artifact = api.artifact('entity/project/pong_plots:latest')
+artifact_dir = artifact.download()
+
+print(f"Downloaded to: {artifact_dir}")
+```
+
+**Via plot_results.py:**
+```bash
+# Download and plot from W&B artifact
+python scripts/plot_results.py \
+  --wandb-project dqn-atari \
+  --wandb-run abc123 \
+  --wandb-artifact training_logs_step_10000000:latest \
+  --output plots/pong
+```
+
+#### Artifact Versioning
+
+W&B automatically versions artifacts:
+
+- First upload: `pong_plots:v0`
+- Second upload: `pong_plots:v1`
+- Third upload: `pong_plots:v2`
+- Latest: `pong_plots:latest` (alias)
+
+**View version history** in W&B dashboard to track plot evolution over time.
+
+#### Metadata in Artifacts
+
+Artifacts automatically include:
+
+1. **Files**: Plot images + metadata JSON
+2. **Artifact Metadata**: Upload timestamp, uploader
+3. **Custom Metadata**: Can be added via script
+
+**Example**: View metadata in W&B UI:
+```
+Artifact: pong_plots:v2
+Files: 5
+Size: 2.3 MB
+Created: 2025-11-14 12:34:56
+Metadata:
+  - generated_at: 2025-11-14T12:34:56
+  - smoothing_window: 100
+  - commit_hash: abc123def
 ```
 
 ### Performance Options
