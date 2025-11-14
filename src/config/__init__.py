@@ -14,7 +14,18 @@ from .config_loader import (
     merge_cli_overrides
 )
 
+from .cli import (
+    create_parser,
+    parse_args,
+    load_config_from_args,
+    validate_config,
+    setup_from_args,
+    print_startup_banner,
+    main
+)
+
 __all__ = [
+    # Config loader
     'load_config',
     'load_yaml',
     'deep_merge',
@@ -25,5 +36,13 @@ __all__ = [
     'get_nested_value',
     'set_nested_value',
     'validate_config_exists',
-    'merge_cli_overrides'
+    'merge_cli_overrides',
+    # CLI
+    'create_parser',
+    'parse_args',
+    'load_config_from_args',
+    'validate_config',
+    'setup_from_args',
+    'print_startup_banner',
+    'main'
 ]
