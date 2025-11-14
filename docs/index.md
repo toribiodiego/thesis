@@ -4,11 +4,59 @@ Complete reference for DQN Atari implementation. Use this index to navigate desi
 
 ## Quick Navigation
 
-- **New to the project?** Start with [Quick Start Guide](quick_start.md) → [Roadmap](roadmap.md)
+- **New to the project?** Start with [Architecture Overview](architecture.md) → [Quick Start Guide](quick_start.md) → [Roadmap](roadmap.md)
+- **Need to do something?** Check [Workflows](workflows.md) for task-oriented guides
+- **Stuck on an issue?** See [Troubleshooting](troubleshooting.md) for quick problem resolution
 - **Setting up environment?** See [DQN Setup](design/dqn_setup.md)
 - **Implementing a component?** Jump to relevant design doc below
 - **Running experiments?** See [Quick Start Guide](quick_start.md) or [Experiment README](../experiments/dqn_atari/README.md)
 - **Tracking progress?** Check [Changelog](changelog.md) and [Roadmap](roadmap.md)
+
+---
+
+## Getting Started
+
+### [Architecture Overview](architecture.md)
+High-level system design and component interactions (READ THIS FIRST).
+
+**What's inside:**
+- System component diagram (Environment, Q-Network, Replay, Training Loop, Checkpointing)
+- Complete data flow walkthrough for single training step
+- Component details with memory layout and tensor shapes
+- Key algorithms (Q-learning update, epsilon-greedy exploration)
+- Directory structure and file organization
+- Execution flow summary
+
+**When to read:** First stop for new contributors, before diving into detailed design docs
+
+---
+
+### [Common Workflows](workflows.md)
+Task-oriented guides for frequent operations.
+
+**What's inside:**
+- First-time setup and verification
+- Train from scratch and resume from checkpoint
+- Monitor training progress in real-time
+- Debug unstable training and verify determinism
+- Run unit tests and smoke tests
+- Inspect checkpoint contents
+
+**When to read:** When you need to DO something (setup, train, debug, test)
+
+---
+
+### [Troubleshooting Guide](troubleshooting.md)
+Quick reference for diagnosing and fixing common issues.
+
+**What's inside:**
+- Setup issues (ImportError, ROM not found, CUDA unavailable)
+- Training issues (NaN loss, not decreasing, divergence, non-determinism)
+- Performance issues (too slow, out of memory, high CPU)
+- Checkpoint/resume issues (config mismatch, commit warnings, RNG states)
+- Environment issues (frame shapes, action space, termination)
+
+**When to read:** When something is broken or not working as expected
 
 ---
 
