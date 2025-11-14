@@ -2,6 +2,21 @@
 
 Training and setup utilities for DQN Atari experiments. All scripts should be run from the repository root.
 
+## Overview
+
+This directory contains scripts for:
+- **Training**: `run_dqn.sh` - Full training runs with config management
+- **Validation**: `smoke_test.sh` - Fast end-to-end pipeline validation (~200K frames)
+- **Setup**: `setup_roms.sh` - One-time ROM installation
+- **Environment**: `capture_env.sh` - System info capture for reproducibility
+
+**Recommended workflow for Subtask 6 validation:**
+1. `setup_roms.sh` - Install Atari ROMs (one-time)
+2. `capture_env.sh` - Document environment state
+3. `smoke_test.sh` - Verify training loop works (~5-10 min)
+4. `run_dqn.sh --dry-run` - Validate preprocessing with real env
+5. `run_dqn.sh` - Start full training runs
+
 ## `run_dqn.sh`
 
 Launch DQN training or dry-run validation with specified config.
