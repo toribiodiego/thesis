@@ -156,6 +156,43 @@ class WandBBackend:
             self.run = None
             self.enabled = False
 
+    def upload_artifact(
+        self,
+        artifact_name: str,
+        artifact_type: str,
+        file_paths: List[str],
+        metadata: Optional[Dict] = None
+    ):
+        """
+        Upload files as a W&B artifact.
+
+        Args:
+            artifact_name: Name for the artifact
+            artifact_type: Type of artifact (e.g., 'logs', 'checkpoints')
+            file_paths: List of file paths to include in artifact
+            metadata: Optional metadata dict for artifact
+        """
+        if not self.enabled:
+            return
+
+        try:
+            artifact = self.wandb.Artifact(
+                name=artifact_name,
+                type=artifact_type,
+                metadata=metadata
+            )
+
+            # Add files to artifact
+            for file_path in file_paths:
+                if os.path.exists(file_path):
+                    artifact.add_file(file_path)
+
+            # Log artifact
+            self.run.log_artifact(artifact)
+
+        except Exception as e:
+            print(f"Warning: Failed to upload W&B artifact: {e}")
+
     def log_scalar(self, key: str, value: float, step: int):
         """Log a scalar metric."""
         if self.enabled and value is not None:
@@ -307,6 +344,10 @@ class MetricsLogger:
         W&B run ID for resuming
     moving_avg_window : int
         Window size for moving averages (default: 100)
+    flush_interval : int
+        Steps between automatic flushes (default: 1000)
+    upload_artifacts : bool
+        Enable automatic W&B artifact uploads (default: False)
 
     Usage
     -----
@@ -351,12 +392,16 @@ class MetricsLogger:
         wandb_tags: Optional[List[str]] = None,
         wandb_resume: Optional[str] = None,
         wandb_id: Optional[str] = None,
-        moving_avg_window: int = 100
+        moving_avg_window: int = 100,
+        flush_interval: int = 1000,
+        upload_artifacts: bool = False
     ):
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
         self.moving_avg_window = moving_avg_window
+        self.flush_interval = flush_interval
+        self.upload_artifacts = upload_artifacts
 
         # Initialize backends
         self.backends = []
@@ -403,6 +448,10 @@ class MetricsLogger:
 
         # Episode counter
         self.episode_count = 0
+
+        # Track steps for periodic flush
+        self.last_flush_step = 0
+        self.last_artifact_upload_step = 0
 
     def log_step(
         self,
@@ -653,12 +702,92 @@ class MetricsLogger:
             if backend != self.csv:
                 backend.log_scalars(metrics, step)
 
-    def flush(self):
-        """Flush all backends."""
+    def _should_flush(self, step: int) -> bool:
+        """Check if periodic flush is needed."""
+        return (step - self.last_flush_step) >= self.flush_interval
+
+    def _should_upload_artifacts(self, step: int) -> bool:
+        """Check if artifact upload is needed."""
+        # Upload artifacts at checkpoint intervals (default: 1M steps)
+        upload_interval = 1_000_000
+        return self.upload_artifacts and (step - self.last_artifact_upload_step) >= upload_interval
+
+    def flush(self, step: Optional[int] = None):
+        """
+        Flush all backends.
+
+        Args:
+            step: Current step (optional, for tracking last flush)
+        """
         for backend in self.backends:
             backend.flush()
 
+        if step is not None:
+            self.last_flush_step = step
+
+    def upload_logs_as_artifacts(self, step: int, metadata: Optional[Dict] = None):
+        """
+        Upload CSV logs as W&B artifacts.
+
+        Args:
+            step: Current training step
+            metadata: Optional metadata to attach to artifact
+        """
+        if not self.upload_artifacts or self.wandb is None or not self.wandb.enabled:
+            return
+
+        if self.csv is None:
+            return
+
+        # Collect CSV files
+        csv_files = []
+        if self.csv.step_csv_path.exists():
+            csv_files.append(str(self.csv.step_csv_path))
+        if self.csv.episode_csv_path.exists():
+            csv_files.append(str(self.csv.episode_csv_path))
+
+        if not csv_files:
+            return
+
+        # Create artifact name with step
+        artifact_name = f"training_logs_step_{step}"
+
+        # Add step to metadata
+        artifact_metadata = {"step": step}
+        if metadata:
+            artifact_metadata.update(metadata)
+
+        # Upload artifact
+        self.wandb.upload_artifact(
+            artifact_name=artifact_name,
+            artifact_type="logs",
+            file_paths=csv_files,
+            metadata=artifact_metadata
+        )
+
+        self.last_artifact_upload_step = step
+
+    def maybe_flush_and_upload(self, step: int, force: bool = False):
+        """
+        Conditionally flush and upload artifacts based on step intervals.
+
+        Args:
+            step: Current training step
+            force: If True, flush and upload regardless of interval
+        """
+        # Periodic flush
+        if force or self._should_flush(step):
+            self.flush(step)
+
+        # Periodic artifact upload
+        if force or self._should_upload_artifacts(step):
+            self.upload_logs_as_artifacts(step)
+
     def close(self):
-        """Close all backends."""
+        """Close all backends and perform final flush."""
+        # Final flush
+        self.flush()
+
+        # Close all backends
         for backend in self.backends:
             backend.close()

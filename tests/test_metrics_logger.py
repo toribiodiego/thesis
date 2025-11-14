@@ -519,3 +519,138 @@ def test_metrics_logger_multi_backend_consistency(temp_log_dir):
         assert tb_dir.exists()
 
     logger.close()
+
+
+# ============================================================================
+# Periodic Flush and Artifact Upload Tests
+# ============================================================================
+
+def test_metrics_logger_periodic_flush(temp_log_dir):
+    """Test MetricsLogger periodic flush mechanism."""
+    logger = MetricsLogger(
+        log_dir=temp_log_dir,
+        enable_csv=True,
+        flush_interval=1000
+    )
+
+    # Log at step 500 (should not flush)
+    logger.log_step(step=500, loss=0.5)
+    assert logger.last_flush_step == 0
+
+    # Log at step 1000 (should flush)
+    logger.maybe_flush_and_upload(step=1000)
+    assert logger.last_flush_step == 1000
+
+    # Log at step 1500 (should not flush yet)
+    logger.maybe_flush_and_upload(step=1500)
+    assert logger.last_flush_step == 1000
+
+    # Log at step 2000 (should flush)
+    logger.maybe_flush_and_upload(step=2000)
+    assert logger.last_flush_step == 2000
+
+    logger.close()
+
+
+def test_metrics_logger_force_flush(temp_log_dir):
+    """Test MetricsLogger force flush functionality."""
+    logger = MetricsLogger(
+        log_dir=temp_log_dir,
+        enable_csv=True,
+        flush_interval=1000
+    )
+
+    # Force flush at step 100 (before interval)
+    logger.maybe_flush_and_upload(step=100, force=True)
+    assert logger.last_flush_step == 100
+
+    logger.close()
+
+
+def test_metrics_logger_artifact_upload_disabled(temp_log_dir):
+    """Test that artifact upload is skipped when disabled."""
+    logger = MetricsLogger(
+        log_dir=temp_log_dir,
+        enable_csv=True,
+        enable_wandb=True,
+        wandb_project="test-project",
+        upload_artifacts=False  # Disabled
+    )
+
+    # Log some data
+    logger.log_step(step=1000, loss=0.5)
+
+    # Try to upload (should do nothing)
+    logger.upload_logs_as_artifacts(step=1000)
+
+    # Should not have uploaded
+    assert logger.last_artifact_upload_step == 0
+
+    logger.close()
+
+
+def test_metrics_logger_artifact_upload_interval(temp_log_dir):
+    """Test artifact upload interval checking."""
+    logger = MetricsLogger(
+        log_dir=temp_log_dir,
+        enable_csv=True,
+        enable_wandb=False,  # Disable to avoid actual upload
+        upload_artifacts=True
+    )
+
+    # Should not upload at step 500K
+    assert not logger._should_upload_artifacts(500_000)
+
+    # Should upload at step 1M
+    assert logger._should_upload_artifacts(1_000_000)
+
+    # Mark as uploaded
+    logger.last_artifact_upload_step = 1_000_000
+
+    # Should not upload at step 1.5M
+    assert not logger._should_upload_artifacts(1_500_000)
+
+    # Should upload at step 2M
+    assert logger._should_upload_artifacts(2_000_000)
+
+    logger.close()
+
+
+def test_metrics_logger_deterministic_artifact_name(temp_log_dir):
+    """Test that artifact names are deterministic based on step."""
+    logger = MetricsLogger(
+        log_dir=temp_log_dir,
+        enable_csv=True,
+        enable_wandb=False,
+        upload_artifacts=True
+    )
+
+    # Log some data to create CSV files
+    logger.log_step(step=1000, loss=0.5)
+    logger.log_episode(step=1000, episode=1, episode_return=10.0, episode_length=100)
+
+    # The artifact name should be deterministic: training_logs_step_{step}
+    # We can't test actual upload without W&B, but we can verify the method doesn't crash
+    logger.upload_logs_as_artifacts(step=1_000_000, metadata={"test": True})
+
+    logger.close()
+
+
+def test_metrics_logger_close_performs_final_flush(temp_log_dir):
+    """Test that close() performs a final flush."""
+    logger = MetricsLogger(
+        log_dir=temp_log_dir,
+        enable_csv=True,
+        flush_interval=1000
+    )
+
+    # Log at step 500 (before flush interval)
+    logger.log_step(step=500, loss=0.5)
+    assert logger.last_flush_step == 0
+
+    # Close should flush
+    logger.close()
+
+    # Verify CSV file was written (flush occurred)
+    csv_path = Path(temp_log_dir) / 'csv' / 'training_steps.csv'
+    assert csv_path.exists()
