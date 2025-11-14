@@ -2863,6 +2863,279 @@ def test_training_step_triggers_training_after_warmup():
     assert result['metrics'] is not None
 
 
+# ============================================================================
+# Logging and Checkpoint Tests
+# ============================================================================
+
+def test_step_logger_basic():
+    """Test StepLogger creates CSV and logs metrics."""
+    from src.training import StepLogger, UpdateMetrics
+    import tempfile
+    import os
+    import csv
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        logger = StepLogger(log_dir=tmpdir, log_interval=1000)
+
+        # Log at step 1000 (should write)
+        metrics = UpdateMetrics(
+            loss=0.5,
+            td_error=0.3,
+            td_error_std=0.1,
+            grad_norm=2.5,
+            learning_rate=0.00025,
+            update_count=1
+        )
+        logger.log_step(step=1000, epsilon=0.95, metrics=metrics, replay_size=50000, fps=120.0)
+
+        # Check CSV exists
+        csv_path = os.path.join(tmpdir, 'training_steps.csv')
+        assert os.path.exists(csv_path)
+
+        # Read CSV
+        with open(csv_path, 'r') as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+
+        assert len(rows) == 1
+        row = rows[0]
+        assert int(row['step']) == 1000
+        assert float(row['epsilon']) == 0.95
+        assert float(row['loss']) == 0.5
+        assert int(row['replay_size']) == 50000
+
+
+def test_step_logger_interval():
+    """Test StepLogger only logs at intervals."""
+    from src.training import StepLogger
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        logger = StepLogger(log_dir=tmpdir, log_interval=1000)
+
+        # Log at step 500 (should not write)
+        logger.log_step(step=500, epsilon=0.95)
+
+        csv_path = os.path.join(tmpdir, 'training_steps.csv')
+        assert not os.path.exists(csv_path)
+
+        # Log at step 1000 (should write)
+        logger.log_step(step=1000, epsilon=0.90)
+        assert os.path.exists(csv_path)
+
+
+def test_step_logger_moving_average():
+    """Test StepLogger computes loss moving average."""
+    from src.training import StepLogger, UpdateMetrics
+    import tempfile
+    import csv
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        logger = StepLogger(log_dir=tmpdir, log_interval=1000, moving_avg_window=3)
+
+        # Log 3 steps with different losses
+        for i, loss in enumerate([1.0, 2.0, 3.0], start=1):
+            metrics = UpdateMetrics(
+                loss=loss, td_error=0.1, td_error_std=0.05,
+                grad_norm=1.0, learning_rate=0.00025, update_count=i
+            )
+            logger.log_step(step=i * 1000, epsilon=0.9, metrics=metrics)
+
+        # Read last entry
+        csv_path = f"{tmpdir}/training_steps.csv"
+        with open(csv_path, 'r') as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+
+        # Moving average of [1.0, 2.0, 3.0] = 2.0
+        assert float(rows[-1]['loss_ma']) == 2.0
+
+
+def test_episode_logger_basic():
+    """Test EpisodeLogger creates CSV and logs episodes."""
+    from src.training import EpisodeLogger
+    import tempfile
+    import os
+    import csv
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        logger = EpisodeLogger(log_dir=tmpdir, rolling_window=100)
+
+        # Log first episode
+        logger.log_episode(step=5000, episode_return=21.0, episode_length=1200, fps=120.0, epsilon=0.95)
+
+        # Check CSV exists
+        csv_path = os.path.join(tmpdir, 'episodes.csv')
+        assert os.path.exists(csv_path)
+
+        # Read CSV
+        with open(csv_path, 'r') as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+
+        assert len(rows) == 1
+        row = rows[0]
+        assert int(row['episode']) == 1
+        assert int(row['step']) == 5000
+        assert float(row['return']) == 21.0
+        assert int(row['length']) == 1200
+
+
+def test_episode_logger_rolling_stats():
+    """Test EpisodeLogger computes rolling statistics."""
+    from src.training import EpisodeLogger
+    import tempfile
+    import csv
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        logger = EpisodeLogger(log_dir=tmpdir, rolling_window=3)
+
+        # Log 3 episodes with different returns
+        returns = [10.0, 20.0, 30.0]
+        for i, ret in enumerate(returns, start=1):
+            logger.log_episode(step=i * 1000, episode_return=ret, episode_length=1000)
+
+        # Read last entry
+        csv_path = f"{tmpdir}/episodes.csv"
+        with open(csv_path, 'r') as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+
+        # Rolling mean of [10, 20, 30] = 20.0
+        assert float(rows[-1]['rolling_mean_return']) == 20.0
+
+
+def test_episode_logger_get_recent_stats():
+    """Test EpisodeLogger get_recent_stats method."""
+    from src.training import EpisodeLogger
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        logger = EpisodeLogger(log_dir=tmpdir, rolling_window=100)
+
+        # Log 5 episodes
+        for i in range(1, 6):
+            logger.log_episode(step=i * 1000, episode_return=float(i * 10), episode_length=1000)
+
+        # Get stats for last 3 episodes
+        stats = logger.get_recent_stats(n=3)
+
+        assert stats['num_episodes'] == 3
+        assert stats['mean_return'] == 40.0  # (30 + 40 + 50) / 3
+        assert stats['min_return'] == 30.0
+        assert stats['max_return'] == 50.0
+
+
+def test_checkpoint_manager_periodic_save():
+    """Test CheckpointManager saves periodic checkpoints."""
+    from src.training import CheckpointManager
+    from src.models import DQN
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manager = CheckpointManager(checkpoint_dir=tmpdir, save_interval=1000000, keep_last_n=2)
+
+        # Create model and optimizer
+        model = DQN(num_actions=6)
+        optimizer = configure_optimizer(model)
+
+        # Should save at 1M steps
+        assert manager.should_save(1000000)
+        path = manager.save_checkpoint(step=1000000, model=model, optimizer=optimizer)
+
+        assert os.path.exists(path)
+        assert '1000000' in path
+
+
+def test_checkpoint_manager_keep_last_n():
+    """Test CheckpointManager keeps only last N checkpoints."""
+    from src.training import CheckpointManager
+    from src.models import DQN
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manager = CheckpointManager(checkpoint_dir=tmpdir, save_interval=1000000, keep_last_n=2)
+
+        model = DQN(num_actions=6)
+        optimizer = configure_optimizer(model)
+
+        # Save 3 checkpoints
+        for i in range(1, 4):
+            manager.save_checkpoint(step=i * 1000000, model=model, optimizer=optimizer)
+
+        # Should only have 2 checkpoints (last 2)
+        checkpoints = [f for f in os.listdir(tmpdir) if f.startswith('checkpoint_')]
+        assert len(checkpoints) == 2
+
+
+def test_checkpoint_manager_best_model():
+    """Test CheckpointManager saves best model."""
+    from src.training import CheckpointManager
+    from src.models import DQN
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manager = CheckpointManager(checkpoint_dir=tmpdir, save_best=True)
+
+        model = DQN(num_actions=6)
+        optimizer = configure_optimizer(model)
+
+        # First eval (return=20) - should save
+        saved = manager.save_best(step=1000000, eval_return=20.0, model=model, optimizer=optimizer)
+        assert saved
+        assert os.path.exists(os.path.join(tmpdir, 'best_model.pt'))
+
+        # Second eval (return=15) - should NOT save
+        saved = manager.save_best(step=2000000, eval_return=15.0, model=model, optimizer=optimizer)
+        assert not saved
+
+        # Third eval (return=25) - should save
+        saved = manager.save_best(step=3000000, eval_return=25.0, model=model, optimizer=optimizer)
+        assert saved
+        assert manager.best_eval_return == 25.0
+
+
+def test_checkpoint_manager_load():
+    """Test CheckpointManager loads checkpoints correctly."""
+    from src.training import CheckpointManager
+    from src.models import DQN
+    import tempfile
+    import torch
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manager = CheckpointManager(checkpoint_dir=tmpdir)
+
+        # Create and save model
+        model1 = DQN(num_actions=6)
+        optimizer1 = configure_optimizer(model1)
+
+        # Modify model weights
+        with torch.no_grad():
+            for param in model1.parameters():
+                param.fill_(1.0)
+
+        path = manager.save_checkpoint(step=1000000, model=model1, optimizer=optimizer1,
+                                       metadata={'epsilon': 0.5})
+
+        # Create new model and load checkpoint
+        model2 = DQN(num_actions=6)
+        optimizer2 = configure_optimizer(model2)
+
+        metadata = manager.load_checkpoint(path, model2, optimizer2)
+
+        # Check weights were loaded
+        for p1, p2 in zip(model1.parameters(), model2.parameters()):
+            assert torch.allclose(p1, p2)
+
+        # Check metadata
+        assert metadata['step'] == 1000000
+        assert metadata['metadata']['epsilon'] == 0.5
+
+
 if __name__ == "__main__":
     # Run tests manually
     print("Running DQN trainer tests...")
