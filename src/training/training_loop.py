@@ -7,7 +7,8 @@ import torch.nn as nn
 from typing import Dict, Any, Optional
 
 from .metrics import perform_update_step
-from .schedulers import EpsilonScheduler, TargetNetworkUpdater, TrainingScheduler
+from .schedulers import TargetNetworkUpdater, TrainingScheduler
+from .metrics import EpsilonScheduler
 
 
 def select_epsilon_greedy_action(

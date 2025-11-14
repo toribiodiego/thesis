@@ -5,7 +5,10 @@ import os
 import csv
 import torch
 import torch.nn as nn
-from typing import Dict, Optional, Any, List
+from typing import Dict, Optional, Any, List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .metrics import UpdateMetrics
 
 
 class StepLogger:
@@ -50,7 +53,7 @@ class StepLogger:
         self,
         step: int,
         epsilon: float,
-        metrics: UpdateMetrics = None,
+        metrics: Optional['UpdateMetrics'] = None,
         replay_size: int = 0,
         fps: float = 0.0
     ):
@@ -256,10 +259,18 @@ class EpisodeLogger:
 
 class CheckpointManager:
     """
-    Manages model checkpoints with periodic and best-model saving.
+    Manages complete training state checkpoints with atomic saves.
 
-    Saves checkpoints at regular intervals and tracks the best model
-    based on evaluation performance.
+    Saves complete training state including:
+    - Online and target Q-network weights
+    - Optimizer state
+    - Step and episode counters
+    - Epsilon value
+    - Replay buffer write index and content (optional)
+    - RNG states (torch, numpy, random, environment)
+    - Metadata (schema version, timestamp, commit hash)
+
+    Supports periodic saves, best-model tracking, and atomic writes.
 
     Parameters
     ----------
@@ -271,26 +282,42 @@ class CheckpointManager:
         Number of periodic checkpoints to keep (default: 3, 0 = keep all)
     save_best : bool
         Whether to save best model based on eval score (default: True)
+    save_replay_buffer : bool
+        Whether to save replay buffer state (default: False, saves space)
 
     Usage
     -----
     >>> manager = CheckpointManager(checkpoint_dir='runs/pong_123/checkpoints')
-    >>> manager.save_checkpoint(step=1000000, model=model, optimizer=optimizer, metadata={...})
-    >>> manager.save_best(step=1000000, eval_return=25.0, model=model, optimizer=optimizer)
+    >>> state = {
+    ...     'online_model': online_model,
+    ...     'target_model': target_model,
+    ...     'optimizer': optimizer,
+    ...     'step': 1000000,
+    ...     'episode': 5000,
+    ...     'epsilon': 0.5,
+    ...     'replay_buffer': replay_buffer,
+    ...     'rng_states': get_rng_states(env)
+    ... }
+    >>> manager.save_checkpoint(**state)
     """
+
+    # Checkpoint schema version for compatibility tracking
+    SCHEMA_VERSION = "1.0.0"
 
     def __init__(
         self,
         checkpoint_dir: str,
         save_interval: int = 1_000_000,
         keep_last_n: int = 3,
-        save_best: bool = True
+        save_best: bool = True,
+        save_replay_buffer: bool = False
     ):
         import os
         self.checkpoint_dir = checkpoint_dir
         self.save_interval = save_interval
         self.keep_last_n = keep_last_n
         self.save_best_enabled = save_best
+        self.save_replay_buffer = save_replay_buffer
 
         # Create checkpoint directory
         os.makedirs(checkpoint_dir, exist_ok=True)
@@ -309,38 +336,112 @@ class CheckpointManager:
     def save_checkpoint(
         self,
         step: int,
-        model: torch.nn.Module,
+        episode: int,
+        epsilon: float,
+        online_model: nn.Module,
+        target_model: nn.Module,
         optimizer: torch.optim.Optimizer,
-        metadata: dict = None
+        replay_buffer: Any = None,
+        rng_states: Dict = None,
+        extra_metadata: Dict = None
     ) -> str:
         """
-        Save periodic checkpoint.
+        Save complete checkpoint with all training state.
+
+        Performs atomic write (tmp file -> rename) to prevent corruption.
 
         Args:
-            step: Current environment step
-            model: Q-network to save
-            optimizer: Optimizer state to save
-            metadata: Additional metadata (epsilon, replay stats, etc.)
+            step: Current environment step counter
+            episode: Current episode counter
+            epsilon: Current exploration rate
+            online_model: Online Q-network
+            target_model: Target Q-network
+            optimizer: Optimizer state
+            replay_buffer: Replay buffer object (optional, can be large)
+            rng_states: Dict with RNG states from get_rng_states()
+            extra_metadata: Additional metadata to include
 
         Returns:
             str: Path to saved checkpoint
         """
         import os
+        import tempfile
+        from datetime import datetime
+        from ..training.metadata import get_git_commit_hash
 
-        checkpoint_path = os.path.join(self.checkpoint_dir, f'checkpoint_step_{step}.pt')
+        checkpoint_path = os.path.join(
+            self.checkpoint_dir,
+            f'checkpoint_{step}.pt'
+        )
 
-        # Prepare checkpoint
+        # Prepare checkpoint data
         checkpoint = {
+            # Schema and metadata
+            'schema_version': self.SCHEMA_VERSION,
+            'timestamp': datetime.now().isoformat(),
+            'commit_hash': get_git_commit_hash(),
+
+            # Training state
             'step': step,
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict()
+            'episode': episode,
+            'epsilon': epsilon,
+
+            # Model weights
+            'online_model_state_dict': online_model.state_dict(),
+            'target_model_state_dict': target_model.state_dict(),
+
+            # Optimizer state
+            'optimizer_state_dict': optimizer.state_dict(),
+
+            # RNG states (if provided)
+            'rng_states': rng_states if rng_states is not None else {},
         }
 
-        if metadata is not None:
-            checkpoint['metadata'] = metadata
+        # Add replay buffer state (write index and size, optionally full content)
+        if replay_buffer is not None:
+            checkpoint['replay_buffer_state'] = {
+                'index': replay_buffer.index,
+                'size': replay_buffer.size,
+                'capacity': replay_buffer.capacity,
+                'obs_shape': replay_buffer.obs_shape,
+            }
 
-        # Save checkpoint
-        torch.save(checkpoint, checkpoint_path)
+            # Optionally save full buffer content (large!)
+            if self.save_replay_buffer:
+                checkpoint['replay_buffer_state']['data'] = {
+                    'observations': replay_buffer.observations,
+                    'actions': replay_buffer.actions,
+                    'rewards': replay_buffer.rewards,
+                    'dones': replay_buffer.dones,
+                    'episode_starts': replay_buffer.episode_starts,
+                }
+
+        # Add extra metadata
+        if extra_metadata is not None:
+            checkpoint['metadata'] = extra_metadata
+
+        # Atomic write: save to temp file, then rename
+        # This prevents corruption if process is killed during write
+        temp_fd, temp_path = tempfile.mkstemp(
+            dir=self.checkpoint_dir,
+            suffix='.pt.tmp'
+        )
+
+        try:
+            # Close the file descriptor (torch.save will open it)
+            os.close(temp_fd)
+
+            # Save to temporary file
+            torch.save(checkpoint, temp_path)
+
+            # Atomic rename (overwrites if exists)
+            os.replace(temp_path, checkpoint_path)
+
+        except Exception as e:
+            # Clean up temp file on error
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            raise e
 
         # Track periodic checkpoint
         self.periodic_checkpoints.append(checkpoint_path)
@@ -356,25 +457,40 @@ class CheckpointManager:
     def save_best(
         self,
         step: int,
+        episode: int,
+        epsilon: float,
         eval_return: float,
-        model: torch.nn.Module,
+        online_model: nn.Module,
+        target_model: nn.Module,
         optimizer: torch.optim.Optimizer,
-        metadata: dict = None
+        replay_buffer: Any = None,
+        rng_states: Dict = None,
+        extra_metadata: Dict = None
     ) -> bool:
         """
         Save checkpoint if it's the best model so far.
 
+        Uses same atomic write as save_checkpoint.
+
         Args:
             step: Current environment step
+            episode: Current episode counter
+            epsilon: Current exploration rate
             eval_return: Evaluation return to compare
-            model: Q-network to save
-            optimizer: Optimizer state to save
-            metadata: Additional metadata
+            online_model: Online Q-network
+            target_model: Target Q-network
+            optimizer: Optimizer state
+            replay_buffer: Replay buffer (optional)
+            rng_states: RNG states
+            extra_metadata: Additional metadata
 
         Returns:
             bool: True if checkpoint was saved (new best), False otherwise
         """
         import os
+        import tempfile
+        from datetime import datetime
+        from ..training.metadata import get_git_commit_hash
 
         if not self.save_best_enabled:
             return False
@@ -384,49 +500,134 @@ class CheckpointManager:
 
         # New best model
         self.best_eval_return = eval_return
-
         checkpoint_path = os.path.join(self.checkpoint_dir, 'best_model.pt')
 
-        # Prepare checkpoint
+        # Prepare checkpoint (same structure as periodic)
         checkpoint = {
+            'schema_version': self.SCHEMA_VERSION,
+            'timestamp': datetime.now().isoformat(),
+            'commit_hash': get_git_commit_hash(),
             'step': step,
-            'eval_return': eval_return,
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict()
+            'episode': episode,
+            'epsilon': epsilon,
+            'eval_return': eval_return,  # Additional field for best model
+            'online_model_state_dict': online_model.state_dict(),
+            'target_model_state_dict': target_model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'rng_states': rng_states if rng_states is not None else {},
         }
 
-        if metadata is not None:
-            checkpoint['metadata'] = metadata
+        if replay_buffer is not None:
+            checkpoint['replay_buffer_state'] = {
+                'index': replay_buffer.index,
+                'size': replay_buffer.size,
+                'capacity': replay_buffer.capacity,
+                'obs_shape': replay_buffer.obs_shape,
+            }
+            if self.save_replay_buffer:
+                checkpoint['replay_buffer_state']['data'] = {
+                    'observations': replay_buffer.observations,
+                    'actions': replay_buffer.actions,
+                    'rewards': replay_buffer.rewards,
+                    'dones': replay_buffer.dones,
+                    'episode_starts': replay_buffer.episode_starts,
+                }
 
-        # Save checkpoint
-        torch.save(checkpoint, checkpoint_path)
+        if extra_metadata is not None:
+            checkpoint['metadata'] = extra_metadata
+
+        # Atomic write
+        temp_fd, temp_path = tempfile.mkstemp(
+            dir=self.checkpoint_dir,
+            suffix='.pt.tmp'
+        )
+
+        try:
+            os.close(temp_fd)
+            torch.save(checkpoint, temp_path)
+            os.replace(temp_path, checkpoint_path)
+        except Exception as e:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            raise e
+
         self.best_checkpoint_path = checkpoint_path
-
         return True
 
-    def load_checkpoint(self, checkpoint_path: str, model: torch.nn.Module, optimizer: torch.optim.Optimizer = None):
+    def load_checkpoint(
+        self,
+        checkpoint_path: str,
+        online_model: nn.Module,
+        target_model: nn.Module,
+        optimizer: torch.optim.Optimizer = None,
+        replay_buffer: Any = None,
+        device: str = 'cpu',
+        strict: bool = True
+    ) -> Dict:
         """
-        Load checkpoint and restore model/optimizer state.
+        Load checkpoint and restore complete training state.
 
         Args:
             checkpoint_path: Path to checkpoint file
-            model: Q-network to load weights into
+            online_model: Online Q-network to load weights into
+            target_model: Target Q-network to load weights into
             optimizer: Optimizer to load state into (optional)
+            replay_buffer: Replay buffer to restore state into (optional)
+            device: Device to map checkpoint tensors to
+            strict: Whether to strictly enforce state_dict key matching
 
         Returns:
-            dict: Checkpoint metadata
+            dict: Loaded checkpoint data including step, episode, epsilon,
+                  rng_states, and metadata
         """
-        checkpoint = torch.load(checkpoint_path, map_location='cpu')
+        checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
 
-        model.load_state_dict(checkpoint['model_state_dict'])
+        # Validate schema version
+        schema_version = checkpoint.get('schema_version', 'unknown')
+        if schema_version != self.SCHEMA_VERSION:
+            print(f"Warning: Checkpoint schema version {schema_version} "
+                  f"does not match current version {self.SCHEMA_VERSION}")
 
+        # Restore models
+        online_model.load_state_dict(
+            checkpoint['online_model_state_dict'],
+            strict=strict
+        )
+        target_model.load_state_dict(
+            checkpoint['target_model_state_dict'],
+            strict=strict
+        )
+
+        # Restore optimizer
         if optimizer is not None and 'optimizer_state_dict' in checkpoint:
             optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
+        # Restore replay buffer state
+        if replay_buffer is not None and 'replay_buffer_state' in checkpoint:
+            buffer_state = checkpoint['replay_buffer_state']
+            replay_buffer.index = buffer_state['index']
+            replay_buffer.size = buffer_state['size']
+
+            # Restore full buffer data if saved
+            if 'data' in buffer_state:
+                data = buffer_state['data']
+                replay_buffer.observations = data['observations']
+                replay_buffer.actions = data['actions']
+                replay_buffer.rewards = data['rewards']
+                replay_buffer.dones = data['dones']
+                replay_buffer.episode_starts = data['episode_starts']
+
+        # Return all state for manual restoration
         return {
             'step': checkpoint.get('step', 0),
+            'episode': checkpoint.get('episode', 0),
+            'epsilon': checkpoint.get('epsilon', 1.0),
             'eval_return': checkpoint.get('eval_return', None),
-            'metadata': checkpoint.get('metadata', {})
+            'rng_states': checkpoint.get('rng_states', {}),
+            'metadata': checkpoint.get('metadata', {}),
+            'timestamp': checkpoint.get('timestamp', 'unknown'),
+            'commit_hash': checkpoint.get('commit_hash', 'unknown'),
+            'schema_version': schema_version,
         }
 
 

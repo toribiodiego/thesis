@@ -2,8 +2,9 @@
 """
 
 import torch
+import torch.nn as nn
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Dict
 
 from .loss import compute_td_loss_components, compute_dqn_loss
 from .optimization import clip_gradients

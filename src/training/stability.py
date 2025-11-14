@@ -2,7 +2,8 @@
 """
 
 import torch
-from typing import List
+import torch.nn as nn
+from typing import List, Tuple, Dict
 
 
 def detect_nan_inf(tensor: torch.Tensor, name: str = "tensor") -> bool:

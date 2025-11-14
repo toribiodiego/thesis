@@ -23,8 +23,7 @@ from .optimization import (
 # Schedulers
 from .schedulers import (
     TargetNetworkUpdater,
-    TrainingScheduler,
-    EpsilonScheduler
+    TrainingScheduler
 )
 
 # Stability checks
@@ -37,7 +36,8 @@ from .stability import (
 # Metrics
 from .metrics import (
     UpdateMetrics,
-    perform_update_step
+    perform_update_step,
+    EpsilonScheduler
 )
 
 # Training loop
@@ -72,6 +72,13 @@ from .metadata import (
     get_git_commit_hash,
     get_git_status,
     MetadataWriter
+)
+
+# Checkpoint utilities
+from .checkpoint_utils import (
+    get_rng_states,
+    set_rng_states,
+    verify_checkpoint_integrity
 )
 
 __all__ = [
@@ -115,5 +122,9 @@ __all__ = [
     # Metadata
     'get_git_commit_hash',
     'get_git_status',
-    'MetadataWriter'
+    'MetadataWriter',
+    # Checkpoint utilities
+    'get_rng_states',
+    'set_rng_states',
+    'verify_checkpoint_integrity'
 ]
