@@ -6,14 +6,30 @@ Masters thesis on sample- and data-efficient reinforcement learning. First miles
 
 ### Environment Setup
 
+**1. Create and activate virtual environment:**
+
 ```bash
-# 1. Install dependencies
-pip install -r requirements.txt
+# Create .venv and install all dependencies
+bash envs/setup_env.sh
 
-# 2. Download Atari ROMs (one-time setup)
-./experiments/dqn_atari/scripts/setup_roms.sh
+# Activate the virtual environment
+source .venv/bin/activate
+```
 
-# 3. Capture system info for reproducibility
+The `setup_env.sh` script:
+- Creates a Python virtual environment at `.venv/`
+- Installs all pinned dependencies from `envs/requirements.txt`
+- Sets up Atari ROM tooling (AutoROM)
+
+**Important:** Always activate the virtual environment before running any commands:
+```bash
+source .venv/bin/activate
+```
+
+**2. Additional setup (optional):**
+
+```bash
+# Capture system info for reproducibility
 ./experiments/dqn_atari/scripts/capture_env.sh
 ```
 
