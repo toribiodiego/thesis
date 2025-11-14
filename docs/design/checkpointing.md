@@ -2,6 +2,87 @@
 
 **Objective:** Save and restore complete training state to enable resumption and reproducibility.
 
+---
+
+## Table of Contents
+
+**Quick Links:** [Quick Start](#quick-start-90-seconds) | [CLI Usage](#usage) | [Resume Training](#resume-training) | [Determinism](#deterministic-seeding) | [Troubleshooting](#troubleshooting)
+
+### Getting Started
+1. [Quick Start (90 seconds)](#quick-start-90-seconds)
+2. [Checkpoint Structure](#checkpoint-structure)
+3. [File Format](#file-format)
+4. [Atomic Writes](#atomic-writes)
+5. [Usage (CLI)](#usage)
+
+### Resuming Training
+6. [Resume Training](#resume-training)
+7. [RNG State Management](#rng-state-management)
+8. [Checkpoint Validation](#checkpoint-validation)
+
+### Deterministic Execution
+9. [Deterministic Seeding](#deterministic-seeding)
+10. [Checkpoint/Resume Procedures](#checkpointresume-procedures)
+
+### Reference
+11. [Metadata Files](#metadata-files-in-resumed-runs)
+12. [Best Practices](#best-practices)
+13. [Testing](#testing)
+14. [Troubleshooting](#troubleshooting)
+15. [Related Documentation](#related-documentation)
+
+---
+
+## Quick Start (90 seconds)
+
+### Save a Checkpoint (Automatic)
+
+Checkpoints are saved automatically during training:
+
+```bash
+# Training automatically saves checkpoints every 1M frames
+./experiments/dqn_atari/scripts/run_dqn.sh \
+  experiments/dqn_atari/configs/pong.yaml \
+  --seed 42
+```
+
+**Expected output:**
+```
+experiments/dqn_atari/runs/pong_42/checkpoints/
+├── checkpoint_1000000.pt    # Every 1M frames
+├── checkpoint_2000000.pt
+└── best_model.pt            # Best eval score
+```
+
+### Resume from Checkpoint
+
+```bash
+# Basic resume (continues training)
+./experiments/dqn_atari/scripts/run_dqn.sh \
+  experiments/dqn_atari/configs/pong.yaml \
+  --resume experiments/dqn_atari/runs/pong_42/checkpoints/checkpoint_1000000.pt
+
+# Resume with strict config validation
+./experiments/dqn_atari/scripts/run_dqn.sh \
+  experiments/dqn_atari/configs/pong.yaml \
+  --resume experiments/dqn_atari/runs/pong_42/checkpoints/checkpoint_1000000.pt \
+  --strict-resume
+```
+
+### Verify Determinism
+
+```bash
+# Run smoke test to verify save/resume determinism
+pytest tests/test_save_resume_determinism.py -v -s
+
+# Expected output:
+# ✓ PERFECT DETERMINISM - All metrics match exactly
+```
+
+**Need more details?** Jump to [Command-Line Interface](#command-line-interface) or [Deterministic Execution](#deterministic-execution).
+
+---
+
 ## Checkpoint Structure
 
 Checkpoints save the complete training state including:
