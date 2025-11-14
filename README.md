@@ -130,8 +130,16 @@ See [experiments/dqn_atari/README.md](experiments/dqn_atari/README.md) for exper
 
 See [tests/README.md](tests/README.md) for complete test documentation.
 
-**Run tests:**
+**Running tests** (assumes virtual environment is active):
+
 ```bash
+# 1. Activate virtual environment (if not already active)
+source .venv/bin/activate
+
+# 2. Install pytest if not present
+pip install pytest
+
+# 3. Run tests
 # All tests
 pytest tests/ -v
 
@@ -140,7 +148,16 @@ pytest tests/test_dqn_trainer.py -v
 
 # Targeted component tests
 pytest tests/test_dqn_trainer.py -k "scheduler" -v
+
+# Smoke test example (fast validation)
+pytest tests/test_dqn_trainer.py -k "smoke_test" -v
 ```
+
+**Complete workflow for contributors:**
+1. Activate venv: `source .venv/bin/activate`
+2. Install dependencies: `bash envs/setup_env.sh` (first time only)
+3. Verify install: `python -c "import torch, gymnasium, ale_py"`
+4. Run tests: `pytest tests/`
 
 ## Structure
 
