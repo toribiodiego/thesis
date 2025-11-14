@@ -17,7 +17,9 @@ def evaluate(
     eval_epsilon: float = 0.05,
     num_actions: int = None,
     device: str = 'cpu',
-    seed: int = None
+    seed: int = None,
+    step: int = None,
+    track_lives: bool = False
 ) -> dict:
     """
     Evaluate agent over multiple episodes with low/greedy epsilon.
@@ -41,6 +43,10 @@ def evaluate(
         Device for model inference (default: 'cpu')
     seed : int
         Random seed for reproducibility (optional)
+    step : int
+        Training step when evaluation occurred (optional, included in results)
+    track_lives : bool
+        Track lives lost per episode (optional, default: False)
 
     Returns
     -------
@@ -54,7 +60,11 @@ def evaluate(
         - mean_length: Average episode length
         - episode_returns: List of individual episode returns
         - episode_lengths: List of individual episode lengths
+        - episode_lives_lost: List of lives lost per episode (if track_lives=True)
         - num_episodes: Number of episodes evaluated
+        - seed: Random seed used (if provided)
+        - step: Training step when evaluation occurred (if provided)
+        - eval_epsilon: Epsilon value used for evaluation
 
     Example
     -------
@@ -76,12 +86,19 @@ def evaluate(
 
     episode_returns = []
     episode_lengths = []
+    episode_lives_lost = [] if track_lives else None
 
     for ep in range(num_episodes):
         obs, info = env.reset()
         episode_return = 0.0
         episode_length = 0
         done = False
+
+        # Track initial lives if requested
+        if track_lives:
+            initial_lives = info.get('lives', None)
+            if initial_lives is None and hasattr(env.unwrapped, 'ale'):
+                initial_lives = env.unwrapped.ale.lives()
 
         while not done:
             # Convert observation to tensor
@@ -112,8 +129,21 @@ def evaluate(
             episode_length += 1
             done = terminated or truncated
 
+        # Record episode statistics
         episode_returns.append(episode_return)
         episode_lengths.append(episode_length)
+
+        # Track lives lost if requested
+        if track_lives:
+            final_lives = info.get('lives', None)
+            if final_lives is None and hasattr(env.unwrapped, 'ale'):
+                final_lives = env.unwrapped.ale.lives()
+
+            if initial_lives is not None and final_lives is not None:
+                lives_lost = initial_lives - final_lives
+            else:
+                lives_lost = None
+            episode_lives_lost.append(lives_lost)
 
     # Compute statistics
     results = {
@@ -125,8 +155,19 @@ def evaluate(
         'mean_length': np.mean(episode_lengths),
         'episode_returns': episode_returns,
         'episode_lengths': episode_lengths,
-        'num_episodes': num_episodes
+        'num_episodes': num_episodes,
+        'eval_epsilon': eval_epsilon
     }
+
+    # Add optional metadata
+    if seed is not None:
+        results['seed'] = seed
+
+    if step is not None:
+        results['step'] = step
+
+    if track_lives and episode_lives_lost is not None:
+        results['episode_lives_lost'] = episode_lives_lost
 
     # Set model back to train mode
     model.train()

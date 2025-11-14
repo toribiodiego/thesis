@@ -3182,6 +3182,7 @@ def test_evaluate_basic():
     assert 'episode_returns' in results
     assert 'episode_lengths' in results
     assert results['num_episodes'] == 2
+    assert results['eval_epsilon'] == 0.05
 
 
 def test_evaluate_greedy():
@@ -3212,6 +3213,110 @@ def test_evaluate_greedy():
 
     assert results['num_episodes'] == 1
     assert len(results['episode_returns']) == 1
+
+
+def test_evaluate_with_metadata():
+    """Test evaluate includes seed and step in results."""
+    from src.training import evaluate
+    from src.models import DQN
+    from unittest.mock import Mock
+
+    env = Mock()
+    env.action_space.n = 6
+    dummy_state = np.random.randint(0, 255, (4, 84, 84), dtype=np.uint8)
+    env.reset.return_value = (dummy_state, {})
+
+    step_count = [0]
+    def mock_step(action):
+        step_count[0] += 1
+        done = step_count[0] >= 5
+        if done:
+            step_count[0] = 0
+        return (dummy_state, 1.0, done, False, {})
+
+    env.step.side_effect = mock_step
+    model = DQN(num_actions=6)
+
+    # Evaluate with metadata
+    results = evaluate(env, model, num_episodes=1, eval_epsilon=0.05,
+                      device='cpu', seed=42, step=250000)
+
+    # Check metadata is included
+    assert results['seed'] == 42
+    assert results['step'] == 250000
+    assert results['eval_epsilon'] == 0.05
+
+
+def test_evaluate_lives_tracking():
+    """Test evaluate tracks lives lost when requested."""
+    from src.training import evaluate
+    from src.models import DQN
+    from unittest.mock import Mock
+
+    env = Mock()
+    env.action_space.n = 6
+    dummy_state = np.random.randint(0, 255, (4, 84, 84), dtype=np.uint8)
+
+    # Mock environment with lives tracking
+    step_count = [0]
+    initial_lives = 5
+
+    def mock_reset():
+        return (dummy_state, {'lives': initial_lives})
+
+    def mock_step(action):
+        step_count[0] += 1
+        done = step_count[0] >= 10
+        # Simulate losing lives during episode
+        current_lives = max(0, initial_lives - (step_count[0] // 3))
+        if done:
+            step_count[0] = 0
+        return (dummy_state, 1.0, done, False, {'lives': current_lives})
+
+    env.reset.side_effect = mock_reset
+    env.step.side_effect = mock_step
+    model = DQN(num_actions=6)
+
+    # Evaluate with lives tracking
+    results = evaluate(env, model, num_episodes=2, eval_epsilon=0.05,
+                      device='cpu', track_lives=True)
+
+    # Check lives tracking is included
+    assert 'episode_lives_lost' in results
+    assert len(results['episode_lives_lost']) == 2
+    # Each episode should have lives lost data
+    for lives_lost in results['episode_lives_lost']:
+        assert lives_lost is not None
+
+
+def test_evaluate_without_lives_tracking():
+    """Test evaluate omits lives when not requested."""
+    from src.training import evaluate
+    from src.models import DQN
+    from unittest.mock import Mock
+
+    env = Mock()
+    env.action_space.n = 6
+    dummy_state = np.random.randint(0, 255, (4, 84, 84), dtype=np.uint8)
+    env.reset.return_value = (dummy_state, {})
+
+    step_count = [0]
+    def mock_step(action):
+        step_count[0] += 1
+        done = step_count[0] >= 5
+        if done:
+            step_count[0] = 0
+        return (dummy_state, 1.0, done, False, {})
+
+    env.step.side_effect = mock_step
+    model = DQN(num_actions=6)
+
+    # Evaluate without lives tracking
+    results = evaluate(env, model, num_episodes=1, eval_epsilon=0.05,
+                      device='cpu', track_lives=False)
+
+    # Check lives tracking is NOT included
+    assert 'episode_lives_lost' not in results
 
 
 def test_evaluation_scheduler_interval():
