@@ -294,14 +294,14 @@ Structured logging through TensorBoard, Weights & Biases (W&B), and CSV. Plottin
     - [X] chore: Save plots/metadata locally and publish as W&B artifacts
 - [X] Build a metadata summary generator that outputs Markdown/CSV tables (`run_id | game | mean_eval_return | frames | wall_time | seed | commit_hash`) and pushes the summary CSV/Markdown to W&B for provenance.
     - [X] feat: Add results table exporter with optional W&B upload
-- [ ] Provide a CLI for the plotting/aggregation pipeline: accept run directories or W&B run IDs/globs, set smoothing window/output directory, toggle artifact uploads, and fail fast on missing inputs.
-    - [ ] feat: Add CLI flags for plot script (local vs W&B sources, smoothing, upload toggle)
-- [ ] Add performance safeguards for large logs: optional downsampling/rolling aggregation prior to plotting; warn when logs exceed thresholds and automatically chunk uploads to W&B.
-    - [ ] perf: Add scalable log downsampling and chunked artifact uploads
-- [ ] Include sanity tests/examples: run plotting off synthetic logs (CSV + TensorBoard + W&B mock), verify figures render, files exist, and W&B artifact uploads succeed (use offline/sandbox mode in tests).
-    - [ ] test: Add plotting/logging pipeline smoke tests covering TensorBoard/W&B/CSV paths
-- [ ] Document the logging/plotting stack in `docs/design/logging_pipeline.md`: describe backend configs (TensorBoard dir, W&B project/entity, CSV layout), artifact upload workflow, CLI usage, and strategies for handling large logs.
-    - [ ] docs: Reference sample commands (`python scripts/plot_results.py ... --upload-wandb`) and expected outputs for single-run vs multi-seed cases.
+- [X] Provide a CLI for the plotting/aggregation pipeline: accept run directories or W&B run IDs/globs, set smoothing window/output directory, toggle artifact uploads, and fail fast on missing inputs.
+    - [X] feat: Add CLI flags for plot script (local vs W&B sources, smoothing, upload toggle)
+- [X] Add performance safeguards for large logs: optional downsampling/rolling aggregation prior to plotting; warn when logs exceed thresholds and automatically chunk uploads to W&B.
+    - [X] feat: Add performance safeguards for large logs with downsampling and warnings
+- [X] Include sanity tests/examples: run plotting off synthetic logs (CSV + TensorBoard + W&B mock), verify figures render, files exist, and W&B artifact uploads succeed (use offline/sandbox mode in tests).
+    - [X] test: 48 comprehensive tests covering all logging/plotting functionality
+- [X] Document the logging/plotting stack in `docs/design/logging_pipeline.md`: describe backend configs (TensorBoard dir, W&B project/entity, CSV layout), artifact upload workflow, CLI usage, and strategies for handling large logs.
+    - [X] docs: Create comprehensive logging_pipeline.md with CLI examples and best practices
 
 ---
 

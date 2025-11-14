@@ -21,3 +21,4 @@ Keeping design decisions explicit here makes it easier to evolve the codebase wh
 - [Checkpointing](checkpointing.md) - Save/resume and deterministic seeding
 - [Config & CLI](config_cli.md) - Configuration system and command-line interface
 - [Evaluation Harness](eval_harness.md) - Periodic evaluation, metrics, and video capture
+- [Logging & Plotting Pipeline](logging_pipeline.md) - Multi-backend logging, plotting, and results analysis
