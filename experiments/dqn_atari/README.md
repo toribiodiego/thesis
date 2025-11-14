@@ -36,9 +36,56 @@ Deterministic configuration for reproducibility:
 
 These settings are applied when creating environments and ensure deterministic behavior across runs.
 
+## Running DQN
+
+### Quick Start
+
+```bash
+# 1. Install dependencies (first time only)
+pip install -r requirements.txt
+
+# 2. Download ROMs (first time only)
+./experiments/dqn_atari/scripts/setup_roms.sh
+
+# 3. Validate setup with dry run
+./experiments/dqn_atari/scripts/run_dqn.sh \
+  experiments/dqn_atari/configs/pong.yaml --dry-run
+
+# 4. Start training
+./experiments/dqn_atari/scripts/run_dqn.sh \
+  experiments/dqn_atari/configs/pong.yaml --seed 123
+```
+
+### Training Scripts
+
+All scripts are in `scripts/` and should be run from repository root:
+
+- **`run_dqn.sh`** – Main training entry point with dry-run support
+  ```bash
+  # Dry run (validates preprocessing, saves debug frames)
+  ./experiments/dqn_atari/scripts/run_dqn.sh \
+    experiments/dqn_atari/configs/pong.yaml --dry-run
+
+  # Full training
+  ./experiments/dqn_atari/scripts/run_dqn.sh \
+    experiments/dqn_atari/configs/pong.yaml --seed 42
+  ```
+
+- **`setup_roms.sh`** – One-time ROM installation via AutoROM
+  ```bash
+  ./experiments/dqn_atari/scripts/setup_roms.sh
+  ```
+
+- **`capture_env.sh`** – Record system info and package versions
+  ```bash
+  ./experiments/dqn_atari/scripts/capture_env.sh
+  ```
+
+See `scripts/README.md` for detailed documentation, all CLI flags, and common workflows.
+
 ## Layout
 - `configs/` – `base.yaml` plus per-game overrides; see `configs/README.md`.
-- `scripts/` – Shell entry points like `run_dqn.sh` (training), with planned `eval` and `dry_run` helpers.
+- `scripts/` – Training and setup utilities (`run_dqn.sh`, `setup_roms.sh`, `capture_env.sh`); see `scripts/README.md`.
 - `notes.md` – Chronological experiment log for hyperparameter tweaks and observations.
 
 Core implementations (agents, replay, env wrappers) stay under `src/`, keeping this directory focused on wiring, configs, and documentation.
