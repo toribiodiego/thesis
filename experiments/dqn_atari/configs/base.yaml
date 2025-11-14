@@ -28,7 +28,11 @@ agent:
   replay_capacity: 1000000
   replay_min_transitions: 50000
   batch_size: 32
-  target_update_interval: 10000
+  # Target network synchronization:
+  # - target_update_interval > 0: 2015 Nature DQN (separate target network, updated every N steps)
+  # - target_update_interval = 0: 2013 NIPS DQN (no target network, less stable)
+  # See docs/design/dqn_training.md for detailed comparison
+  target_update_interval: 10000  # Hard-copy every 10K steps (2015 standard)
   gradient_clip_norm: 10.0
 
 exploration:

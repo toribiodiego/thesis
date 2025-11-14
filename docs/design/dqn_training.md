@@ -280,22 +280,60 @@ for env_step in range(total_steps):
 
 ### 2013 vs 2015 DQN
 
-**2013 arXiv version:**
+**2013 NIPS version (original arXiv):**
 - Single network for both Q(s,a) and targets
-- Equivalent to update_interval=1
+- No separate target network
+- Simpler but less stable (moving target problem)
 
 **2015 Nature version:**
-- Separate target network
-- update_interval=10000
+- Separate target network updated every C steps
+- update_interval=10000 (default)
+- More stable training, fixed targets for multiple updates
 
-**For purist 2013 reproduction:**
-```python
-# Option 1: Set update_interval=1 (update every step)
-updater = TargetNetworkUpdater(update_interval=1)
+**Configuration:**
 
-# Option 2: Use same network for online and target
-target_net = online_net  # No separate target network
+The target network can be toggled via the `agent.target_update_interval` config key:
+
+**Enable target network (2015 mode, recommended):**
+```yaml
+# In config YAML
+agent:
+  target_update_interval: 10000  # Update every 10K steps (standard)
 ```
+
+**Disable target network (2013 purist mode):**
+```yaml
+# In config YAML
+agent:
+  target_update_interval: 0  # Disabled (or set to null)
+```
+
+**CLI override:**
+```bash
+# Disable target network at runtime
+./experiments/dqn_atari/scripts/run_dqn.sh \
+  experiments/dqn_atari/configs/pong.yaml \
+  --agent.target_update_interval 0
+
+# Use different update interval
+./experiments/dqn_atari/scripts/run_dqn.sh \
+  experiments/dqn_atari/configs/pong.yaml \
+  --agent.target_update_interval 5000
+```
+
+**Implementation behavior:**
+- `target_update_interval > 0`: Use separate target network, hard-copy every N steps
+- `target_update_interval == 0` or `null`: Disable target network (2013 mode)
+
+**When to disable target network:**
+- Ablation studies comparing 2013 vs 2015 DQN
+- Reproducing original 2013 NIPS paper exactly
+- Research on target network effectiveness
+
+**When to enable target network:**
+- Standard DQN training (recommended)
+- Stability is important
+- Reproducing 2015 Nature DQN paper
 
 ---
 
