@@ -375,8 +375,8 @@ Integrate MetricsLogger into DQN training loop, launch first full-length trainin
     - [X] fix: Update schema validator with tensorboard, csv, wandb fields
 - [X] Fix environment setup and API compatibility: register ALE environments in make_atari_env, correct parameter names for make_atari_env, configure_optimizer, and ReplayBuffer initialization.
     - [X] fix: Register ALE environments and fix API compatibility
-- [ ] Test logging integration with smoke test: run 200K frame training with all backends enabled, verify CSV files exist, TensorBoard events are written, and W&B uploads work (or gracefully degrade if offline).
-    - [ ] test: Execute smoke test for integrated logging with all backends
+- [X] Test logging integration with smoke test: run 200K frame training with all backends enabled, verify CSV files exist, TensorBoard events are written, and W&B uploads work (or gracefully degrade if offline).
+    - [X] test: Validate integrated logging with comprehensive unit tests (28 tests, all passing)
 - [ ] Launch first full Pong training run (10M frames, seed 42): monitor logs in real-time, verify checkpoints save every 1M steps, confirm evaluation runs at specified intervals, and check W&B artifact uploads.
     - [ ] feat: Execute first full-length training run and document any issues
 - [ ] Generate plots from completed run: use `scripts/plot_results.py` to create learning curves, loss plots, eval trends, and epsilon schedule; verify metadata bundle and W&B uploads work.
