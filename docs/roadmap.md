@@ -435,7 +435,6 @@ Compare reproduced scores against the original DQN paper. Aggregate final-eval s
 - [ ] Maintain `docs/design/results_comparison.md` as the authoritative “how-to regenerate” guide: list scripts, CLI args, W&B queries, and validation steps for verifying percentage-of-paper calculations.
     - [ ] docs: Ensure the guide includes both local and W&B regeneration paths
 
----
 
 ---
 
@@ -459,31 +458,28 @@ Quantify the effect of key design choices (reward clipping, frame stack size, ta
     - [ ] docs: Capture lessons learned per ablation with links to artifacts
 - [ ] Provide a convenience runner (e.g., `experiments/dqn_atari/scripts/run_ablations.sh`) that launches the configured ablation suite with consistent seeds/output paths.
     - [ ] chore: Script reproducible ablation execution
-
----
 - [ ] Capture ablation design/interpretation guidance in `docs/design/ablations_plan.md`: list the experiments, hypotheses, runtime costs, artifact locations, and how to interpret deltas/stability flags.
     - [ ] docs: Link to config files, plotting outputs, and the report section summarizing ablation findings.
 
 ---
 
--### Subtask 16 — Aggregate Report & Interpretation
-+
-+**Objective:**
-+Consolidate the reproduction into a polished report (`docs/reports/dqn_results.md`) plus a companion W&B report/dashboard. Include final plots/tables/videos, configs, averaged metrics, comparison to the paper, and lessons learned. Completion means the Markdown report, W&B report, and referenced artifacts remain in sync.
-+
-+**Checklist:**
-+- [ ] Export final artifacts (per-game learning curves, aggregate bar charts, eval video links) via Subtask 10 tooling and store under `results/summary/`. Reference the same assets from W&B so readers can drill into runs.
-+    - [ ] docs: Capture artifact paths/URLs in the report for reproducibility
-+- [ ] Write/refresh `docs/reports/dqn_results.md` summarizing metrics (seed averages, runtime budgets, configs/checkpoints) with links to local artifacts and W&B run collections.
-+    - [ ] docs: Include a brief methods recap plus pointers to config + checkpoint locations
-+- [ ] Interpret outcomes relative to the original paper—highlight matches/gaps, root causes (env versions, reward clipping, precision, budgets), and quote stats from Subtask 14 tables.
-+    - [ ] docs: Embed comparison tables/figures or link to them directly
-+- [ ] Add a “Lessons learned & future work” section touching on reproducibility practices and next algorithmic steps (Double DQN, Prioritized Replay, etc.), referencing the roadmap for future subtasks.
-+    - [ ] docs: Keep this section updated as new insights emerge
-+- [ ] Publish a condensed version of the report as a W&B Report (or similar dashboard) linking to the same plots/tables/videos so collaborators can review results without cloning the repo.
-+    - [ ] docs: Mention the W&B report URL inside `docs/reports/dqn_results.md`
-+
-+---
+
+### Subtask 15 — Aggregate Report & Interpretation
+
+**Objective:**
+Consolidate the reproduction into a polished report (`docs/reports/dqn_results.md`) plus a companion W&B report/dashboard. Include final plots/tables/videos, configs, averaged metrics, comparison to the paper, and lessons learned. Completion means the Markdown report, W&B report, and referenced artifacts remain in sync.
+
+**Checklist:**
+- [ ] Export final artifacts (per-game learning curves, aggregate bar charts, eval video links) via Subtask 10 tooling and store under `results/summary/`. Reference the same assets from W&B so readers can drill into runs.
+    - [ ] docs: Capture artifact paths/URLs in the report for reproducibility
+- [ ] Write/refresh `docs/reports/dqn_results.md` summarizing metrics (seed averages, runtime budgets, configs/checkpoints) with links to local artifacts and W&B run collections.
+    - [ ] docs: Include a brief methods recap plus pointers to config + checkpoint locations
+- [ ] Interpret outcomes relative to the original paper—highlight matches/gaps, root causes (env versions, reward clipping, precision, budgets), and quote stats from Subtask 14 tables.
+    - [ ] docs: Embed comparison tables/figures or link to them directly
+- [ ] Add a "Lessons learned & future work" section touching on reproducibility practices and next algorithmic steps (Double DQN, Prioritized Replay, etc.), referencing the roadmap for future subtasks.
+    - [ ] docs: Keep this section updated as new insights emerge
+- [ ] Publish a condensed version of the report as a W&B Report (or similar dashboard) linking to the same plots/tables/videos so collaborators can review results without cloning the repo.
+    - [ ] docs: Mention the W&B report URL inside `docs/reports/dqn_results.md`
 - [ ] Maintain `docs/design/report_outline.md` to track the structure of `docs/reports/dqn_results.md`, mapping each section to source artifacts, plots, and data files for quick updates or peer review.
     - [ ] docs: Record which scripts regenerate each figure/table and any open questions/todo items for the report.
 
@@ -508,7 +504,6 @@ Guarantee reliability and contributor readiness by maintaining a comprehensive a
 - [ ] Keep `docs/design/code_quality.md` authoritative: include testing matrix, lint/format/type-check commands, coverage targets, CI links, and troubleshooting tips.
     - [ ] docs: Update the guide whenever tooling/commands change
 
----
 
 ---
 
@@ -531,7 +526,6 @@ Ship a one-command reproduction script (`scripts/reproduce_dqn.sh` + optional Py
 - [ ] Document usage in README (`Quick reproduction` section) and in `docs/design/reproduce_recipe.md`, detailing prerequisites, runtime expectations, and troubleshooting tips.
     - [ ] docs: Keep documentation current whenever the script workflow changes
 
----
 
 ---
 
@@ -583,7 +577,6 @@ Keep the repository tidy and reproducible: standardized layout, documented reten
 - [ ] Keep `docs/design/archive_plan.md` authoritative: folder purposes, retention policies, ignore rules, licensing decisions, fresh-clone checklist, and references to helper scripts.
     - [ ] docs: Update the plan whenever structure/retention rules change
 
----
 
 ---
 
