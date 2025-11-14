@@ -1354,6 +1354,137 @@ python train_dqn.py \
     --set evaluation.num_episodes=30
 ```
 
+### Configuration Overrides
+
+**Common CLI overrides for evaluation parameters:**
+
+```bash
+# Change number of evaluation episodes
+--set evaluation.num_episodes=30
+
+# Change evaluation epsilon
+--set evaluation.epsilon=0.0  # Pure greedy
+
+# Change evaluation frequency
+--set evaluation.eval_every=500000  # Every 500K frames instead of 250K
+
+# Disable video recording (save disk space)
+--set evaluation.record_video=false
+
+# Enable video recording with GIF export
+--set evaluation.record_video=true --set evaluation.export_gif=true
+
+# Multiple overrides at once
+--set evaluation.num_episodes=30 evaluation.epsilon=0.0 evaluation.record_video=true
+```
+
+**Config file overrides (experiments/dqn_atari/configs/custom_eval.yaml):**
+
+```yaml
+# Inherit from base config
+defaults:
+  - base
+
+# Custom evaluation settings
+evaluation:
+  num_episodes: 30        # More episodes for stable statistics
+  epsilon: 0.0            # Pure greedy evaluation
+  eval_every: 100000      # More frequent evaluation
+  record_video: false     # Disable videos to save space
+```
+
+**Environment-specific tuning:**
+
+Some games may benefit from different evaluation settings:
+
+```yaml
+# Space Invaders: Longer episodes, more variability
+evaluation:
+  num_episodes: 20        # Higher variance game
+  epsilon: 0.05           # Standard
+
+# Breakout: Deterministic, fewer episodes needed
+evaluation:
+  num_episodes: 10        # Low variance game
+  epsilon: 0.05           # Standard
+
+# Beam Rider: High variance, more episodes
+evaluation:
+  num_episodes: 30        # Very high variance
+  epsilon: 0.05           # Standard
+```
+
+### When to Adjust Defaults
+
+**Increase num_episodes (10 → 30) when:**
+- Final reporting for paper/thesis
+- High-variance games (returns vary significantly)
+- Comparing models (need statistical significance)
+- Publication-quality results required
+
+**Decrease num_episodes (10 → 5) when:**
+- Rapid iteration during development
+- Low-variance games (consistent performance)
+- Computational budget constraints
+- Hyperparameter sweeps (many runs)
+
+**Use pure greedy (ε=0) when:**
+- Testing maximum achievable performance
+- Deployment scenarios (no exploration)
+- Debugging policy quality
+- **Note:** Not recommended for reproducibility (brittle)
+
+**Use higher ε (0.05 → 0.1) when:**
+- Very stochastic environments
+- Testing robustness to exploration
+- **Note:** Deviates from paper protocol
+
+**Increase eval_every (250K → 500K) when:**
+- Long training runs (50M+ frames)
+- Disk space constrained (fewer videos)
+- Slow environments (reduce overhead)
+
+**Decrease eval_every (250K → 100K) when:**
+- Rapid learning phases
+- Debugging training dynamics
+- Short training budgets (<5M frames)
+
+### Reproducibility Considerations
+
+**For reproducible results:**
+1. Always specify `--seed` for evaluation
+2. Use paper defaults (ε=0.05, 10 episodes, 250K interval)
+3. Document any deviations in run metadata
+4. Use same evaluation settings across all runs in comparison
+
+**Recording evaluation settings:**
+```python
+# Evaluation settings are saved in run metadata
+{
+  "evaluation": {
+    "num_episodes": 10,
+    "epsilon": 0.05,
+    "eval_every": 250000,
+    "record_video": true
+  }
+}
+```
+
+**Comparing runs with different eval settings:**
+```python
+import pandas as pd
+
+# Load results from different runs
+run1 = pd.read_csv('runs/pong_1/eval/evaluations.csv')  # 10 episodes
+run2 = pd.read_csv('runs/pong_2/eval/evaluations.csv')  # 30 episodes
+
+# Check evaluation settings
+print(f"Run 1: {run1['episodes'].iloc[0]} episodes")  # 10
+print(f"Run 2: {run2['episodes'].iloc[0]} episodes")  # 30
+
+# Note: Direct comparison may not be valid if settings differ
+```
+
 ---
 
 ## Regenerating Artifacts
