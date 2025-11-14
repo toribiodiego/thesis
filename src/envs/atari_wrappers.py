@@ -493,6 +493,13 @@ def make_atari_env(
         - For training: episode_life=True is optional and can improve performance
         - For evaluation: ALWAYS use episode_life=False to get true episode returns
     """
+    # Register ALE environments if not already registered
+    try:
+        import ale_py
+        gym.register_envs(ale_py)
+    except:
+        pass  # Already registered or ale_py not available
+
     # Create base environment
     env = gym.make(env_id, **env_kwargs)
 
