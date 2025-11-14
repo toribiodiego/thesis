@@ -620,9 +620,11 @@ if done:
 
 2. **Evaluation Mode:**
    - NO `EpisodicLifeEnv` (run full episodes)
-   - Use low epsilon (0.05) or greedy (0.0)
+   - Use low epsilon (default: 0.05) or greedy (0.0)
    - Disable learning (`model.eval()`, `no_grad()`)
-   - Report mean/median/std over multiple episodes
+   - Report mean/median/std over multiple episodes (default: 10 episodes)
+   - **Implemented in:** `src/training/evaluation.py::evaluate()` function
+   - **Configuration:** `eval.epsilon`, `eval.num_episodes` in config files
 
 3. **Episode Tracking:**
    - Accumulate rewards until done
@@ -634,6 +636,13 @@ if done:
    - Expose `episodic_life`, `noop_max`, `frameskip` in config
    - Create separate train/eval environment builders
    - Document wrapper order and reasoning
+   - **Config files:** `experiments/dqn_atari/configs/base.yaml`
+     - `training.episode_life`: Enable life-loss as terminal (default: true)
+     - `env.max_noop_start`: Random no-ops on reset (default: 30)
+     - `env.frameskip`: Action repeat (default: 4)
+     - `eval.epsilon`: Evaluation exploration rate (default: 0.05)
+     - `eval.num_episodes`: Episodes per evaluation (default: 10)
+     - `eval.interval`: Frames between evaluations (default: 250K)
 
 **Implementation Checklist:**
 - [ ] Implement `make_training_env()` with all wrappers
@@ -644,5 +653,21 @@ if done:
 - [ ] Test with and without `EpisodicLifeEnv`
 - [ ] Verify eval returns are higher than training returns (due to full episodes)
 
+**Related Components (Subtask 6):**
+
+- **Evaluation System:** `src/training/evaluation.py` - Periodic performance assessment with low-ε policy
+  - `evaluate()`: Run N episodes with eval_epsilon (default: 0.05, 10 episodes)
+  - `EvaluationScheduler`: Trigger evaluations every 250K frames
+  - `EvaluationLogger`: Log mean/median/std returns to CSV and JSON
+
+- **Reference-State Q Tracking:** `src/training/q_tracking.py` - Monitor learning via Q-values
+  - `ReferenceStateQTracker`: Track Q-values on fixed batch of states
+  - Provides smooth learning signal when episode returns are noisy
+  - Default: 100 reference states, logged every 10K steps
+
+- **Episode Logging:** `src/training/logging.py` - Structured episode metrics
+  - `EpisodeLogger`: Log return, length, rolling statistics
+  - Handles both life-based (training) and full episodes (eval)
+
 **Next Steps:**
-See `docs/design/training_loop_runtime.md` for complete training loop orchestration that integrates episode handling with the DQN update pipeline.
+See `docs/design/training_loop_runtime.md` for complete training loop orchestration that integrates episode handling, evaluation, and Q tracking with the DQN update pipeline.
