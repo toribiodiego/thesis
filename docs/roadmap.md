@@ -151,6 +151,9 @@ Circular buffer storing ~1M transitions (s,a,r,s',done). Store as uint8, convert
 **Objective:**
 TD target: *y = r + γ(1−done)×maxₐ′ Q_target(s′,a′)*. MSE or Huber loss. RMSProp/Adam (LR 2.5e-4, γ=0.99, batch=32). Target sync every 10k steps. Train every 4 steps. Complete when loss decreases smoothly and target updates are correct.
 
+**Note on Target Networks:**
+The target network is a 2015 Nature paper improvement (Mnih et al.). The original 2013 arXiv DQN paper used a single network for both Q(s,a) and target computations. For purist 2013 reproduction, set `TargetNetworkUpdater(update_interval=1)` or use the same network for both online and target Q-value computations.
+
 **Checklist:**
 - [X] Create online and target Q-networks with identical architecture; initialize target as a hard copy of online, freeze target grads, and provide `hard_update_target()` utility.
     - [X] feat: Initialize online/target Q-nets and hard-copy sync helper
@@ -162,8 +165,8 @@ TD target: *y = r + γ(1−done)×maxₐ′ Q_target(s′,a′)*. MSE or Huber l
     - [X] build: Add optimizer setup and global-norm gradient clipping
 - [X] Implement periodic target updates: call `hard_update_target()` every `C` environment steps (default `10_000`); track env step counter and log each sync step.
     - [X] feat: Add step-scheduled hard target sync with logging
-- [ ] Document that the target network is a 2015 stability improvement (not present in the 2013 paper) and expose a config flag/notes on how to disable it for purist reproductions.
-    - [ ] docs: Add roadmap/config comments describing how to run without a target network
+- [X] Document that the target network is a 2015 stability improvement (not present in the 2013 paper) and expose a config flag/notes on how to disable it for purist reproductions.
+    - [X] docs: Add roadmap/config comments describing how to run without a target network
 - [ ] Schedule training frequency: perform one optimization step every `k=4` environment steps after replay warm-up; skip updates if `can_sample` is false; support configurable `train_every`.
     - [ ] feat: Add train-every-k update scheduler with warm-up gating
 - [ ] Add stability checks: unit test on a synthetic batch to confirm loss decreases over several updates; assert target updates occur at exact multiples of `C`; detect and warn on NaNs/Infs; log grad norm and LR per update.

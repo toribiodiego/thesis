@@ -6,6 +6,25 @@ Provides utilities for:
 - TD target computation
 - Q-learning loss computation
 - MSE and Huber loss functions
+
+Target Network Note:
+    The target network is a stability improvement introduced in the 2015 Nature
+    paper (Mnih et al., "Human-level control through deep reinforcement learning").
+    It was NOT present in the original 2013 arXiv paper (Mnih et al., "Playing
+    Atari with Deep Reinforcement Learning").
+
+    The 2013 paper used a single Q-network with the same network for both:
+    - Computing Q(s,a) for the current state-action pairs
+    - Computing max Q(s',a') for the next state (in TD targets)
+
+    The 2015 paper introduced a separate target network that is updated
+    periodically (every C=10,000 steps) to stabilize training by reducing
+    correlations between Q-values and targets.
+
+    For purist reproduction of the 2013 paper:
+    - Set update_interval to 1 (update every step = same as 2013)
+    - Or use the same network for both online and target Q-values
+    - See TargetNetworkUpdater class for configuration options
 """
 
 import torch
@@ -430,16 +449,33 @@ class TargetNetworkUpdater:
     Tracks environment steps and triggers hard updates to the target network
     at fixed intervals (default: every 10,000 steps).
 
+    Historical Context:
+        Target networks were introduced in the 2015 Nature DQN paper as a stability
+        improvement. The original 2013 arXiv paper did NOT use a separate target
+        network. For purist 2013 reproduction:
+        - Set update_interval=1 (updates every step, equivalent to single network)
+        - Or use online_net for both Q(s,a) and target Q(s',a') computations
+
     Attributes:
         update_interval: Number of environment steps between target updates
         step_count: Current environment step counter
         last_update_step: Step at which last update occurred
         total_updates: Total number of updates performed
 
+    Configuration Notes:
+        - DQN 2015 (Nature): update_interval=10000 (default)
+        - DQN 2013 (arXiv): update_interval=1 or same network for both
+        - Smaller intervals: More stable but slower learning
+        - Larger intervals: Faster learning but potentially less stable
+
     Example:
+        >>> # 2015 Nature paper setup (default)
         >>> online_net = DQN(num_actions=6)
         >>> target_net = init_target_network(online_net, num_actions=6)
         >>> updater = TargetNetworkUpdater(update_interval=10000)
+        >>>
+        >>> # 2013 arXiv paper setup (purist reproduction)
+        >>> updater_2013 = TargetNetworkUpdater(update_interval=1)
         >>>
         >>> # Training loop
         >>> for step in range(100000):
@@ -457,9 +493,16 @@ class TargetNetworkUpdater:
             update_interval: Number of environment steps between updates (default: 10000)
 
         Notes:
-            - DQN paper uses C=10,000 steps
+            - DQN 2015 Nature paper uses C=10,000 steps (default)
+            - DQN 2013 arXiv paper: use update_interval=1 for purist reproduction
             - First update occurs at step update_interval (not step 0)
             - Updates occur at exact multiples: 10000, 20000, 30000, etc.
+            - Setting interval=1 makes every step update (equivalent to 2013 single network)
+
+        Configuration Examples:
+            - Modern stable training: update_interval=10000 (default)
+            - Faster updates for debugging: update_interval=1000
+            - 2013 paper reproduction: update_interval=1
         """
         if update_interval <= 0:
             raise ValueError(f"update_interval must be positive, got {update_interval}")
