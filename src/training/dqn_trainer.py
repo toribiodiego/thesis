@@ -421,3 +421,196 @@ def clip_gradients(
     )
 
     return total_norm.item()
+
+
+class TargetNetworkUpdater:
+    """
+    Scheduler for periodic target network updates.
+
+    Tracks environment steps and triggers hard updates to the target network
+    at fixed intervals (default: every 10,000 steps).
+
+    Attributes:
+        update_interval: Number of environment steps between target updates
+        step_count: Current environment step counter
+        last_update_step: Step at which last update occurred
+        total_updates: Total number of updates performed
+
+    Example:
+        >>> online_net = DQN(num_actions=6)
+        >>> target_net = init_target_network(online_net, num_actions=6)
+        >>> updater = TargetNetworkUpdater(update_interval=10000)
+        >>>
+        >>> # Training loop
+        >>> for step in range(100000):
+        ...     # ... training code ...
+        ...     if updater.should_update(step):
+        ...         updater.update(online_net, target_net)
+        ...         print(f"Target network updated at step {step}")
+    """
+
+    def __init__(self, update_interval: int = 10000):
+        """
+        Initialize target network updater.
+
+        Args:
+            update_interval: Number of environment steps between updates (default: 10000)
+
+        Notes:
+            - DQN paper uses C=10,000 steps
+            - First update occurs at step update_interval (not step 0)
+            - Updates occur at exact multiples: 10000, 20000, 30000, etc.
+        """
+        if update_interval <= 0:
+            raise ValueError(f"update_interval must be positive, got {update_interval}")
+
+        self.update_interval = update_interval
+        self.step_count = 0
+        self.last_update_step = 0
+        self.total_updates = 0
+
+    def should_update(self, current_step: int) -> bool:
+        """
+        Check if target network should be updated at current step.
+
+        Args:
+            current_step: Current environment step count
+
+        Returns:
+            True if target network should be updated, False otherwise
+
+        Notes:
+            - Updates occur at exact multiples of update_interval
+            - Returns True at steps: update_interval, 2*update_interval, etc.
+            - Returns False at step 0
+        """
+        # Update at exact multiples of update_interval
+        if current_step > 0 and current_step % self.update_interval == 0:
+            # Only update if we haven't already updated at this step
+            return current_step != self.last_update_step
+        return False
+
+    def update(
+        self,
+        online_net: nn.Module,
+        target_net: nn.Module,
+        current_step: Optional[int] = None
+    ) -> Dict[str, int]:
+        """
+        Perform hard update of target network.
+
+        Copies all parameters from online network to target network and
+        updates internal counters.
+
+        Args:
+            online_net: Online Q-network
+            target_net: Target Q-network
+            current_step: Current environment step (optional, for logging)
+
+        Returns:
+            Dictionary with update info:
+                - 'step': Step at which update occurred
+                - 'total_updates': Total number of updates so far
+                - 'steps_since_last': Steps since last update
+
+        Example:
+            >>> info = updater.update(online_net, target_net, current_step=10000)
+            >>> print(f"Updated at step {info['step']}, total updates: {info['total_updates']}")
+        """
+        # Perform hard update
+        hard_update_target(online_net, target_net)
+
+        # Update counters
+        if current_step is not None:
+            self.step_count = current_step
+        else:
+            self.step_count += self.update_interval
+
+        steps_since_last = self.step_count - self.last_update_step
+        self.last_update_step = self.step_count
+        self.total_updates += 1
+
+        return {
+            'step': self.step_count,
+            'total_updates': self.total_updates,
+            'steps_since_last': steps_since_last
+        }
+
+    def step(
+        self,
+        online_net: nn.Module,
+        target_net: nn.Module,
+        current_step: int
+    ) -> Optional[Dict[str, int]]:
+        """
+        Convenience method to check and update in one call.
+
+        Args:
+            online_net: Online Q-network
+            target_net: Target Q-network
+            current_step: Current environment step
+
+        Returns:
+            Update info dict if update occurred, None otherwise
+
+        Example:
+            >>> # In training loop
+            >>> update_info = updater.step(online_net, target_net, current_step)
+            >>> if update_info:
+            ...     print(f"Target updated: {update_info}")
+        """
+        if self.should_update(current_step):
+            return self.update(online_net, target_net, current_step)
+        return None
+
+    def reset(self):
+        """
+        Reset all counters.
+
+        Useful for starting a new training run or after loading a checkpoint.
+        """
+        self.step_count = 0
+        self.last_update_step = 0
+        self.total_updates = 0
+
+    def state_dict(self) -> Dict[str, int]:
+        """
+        Get state for checkpointing.
+
+        Returns:
+            Dictionary with all internal state
+
+        Example:
+            >>> checkpoint = {
+            ...     'model': model.state_dict(),
+            ...     'updater': updater.state_dict()
+            ... }
+        """
+        return {
+            'update_interval': self.update_interval,
+            'step_count': self.step_count,
+            'last_update_step': self.last_update_step,
+            'total_updates': self.total_updates
+        }
+
+    def load_state_dict(self, state_dict: Dict[str, int]):
+        """
+        Load state from checkpoint.
+
+        Args:
+            state_dict: Dictionary with state (from state_dict())
+
+        Example:
+            >>> updater.load_state_dict(checkpoint['updater'])
+        """
+        self.update_interval = state_dict['update_interval']
+        self.step_count = state_dict['step_count']
+        self.last_update_step = state_dict['last_update_step']
+        self.total_updates = state_dict['total_updates']
+
+    def __repr__(self) -> str:
+        """String representation for debugging."""
+        return (
+            f"TargetNetworkUpdater(interval={self.update_interval}, "
+            f"step={self.step_count}, updates={self.total_updates})"
+        )

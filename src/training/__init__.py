@@ -8,7 +8,8 @@ from .dqn_trainer import (
     compute_td_loss_components,
     compute_dqn_loss,
     configure_optimizer,
-    clip_gradients
+    clip_gradients,
+    TargetNetworkUpdater
 )
 
 __all__ = [
@@ -19,5 +20,6 @@ __all__ = [
     'compute_td_loss_components',
     'compute_dqn_loss',
     'configure_optimizer',
-    'clip_gradients'
+    'clip_gradients',
+    'TargetNetworkUpdater'
 ]

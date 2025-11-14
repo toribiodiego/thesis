@@ -160,8 +160,8 @@ TD target: *y = r + γ(1−done)×maxₐ′ Q_target(s′,a′)*. MSE or Huber l
     - [X] feat: Add MSE/Huber loss with TD-error metrics
 - [X] Configure optimizer and hyperparameters: RMSProp (ρ=0.95, ε=1e-2) or Adam via config; LR `2.5e-4`, γ `0.99`, batch size `32`; apply global-norm gradient clipping (e.g., `10.0`) right before `optimizer.step()`.
     - [X] build: Add optimizer setup and global-norm gradient clipping
-- [ ] Implement periodic target updates: call `hard_update_target()` every `C` environment steps (default `10_000`); track env step counter and log each sync step.
-    - [ ] feat: Add step-scheduled hard target sync with logging
+- [X] Implement periodic target updates: call `hard_update_target()` every `C` environment steps (default `10_000`); track env step counter and log each sync step.
+    - [X] feat: Add step-scheduled hard target sync with logging
 - [ ] Document that the target network is a 2015 stability improvement (not present in the 2013 paper) and expose a config flag/notes on how to disable it for purist reproductions.
     - [ ] docs: Add roadmap/config comments describing how to run without a target network
 - [ ] Schedule training frequency: perform one optimization step every `k=4` environment steps after replay warm-up; skip updates if `can_sample` is false; support configurable `train_every`.

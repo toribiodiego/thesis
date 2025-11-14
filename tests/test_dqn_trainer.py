@@ -11,6 +11,7 @@ Verifies:
 - Loss computation (MSE and Huber)
 - Optimizer configuration (RMSProp and Adam)
 - Gradient clipping
+- Target network update scheduling
 """
 
 import torch
@@ -24,7 +25,8 @@ from src.training import (
     compute_td_loss_components,
     compute_dqn_loss,
     configure_optimizer,
-    clip_gradients
+    clip_gradients,
+    TargetNetworkUpdater
 )
 
 
@@ -1103,6 +1105,284 @@ def test_clip_gradients_monitoring():
         assert not torch.isinf(torch.tensor(norm))
 
 
+# ============================================================================
+# Target Network Update Scheduler Tests
+# ============================================================================
+
+def test_target_network_updater_initialization():
+    """Test TargetNetworkUpdater initialization."""
+    updater = TargetNetworkUpdater(update_interval=10000)
+
+    assert updater.update_interval == 10000
+    assert updater.step_count == 0
+    assert updater.last_update_step == 0
+    assert updater.total_updates == 0
+
+
+def test_target_network_updater_invalid_interval():
+    """Test that invalid interval raises error."""
+    with pytest.raises(ValueError, match="must be positive"):
+        TargetNetworkUpdater(update_interval=0)
+
+    with pytest.raises(ValueError, match="must be positive"):
+        TargetNetworkUpdater(update_interval=-100)
+
+
+def test_target_network_updater_should_update():
+    """Test should_update logic at exact multiples."""
+    updater = TargetNetworkUpdater(update_interval=1000)
+
+    # Should not update at step 0
+    assert not updater.should_update(0)
+
+    # Should not update before interval
+    assert not updater.should_update(500)
+    assert not updater.should_update(999)
+
+    # Should update at exact multiples
+    assert updater.should_update(1000)
+    assert updater.should_update(2000)
+    assert updater.should_update(3000)
+    assert updater.should_update(10000)
+
+    # Should not update between multiples
+    assert not updater.should_update(1001)
+    assert not updater.should_update(1500)
+
+
+def test_target_network_updater_update():
+    """Test update performs hard copy and updates counters."""
+    online_net = DQN(num_actions=6)
+    target_net = DQN(num_actions=6)
+
+    # Make networks different
+    with torch.no_grad():
+        for p in online_net.parameters():
+            p.fill_(1.0)
+        for p in target_net.parameters():
+            p.fill_(0.0)
+
+    updater = TargetNetworkUpdater(update_interval=10000)
+
+    # Perform update
+    info = updater.update(online_net, target_net, current_step=10000)
+
+    # Check networks are now identical
+    for p_online, p_target in zip(online_net.parameters(), target_net.parameters()):
+        assert torch.allclose(p_online, p_target)
+
+    # Check info dict
+    assert info['step'] == 10000
+    assert info['total_updates'] == 1
+    assert info['steps_since_last'] == 10000
+
+    # Check internal state
+    assert updater.step_count == 10000
+    assert updater.last_update_step == 10000
+    assert updater.total_updates == 1
+
+
+def test_target_network_updater_multiple_updates():
+    """Test multiple updates at correct intervals."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    updater = TargetNetworkUpdater(update_interval=1000)
+
+    # Simulate training loop
+    for step in range(1, 5001):
+        if updater.should_update(step):
+            info = updater.update(online_net, target_net, current_step=step)
+
+            # Verify update occurred at correct step
+            assert step % 1000 == 0
+            assert info['step'] == step
+
+    # Should have updated 5 times (at 1000, 2000, 3000, 4000, 5000)
+    assert updater.total_updates == 5
+    assert updater.last_update_step == 5000
+
+
+def test_target_network_updater_step_method():
+    """Test convenience step() method."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    updater = TargetNetworkUpdater(update_interval=100)
+
+    # Should return None when no update
+    result = updater.step(online_net, target_net, current_step=50)
+    assert result is None
+
+    # Should return info dict when update occurs
+    result = updater.step(online_net, target_net, current_step=100)
+    assert result is not None
+    assert result['step'] == 100
+    assert result['total_updates'] == 1
+
+
+def test_target_network_updater_no_duplicate_updates():
+    """Test that calling update multiple times at same step doesn't duplicate."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    updater = TargetNetworkUpdater(update_interval=1000)
+
+    # First call at step 1000
+    assert updater.should_update(1000)
+    updater.update(online_net, target_net, current_step=1000)
+
+    # Second call at step 1000 should not trigger update
+    assert not updater.should_update(1000)
+
+    assert updater.total_updates == 1
+
+
+def test_target_network_updater_reset():
+    """Test reset() clears all counters."""
+    updater = TargetNetworkUpdater(update_interval=1000)
+
+    # Set some state
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    updater.update(online_net, target_net, current_step=1000)
+    updater.update(online_net, target_net, current_step=2000)
+
+    assert updater.total_updates == 2
+
+    # Reset
+    updater.reset()
+
+    assert updater.step_count == 0
+    assert updater.last_update_step == 0
+    assert updater.total_updates == 0
+
+
+def test_target_network_updater_state_dict():
+    """Test state_dict() for checkpointing."""
+    updater = TargetNetworkUpdater(update_interval=5000)
+
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+
+    # Perform some updates
+    updater.update(online_net, target_net, current_step=5000)
+    updater.update(online_net, target_net, current_step=10000)
+
+    # Get state dict
+    state = updater.state_dict()
+
+    assert state['update_interval'] == 5000
+    assert state['step_count'] == 10000
+    assert state['last_update_step'] == 10000
+    assert state['total_updates'] == 2
+
+
+def test_target_network_updater_load_state_dict():
+    """Test load_state_dict() for checkpoint restoration."""
+    updater1 = TargetNetworkUpdater(update_interval=5000)
+
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+
+    # Perform some updates
+    updater1.update(online_net, target_net, current_step=5000)
+    updater1.update(online_net, target_net, current_step=10000)
+
+    # Save state
+    state = updater1.state_dict()
+
+    # Create new updater and load state
+    updater2 = TargetNetworkUpdater(update_interval=1000)  # Different interval
+    updater2.load_state_dict(state)
+
+    # Should match original state
+    assert updater2.update_interval == 5000
+    assert updater2.step_count == 10000
+    assert updater2.last_update_step == 10000
+    assert updater2.total_updates == 2
+
+
+def test_target_network_updater_exact_multiples():
+    """Test updates occur at exact multiples of interval."""
+    updater = TargetNetworkUpdater(update_interval=10000)
+
+    # Track which steps trigger updates
+    update_steps = []
+    for step in range(1, 50001):
+        if updater.should_update(step):
+            update_steps.append(step)
+            # Mark as updated
+            updater.last_update_step = step
+            updater.total_updates += 1
+
+    # Should update at: 10000, 20000, 30000, 40000, 50000
+    expected_steps = [10000, 20000, 30000, 40000, 50000]
+    assert update_steps == expected_steps
+
+
+def test_target_network_updater_repr():
+    """Test string representation."""
+    updater = TargetNetworkUpdater(update_interval=10000)
+
+    repr_str = repr(updater)
+    assert "TargetNetworkUpdater" in repr_str
+    assert "interval=10000" in repr_str
+    assert "step=0" in repr_str
+    assert "updates=0" in repr_str
+
+
+def test_target_network_updater_integration():
+    """Test full integration in training-like loop."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    updater = TargetNetworkUpdater(update_interval=1000)
+
+    # Track updates
+    update_log = []
+
+    # Simulate 5000 training steps
+    for step in range(1, 5001):
+        # Check and update
+        info = updater.step(online_net, target_net, current_step=step)
+
+        if info:
+            update_log.append(info)
+
+    # Should have 5 updates
+    assert len(update_log) == 5
+
+    # Verify each update
+    for i, info in enumerate(update_log):
+        expected_step = (i + 1) * 1000
+        assert info['step'] == expected_step
+        assert info['total_updates'] == i + 1
+
+
+def test_target_network_updater_parameters_actually_copied():
+    """Test that parameters are actually copied during update."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    updater = TargetNetworkUpdater(update_interval=1000)
+
+    # Get initial target params
+    initial_target_param = list(target_net.parameters())[0].clone()
+
+    # Modify online network
+    with torch.no_grad():
+        for p in online_net.parameters():
+            p.add_(0.1)
+
+    # Online should differ from target
+    current_online_param = list(online_net.parameters())[0]
+    assert not torch.allclose(current_online_param, initial_target_param)
+
+    # Update target
+    updater.update(online_net, target_net, current_step=1000)
+
+    # Target should now match online
+    updated_target_param = list(target_net.parameters())[0]
+    assert torch.allclose(current_online_param, updated_target_param)
+    assert not torch.allclose(initial_target_param, updated_target_param)
+
+
 if __name__ == "__main__":
     # Run tests manually
     print("Running DQN trainer tests...")
@@ -1262,5 +1542,49 @@ if __name__ == "__main__":
 
     test_clip_gradients_monitoring()
     print("✓ Clip gradients monitoring test passed")
+
+    # Target network update scheduler tests
+    print("\nTarget Network Update Scheduler Tests:")
+    test_target_network_updater_initialization()
+    print("✓ Target network updater initialization test passed")
+
+    test_target_network_updater_invalid_interval()
+    print("✓ Target network updater invalid interval test passed")
+
+    test_target_network_updater_should_update()
+    print("✓ Target network updater should_update test passed")
+
+    test_target_network_updater_update()
+    print("✓ Target network updater update test passed")
+
+    test_target_network_updater_multiple_updates()
+    print("✓ Target network updater multiple updates test passed")
+
+    test_target_network_updater_step_method()
+    print("✓ Target network updater step method test passed")
+
+    test_target_network_updater_no_duplicate_updates()
+    print("✓ Target network updater no duplicate updates test passed")
+
+    test_target_network_updater_reset()
+    print("✓ Target network updater reset test passed")
+
+    test_target_network_updater_state_dict()
+    print("✓ Target network updater state_dict test passed")
+
+    test_target_network_updater_load_state_dict()
+    print("✓ Target network updater load_state_dict test passed")
+
+    test_target_network_updater_exact_multiples()
+    print("✓ Target network updater exact multiples test passed")
+
+    test_target_network_updater_repr()
+    print("✓ Target network updater repr test passed")
+
+    test_target_network_updater_integration()
+    print("✓ Target network updater integration test passed")
+
+    test_target_network_updater_parameters_actually_copied()
+    print("✓ Target network updater parameters actually copied test passed")
 
     print("\nAll tests passed! ✓")
