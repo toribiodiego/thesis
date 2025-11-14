@@ -739,15 +739,25 @@ class MetricsLogger:
         if self.csv is None:
             return
 
-        # Collect CSV files
+        # Collect CSV files with size check
         csv_files = []
+        total_size_mb = 0.0
+
         if self.csv.step_csv_path.exists():
             csv_files.append(str(self.csv.step_csv_path))
+            total_size_mb += self.csv.step_csv_path.stat().st_size / (1024 * 1024)
+
         if self.csv.episode_csv_path.exists():
             csv_files.append(str(self.csv.episode_csv_path))
+            total_size_mb += self.csv.episode_csv_path.stat().st_size / (1024 * 1024)
 
         if not csv_files:
             return
+
+        # Warn if uploading large files
+        if total_size_mb > 100.0:
+            print(f"Warning: Uploading large artifact ({total_size_mb:.1f} MB). "
+                  f"This may take some time.")
 
         # Create artifact name with step
         artifact_name = f"training_logs_step_{step}"

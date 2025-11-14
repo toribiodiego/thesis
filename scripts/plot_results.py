@@ -150,18 +150,62 @@ def upload_plots_to_wandb(
 # Data Loading
 # ============================================================================
 
-def load_csv_data(csv_path: Path) -> Dict[str, np.ndarray]:
+def downsample_data(
+    data: Dict[str, np.ndarray],
+    max_points: int = 10000
+) -> Dict[str, np.ndarray]:
     """
-    Load data from CSV file.
+    Downsample data to reduce memory usage and plotting time.
+
+    Uses uniform sampling to preserve data distribution while
+    reducing number of points.
+
+    Args:
+        data: Dictionary of column name -> array
+        max_points: Maximum number of points to keep
+
+    Returns:
+        Downsampled data dictionary
+    """
+    # Check if downsampling needed
+    num_points = len(next(iter(data.values())))
+    if num_points <= max_points:
+        return data
+
+    # Compute sampling indices
+    indices = np.linspace(0, num_points - 1, max_points, dtype=int)
+
+    # Downsample all arrays
+    downsampled = {}
+    for key, arr in data.items():
+        downsampled[key] = arr[indices]
+
+    print(f"Downsampled {num_points} points to {max_points} points")
+    return downsampled
+
+
+def load_csv_data(
+    csv_path: Path,
+    warn_size_mb: float = 50.0
+) -> Dict[str, np.ndarray]:
+    """
+    Load data from CSV file with optional size warning.
 
     Args:
         csv_path: Path to CSV file
+        warn_size_mb: Warn if file exceeds this size (MB)
 
     Returns:
         dict: Column name -> numpy array
     """
     if not csv_path.exists():
         raise FileNotFoundError(f"CSV file not found: {csv_path}")
+
+    # Check file size and warn if large
+    file_size_mb = csv_path.stat().st_size / (1024 * 1024)
+    if file_size_mb > warn_size_mb:
+        print(f"Warning: Large CSV file ({file_size_mb:.1f} MB). "
+              f"Consider using --downsample for faster plotting.")
 
     data = {}
     with open(csv_path, 'r') as f:
@@ -872,6 +916,21 @@ Examples:
         help='Disable smoothing (plot raw data only)'
     )
 
+    # Performance options
+    perf_group = parser.add_argument_group('Performance Options')
+    perf_group.add_argument(
+        '--downsample',
+        type=int,
+        metavar='MAX_POINTS',
+        help='Downsample data to MAX_POINTS for faster plotting (e.g., 10000)'
+    )
+    perf_group.add_argument(
+        '--warn-size-mb',
+        type=float,
+        default=50.0,
+        help='Warn if CSV file exceeds this size in MB (default: 50.0)'
+    )
+
     args = parser.parse_args()
 
     # Validate inputs
@@ -905,26 +964,35 @@ Examples:
         steps_csv = artifact_dir / 'training_steps.csv'
 
         if episodes_csv.exists():
-            episodes_data = load_csv_data(episodes_csv)
+            episodes_data = load_csv_data(episodes_csv, warn_size_mb=args.warn_size_mb)
             print(f"Loaded episodes data: {episodes_csv}")
 
         if steps_csv.exists():
-            steps_data = load_csv_data(steps_csv)
+            steps_data = load_csv_data(steps_csv, warn_size_mb=args.warn_size_mb)
             print(f"Loaded steps data: {steps_csv}")
 
     else:
         # Load from local CSV files
         if args.episodes:
-            episodes_data = load_csv_data(args.episodes)
+            episodes_data = load_csv_data(args.episodes, warn_size_mb=args.warn_size_mb)
             print(f"Loaded episodes data: {args.episodes}")
 
         if args.steps:
-            steps_data = load_csv_data(args.steps)
+            steps_data = load_csv_data(args.steps, warn_size_mb=args.warn_size_mb)
             print(f"Loaded steps data: {args.steps}")
 
         if args.eval:
-            eval_data = load_csv_data(args.eval)
+            eval_data = load_csv_data(args.eval, warn_size_mb=args.warn_size_mb)
             print(f"Loaded evaluation data: {args.eval}")
+
+    # Apply downsampling if requested
+    if args.downsample:
+        if episodes_data:
+            episodes_data = downsample_data(episodes_data, max_points=args.downsample)
+        if steps_data:
+            steps_data = downsample_data(steps_data, max_points=args.downsample)
+        if eval_data:
+            eval_data = downsample_data(eval_data, max_points=args.downsample)
 
     # Set smoothing window
     smoothing_window = 1 if args.no_smoothing else args.smoothing
