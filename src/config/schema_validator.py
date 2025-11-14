@@ -91,11 +91,14 @@ KNOWN_STRUCTURE = {
     },
     "logging": {
         "base_dir", "log_every_steps", "log_every_episodes",
-        "checkpoint", "step_metrics", "episode_metrics", "reference_q", "wandb"
+        "checkpoint", "step_metrics", "episode_metrics", "reference_q",
+        "wandb", "tensorboard", "csv"
     },
     "logging.checkpoint": {"enabled", "save_every", "keep_last_n", "save_best"},
     "logging.reference_q": {"enabled", "num_states", "log_every"},
-    "logging.wandb": {"enabled", "project", "entity", "tags"},
+    "logging.wandb": {"enabled", "project", "entity", "tags", "upload_artifacts", "artifact_upload_interval"},
+    "logging.tensorboard": {"enabled", "flush_interval"},
+    "logging.csv": {"enabled", "smoothing_window"},
     "seed": {"value", "save_rng_states"},
     "system": {"num_workers", "empty_cache_every", "progress_bar", "verbose"},
 }

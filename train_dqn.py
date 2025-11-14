@@ -28,7 +28,7 @@ from omegaconf import OmegaConf
 
 from src.config.cli import main
 from src.config.run_manager import setup_run_directory, print_run_info
-from src.envs import create_atari_env
+from src.envs import make_atari_env
 from src.models import DQN
 from src.replay import ReplayBuffer
 from src.training import (
@@ -72,30 +72,34 @@ def setup_device(config):
 def initialize_components(config, paths, device, resuming=False):
     """Initialize all training components."""
     # Create environment
-    env = create_atari_env(
+    env = make_atari_env(
         env_id=config.environment.env_id,
-        frame_stack=config.environment.preprocessing.frame_stack,
+        num_stack=config.environment.preprocessing.frame_stack,
         frame_skip=config.environment.action_repeat,
         noop_max=config.environment.episode.noop_max,
-        episodic_life=config.environment.episode.episodic_life,
-        clip_rewards=config.environment.preprocessing.clip_rewards,
-        fire_on_reset=config.environment.episode.fire_on_reset,
-        seed=config.seed.value
+        episode_life=config.environment.episode.episodic_life,
+        clip_rewards=config.environment.preprocessing.clip_rewards
     )
+
+    # Set seed
+    if config.seed.value is not None:
+        env.reset(seed=config.seed.value)
 
     num_actions = env.action_space.n
 
     # Create evaluation environment (no episodic life, for true episode returns)
-    eval_env = create_atari_env(
+    eval_env = make_atari_env(
         env_id=config.environment.env_id,
-        frame_stack=config.environment.preprocessing.frame_stack,
+        num_stack=config.environment.preprocessing.frame_stack,
         frame_skip=config.environment.action_repeat,
         noop_max=config.environment.episode.noop_max,
-        episodic_life=False,  # Full episodes for evaluation
-        clip_rewards=config.environment.preprocessing.clip_rewards,
-        fire_on_reset=config.environment.episode.fire_on_reset,
-        seed=config.seed.value + 1000  # Different seed for eval
+        episode_life=False,  # Full episodes for evaluation
+        clip_rewards=config.environment.preprocessing.clip_rewards
     )
+
+    # Set different seed for eval
+    if config.seed.value is not None:
+        eval_env.reset(seed=config.seed.value + 1000)
 
     # Create networks
     online_net = DQN(num_actions=num_actions).to(device)
@@ -105,20 +109,18 @@ def initialize_components(config, paths, device, resuming=False):
     optimizer = configure_optimizer(
         network=online_net,
         optimizer_type=config.training.optimizer.type,
-        lr=config.training.optimizer.lr,
-        rmsprop_alpha=config.training.optimizer.rmsprop.alpha,
-        rmsprop_eps=config.training.optimizer.rmsprop.eps,
-        rmsprop_momentum=config.training.optimizer.rmsprop.momentum,
-        adam_betas=tuple(config.training.optimizer.adam.betas),
-        adam_eps=config.training.optimizer.adam.eps
+        learning_rate=config.training.optimizer.lr,
+        alpha=config.training.optimizer.rmsprop.alpha,
+        eps=config.training.optimizer.rmsprop.eps,
+        momentum=config.training.optimizer.rmsprop.momentum
     )
 
     # Create replay buffer
     replay_buffer = ReplayBuffer(
         capacity=config.replay.capacity,
         obs_shape=(config.environment.preprocessing.frame_stack, 84, 84),
-        batch_size=config.replay.batch_size,
-        device=device
+        min_size=config.replay.min_size,
+        device=str(device) if device is not None else None
     )
 
     # Create schedulers
@@ -405,10 +407,13 @@ def run_training(config, paths, device):
 
 if __name__ == '__main__':
     # Load and validate configuration
-    config = main()
+    config_dict = main()
+
+    # Convert to OmegaConf for easier access
+    config = OmegaConf.create(config_dict)
 
     # Setup run directory and save config/metadata
-    paths = setup_run_directory(config)
+    paths = setup_run_directory(config_dict)
     print_run_info(paths)
 
     # Setup device
