@@ -12,11 +12,13 @@ Verifies:
 - Optimizer configuration (RMSProp and Adam)
 - Gradient clipping
 - Target network update scheduling
+- Training frequency scheduling with warm-up
 """
 
 import torch
 import pytest
 from src.models import DQN
+from src.memory import ReplayBuffer
 from src.training import (
     hard_update_target,
     init_target_network,
@@ -26,7 +28,8 @@ from src.training import (
     compute_dqn_loss,
     configure_optimizer,
     clip_gradients,
-    TargetNetworkUpdater
+    TargetNetworkUpdater,
+    TrainingScheduler
 )
 
 
@@ -1383,6 +1386,244 @@ def test_target_network_updater_parameters_actually_copied():
     assert not torch.allclose(initial_target_param, updated_target_param)
 
 
+# ============================================================================
+# Training Scheduler Tests
+# ============================================================================
+
+def test_training_scheduler_initialization():
+    """Test TrainingScheduler initialization."""
+    scheduler = TrainingScheduler(train_every=4)
+
+    assert scheduler.train_every == 4
+    assert scheduler.env_step_count == 0
+    assert scheduler.training_step_count == 0
+    assert scheduler.last_train_step == 0
+
+
+def test_training_scheduler_invalid_train_every():
+    """Test that invalid train_every raises error."""
+    with pytest.raises(ValueError, match="must be positive"):
+        TrainingScheduler(train_every=0)
+
+    with pytest.raises(ValueError, match="must be positive"):
+        TrainingScheduler(train_every=-1)
+
+
+def test_training_scheduler_warm_up_gating():
+    """Test that training is gated by replay buffer warm-up."""
+    buffer = ReplayBuffer(capacity=1000, batch_size=32, min_size=100)
+    scheduler = TrainingScheduler(train_every=4)
+
+    # Before warm-up: should not train even at multiples of train_every
+    assert not scheduler.should_train(4, buffer)
+    assert not scheduler.should_train(8, buffer)
+    assert not scheduler.should_train(12, buffer)
+
+    # Fill buffer past min_size
+    for _ in range(150):
+        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8)
+        buffer.add(state, action=0, reward=0.0, done=False)
+
+    # After warm-up: should train at multiples
+    assert buffer.can_sample()
+    assert scheduler.should_train(4, buffer)
+
+
+def test_training_scheduler_train_every_multiples():
+    """Test training occurs at exact multiples of train_every."""
+    buffer = ReplayBuffer(capacity=1000, batch_size=32, min_size=50)
+    scheduler = TrainingScheduler(train_every=4)
+
+    # Fill buffer
+    for _ in range(100):
+        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8)
+        buffer.add(state, action=0, reward=0.0, done=False)
+
+    # Check multiples
+    assert not scheduler.should_train(0, buffer)  # Step 0
+    assert not scheduler.should_train(1, buffer)
+    assert not scheduler.should_train(2, buffer)
+    assert not scheduler.should_train(3, buffer)
+    assert scheduler.should_train(4, buffer)  # Multiple of 4
+    assert not scheduler.should_train(5, buffer)
+    assert not scheduler.should_train(6, buffer)
+    assert not scheduler.should_train(7, buffer)
+    assert scheduler.should_train(8, buffer)  # Multiple of 4
+
+
+def test_training_scheduler_mark_trained():
+    """Test mark_trained updates counters."""
+    buffer = ReplayBuffer(capacity=1000, batch_size=32, min_size=50)
+    scheduler = TrainingScheduler(train_every=4)
+
+    # Fill buffer
+    for _ in range(100):
+        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8)
+        buffer.add(state, action=0, reward=0.0, done=False)
+
+    # Mark trained
+    scheduler.mark_trained(env_step=4)
+
+    assert scheduler.env_step_count == 4
+    assert scheduler.last_train_step == 4
+    assert scheduler.training_step_count == 1
+
+    # Mark again
+    scheduler.mark_trained(env_step=8)
+
+    assert scheduler.env_step_count == 8
+    assert scheduler.last_train_step == 8
+    assert scheduler.training_step_count == 2
+
+
+def test_training_scheduler_no_duplicate_training():
+    """Test that training at same step doesn't happen twice."""
+    buffer = ReplayBuffer(capacity=1000, batch_size=32, min_size=50)
+    scheduler = TrainingScheduler(train_every=4)
+
+    # Fill buffer
+    for _ in range(100):
+        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8)
+        buffer.add(state, action=0, reward=0.0, done=False)
+
+    # First call at step 4
+    assert scheduler.should_train(4, buffer)
+    scheduler.mark_trained(4)
+
+    # Second call at step 4 should not train
+    assert not scheduler.should_train(4, buffer)
+
+
+def test_training_scheduler_step_method():
+    """Test convenience step() method."""
+    buffer = ReplayBuffer(capacity=1000, batch_size=32, min_size=50)
+    scheduler = TrainingScheduler(train_every=4)
+
+    # Fill buffer
+    for _ in range(100):
+        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8)
+        buffer.add(state, action=0, reward=0.0, done=False)
+
+    # Should return False when not time to train
+    result = scheduler.step(2, buffer)
+    assert result is False
+    assert scheduler.training_step_count == 0
+
+    # Should return True and update counters when time to train
+    result = scheduler.step(4, buffer)
+    assert result is True
+    assert scheduler.training_step_count == 1
+    assert scheduler.last_train_step == 4
+
+
+def test_training_scheduler_reset():
+    """Test reset() clears all counters."""
+    buffer = ReplayBuffer(capacity=1000, batch_size=32, min_size=50)
+    scheduler = TrainingScheduler(train_every=4)
+
+    # Fill buffer and train
+    for _ in range(100):
+        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8)
+        buffer.add(state, action=0, reward=0.0, done=False)
+
+    scheduler.mark_trained(4)
+    scheduler.mark_trained(8)
+
+    assert scheduler.training_step_count == 2
+
+    # Reset
+    scheduler.reset()
+
+    assert scheduler.env_step_count == 0
+    assert scheduler.training_step_count == 0
+    assert scheduler.last_train_step == 0
+
+
+def test_training_scheduler_state_dict():
+    """Test state_dict() for checkpointing."""
+    scheduler = TrainingScheduler(train_every=4)
+    scheduler.mark_trained(12)
+    scheduler.mark_trained(16)
+
+    state = scheduler.state_dict()
+
+    assert state['train_every'] == 4
+    assert state['env_step_count'] == 16
+    assert state['training_step_count'] == 2
+    assert state['last_train_step'] == 16
+
+
+def test_training_scheduler_load_state_dict():
+    """Test load_state_dict() for checkpoint restoration."""
+    scheduler1 = TrainingScheduler(train_every=4)
+    scheduler1.mark_trained(8)
+    scheduler1.mark_trained(12)
+
+    state = scheduler1.state_dict()
+
+    # Create new scheduler and load
+    scheduler2 = TrainingScheduler(train_every=1)  # Different value
+    scheduler2.load_state_dict(state)
+
+    assert scheduler2.train_every == 4
+    assert scheduler2.env_step_count == 12
+    assert scheduler2.training_step_count == 2
+    assert scheduler2.last_train_step == 12
+
+
+def test_training_scheduler_integration():
+    """Test full integration in training-like loop."""
+    buffer = ReplayBuffer(capacity=1000, batch_size=32, min_size=50)
+    scheduler = TrainingScheduler(train_every=4)
+
+    # Fill buffer
+    for i in range(100):
+        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8)
+        buffer.add(state, action=0, reward=0.0, done=False)
+
+    # Simulate training loop
+    training_steps = []
+    for env_step in range(1, 41):
+        if scheduler.step(env_step, buffer):
+            training_steps.append(env_step)
+
+    # Should train at: 4, 8, 12, 16, 20, 24, 28, 32, 36, 40
+    expected_steps = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40]
+    assert training_steps == expected_steps
+    assert scheduler.training_step_count == 10
+
+
+def test_training_scheduler_different_intervals():
+    """Test scheduler with different train_every values."""
+    buffer = ReplayBuffer(capacity=1000, batch_size=32, min_size=50)
+
+    # Fill buffer
+    for _ in range(100):
+        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8)
+        buffer.add(state, action=0, reward=0.0, done=False)
+
+    # Test train_every=1
+    scheduler1 = TrainingScheduler(train_every=1)
+    count1 = sum(1 for step in range(1, 11) if scheduler1.step(step, buffer))
+    assert count1 == 10  # Every step
+
+    # Test train_every=8
+    scheduler8 = TrainingScheduler(train_every=8)
+    count8 = sum(1 for step in range(1, 25) if scheduler8.step(step, buffer))
+    assert count8 == 3  # Steps 8, 16, 24
+
+
+def test_training_scheduler_repr():
+    """Test string representation."""
+    scheduler = TrainingScheduler(train_every=4)
+
+    repr_str = repr(scheduler)
+    assert "TrainingScheduler" in repr_str
+    assert "train_every=4" in repr_str
+    assert "env_step=0" in repr_str
+    assert "training_steps=0" in repr_str
+
+
 if __name__ == "__main__":
     # Run tests manually
     print("Running DQN trainer tests...")
@@ -1586,5 +1827,46 @@ if __name__ == "__main__":
 
     test_target_network_updater_parameters_actually_copied()
     print("✓ Target network updater parameters actually copied test passed")
+
+    # Training scheduler tests
+    print("\nTraining Scheduler Tests:")
+    test_training_scheduler_initialization()
+    print("✓ Training scheduler initialization test passed")
+
+    test_training_scheduler_invalid_train_every()
+    print("✓ Training scheduler invalid train_every test passed")
+
+    test_training_scheduler_warm_up_gating()
+    print("✓ Training scheduler warm-up gating test passed")
+
+    test_training_scheduler_train_every_multiples()
+    print("✓ Training scheduler train_every multiples test passed")
+
+    test_training_scheduler_mark_trained()
+    print("✓ Training scheduler mark_trained test passed")
+
+    test_training_scheduler_no_duplicate_training()
+    print("✓ Training scheduler no duplicate training test passed")
+
+    test_training_scheduler_step_method()
+    print("✓ Training scheduler step method test passed")
+
+    test_training_scheduler_reset()
+    print("✓ Training scheduler reset test passed")
+
+    test_training_scheduler_state_dict()
+    print("✓ Training scheduler state_dict test passed")
+
+    test_training_scheduler_load_state_dict()
+    print("✓ Training scheduler load_state_dict test passed")
+
+    test_training_scheduler_integration()
+    print("✓ Training scheduler integration test passed")
+
+    test_training_scheduler_different_intervals()
+    print("✓ Training scheduler different intervals test passed")
+
+    test_training_scheduler_repr()
+    print("✓ Training scheduler repr test passed")
 
     print("\nAll tests passed! ✓")

@@ -167,8 +167,8 @@ The target network is a 2015 Nature paper improvement (Mnih et al.). The origina
     - [X] feat: Add step-scheduled hard target sync with logging
 - [X] Document that the target network is a 2015 stability improvement (not present in the 2013 paper) and expose a config flag/notes on how to disable it for purist reproductions.
     - [X] docs: Add roadmap/config comments describing how to run without a target network
-- [ ] Schedule training frequency: perform one optimization step every `k=4` environment steps after replay warm-up; skip updates if `can_sample` is false; support configurable `train_every`.
-    - [ ] feat: Add train-every-k update scheduler with warm-up gating
+- [X] Schedule training frequency: perform one optimization step every `k=4` environment steps after replay warm-up; skip updates if `can_sample` is false; support configurable `train_every`.
+    - [X] feat: Add train-every-k update scheduler with warm-up gating
 - [ ] Add stability checks: unit test on a synthetic batch to confirm loss decreases over several updates; assert target updates occur at exact multiples of `C`; detect and warn on NaNs/Infs; log grad norm and LR per update.
     - [ ] test: Add toy-batch loss decrease and target-sync schedule tests
 - [ ] Minimal metrics logging from the update step: loss, mean |TD error|, grad norm, learning rate, and update count for downstream plotting.

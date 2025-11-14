@@ -657,3 +657,183 @@ class TargetNetworkUpdater:
             f"TargetNetworkUpdater(interval={self.update_interval}, "
             f"step={self.step_count}, updates={self.total_updates})"
         )
+
+
+class TrainingScheduler:
+    """
+    Scheduler for training frequency with replay buffer warm-up.
+
+    Controls when optimization steps should be performed based on:
+    - Replay buffer warm-up (sufficient samples available)
+    - Training frequency (perform updates every k environment steps)
+
+    Attributes:
+        train_every: Number of environment steps between training updates
+        env_step_count: Current environment step counter
+        training_step_count: Number of training updates performed
+        last_train_step: Environment step at which last training occurred
+
+    Example:
+        >>> from src.memory import ReplayBuffer
+        >>> buffer = ReplayBuffer(capacity=100000, batch_size=32)
+        >>> scheduler = TrainingScheduler(train_every=4)
+        >>>
+        >>> # Training loop
+        >>> for env_step in range(100000):
+        ...     # Interact with environment, store in buffer
+        ...     # ...
+        ...     if scheduler.should_train(env_step, buffer):
+        ...         batch = buffer.sample()
+        ...         # Perform training update
+        ...         scheduler.mark_trained(env_step)
+    """
+
+    def __init__(self, train_every: int = 4):
+        """
+        Initialize training scheduler.
+
+        Args:
+            train_every: Number of environment steps between training updates (default: 4)
+
+        Notes:
+            - DQN paper uses train_every=4 (one update per 4 environment steps)
+            - Smaller values: More frequent updates, slower but more sample efficient
+            - Larger values: Faster environment interaction, less sample efficient
+            - Training only occurs after replay buffer warm-up (can_sample=True)
+
+        Configuration Examples:
+            - Standard DQN: train_every=4 (default)
+            - More frequent updates: train_every=1 (every step)
+            - Less frequent updates: train_every=8 or train_every=16
+        """
+        if train_every <= 0:
+            raise ValueError(f"train_every must be positive, got {train_every}")
+
+        self.train_every = train_every
+        self.env_step_count = 0
+        self.training_step_count = 0
+        self.last_train_step = 0
+
+    def should_train(self, env_step: int, replay_buffer) -> bool:
+        """
+        Check if training update should be performed.
+
+        Args:
+            env_step: Current environment step count
+            replay_buffer: Replay buffer with can_sample() method
+
+        Returns:
+            True if should train, False otherwise
+
+        Notes:
+            - Returns False if replay buffer cannot sample (warm-up not complete)
+            - Returns True if env_step is multiple of train_every AND buffer ready
+            - First training occurs at step train_every (not step 0)
+
+        Example:
+            >>> if scheduler.should_train(env_step, buffer):
+            ...     # Perform training update
+            ...     batch = buffer.sample()
+        """
+        # Check if replay buffer has enough samples
+        if not replay_buffer.can_sample():
+            return False
+
+        # Check if it's time to train (every k steps)
+        if env_step > 0 and env_step % self.train_every == 0:
+            # Only train if we haven't already trained at this step
+            return env_step != self.last_train_step
+
+        return False
+
+    def mark_trained(self, env_step: int):
+        """
+        Mark that training occurred at this environment step.
+
+        Updates internal counters to track training progress.
+
+        Args:
+            env_step: Environment step at which training occurred
+
+        Example:
+            >>> if scheduler.should_train(env_step, buffer):
+            ...     # ... perform training ...
+            ...     scheduler.mark_trained(env_step)
+        """
+        self.env_step_count = env_step
+        self.last_train_step = env_step
+        self.training_step_count += 1
+
+    def step(self, env_step: int, replay_buffer) -> bool:
+        """
+        Convenience method to check and mark training in one call.
+
+        Args:
+            env_step: Current environment step
+            replay_buffer: Replay buffer with can_sample() method
+
+        Returns:
+            True if should train, False otherwise
+
+        Example:
+            >>> if scheduler.step(env_step, buffer):
+            ...     # Perform training update
+            ...     batch = buffer.sample()
+        """
+        should = self.should_train(env_step, replay_buffer)
+        if should:
+            self.mark_trained(env_step)
+        return should
+
+    def reset(self):
+        """
+        Reset all counters.
+
+        Useful for starting a new training run.
+        """
+        self.env_step_count = 0
+        self.training_step_count = 0
+        self.last_train_step = 0
+
+    def state_dict(self) -> Dict[str, int]:
+        """
+        Get state for checkpointing.
+
+        Returns:
+            Dictionary with all internal state
+
+        Example:
+            >>> checkpoint = {
+            ...     'model': model.state_dict(),
+            ...     'scheduler': scheduler.state_dict()
+            ... }
+        """
+        return {
+            'train_every': self.train_every,
+            'env_step_count': self.env_step_count,
+            'training_step_count': self.training_step_count,
+            'last_train_step': self.last_train_step
+        }
+
+    def load_state_dict(self, state_dict: Dict[str, int]):
+        """
+        Load state from checkpoint.
+
+        Args:
+            state_dict: Dictionary with state (from state_dict())
+
+        Example:
+            >>> scheduler.load_state_dict(checkpoint['scheduler'])
+        """
+        self.train_every = state_dict['train_every']
+        self.env_step_count = state_dict['env_step_count']
+        self.training_step_count = state_dict['training_step_count']
+        self.last_train_step = state_dict['last_train_step']
+
+    def __repr__(self) -> str:
+        """String representation for debugging."""
+        return (
+            f"TrainingScheduler(train_every={self.train_every}, "
+            f"env_step={self.env_step_count}, "
+            f"training_steps={self.training_step_count})"
+        )
