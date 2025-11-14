@@ -247,7 +247,24 @@ Generated in: `experiments/dqn_atari/runs/{experiment_name}_{seed}/`
 | `meta.json` | Git hash, config, seed, ALE settings |
 | `frames/reset_*_frame_*.png` | Preprocessed frame samples (4 per stack, up to 5 stacks) |
 
-### Regenerating Artifacts
+### Subtask 2 Debug Artifacts
+
+The wrapper chain validation (Subtask 2) produces debug artifacts that verify correct preprocessing behavior. These artifacts are stored in game-specific directories for easy inspection.
+
+**Location:** `experiments/dqn_atari/artifacts/frames/<game>/`
+
+Each game directory contains:
+- **Frame PNGs:** Individual frames from each preprocessing stage (reset_0_frame_0.png, reset_0_frame_1.png, etc.)
+- **Rollout logs:** Complete preprocessing metadata and reward statistics
+- **Meta files:** Configuration and environment settings used for the run
+
+**Purpose:**
+- Verify wrapper chain applies transformations correctly
+- Inspect grayscale conversion and resizing quality
+- Confirm frame stacking creates proper 4-frame sequences
+- Debug preprocessing issues before full training runs
+
+**Regenerating artifacts:**
 
 ```bash
 # Basic dry run (Pong, 3 episodes)
@@ -263,6 +280,18 @@ Generated in: `experiments/dqn_atari/runs/{experiment_name}_{seed}/`
 ./experiments/dqn_atari/scripts/run_dqn.sh \
   experiments/dqn_atari/configs/beam_rider.yaml --dry-run
 ```
+
+**When to regenerate:**
+- After modifying wrapper chain code
+- Before training a new game for the first time
+- When debugging unexpected preprocessing behavior
+- After changing frame_size, stack_size, or frameskip parameters
+
+**Expected output:** Each dry run creates a timestamped directory containing frames and logs. The frame PNGs should show:
+- Correct grayscale conversion (no color artifacts)
+- Proper 84×84 resizing (no distortion or cropping errors)
+- Sequential frames with visible motion (verifying frame stacking)
+- Consistent preprocessing across all resets
 
 ## Troubleshooting
 
