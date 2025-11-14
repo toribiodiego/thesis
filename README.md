@@ -91,6 +91,24 @@ pytest tests/test_dqn_trainer.py -k "training_step" -v
 tail -f experiments/dqn_atari/runs/pong_123/logs/episodes.csv
 ```
 
+**Config overrides** (adjust runs without editing YAML):
+
+```bash
+# Override learning rate
+python train_dqn.py --cfg experiments/dqn_atari/configs/pong.yaml --seed 7 \
+  --set training.optimizer.lr=0.001
+
+# Multiple overrides
+python train_dqn.py --cfg experiments/dqn_atari/configs/pong.yaml --seed 7 \
+  --set training.total_frames=2000000 training.gamma=0.95
+
+# Disable target network (2013 NIPS DQN)
+python train_dqn.py --cfg experiments/dqn_atari/configs/pong.yaml --seed 7 \
+  --set target_network.update_interval=null
+```
+
+See [experiments/dqn_atari/configs/README.md](experiments/dqn_atari/configs/README.md) for complete CLI reference.
+
 **What's included:**
 - [x] Complete training loop with epsilon-greedy exploration
 - [x] Structured logging (steps, episodes, evaluation, Q-values)

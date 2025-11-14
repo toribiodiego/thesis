@@ -60,6 +60,24 @@ Launch DQN training or dry-run validation with specified config.
   --seed 456 --device cuda
 ```
 
+**Config overrides** (use `--set` to adjust hyperparameters without editing YAML):
+
+```bash
+# Override learning rate
+python train_dqn.py --cfg experiments/dqn_atari/configs/pong.yaml --seed 7 \
+  --set training.optimizer.lr=0.001
+
+# Multiple overrides at once
+python train_dqn.py --cfg experiments/dqn_atari/configs/pong.yaml --seed 7 \
+  --set training.total_frames=2000000 training.gamma=0.95 replay.capacity=500000
+
+# Disable target network (2013 NIPS DQN mode)
+python train_dqn.py --cfg experiments/dqn_atari/configs/pong.yaml --seed 7 \
+  --set target_network.update_interval=null
+```
+
+See [../configs/README.md](../configs/README.md) for complete CLI reference and more examples.
+
 **Outputs:**
 - Dry run: `experiments/dqn_atari/runs/{experiment_name}_{seed}/` (frames, logs, metadata)
 - Training: `experiments/dqn_atari/runs/{experiment_name}_{seed}/` (checkpoints, logs, metrics)
