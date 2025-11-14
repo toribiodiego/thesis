@@ -271,8 +271,8 @@ Dedicated eval loop: greedy or low-ε, compute mean/median/std returns. Capture 
     - [X] chore: Persist eval summaries and per-episode details to CSV/JSONL files
 - [X] Ensure evaluation defaults follow the paper: greedy policy with `eval_epsilon=0.05`, ≥10 episodes for interim checks, and ~30 episodes for final reporting; make the episode count configurable via CLI/config.
     - [X] docs: State the ε=0.05 convention and recommended episode counts in the evaluation harness docs/config comments
-- [ ] Document the evaluation harness in `docs/design/eval_harness.md`: describe loop structure, metric definitions, video capture settings, scheduling triggers, output file schemas, and debugging steps for desyncs or video corruption.
-    - [ ] docs: Include CLI examples for manual eval runs and instructions for re-rendering videos/metrics.
+- [X] Document the evaluation harness in `docs/design/eval_harness.md`: describe loop structure, metric definitions, video capture settings, scheduling triggers, output file schemas, and debugging steps for desyncs or video corruption.
+    - [X] docs: Include CLI examples for manual eval runs and instructions for re-rendering videos/metrics.
 
 ---
 
