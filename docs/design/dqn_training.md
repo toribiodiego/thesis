@@ -544,6 +544,108 @@ print(f"Step {metrics.update_count}: "
 6. Learning rate vs. update count (if using schedules)
 7. Q-value distribution (histogram)
 8. Action distribution during training
+9. Average max-Q on reference states (Q-value growth indicator)
+
+### Reference-State Q Logging (Subtask 6)
+
+**Purpose:** Track Q-value growth and stability by evaluating the network on a fixed batch of reference states.
+
+**Why reference states?**
+- Training Q-values vary due to changing state distribution
+- Reference states provide consistent measurement across training
+- Detects Q-value collapse, explosion, or stagnation
+- Standard metric in DQN papers and implementations
+
+**Implementation:**
+
+**1. Capture reference batch:**
+```python
+# During initial exploration (after replay_min_transitions)
+reference_batch = replay_buffer.sample(batch_size=100)
+
+# Save to disk for consistency across runs
+torch.save({
+    'states': reference_batch['states'],
+    'actions': reference_batch['actions'],
+    'rewards': reference_batch['rewards'],
+    'next_states': reference_batch['next_states'],
+    'dones': reference_batch['dones']
+}, 'reference_states.pt')
+```
+
+**2. Compute average max-Q periodically:**
+```python
+def compute_reference_max_q(network, reference_states):
+    """Compute average max-Q on reference states."""
+    network.eval()
+    with torch.no_grad():
+        output = network(reference_states)
+        q_values = output['q_values']  # (batch_size, num_actions)
+        max_q = q_values.max(dim=1)[0]  # (batch_size,)
+        avg_max_q = max_q.mean().item()
+    network.train()
+    return avg_max_q
+
+# Log every eval_frames (e.g., 250K frames)
+if env_step % config.intervals.eval_frames == 0:
+    avg_max_q = compute_reference_max_q(online_net, reference_states)
+    logger.log({'reference_max_q': avg_max_q}, step=env_step)
+```
+
+**3. Interpret the metric:**
+
+**Expected behavior:**
+- Initial: avg_max_q ≈ 0.0 (random initialization)
+- Early training: avg_max_q increases as agent learns
+- Mid training: avg_max_q stabilizes at positive value
+- Late training: avg_max_q plateaus (converged Q-values)
+
+**Warning signs:**
+- **Explosion:** avg_max_q > 1000 (Q-values diverging, check learning rate)
+- **Collapse:** avg_max_q drops to near 0 after initial growth (training instability)
+- **Stagnation:** avg_max_q never increases (no learning, check exploration/replay)
+
+**Storage location:**
+- Reference batch: `experiments/dqn_atari/runs/{experiment_name}_{seed}/reference_states.pt`
+- Created once at step `replay_min_transitions` (e.g., 50K frames)
+- Reused throughout training for consistent measurements
+
+**When to refresh reference batch:**
+- After major code changes affecting preprocessing
+- If reference batch corrupted or deleted
+- For ablation studies (use same batch across experiments for fair comparison)
+
+**Configuration:**
+```yaml
+# In config YAML (add to logging section)
+logging:
+  reference_batch_size: 100  # Number of states in reference batch
+  compute_reference_q: true   # Enable reference-state Q logging
+```
+
+**Example usage in training loop:**
+```python
+# After replay buffer has enough samples
+if not reference_batch_loaded and replay_buffer.size >= config.agent.replay_min_transitions:
+    reference_path = Path(config.experiment.output_dir) / 'reference_states.pt'
+
+    if reference_path.exists():
+        # Load existing reference batch
+        reference_data = torch.load(reference_path)
+        reference_states = reference_data['states'].to(device)
+    else:
+        # Create and save new reference batch
+        reference_batch = replay_buffer.sample(config.logging.reference_batch_size)
+        reference_states = reference_batch['states'].to(device)
+        torch.save(reference_batch, reference_path)
+
+    reference_batch_loaded = True
+
+# Log reference max-Q every eval_frames
+if reference_batch_loaded and env_step % config.intervals.eval_frames == 0:
+    avg_max_q = compute_reference_max_q(online_net, reference_states)
+    logger.log({'reference_max_q': avg_max_q}, step=env_step)
+```
 
 ---
 
