@@ -196,8 +196,8 @@ The target network is a 2015 Nature paper improvement (Mnih et al.). The origina
     - [X] feat: Add step/episode loggers and periodic/best checkpoints
 - [X] Implement the evaluation routine: every E frames (default 250,000) run K episodes (default 10) with `eval_epsilon`; disable learning, set eval mode, log mean/median/std returns, and write plots/CSV to `results/`.
     - [X] feat: Add periodic evaluation with summary metrics and result artifacts
-- [ ] Track the average max-Q over a fixed reference batch of saved states (as in the paper) to monitor learning progress even when rewards are noisy.
-    - [ ] feat: Add optional reference-state Q logging hook and plotting support
+- [X] Track the average max-Q over a fixed reference batch of saved states (as in the paper) to monitor learning progress even when rewards are noisy.
+    - [X] feat: Add optional reference-state Q logging hook and plotting support
 - [ ] Persist reproducibility metadata for each run: save merged config snapshot, seed, and git commit hash beside logs and checkpoints (JSON/YAML).
     - [ ] chore: Write run metadata (config, seed, commit) to run folder
 - [ ] Run a smoke test (~200,000 frames) to verify end-to-end stability: confirm logs grow, checkpoints appear, eval runs trigger, and quick plots render without errors.

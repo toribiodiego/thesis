@@ -25,7 +25,9 @@ from .dqn_trainer import (
     CheckpointManager,
     evaluate,
     EvaluationScheduler,
-    EvaluationLogger
+    EvaluationLogger,
+    ReferenceStateQTracker,
+    ReferenceQLogger
 )
 
 __all__ = [
@@ -53,5 +55,7 @@ __all__ = [
     'CheckpointManager',
     'evaluate',
     'EvaluationScheduler',
-    'EvaluationLogger'
+    'EvaluationLogger',
+    'ReferenceStateQTracker',
+    'ReferenceQLogger'
 ]

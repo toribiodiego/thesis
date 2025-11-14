@@ -3378,6 +3378,217 @@ def test_evaluation_logger_get_all_results():
         assert len(all_results) == 3
 
 
+# ============================================================================
+# Reference-State Q Tracking Tests
+# ============================================================================
+
+def test_reference_q_tracker_basic():
+    """Test ReferenceStateQTracker computes Q-values."""
+    from src.training import ReferenceStateQTracker
+    from src.models import DQN
+
+    # Create reference states
+    ref_states = np.random.randint(0, 255, (10, 4, 84, 84), dtype=np.uint8)
+
+    # Create tracker
+    tracker = ReferenceStateQTracker(reference_states=ref_states, log_interval=10000)
+
+    # Create model
+    model = DQN(num_actions=6)
+
+    # Compute Q-values
+    q_stats = tracker.compute_q_values(model)
+
+    # Check statistics
+    assert 'avg_max_q' in q_stats
+    assert 'max_q' in q_stats
+    assert 'min_q' in q_stats
+
+
+def test_reference_q_tracker_logging_interval():
+    """Test ReferenceStateQTracker respects logging interval."""
+    from src.training import ReferenceStateQTracker
+
+    ref_states = np.random.randint(0, 255, (5, 4, 84, 84), dtype=np.uint8)
+    tracker = ReferenceStateQTracker(reference_states=ref_states, log_interval=10000)
+
+    # Should not log at step 0
+    assert not tracker.should_log(0)
+
+    # Should not log before interval
+    assert not tracker.should_log(5000)
+
+    # Should log at interval
+    assert tracker.should_log(10000)
+
+    # Should not log twice at same step
+    from src.models import DQN
+    model = DQN(num_actions=6)
+    tracker.log_q_values(step=10000, model=model)
+    assert not tracker.should_log(10000)
+
+    # Should log at next interval
+    assert tracker.should_log(20000)
+
+
+def test_reference_q_tracker_history():
+    """Test ReferenceStateQTracker maintains history."""
+    from src.training import ReferenceStateQTracker
+    from src.models import DQN
+
+    ref_states = np.random.randint(0, 255, (5, 4, 84, 84), dtype=np.uint8)
+    tracker = ReferenceStateQTracker(reference_states=ref_states, log_interval=10000)
+
+    model = DQN(num_actions=6)
+
+    # Log Q-values at multiple steps
+    tracker.log_q_values(step=10000, model=model)
+    tracker.log_q_values(step=20000, model=model)
+    tracker.log_q_values(step=30000, model=model)
+
+    # Check history
+    history = tracker.get_history()
+    assert len(history['steps']) == 3
+    assert len(history['avg_max_q']) == 3
+    assert history['steps'] == [10000, 20000, 30000]
+
+
+def test_reference_q_tracker_set_states():
+    """Test ReferenceStateQTracker can set states after initialization."""
+    from src.training import ReferenceStateQTracker
+    from src.models import DQN
+
+    # Create tracker without states
+    tracker = ReferenceStateQTracker(log_interval=10000)
+
+    # Should not log without states
+    assert not tracker.should_log(10000)
+
+    # Set states
+    ref_states = np.random.randint(0, 255, (5, 4, 84, 84), dtype=np.uint8)
+    tracker.set_reference_states(ref_states)
+
+    # Now should be able to log
+    assert tracker.should_log(10000)
+
+    model = DQN(num_actions=6)
+    q_stats = tracker.compute_q_values(model)
+    assert 'avg_max_q' in q_stats
+
+
+def test_reference_q_tracker_normalization():
+    """Test ReferenceStateQTracker normalizes uint8 inputs."""
+    from src.training import ReferenceStateQTracker
+    from src.models import DQN
+
+    # Create uint8 states (0-255)
+    ref_states = np.random.randint(0, 255, (5, 4, 84, 84), dtype=np.uint8)
+    tracker = ReferenceStateQTracker(reference_states=ref_states)
+
+    # Check states are normalized to [0, 1]
+    assert tracker.reference_states.max() <= 1.0
+    assert tracker.reference_states.min() >= 0.0
+
+
+def test_reference_q_tracker_to_dict():
+    """Test ReferenceStateQTracker serialization."""
+    from src.training import ReferenceStateQTracker
+    from src.models import DQN
+
+    ref_states = np.random.randint(0, 255, (5, 4, 84, 84), dtype=np.uint8)
+    tracker = ReferenceStateQTracker(reference_states=ref_states, log_interval=5000)
+
+    model = DQN(num_actions=6)
+    tracker.log_q_values(step=5000, model=model)
+
+    # Serialize
+    state_dict = tracker.to_dict()
+
+    assert state_dict['log_interval'] == 5000
+    assert state_dict['last_log_step'] == 5000
+    assert len(state_dict['log_steps']) == 1
+    assert len(state_dict['avg_max_q']) == 1
+
+
+def test_reference_q_logger_csv():
+    """Test ReferenceQLogger writes CSV correctly."""
+    from src.training import ReferenceQLogger
+    import tempfile
+    import os
+    import csv
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        logger = ReferenceQLogger(log_dir=tmpdir)
+
+        # Log Q-values
+        q_stats = {'avg_max_q': 5.5, 'max_q': 10.0, 'min_q': 2.0}
+        logger.log(step=10000, q_stats=q_stats)
+
+        # Check CSV exists
+        csv_path = os.path.join(tmpdir, 'reference_q_values.csv')
+        assert os.path.exists(csv_path)
+
+        # Read CSV
+        with open(csv_path, 'r') as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+
+        assert len(rows) == 1
+        assert int(rows[0]['step']) == 10000
+        assert float(rows[0]['avg_max_q']) == 5.5
+        assert float(rows[0]['max_q']) == 10.0
+        assert float(rows[0]['min_q']) == 2.0
+
+
+def test_reference_q_logger_multiple_logs():
+    """Test ReferenceQLogger handles multiple log entries."""
+    from src.training import ReferenceQLogger
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        logger = ReferenceQLogger(log_dir=tmpdir)
+
+        # Log multiple Q-values
+        for step in [10000, 20000, 30000]:
+            q_stats = {'avg_max_q': step / 1000, 'max_q': step / 500, 'min_q': step / 2000}
+            logger.log(step=step, q_stats=q_stats)
+
+        # Retrieve all logs
+        all_logs = logger.get_all_logs()
+        assert len(all_logs) == 3
+
+
+def test_reference_q_tracker_integration():
+    """Test ReferenceStateQTracker and ReferenceQLogger integration."""
+    from src.training import ReferenceStateQTracker, ReferenceQLogger
+    from src.models import DQN
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Create tracker
+        ref_states = np.random.randint(0, 255, (10, 4, 84, 84), dtype=np.uint8)
+        tracker = ReferenceStateQTracker(reference_states=ref_states, log_interval=10000)
+
+        # Create logger
+        logger = ReferenceQLogger(log_dir=tmpdir)
+
+        # Create model
+        model = DQN(num_actions=6)
+
+        # Simulate tracking over multiple steps
+        for step in [10000, 20000, 30000]:
+            if tracker.should_log(step):
+                tracker.log_q_values(step=step, model=model)
+                q_stats = {'avg_max_q': tracker.avg_max_q[-1],
+                          'max_q': tracker.max_q[-1],
+                          'min_q': tracker.min_q[-1]}
+                logger.log(step=step, q_stats=q_stats)
+
+        # Check both have 3 entries
+        assert len(tracker.log_steps) == 3
+        assert len(logger.get_all_logs()) == 3
+
+
 if __name__ == "__main__":
     # Run tests manually
     print("Running DQN trainer tests...")
