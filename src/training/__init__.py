@@ -6,7 +6,9 @@ from .dqn_trainer import (
     compute_td_targets,
     select_q_values,
     compute_td_loss_components,
-    compute_dqn_loss
+    compute_dqn_loss,
+    configure_optimizer,
+    clip_gradients
 )
 
 __all__ = [
@@ -15,5 +17,7 @@ __all__ = [
     'compute_td_targets',
     'select_q_values',
     'compute_td_loss_components',
-    'compute_dqn_loss'
+    'compute_dqn_loss',
+    'configure_optimizer',
+    'clip_gradients'
 ]

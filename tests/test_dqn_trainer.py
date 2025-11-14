@@ -9,6 +9,8 @@ Verifies:
 - TD target computation
 - Q-value selection
 - Loss computation (MSE and Huber)
+- Optimizer configuration (RMSProp and Adam)
+- Gradient clipping
 """
 
 import torch
@@ -20,7 +22,9 @@ from src.training import (
     compute_td_targets,
     select_q_values,
     compute_td_loss_components,
-    compute_dqn_loss
+    compute_dqn_loss,
+    configure_optimizer,
+    clip_gradients
 )
 
 
@@ -760,6 +764,345 @@ def test_compute_dqn_loss_mse_vs_huber():
     assert huber_large['loss'] < mse_large['loss']
 
 
+# ============================================================================
+# Optimizer Configuration Tests
+# ============================================================================
+
+def test_configure_optimizer_rmsprop_defaults():
+    """Test RMSProp optimizer with default parameters."""
+    online_net = DQN(num_actions=6)
+
+    # Configure with defaults
+    optimizer = configure_optimizer(online_net, optimizer_type='rmsprop')
+
+    # Should be RMSProp
+    assert isinstance(optimizer, torch.optim.RMSprop)
+
+    # Check default hyperparameters
+    param_groups = optimizer.param_groups[0]
+    assert param_groups['lr'] == 2.5e-4, "Default LR should be 2.5e-4"
+    assert param_groups['alpha'] == 0.95, "Default alpha (ρ) should be 0.95"
+    assert param_groups['eps'] == 1e-2, "Default eps should be 0.01"
+    assert param_groups['momentum'] == 0.0, "Default momentum should be 0.0"
+    assert param_groups['weight_decay'] == 0.0, "Default weight_decay should be 0.0"
+
+
+def test_configure_optimizer_rmsprop_custom():
+    """Test RMSProp optimizer with custom parameters."""
+    online_net = DQN(num_actions=6)
+
+    # Configure with custom params
+    optimizer = configure_optimizer(
+        online_net,
+        optimizer_type='rmsprop',
+        learning_rate=1e-3,
+        alpha=0.99,
+        eps=1e-8,
+        momentum=0.9,
+        weight_decay=1e-5
+    )
+
+    # Check custom hyperparameters
+    param_groups = optimizer.param_groups[0]
+    assert param_groups['lr'] == 1e-3
+    assert param_groups['alpha'] == 0.99
+    assert param_groups['eps'] == 1e-8
+    assert param_groups['momentum'] == 0.9
+    assert param_groups['weight_decay'] == 1e-5
+
+
+def test_configure_optimizer_adam_defaults():
+    """Test Adam optimizer with default parameters."""
+    online_net = DQN(num_actions=6)
+
+    # Configure Adam
+    optimizer = configure_optimizer(online_net, optimizer_type='adam')
+
+    # Should be Adam
+    assert isinstance(optimizer, torch.optim.Adam)
+
+    # Check default hyperparameters
+    param_groups = optimizer.param_groups[0]
+    assert param_groups['lr'] == 2.5e-4
+    assert param_groups['betas'] == (0.9, 0.999)
+    assert param_groups['eps'] == 1e-8
+    assert param_groups['weight_decay'] == 0.0
+
+
+def test_configure_optimizer_adam_custom():
+    """Test Adam optimizer with custom parameters."""
+    online_net = DQN(num_actions=6)
+
+    # Configure with custom params
+    optimizer = configure_optimizer(
+        online_net,
+        optimizer_type='adam',
+        learning_rate=3e-4,
+        beta1=0.95,
+        beta2=0.9999,
+        adam_eps=1e-7,
+        weight_decay=1e-4
+    )
+
+    # Check custom hyperparameters
+    param_groups = optimizer.param_groups[0]
+    assert param_groups['lr'] == 3e-4
+    assert param_groups['betas'] == (0.95, 0.9999)
+    assert param_groups['eps'] == 1e-7
+    assert param_groups['weight_decay'] == 1e-4
+
+
+def test_configure_optimizer_invalid_type():
+    """Test that invalid optimizer type raises error."""
+    online_net = DQN(num_actions=6)
+
+    with pytest.raises(ValueError, match="Unknown optimizer_type"):
+        configure_optimizer(online_net, optimizer_type='sgd')
+
+
+def test_configure_optimizer_parameters_linked():
+    """Test that optimizer is linked to network parameters."""
+    online_net = DQN(num_actions=6)
+
+    optimizer = configure_optimizer(online_net, optimizer_type='rmsprop')
+
+    # Verify optimizer has parameters
+    assert len(list(optimizer.param_groups[0]['params'])) > 0
+
+    # Verify parameters are from the network
+    net_params = set(online_net.parameters())
+    opt_params = set(optimizer.param_groups[0]['params'])
+    assert net_params == opt_params
+
+
+def test_optimizer_step_updates_parameters():
+    """Test that optimizer step updates network parameters."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net, optimizer_type='rmsprop', learning_rate=0.1)
+
+    # Get initial parameters
+    initial_param = list(online_net.parameters())[0].clone()
+
+    # Create batch and compute loss
+    batch_size = 4
+    states = torch.randn(batch_size, 4, 84, 84)
+    actions = torch.tensor([0, 2, 1, 5])
+    rewards = torch.tensor([1.0, 0.0, -1.0, 0.5])
+    next_states = torch.randn(batch_size, 4, 84, 84)
+    dones = torch.tensor([False, False, True, False])
+
+    q_selected, td_targets = compute_td_loss_components(
+        states, actions, rewards, next_states, dones,
+        online_net, target_net, gamma=0.99
+    )
+
+    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+
+    # Optimization step
+    optimizer.zero_grad()
+    loss_dict['loss'].backward()
+    optimizer.step()
+
+    # Parameters should have changed
+    updated_param = list(online_net.parameters())[0]
+    assert not torch.allclose(initial_param, updated_param), \
+        "Parameters should change after optimizer step"
+
+
+# ============================================================================
+# Gradient Clipping Tests
+# ============================================================================
+
+def test_clip_gradients_basic():
+    """Test basic gradient clipping."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+
+    # Create batch and compute loss
+    batch_size = 4
+    states = torch.randn(batch_size, 4, 84, 84)
+    actions = torch.tensor([0, 2, 1, 5])
+    rewards = torch.tensor([1.0, 0.0, -1.0, 0.5])
+    next_states = torch.randn(batch_size, 4, 84, 84)
+    dones = torch.tensor([False, False, True, False])
+
+    q_selected, td_targets = compute_td_loss_components(
+        states, actions, rewards, next_states, dones,
+        online_net, target_net, gamma=0.99
+    )
+
+    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+    loss_dict['loss'].backward()
+
+    # Clip gradients
+    grad_norm = clip_gradients(online_net, max_norm=10.0)
+
+    # Should return a float
+    assert isinstance(grad_norm, float)
+    assert grad_norm >= 0.0
+
+
+def test_clip_gradients_returns_norm():
+    """Test that clip_gradients returns the gradient norm."""
+    online_net = DQN(num_actions=6)
+
+    # Create dummy loss
+    x = torch.randn(2, 4, 84, 84)
+    output = online_net(x)
+    loss = output['q_values'].mean()
+    loss.backward()
+
+    # Get gradient norm
+    grad_norm = clip_gradients(online_net, max_norm=10.0)
+
+    # Should be positive (network has gradients)
+    assert grad_norm > 0.0
+
+
+def test_clip_gradients_actually_clips():
+    """Test that gradient clipping actually limits gradient norm."""
+    online_net = DQN(num_actions=6)
+
+    # Create large gradients by using large loss
+    x = torch.randn(2, 4, 84, 84)
+    output = online_net(x)
+    loss = output['q_values'].sum() * 1000.0  # Large multiplier
+    loss.backward()
+
+    # Clip with small max_norm
+    max_norm = 1.0
+    grad_norm_before = clip_gradients(online_net, max_norm=max_norm)
+
+    # Compute actual norm after clipping
+    total_norm_after = 0.0
+    for p in online_net.parameters():
+        if p.grad is not None:
+            param_norm = p.grad.data.norm(2)
+            total_norm_after += param_norm.item() ** 2
+    total_norm_after = total_norm_after ** 0.5
+
+    # After clipping, norm should be <= max_norm (with small tolerance for numerical errors)
+    assert total_norm_after <= max_norm + 1e-5, \
+        f"Gradient norm {total_norm_after} exceeds max_norm {max_norm}"
+
+
+def test_clip_gradients_no_effect_when_small():
+    """Test that small gradients are not affected by clipping."""
+    online_net = DQN(num_actions=6)
+
+    # Create small gradients
+    x = torch.randn(2, 4, 84, 84)
+    output = online_net(x)
+    loss = output['q_values'].mean() * 0.001  # Small multiplier
+    loss.backward()
+
+    # Save gradients before clipping
+    grads_before = [p.grad.clone() for p in online_net.parameters() if p.grad is not None]
+
+    # Clip with large max_norm (shouldn't affect small gradients)
+    grad_norm = clip_gradients(online_net, max_norm=100.0)
+
+    # Gradients should be unchanged
+    grads_after = [p.grad for p in online_net.parameters() if p.grad is not None]
+
+    for g_before, g_after in zip(grads_before, grads_after):
+        assert torch.allclose(g_before, g_after, atol=1e-6), \
+            "Small gradients should not be affected by large max_norm"
+
+
+def test_clip_gradients_different_norms():
+    """Test gradient clipping with different norm types."""
+    online_net = DQN(num_actions=6)
+
+    # Create gradients
+    x = torch.randn(2, 4, 84, 84)
+    output = online_net(x)
+    loss = output['q_values'].mean()
+    loss.backward()
+
+    # Clip with L2 norm (default)
+    grad_norm_l2 = clip_gradients(online_net, max_norm=10.0, norm_type=2.0)
+    assert grad_norm_l2 > 0.0
+
+    # Reset gradients and recompute
+    online_net.zero_grad()
+    loss.backward()
+
+    # Clip with L1 norm
+    grad_norm_l1 = clip_gradients(online_net, max_norm=10.0, norm_type=1.0)
+    assert grad_norm_l1 > 0.0
+
+    # L1 and L2 norms should be different
+    assert grad_norm_l1 != grad_norm_l2
+
+
+def test_clip_gradients_integration_with_optimizer():
+    """Test gradient clipping in full training step."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net, optimizer_type='rmsprop')
+
+    # Create batch
+    batch_size = 4
+    states = torch.randn(batch_size, 4, 84, 84)
+    actions = torch.tensor([0, 2, 1, 5])
+    rewards = torch.tensor([1.0, 0.0, -1.0, 0.5])
+    next_states = torch.randn(batch_size, 4, 84, 84)
+    dones = torch.tensor([False, False, True, False])
+
+    # Get initial param
+    initial_param = list(online_net.parameters())[0].clone()
+
+    # Full training step with gradient clipping
+    optimizer.zero_grad()
+
+    q_selected, td_targets = compute_td_loss_components(
+        states, actions, rewards, next_states, dones,
+        online_net, target_net, gamma=0.99
+    )
+
+    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+    loss_dict['loss'].backward()
+
+    grad_norm = clip_gradients(online_net, max_norm=10.0)
+    optimizer.step()
+
+    # Parameters should have updated
+    updated_param = list(online_net.parameters())[0]
+    assert not torch.allclose(initial_param, updated_param)
+
+    # Gradient norm should be positive
+    assert grad_norm > 0.0
+
+
+def test_clip_gradients_monitoring():
+    """Test that gradient norm can be used for monitoring."""
+    online_net = DQN(num_actions=6)
+
+    # List to store gradient norms
+    grad_norms = []
+
+    for _ in range(3):
+        # Create random loss
+        x = torch.randn(2, 4, 84, 84)
+        output = online_net(x)
+        loss = output['q_values'].mean()
+
+        online_net.zero_grad()
+        loss.backward()
+
+        # Clip and record norm
+        grad_norm = clip_gradients(online_net, max_norm=10.0)
+        grad_norms.append(grad_norm)
+
+    # All norms should be positive and finite
+    for norm in grad_norms:
+        assert norm > 0.0
+        assert not torch.isnan(torch.tensor(norm))
+        assert not torch.isinf(torch.tensor(norm))
+
+
 if __name__ == "__main__":
     # Run tests manually
     print("Running DQN trainer tests...")
@@ -873,5 +1216,51 @@ if __name__ == "__main__":
 
     test_compute_dqn_loss_mse_vs_huber()
     print("✓ Compute DQN loss MSE vs Huber test passed")
+
+    # Optimizer configuration tests
+    print("\nOptimizer Configuration Tests:")
+    test_configure_optimizer_rmsprop_defaults()
+    print("✓ Configure optimizer RMSProp defaults test passed")
+
+    test_configure_optimizer_rmsprop_custom()
+    print("✓ Configure optimizer RMSProp custom test passed")
+
+    test_configure_optimizer_adam_defaults()
+    print("✓ Configure optimizer Adam defaults test passed")
+
+    test_configure_optimizer_adam_custom()
+    print("✓ Configure optimizer Adam custom test passed")
+
+    test_configure_optimizer_invalid_type()
+    print("✓ Configure optimizer invalid type test passed")
+
+    test_configure_optimizer_parameters_linked()
+    print("✓ Configure optimizer parameters linked test passed")
+
+    test_optimizer_step_updates_parameters()
+    print("✓ Optimizer step updates parameters test passed")
+
+    # Gradient clipping tests
+    print("\nGradient Clipping Tests:")
+    test_clip_gradients_basic()
+    print("✓ Clip gradients basic test passed")
+
+    test_clip_gradients_returns_norm()
+    print("✓ Clip gradients returns norm test passed")
+
+    test_clip_gradients_actually_clips()
+    print("✓ Clip gradients actually clips test passed")
+
+    test_clip_gradients_no_effect_when_small()
+    print("✓ Clip gradients no effect when small test passed")
+
+    test_clip_gradients_different_norms()
+    print("✓ Clip gradients different norms test passed")
+
+    test_clip_gradients_integration_with_optimizer()
+    print("✓ Clip gradients integration with optimizer test passed")
+
+    test_clip_gradients_monitoring()
+    print("✓ Clip gradients monitoring test passed")
 
     print("\nAll tests passed! ✓")
