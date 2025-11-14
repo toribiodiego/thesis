@@ -14,6 +14,7 @@ from .config_loader import (
     print_config,
     validate_config_exists
 )
+from .schema_validator import validate_config as validate_schema, ConfigValidationError
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -190,37 +191,27 @@ def load_config_from_args(
 
 def validate_config(config: Dict[str, Any]) -> None:
     """
-    Validate loaded configuration has required fields.
-    
+    Validate loaded configuration against comprehensive schema.
+
+    Performs strict validation including:
+    - Required fields present
+    - Positive integers for buffer sizes, training steps, etc.
+    - Gamma in [0, 1]
+    - Known optimizer names
+    - Valid environment IDs
+    - Nonzero frameskip (action_repeat)
+    - Unknown fields rejected
+
     Args:
         config: Configuration dictionary
-        
+
     Raises:
-        ValueError: If required fields are missing or invalid
+        ValueError: If validation fails (wraps ConfigValidationError)
     """
-    required_fields = [
-        ('environment', 'env_id'),
-        ('training', 'total_frames'),
-        ('training', 'optimizer', 'lr'),
-        ('network', 'architecture'),
-        ('replay', 'capacity'),
-    ]
-    
-    errors = []
-    
-    for field_path in required_fields:
-        current = config
-        for key in field_path:
-            if not isinstance(current, dict) or key not in current:
-                errors.append(f"Missing required field: {'.'.join(field_path)}")
-                break
-            current = current[key]
-    
-    if errors:
-        raise ValueError(
-            "Configuration validation failed:\n" +
-            "\n".join(f"  - {err}" for err in errors)
-        )
+    try:
+        validate_schema(config, strict=True)
+    except ConfigValidationError as e:
+        raise ValueError(f"Configuration validation failed:\n{e}") from e
 
 
 def setup_from_args(

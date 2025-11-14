@@ -34,6 +34,12 @@ from .run_manager import (
     print_run_info
 )
 
+from .schema_validator import (
+    validate_config as validate_config_schema,
+    validate_config_safe,
+    ConfigValidationError
+)
+
 __all__ = [
     # Config loader
     'load_config',
@@ -62,5 +68,9 @@ __all__ = [
     'get_git_info',
     'save_metadata',
     'setup_run_directory',
-    'print_run_info'
+    'print_run_info',
+    # Schema validator
+    'validate_config_schema',
+    'validate_config_safe',
+    'ConfigValidationError'
 ]

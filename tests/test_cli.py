@@ -87,6 +87,9 @@ def game_config_file(tmp_path, base_config_file):
     """Create a game config that inherits from base."""
     game_config = {
         'base_config': str(base_config_file),
+        'experiment': {
+            'name': 'pong'
+        },
         'environment': {
             'env_id': 'PongNoFrameskip-v4'
         },
@@ -363,37 +366,42 @@ def test_validate_config_success(temp_config_file):
 def test_validate_config_missing_env_id():
     """Test validation fails when env_id missing."""
     config = {
+        'experiment': {'name': 'test'},
         'environment': {},
         'training': {'total_frames': 1000, 'optimizer': {'lr': 0.001}},
         'network': {'architecture': 'dqn'},
         'replay': {'capacity': 1000}
     }
-    
-    with pytest.raises(ValueError, match="Missing required field"):
+
+    with pytest.raises(ValueError, match="'env_id' is required"):
         validate_config(config)
 
 
-def test_validate_config_missing_training():
-    """Test validation fails when training config missing."""
+def test_validate_config_invalid_gamma():
+    """Test validation fails with invalid gamma."""
     config = {
-        'environment': {'env_id': 'Pong'},
+        'experiment': {'name': 'test'},
+        'environment': {'env_id': 'PongNoFrameskip-v4'},
         'network': {'architecture': 'dqn'},
-        'replay': {'capacity': 1000}
+        'replay': {'capacity': 1000},
+        'training': {'gamma': 1.5}  # Invalid: > 1.0
     }
-    
-    with pytest.raises(ValueError, match="Missing required field"):
+
+    with pytest.raises(ValueError, match="gamma.*must be in range"):
         validate_config(config)
 
 
-def test_validate_config_missing_network():
-    """Test validation fails when network config missing."""
+def test_validate_config_invalid_optimizer():
+    """Test validation fails with invalid optimizer."""
     config = {
-        'environment': {'env_id': 'Pong'},
-        'training': {'total_frames': 1000, 'optimizer': {'lr': 0.001}},
-        'replay': {'capacity': 1000}
+        'experiment': {'name': 'test'},
+        'environment': {'env_id': 'PongNoFrameskip-v4'},
+        'network': {'architecture': 'dqn'},
+        'replay': {'capacity': 1000},
+        'training': {'optimizer': {'type': 'sgd'}}  # Invalid optimizer
     }
-    
-    with pytest.raises(ValueError, match="Missing required field"):
+
+    with pytest.raises(ValueError, match="optimizer.*type"):
         validate_config(config)
 
 

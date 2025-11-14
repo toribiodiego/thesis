@@ -244,8 +244,8 @@ Base config + per-game overrides. Merge utility. CLI: `python train_dqn.py --cfg
     - [X] chore: Persist merged config and metadata to each run directory
 - [X] Create dynamic run paths automatically (logs, checkpoints, artifacts) under `experiments/dqn_atari/runs/<game>/<timestamp>/`; ensure folders are created on startup.
     - [X] chore: Auto-create standard run subfolders (logs, checkpoints, artifacts)
-- [ ] Validate schema on load: assert positive ints, γ in [0,1], known optimizer names, valid env IDs/action_set, nonzero frameskip; reject unknown fields and fail fast with a helpful error.
-    - [ ] build: Add strict config schema validation with clear error messages
+- [X] Validate schema on load: assert positive ints, γ in [0,1], known optimizer names, valid env IDs/action_set, nonzero frameskip; reject unknown fields and fail fast with a helpful error.
+    - [X] build: Add strict config schema validation with clear error messages
 - [ ] Summarize config/CLI conventions in `docs/design/config_cli.md`: explain file hierarchy, override precedence, required flags, schema validation, and how merged configs/meta snapshots are stored.
     - [ ] docs: Include example commands, troubleshooting tips for schema errors, and pointers to generated config artifacts.
 
