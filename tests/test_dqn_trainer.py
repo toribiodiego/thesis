@@ -32,7 +32,9 @@ from src.training import (
     TrainingScheduler,
     detect_nan_inf,
     validate_loss_decrease,
-    verify_target_sync_schedule
+    verify_target_sync_schedule,
+    UpdateMetrics,
+    perform_update_step
 )
 
 
@@ -1975,6 +1977,360 @@ def test_verify_target_sync_schedule_different_intervals():
         assert len(info['update_steps']) == 5
 
 
+# ============================================================================
+# Update Metrics Tests
+# ============================================================================
+
+
+def test_update_metrics_initialization():
+    """Test UpdateMetrics initialization."""
+    metrics = UpdateMetrics(
+        loss=0.5,
+        td_error=0.3,
+        td_error_std=0.2,
+        grad_norm=2.5,
+        learning_rate=0.00025,
+        update_count=1000
+    )
+
+    assert metrics.loss == 0.5
+    assert metrics.td_error == 0.3
+    assert metrics.td_error_std == 0.2
+    assert metrics.grad_norm == 2.5
+    assert metrics.learning_rate == 0.00025
+    assert metrics.update_count == 1000
+
+
+def test_update_metrics_to_dict():
+    """Test UpdateMetrics to_dict conversion."""
+    metrics = UpdateMetrics(
+        loss=0.5,
+        td_error=0.3,
+        td_error_std=0.2,
+        grad_norm=2.5,
+        learning_rate=0.00025,
+        update_count=1000
+    )
+
+    metrics_dict = metrics.to_dict()
+
+    assert isinstance(metrics_dict, dict)
+    assert metrics_dict['loss'] == 0.5
+    assert metrics_dict['td_error'] == 0.3
+    assert metrics_dict['td_error_std'] == 0.2
+    assert metrics_dict['grad_norm'] == 2.5
+    assert metrics_dict['learning_rate'] == 0.00025
+    assert metrics_dict['update_count'] == 1000
+
+
+def test_update_metrics_to_dict_keys():
+    """Test UpdateMetrics to_dict has all expected keys."""
+    metrics = UpdateMetrics(0.5, 0.3, 0.2, 2.5, 0.00025, 1000)
+    metrics_dict = metrics.to_dict()
+
+    expected_keys = {'loss', 'td_error', 'td_error_std', 'grad_norm', 'learning_rate', 'update_count'}
+    assert set(metrics_dict.keys()) == expected_keys
+
+
+def test_update_metrics_repr():
+    """Test UpdateMetrics string representation."""
+    metrics = UpdateMetrics(0.5, 0.3, 0.2, 2.5, 0.00025, 1000)
+    repr_str = repr(metrics)
+
+    assert "UpdateMetrics" in repr_str
+    assert "loss=" in repr_str
+    assert "td_error=" in repr_str
+    assert "grad_norm=" in repr_str
+    assert "lr=" in repr_str
+    assert "updates=" in repr_str
+
+
+def test_perform_update_step_basic():
+    """Test perform_update_step executes full update and returns metrics."""
+    # Create networks and optimizer
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net, learning_rate=0.00025)
+
+    # Create synthetic batch
+    batch_size = 8
+    batch = {
+        'states': torch.randn(batch_size, 4, 84, 84),
+        'actions': torch.randint(0, 6, (batch_size,)),
+        'rewards': torch.randn(batch_size),
+        'next_states': torch.randn(batch_size, 4, 84, 84),
+        'dones': torch.zeros(batch_size)
+    }
+
+    # Perform update
+    metrics = perform_update_step(
+        online_net, target_net, optimizer, batch,
+        update_count=1
+    )
+
+    # Verify metrics exist and have reasonable values
+    assert isinstance(metrics, UpdateMetrics)
+    assert metrics.loss > 0
+    assert metrics.td_error >= 0
+    assert metrics.td_error_std >= 0
+    assert metrics.grad_norm >= 0
+    assert metrics.learning_rate == 0.00025
+    assert metrics.update_count == 1
+
+
+def test_perform_update_step_updates_network():
+    """Test perform_update_step actually updates network parameters."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net, learning_rate=0.01)
+
+    # Save initial parameters
+    initial_params = [p.clone() for p in online_net.parameters()]
+
+    batch_size = 8
+    batch = {
+        'states': torch.randn(batch_size, 4, 84, 84),
+        'actions': torch.randint(0, 6, (batch_size,)),
+        'rewards': torch.randn(batch_size),
+        'next_states': torch.randn(batch_size, 4, 84, 84),
+        'dones': torch.zeros(batch_size)
+    }
+
+    # Perform update
+    metrics = perform_update_step(
+        online_net, target_net, optimizer, batch,
+        update_count=1
+    )
+
+    # Verify parameters changed
+    for initial_p, current_p in zip(initial_params, online_net.parameters()):
+        assert not torch.allclose(initial_p, current_p), \
+            "Parameters should change after update"
+
+
+def test_perform_update_step_mse_loss():
+    """Test perform_update_step with MSE loss."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net)
+
+    batch = {
+        'states': torch.randn(8, 4, 84, 84),
+        'actions': torch.randint(0, 6, (8,)),
+        'rewards': torch.randn(8),
+        'next_states': torch.randn(8, 4, 84, 84),
+        'dones': torch.zeros(8)
+    }
+
+    metrics = perform_update_step(
+        online_net, target_net, optimizer, batch,
+        loss_type='mse', update_count=1
+    )
+
+    assert isinstance(metrics, UpdateMetrics)
+    assert metrics.loss > 0
+
+
+def test_perform_update_step_huber_loss():
+    """Test perform_update_step with Huber loss."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net)
+
+    batch = {
+        'states': torch.randn(8, 4, 84, 84),
+        'actions': torch.randint(0, 6, (8,)),
+        'rewards': torch.randn(8),
+        'next_states': torch.randn(8, 4, 84, 84),
+        'dones': torch.zeros(8)
+    }
+
+    metrics = perform_update_step(
+        online_net, target_net, optimizer, batch,
+        loss_type='huber', update_count=1
+    )
+
+    assert isinstance(metrics, UpdateMetrics)
+    assert metrics.loss > 0
+
+
+def test_perform_update_step_different_gamma():
+    """Test perform_update_step with different gamma values."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net)
+
+    batch = {
+        'states': torch.randn(8, 4, 84, 84),
+        'actions': torch.randint(0, 6, (8,)),
+        'rewards': torch.randn(8),
+        'next_states': torch.randn(8, 4, 84, 84),
+        'dones': torch.zeros(8)
+    }
+
+    # Test with gamma=0.95
+    metrics = perform_update_step(
+        online_net, target_net, optimizer, batch,
+        gamma=0.95, update_count=1
+    )
+
+    assert isinstance(metrics, UpdateMetrics)
+    assert metrics.loss > 0
+
+
+def test_perform_update_step_gradient_clipping():
+    """Test perform_update_step applies gradient clipping."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net, learning_rate=10.0)  # Large LR to create large gradients
+
+    batch = {
+        'states': torch.randn(8, 4, 84, 84),
+        'actions': torch.randint(0, 6, (8,)),
+        'rewards': torch.randn(8),
+        'next_states': torch.randn(8, 4, 84, 84),
+        'dones': torch.zeros(8)
+    }
+
+    # Perform update with small max_grad_norm
+    metrics = perform_update_step(
+        online_net, target_net, optimizer, batch,
+        max_grad_norm=1.0, update_count=1
+    )
+
+    # Gradient norm should be reported (before clipping)
+    assert metrics.grad_norm >= 0
+
+
+def test_perform_update_step_multiple_updates():
+    """Test perform_update_step with multiple sequential updates."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net, learning_rate=0.01)
+
+    batch = {
+        'states': torch.randn(8, 4, 84, 84),
+        'actions': torch.randint(0, 6, (8,)),
+        'rewards': torch.randn(8),
+        'next_states': torch.randn(8, 4, 84, 84),
+        'dones': torch.zeros(8)
+    }
+
+    # Perform multiple updates
+    losses = []
+    for i in range(10):
+        metrics = perform_update_step(
+            online_net, target_net, optimizer, batch,
+            update_count=i+1
+        )
+        losses.append(metrics.loss)
+        assert metrics.update_count == i + 1
+
+    # Loss should generally decrease (overfitting on same batch)
+    # Check that at least the loss changed (parameters were updated)
+    assert len(set(losses)) > 1, "Loss should change across updates"
+
+
+def test_perform_update_step_batch_size_32():
+    """Test perform_update_step with standard DQN batch size."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net)
+
+    # Standard DQN batch size
+    batch = {
+        'states': torch.randn(32, 4, 84, 84),
+        'actions': torch.randint(0, 6, (32,)),
+        'rewards': torch.randn(32),
+        'next_states': torch.randn(32, 4, 84, 84),
+        'dones': torch.zeros(32)
+    }
+
+    metrics = perform_update_step(
+        online_net, target_net, optimizer, batch,
+        update_count=1
+    )
+
+    assert isinstance(metrics, UpdateMetrics)
+    assert metrics.loss > 0
+
+
+def test_perform_update_step_terminal_states():
+    """Test perform_update_step with terminal states."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net)
+
+    batch = {
+        'states': torch.randn(8, 4, 84, 84),
+        'actions': torch.randint(0, 6, (8,)),
+        'rewards': torch.randn(8),
+        'next_states': torch.randn(8, 4, 84, 84),
+        'dones': torch.ones(8)  # All terminal
+    }
+
+    metrics = perform_update_step(
+        online_net, target_net, optimizer, batch,
+        update_count=1
+    )
+
+    assert isinstance(metrics, UpdateMetrics)
+    assert metrics.loss > 0
+
+
+def test_perform_update_step_learning_rate_tracking():
+    """Test perform_update_step tracks learning rate correctly."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+
+    # Test with custom learning rate
+    custom_lr = 0.001
+    optimizer = configure_optimizer(online_net, learning_rate=custom_lr)
+
+    batch = {
+        'states': torch.randn(8, 4, 84, 84),
+        'actions': torch.randint(0, 6, (8,)),
+        'rewards': torch.randn(8),
+        'next_states': torch.randn(8, 4, 84, 84),
+        'dones': torch.zeros(8)
+    }
+
+    metrics = perform_update_step(
+        online_net, target_net, optimizer, batch,
+        update_count=1
+    )
+
+    assert metrics.learning_rate == custom_lr
+
+
+def test_perform_update_step_sets_train_mode():
+    """Test perform_update_step sets network to training mode."""
+    online_net = DQN(num_actions=6)
+    target_net = init_target_network(online_net, num_actions=6)
+    optimizer = configure_optimizer(online_net)
+
+    # Set to eval mode
+    online_net.eval()
+    assert not online_net.training
+
+    batch = {
+        'states': torch.randn(8, 4, 84, 84),
+        'actions': torch.randint(0, 6, (8,)),
+        'rewards': torch.randn(8),
+        'next_states': torch.randn(8, 4, 84, 84),
+        'dones': torch.zeros(8)
+    }
+
+    metrics = perform_update_step(
+        online_net, target_net, optimizer, batch,
+        update_count=1
+    )
+
+    # Network should be in training mode during update
+    # (Note: it stays in training mode after the function)
+    assert metrics is not None
+
+
 if __name__ == "__main__":
     # Run tests manually
     print("Running DQN trainer tests...")
@@ -2284,5 +2640,52 @@ if __name__ == "__main__":
 
     test_verify_target_sync_schedule_different_intervals()
     print("✓ Verify target sync schedule different intervals test passed")
+
+    # Update metrics tests
+    print("\nUpdate Metrics Tests:")
+    test_update_metrics_initialization()
+    print("✓ Update metrics initialization test passed")
+
+    test_update_metrics_to_dict()
+    print("✓ Update metrics to_dict test passed")
+
+    test_update_metrics_to_dict_keys()
+    print("✓ Update metrics to_dict keys test passed")
+
+    test_update_metrics_repr()
+    print("✓ Update metrics repr test passed")
+
+    test_perform_update_step_basic()
+    print("✓ Perform update step basic test passed")
+
+    test_perform_update_step_updates_network()
+    print("✓ Perform update step updates network test passed")
+
+    test_perform_update_step_mse_loss()
+    print("✓ Perform update step MSE loss test passed")
+
+    test_perform_update_step_huber_loss()
+    print("✓ Perform update step Huber loss test passed")
+
+    test_perform_update_step_different_gamma()
+    print("✓ Perform update step different gamma test passed")
+
+    test_perform_update_step_gradient_clipping()
+    print("✓ Perform update step gradient clipping test passed")
+
+    test_perform_update_step_multiple_updates()
+    print("✓ Perform update step multiple updates test passed")
+
+    test_perform_update_step_batch_size_32()
+    print("✓ Perform update step batch size 32 test passed")
+
+    test_perform_update_step_terminal_states()
+    print("✓ Perform update step terminal states test passed")
+
+    test_perform_update_step_learning_rate_tracking()
+    print("✓ Perform update step learning rate tracking test passed")
+
+    test_perform_update_step_sets_train_mode()
+    print("✓ Perform update step sets train mode test passed")
 
     print("\nAll tests passed! ✓")

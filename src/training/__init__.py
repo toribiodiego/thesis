@@ -13,7 +13,9 @@ from .dqn_trainer import (
     TrainingScheduler,
     detect_nan_inf,
     validate_loss_decrease,
-    verify_target_sync_schedule
+    verify_target_sync_schedule,
+    UpdateMetrics,
+    perform_update_step
 )
 
 __all__ = [
@@ -29,5 +31,7 @@ __all__ = [
     'TrainingScheduler',
     'detect_nan_inf',
     'validate_loss_decrease',
-    'verify_target_sync_schedule'
+    'verify_target_sync_schedule',
+    'UpdateMetrics',
+    'perform_update_step'
 ]
