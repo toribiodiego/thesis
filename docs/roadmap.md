@@ -308,23 +308,21 @@ Structured logging through TensorBoard, Weights & Biases (W&B), and CSV. Plottin
 ### Subtask 11 — Game Suite Plan & Training Budgets
 
 **Objective:**
-Finalize game list (Pong, Breakout, Beam Rider + optional others), frame budgets, eval cadence, target scores. Estimate runtimes. Document in `experiments/dqn_atari/README.md`. Complete when plan is approved and documented.
+Finalize the Atari game suite (Pong, Breakout, Beam Rider + optional others), frame budgets, evaluation cadence, target scores, and runtime expectations. Keep the plan centralized in `docs/design/game_suite_plan.md`, with surfaced summaries in `experiments/dqn_atari/README.md` and the per-game configs under `experiments/dqn_atari/configs/`. Complete when the suite definition, overrides, and planning artifacts reflect the refactored code structure.
 
 **Checklist:**
-- [ ] Select a subset of DQN paper games for reproduction (e.g., Pong, Breakout, Beam Rider; with optional additions: Seaquest, Space Invaders, Enduro, Q*bert) and list the chosen titles clearly at the top of `experiments/dqn_atari/README.md`.
-    - [ ] docs: Record selected Atari games for reproduction in README
-- [ ] Specify per-game training frame budgets and evaluation cadence (e.g., 10–20M frames, evaluations every 250k frames) in a single table `Game | Env ID | Frames | Eval cadence | Notes` within `experiments/dqn_atari/README.md`.
-    - [ ] docs: Add per-game frame budgets and evaluation cadence table
-- [ ] Estimate runtime per game based on expected FPS and hardware (GPU/CPU) by adding a small calculator (`scripts/estimate_runtime.py`) and saving a CSV (`experiments/dqn_atari/planning/game_plan.csv`) with columns `game,fps,frames,estimated_hours,hardware`.
-    - [ ] feat: Add runtime estimator script and planning CSV for game budgets
-- [ ] Define objective acceptance criteria per game (e.g., target score or % of paper baseline, number of seeds, final eval window) and include them as `Target score / % baseline` columns in the README table.
-    - [ ] docs: Document per-game acceptance thresholds and evaluation window
-- [ ] Add game-specific overrides called out in the paper (e.g., Space Invaders requires `frameskip=3` to avoid disappearing bullets) and ensure configs/README highlight any such deviations.
-    - [ ] feat: Provide per-game config knobs (like `frame_skip_override`) and document them in the plan
-- [ ] Consolidate the plan in one place: ensure `experiments/dqn_atari/README.md` contains the selected games, frame budgets, eval cadence, runtime estimates link/CSV, and acceptance criteria; link to configs and runs directories.
-    - [ ] chore: Finalize and cross-link game suite plan in README
-- [ ] Archive the planning decisions in `docs/design/game_suite_plan.md`: capture chosen games, rationale, budgets, eval cadence, runtime assumptions, and acceptance thresholds so future contributors see how the suite was selected.
-    - [ ] docs: Link to the README table, runtime CSV, and any scripts used to estimate budgets.
+- [ ] Update `experiments/dqn_atari/README.md` to list the chosen games (Pong, Breakout, Beam Rider as baseline; optional Space Invaders, Seaquest, Enduro, Q*bert) with references to their config files in `experiments/dqn_atari/configs/`.
+    - [ ] docs: Record selected games plus config paths in README (post-refactor layout)
+- [ ] Embed a table `Game | Env ID | Frames (train) | Eval cadence | Target score / % baseline | Notes` in `docs/design/game_suite_plan.md`, and link this table from the README so there’s a single authoritative source for budgets/criteria.
+    - [ ] docs: Maintain the table in `docs/design/game_suite_plan.md` and cross-link from README
+- [ ] Provide per-game overrides in `experiments/dqn_atari/configs/<game>.yaml` for frame budgets, evaluation cadence, and any special settings (e.g., Space Invaders `frameskip=3`); document each override inside the YAML header comment and in the plan doc.
+    - [ ] feat/docs: Add/annotate per-game overrides (frame budgets, eval cadence, frameskip exceptions)
+- [ ] Add a runtime estimator script under `experiments/dqn_atari/scripts/estimate_runtime.py` (or similar) that reads FPS assumptions plus frame budgets and emits `experiments/dqn_atari/planning/game_plan.csv` with `game,fps,frames,estimated_hours,hardware`. Mention this CSV in the README and plan doc.
+    - [ ] feat: Add runtime estimator script + planning CSV and reference them in docs
+- [ ] Define acceptance criteria (target score or % of paper baseline, number of seeds, eval window) directly in `docs/design/game_suite_plan.md`, and ensure `experiments/dqn_atari/README.md` links to that section so updates stay centralized.
+    - [ ] docs: Document acceptance thresholds in the plan doc and reference from README
+- [ ] Consolidate all planning guidance (game rationale, overrides, runtime assumptions, evaluation cadence) inside `docs/design/game_suite_plan.md`, and update the README with a short summary + pointer rather than duplicating tables.
+    - [ ] chore: Finalize the plan doc and make README a concise entry point post-refactor
 
 ---
 

@@ -602,6 +602,155 @@ def plot_all_metrics(
 
 
 # ============================================================================
+# Multi-Seed Aggregation
+# ============================================================================
+
+def aggregate_multi_seed_data(
+    csv_files: List[Path],
+    align_column: str = 'step'
+) -> Dict[str, np.ndarray]:
+    """
+    Aggregate data from multiple seed runs.
+
+    Args:
+        csv_files: List of CSV file paths from different seeds
+        align_column: Column to align data on (default: 'step')
+
+    Returns:
+        dict: Aggregated data with mean, std, min, max, and individual runs
+    """
+    # Load all CSV files
+    all_data = []
+    for csv_file in csv_files:
+        try:
+            data = load_csv_data(csv_file)
+            all_data.append(data)
+        except Exception as e:
+            print(f"Warning: Failed to load {csv_file}: {e}")
+            continue
+
+    if not all_data:
+        raise ValueError("No valid CSV files loaded for aggregation")
+
+    # Get all unique steps across all runs
+    all_steps = set()
+    for data in all_data:
+        if align_column in data:
+            all_steps.update(data[align_column])
+
+    all_steps = np.array(sorted(all_steps))
+
+    # Get column names (excluding align column)
+    column_names = set()
+    for data in all_data:
+        column_names.update(data.keys())
+    column_names.discard(align_column)
+
+    # Aggregate each column
+    aggregated = {align_column: all_steps}
+
+    for col in column_names:
+        # Interpolate each run to common step grid
+        interpolated_runs = []
+        for data in all_data:
+            if col in data and align_column in data:
+                # Remove NaN values for interpolation
+                mask = ~np.isnan(data[col])
+                if mask.sum() > 0:
+                    interp_values = np.interp(
+                        all_steps,
+                        data[align_column][mask],
+                        data[col][mask],
+                        left=np.nan,
+                        right=np.nan
+                    )
+                    interpolated_runs.append(interp_values)
+
+        if interpolated_runs:
+            # Stack runs
+            runs_array = np.stack(interpolated_runs, axis=0)
+
+            # Compute statistics
+            aggregated[f'{col}_mean'] = np.nanmean(runs_array, axis=0)
+            aggregated[f'{col}_std'] = np.nanstd(runs_array, axis=0)
+            aggregated[f'{col}_min'] = np.nanmin(runs_array, axis=0)
+            aggregated[f'{col}_max'] = np.nanmax(runs_array, axis=0)
+
+            # 95% confidence interval (assumes normal distribution)
+            n_runs = runs_array.shape[0]
+            sem = aggregated[f'{col}_std'] / np.sqrt(n_runs)
+            aggregated[f'{col}_ci95'] = 1.96 * sem
+
+            # Store individual runs for plotting
+            for i, run in enumerate(interpolated_runs):
+                aggregated[f'{col}_run{i}'] = run
+
+    return aggregated
+
+
+def plot_multi_seed_aggregation(
+    aggregated_data: Dict[str, np.ndarray],
+    output_path: Path,
+    metric_name: str,
+    title: str = "Multi-Seed Aggregation",
+    formats: List[str] = ['png'],
+    plot_individual_runs: bool = False
+):
+    """
+    Plot multi-seed aggregated data with confidence intervals.
+
+    Args:
+        aggregated_data: Aggregated data from aggregate_multi_seed_data()
+        output_path: Base path for output files
+        metric_name: Name of metric to plot (e.g., 'return', 'loss')
+        title: Plot title
+        formats: Output formats
+        plot_individual_runs: Whether to plot individual seed runs
+    """
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    x = aggregated_data['step']
+    y_mean = aggregated_data[f'{metric_name}_mean']
+    y_std = aggregated_data[f'{metric_name}_std']
+    y_ci95 = aggregated_data[f'{metric_name}_ci95']
+
+    # Plot individual runs if requested
+    if plot_individual_runs:
+        run_idx = 0
+        while f'{metric_name}_run{run_idx}' in aggregated_data:
+            y_run = aggregated_data[f'{metric_name}_run{run_idx}']
+            ax.plot(x, y_run, alpha=0.2, linewidth=0.5, color='gray')
+            run_idx += 1
+
+    # Plot mean
+    ax.plot(x, y_mean, linewidth=2, color='#1f77b4', label='Mean')
+
+    # Plot 95% CI shading
+    ax.fill_between(
+        x,
+        y_mean - y_ci95,
+        y_mean + y_ci95,
+        alpha=0.3,
+        color='#1f77b4',
+        label='95% CI'
+    )
+
+    ax.set_xlabel('Environment Steps')
+    ax.set_ylabel(metric_name.replace('_', ' ').title())
+    ax.set_title(title)
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+
+    # Save in all requested formats
+    for fmt in formats:
+        save_path = output_path.with_suffix(f'.{fmt}')
+        fig.savefig(save_path, bbox_inches='tight', format=fmt)
+        print(f"Saved: {save_path}")
+
+    plt.close(fig)
+
+
+# ============================================================================
 # CLI
 # ============================================================================
 
@@ -649,6 +798,12 @@ Examples:
         '--eval',
         type=Path,
         help='Path to evaluation CSV file'
+    )
+    input_group.add_argument(
+        '--multi-seed',
+        nargs='+',
+        type=Path,
+        help='Paths to episode CSV files from multiple seeds for aggregation'
     )
     input_group.add_argument(
         '--wandb-project',
@@ -722,10 +877,12 @@ Examples:
     # Validate inputs
     use_wandb = args.wandb_project and args.wandb_run and args.wandb_artifact
     use_local = args.episodes or args.steps or args.eval
+    use_multi_seed = args.multi_seed is not None
 
-    if not use_wandb and not use_local:
+    if not use_wandb and not use_local and not use_multi_seed:
         parser.error(
-            "Must specify either local CSV files (--episodes/--steps/--eval) "
+            "Must specify either local CSV files (--episodes/--steps/--eval), "
+            "multi-seed files (--multi-seed), "
             "or W&B artifact (--wandb-project/--wandb-run/--wandb-artifact)"
         )
 
@@ -771,6 +928,39 @@ Examples:
 
     # Set smoothing window
     smoothing_window = 1 if args.no_smoothing else args.smoothing
+
+    # Handle multi-seed aggregation
+    if use_multi_seed:
+        print(f"\nAggregating {len(args.multi_seed)} seed runs...")
+        aggregated = aggregate_multi_seed_data(args.multi_seed, align_column='step')
+
+        # Save aggregated data to CSV
+        agg_csv_path = args.output / f"{args.game_name}_aggregated.csv"
+        args.output.mkdir(parents=True, exist_ok=True)
+
+        with open(agg_csv_path, 'w', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=aggregated.keys())
+            writer.writeheader()
+            for i in range(len(aggregated['step'])):
+                row = {k: v[i] if i < len(v) else np.nan for k, v in aggregated.items()}
+                writer.writerow(row)
+        print(f"Saved aggregated data: {agg_csv_path}")
+
+        # Plot multi-seed aggregation for episode returns
+        if 'return_mean' in aggregated:
+            print("Plotting multi-seed episode returns...")
+            plot_multi_seed_aggregation(
+                aggregated,
+                args.output / f"{args.game_name}_multi_seed_returns",
+                metric_name='return',
+                title=f"{args.game_name.title()} - Multi-Seed Episode Returns (n={len(args.multi_seed)})",
+                formats=args.formats,
+                plot_individual_runs=True
+            )
+
+        print(f"\nDone! Multi-seed aggregation complete")
+        print(f"Plots saved to: {args.output}")
+        return
 
     # Generate plots
     print(f"\nGenerating plots...")
