@@ -234,6 +234,32 @@ logging:
   log_every_steps: 1000  # Log training metrics every N steps
   log_every_episodes: 1  # Log episode metrics every N episodes
 
+  # Multi-backend logging (TensorBoard, W&B, CSV)
+  # All three backends operate independently and in parallel
+  # File system layout: results/logs/<game>/<run_id>/
+  #   ├── tensorboard/  (TensorBoard event files)
+  #   ├── csv/          (CSV log files: training_steps.csv, episodes.csv)
+  #   └── wandb/        (W&B local cache, optional)
+
+  # TensorBoard backend
+  tensorboard:
+    enabled: true  # Enable TensorBoard logging
+    flush_interval: 1000  # Flush to disk every N steps (0 = auto)
+
+  # CSV backend
+  csv:
+    enabled: true  # Enable CSV logging
+    smoothing_window: 100  # Moving average window for loss
+
+  # Weights & Biases backend
+  wandb:
+    enabled: false  # Enable W&B logging (requires WANDB_API_KEY env var)
+    project: "dqn-atari"  # W&B project name
+    entity: null  # W&B entity (username or team, optional)
+    tags: []  # Tags for this run (e.g., ["dqn", "pong", "baseline"])
+    upload_artifacts: false  # Upload logs/plots as W&B artifacts
+    artifact_upload_interval: 1000000  # Upload artifacts every N frames
+
   # Checkpoint saving
   checkpoint:
     enabled: true  # Save checkpoints
@@ -241,32 +267,25 @@ logging:
     keep_last_n: 3  # Keep only last N checkpoints (saves disk space)
     save_best: true  # Save best model (by evaluation return)
 
-  # Metrics to log
+  # Metrics to log (standardized across all backends)
   step_metrics:
-    - "loss"  # Training loss
-    - "td_error"  # Mean absolute TD error
-    - "grad_norm"  # Gradient norm (before clipping)
-    - "q_values"  # Mean Q-value from online network
-    - "epsilon"  # Current ε value
-    - "learning_rate"  # Current learning rate
+    - "loss"  # Training loss (train/loss)
+    - "td_error"  # Mean absolute TD error (train/td_error)
+    - "grad_norm"  # Gradient norm before clipping (train/grad_norm)
+    - "q_values"  # Mean Q-value from online network (q_values/mean)
+    - "epsilon"  # Current ε value (train/epsilon)
+    - "learning_rate"  # Current learning rate (train/lr)
 
   episode_metrics:
-    - "episode_return"  # Total episode reward
-    - "episode_length"  # Episode length
-    - "lives_lost"  # Lives lost (if applicable)
+    - "episode_return"  # Total episode reward (episode/return)
+    - "episode_length"  # Episode length (episode/length)
+    - "lives_lost"  # Lives lost if applicable (episode/lives_lost)
 
   # Reference state Q-value tracking (optional, for debugging)
   reference_q:
     enabled: false  # Track Q-values on fixed reference states
     num_states: 10  # Number of reference states to track
     log_every: 10000  # Log reference Q-values every N steps
-
-  # Wandb integration (optional)
-  wandb:
-    enabled: false  # Enable Weights & Biases logging
-    project: "dqn-atari"  # W&B project name
-    entity: null  # W&B entity (username or team)
-    tags: []  # Tags for this run
 
 # =============================================================================
 # Seeding & Reproducibility
