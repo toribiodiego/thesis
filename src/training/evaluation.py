@@ -7,7 +7,106 @@ import json
 import numpy as np
 import torch
 import torch.nn as nn
-from typing import Dict, Optional, Any, List
+from typing import Dict, Optional, Any, List, Callable
+from pathlib import Path
+
+
+class VideoRecorder:
+    """
+    Records video frames during episode execution.
+
+    Saves frames to MP4 format and optionally exports to GIF.
+
+    Parameters
+    ----------
+    output_path : str
+        Path where video will be saved (e.g., 'videos/pong_250000.mp4')
+    fps : int
+        Frames per second for video (default: 30)
+    export_gif : bool
+        Also export video as GIF (default: False)
+    """
+
+    def __init__(self, output_path: str, fps: int = 30, export_gif: bool = False):
+        self.output_path = Path(output_path)
+        self.fps = fps
+        self.export_gif = export_gif
+        self.frames = []
+
+        # Create output directory
+        self.output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    def capture_frame(self, frame: np.ndarray):
+        """Capture a single frame."""
+        # Store as RGB uint8
+        if frame.dtype == np.float32 or frame.dtype == np.float64:
+            frame = (frame * 255).astype(np.uint8)
+        self.frames.append(frame.copy())
+
+    def save(self):
+        """Save recorded frames to MP4 (and optionally GIF)."""
+        if not self.frames:
+            return None
+
+        # Save MP4 using OpenCV
+        import cv2
+
+        # Get frame dimensions
+        height, width = self.frames[0].shape[:2]
+        if len(self.frames[0].shape) == 2:
+            # Grayscale - convert to RGB
+            self.frames = [cv2.cvtColor(f, cv2.COLOR_GRAY2RGB) for f in self.frames]
+
+        # Create video writer
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        video_writer = cv2.VideoWriter(
+            str(self.output_path),
+            fourcc,
+            self.fps,
+            (width, height)
+        )
+
+        # Write frames
+        for frame in self.frames:
+            # OpenCV expects BGR
+            if len(frame.shape) == 3 and frame.shape[2] == 3:
+                frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            video_writer.write(frame)
+
+        video_writer.release()
+
+        # Optionally export GIF
+        gif_path = None
+        if self.export_gif:
+            gif_path = self.output_path.with_suffix('.gif')
+            self._export_gif(gif_path)
+
+        return {
+            'video_path': str(self.output_path),
+            'gif_path': str(gif_path) if gif_path else None,
+            'num_frames': len(self.frames),
+            'fps': self.fps
+        }
+
+    def _export_gif(self, gif_path: Path):
+        """Export frames to GIF format."""
+        try:
+            from PIL import Image
+
+            # Convert frames to PIL Images
+            pil_frames = [Image.fromarray(f) for f in self.frames]
+
+            # Save as GIF
+            pil_frames[0].save(
+                str(gif_path),
+                save_all=True,
+                append_images=pil_frames[1:],
+                duration=int(1000 / self.fps),  # Duration in milliseconds
+                loop=0
+            )
+        except ImportError:
+            # PIL/Pillow not available, skip GIF export
+            pass
 
 
 def evaluate(
@@ -19,7 +118,12 @@ def evaluate(
     device: str = 'cpu',
     seed: int = None,
     step: int = None,
-    track_lives: bool = False
+    track_lives: bool = False,
+    record_video: bool = False,
+    video_dir: str = None,
+    video_fps: int = 30,
+    export_gif: bool = False,
+    render_mode: str = 'rgb_array'
 ) -> dict:
     """
     Evaluate agent over multiple episodes with low/greedy epsilon.
@@ -47,6 +151,16 @@ def evaluate(
         Training step when evaluation occurred (optional, included in results)
     track_lives : bool
         Track lives lost per episode (optional, default: False)
+    record_video : bool
+        Record video of first evaluation episode (default: False)
+    video_dir : str
+        Directory to save videos (default: 'results/videos')
+    video_fps : int
+        Frames per second for video (default: 30)
+    export_gif : bool
+        Also export video as GIF (default: False)
+    render_mode : str
+        Render mode for capturing frames (default: 'rgb_array')
 
     Returns
     -------
@@ -65,6 +179,7 @@ def evaluate(
         - seed: Random seed used (if provided)
         - step: Training step when evaluation occurred (if provided)
         - eval_epsilon: Epsilon value used for evaluation
+        - video_info: Video recording metadata (if record_video=True)
 
     Example
     -------
@@ -87,6 +202,30 @@ def evaluate(
     episode_returns = []
     episode_lengths = []
     episode_lives_lost = [] if track_lives else None
+
+    # Setup video recording for first episode if requested
+    video_recorder = None
+    video_info = None
+    if record_video:
+        # Determine video filename
+        if video_dir is None:
+            video_dir = 'results/videos'
+
+        # Get environment name for filename
+        env_name = getattr(env.unwrapped, 'spec', None)
+        if env_name is not None and hasattr(env_name, 'id'):
+            env_name = env_name.id.replace('/', '_').replace('NoFrameskip-v4', '')
+        else:
+            env_name = 'env'
+
+        # Create filename with step if provided
+        if step is not None:
+            video_filename = f"{env_name}_step_{step}.mp4"
+        else:
+            video_filename = f"{env_name}_eval.mp4"
+
+        video_path = os.path.join(video_dir, video_filename)
+        video_recorder = VideoRecorder(video_path, fps=video_fps, export_gif=export_gif)
 
     for ep in range(num_episodes):
         obs, info = env.reset()
@@ -129,6 +268,16 @@ def evaluate(
             episode_length += 1
             done = terminated or truncated
 
+            # Capture video frame for first episode
+            if video_recorder is not None and ep == 0:
+                try:
+                    frame = env.render()
+                    if frame is not None:
+                        video_recorder.capture_frame(frame)
+                except Exception:
+                    # Rendering not supported or failed, skip
+                    pass
+
         # Record episode statistics
         episode_returns.append(episode_return)
         episode_lengths.append(episode_length)
@@ -144,6 +293,10 @@ def evaluate(
             else:
                 lives_lost = None
             episode_lives_lost.append(lives_lost)
+
+        # Save video after first episode
+        if video_recorder is not None and ep == 0:
+            video_info = video_recorder.save()
 
     # Compute statistics
     results = {
@@ -168,6 +321,9 @@ def evaluate(
 
     if track_lives and episode_lives_lost is not None:
         results['episode_lives_lost'] = episode_lives_lost
+
+    if video_info is not None:
+        results['video_info'] = video_info
 
     # Set model back to train mode
     model.train()

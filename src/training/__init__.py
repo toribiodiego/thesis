@@ -58,7 +58,8 @@ from .logging import (
 from .evaluation import (
     evaluate,
     EvaluationScheduler,
-    EvaluationLogger
+    EvaluationLogger,
+    VideoRecorder
 )
 
 # Q-value tracking
@@ -124,6 +125,7 @@ __all__ = [
     'evaluate',
     'EvaluationScheduler',
     'EvaluationLogger',
+    'VideoRecorder',
     # Q-tracking
     'ReferenceStateQTracker',
     'ReferenceQLogger',

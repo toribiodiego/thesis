@@ -3319,6 +3319,136 @@ def test_evaluate_without_lives_tracking():
     assert 'episode_lives_lost' not in results
 
 
+def test_video_recorder_basic():
+    """Test VideoRecorder captures and saves frames."""
+    from src.training import VideoRecorder
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        video_path = os.path.join(tmpdir, 'test_video.mp4')
+        recorder = VideoRecorder(video_path, fps=30, export_gif=False)
+
+        # Capture some test frames
+        for i in range(10):
+            frame = np.random.randint(0, 255, (84, 84, 3), dtype=np.uint8)
+            recorder.capture_frame(frame)
+
+        # Save video
+        info = recorder.save()
+
+        # Check video was created
+        assert info is not None
+        assert info['video_path'] == video_path
+        assert info['num_frames'] == 10
+        assert info['fps'] == 30
+        assert os.path.exists(video_path)
+
+
+def test_video_recorder_grayscale():
+    """Test VideoRecorder handles grayscale frames."""
+    from src.training import VideoRecorder
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        video_path = os.path.join(tmpdir, 'test_gray.mp4')
+        recorder = VideoRecorder(video_path, fps=15)
+
+        # Capture grayscale frames
+        for i in range(5):
+            frame = np.random.randint(0, 255, (84, 84), dtype=np.uint8)
+            recorder.capture_frame(frame)
+
+        info = recorder.save()
+        assert info is not None
+        assert os.path.exists(video_path)
+
+
+def test_evaluate_with_video_recording():
+    """Test evaluate records video when requested."""
+    from src.training import evaluate
+    from src.models import DQN
+    from unittest.mock import Mock
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        env = Mock()
+        env.action_space.n = 6
+        env.unwrapped = Mock()
+        env.unwrapped.spec = Mock()
+        env.unwrapped.spec.id = 'TestEnv-v0'
+
+        dummy_state = np.random.randint(0, 255, (4, 84, 84), dtype=np.uint8)
+        dummy_frame = np.random.randint(0, 255, (210, 160, 3), dtype=np.uint8)
+        env.reset.return_value = (dummy_state, {})
+        env.render.return_value = dummy_frame
+
+        step_count = [0]
+        def mock_step(action):
+            step_count[0] += 1
+            done = step_count[0] >= 5
+            if done:
+                step_count[0] = 0
+            return (dummy_state, 1.0, done, False, {})
+
+        env.step.side_effect = mock_step
+        model = DQN(num_actions=6)
+
+        # Evaluate with video recording
+        results = evaluate(
+            env, model,
+            num_episodes=2,
+            eval_epsilon=0.05,
+            device='cpu',
+            record_video=True,
+            video_dir=tmpdir,
+            step=250000
+        )
+
+        # Check video info is included
+        assert 'video_info' in results
+        assert results['video_info'] is not None
+        assert 'video_path' in results['video_info']
+        assert 'num_frames' in results['video_info']
+
+        # Check video file exists
+        video_path = results['video_info']['video_path']
+        assert os.path.exists(video_path)
+        assert video_path.endswith('.mp4')
+
+
+def test_evaluate_without_video():
+    """Test evaluate omits video when not requested."""
+    from src.training import evaluate
+    from src.models import DQN
+    from unittest.mock import Mock
+
+    env = Mock()
+    env.action_space.n = 6
+    dummy_state = np.random.randint(0, 255, (4, 84, 84), dtype=np.uint8)
+    env.reset.return_value = (dummy_state, {})
+
+    step_count = [0]
+    def mock_step(action):
+        step_count[0] += 1
+        done = step_count[0] >= 5
+        if done:
+            step_count[0] = 0
+        return (dummy_state, 1.0, done, False, {})
+
+    env.step.side_effect = mock_step
+    model = DQN(num_actions=6)
+
+    # Evaluate without video
+    results = evaluate(env, model, num_episodes=1, eval_epsilon=0.05,
+                      device='cpu', record_video=False)
+
+    # Check video info is NOT included
+    assert 'video_info' not in results
+
+
 def test_evaluation_scheduler_interval():
     """Test EvaluationScheduler triggers at correct intervals."""
     from src.training import EvaluationScheduler
