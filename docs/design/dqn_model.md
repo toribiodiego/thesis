@@ -291,11 +291,11 @@ Error: `RuntimeError: Expected 4D tensor, got 3D tensor`
 ```python
 # Add batch dimension if single sample
 x = torch.rand(4, 84, 84)          # Missing batch dim
-x = x.unsqueeze(0)                 # → (1, 4, 84, 84) ✓
+x = x.unsqueeze(0)                 # → (1, 4, 84, 84) [x]
 
 # Fix channels-last to channels-first
 x = torch.rand(2, 84, 84, 4)       # Channels last
-x = x.permute(0, 3, 1, 2)          # → (2, 4, 84, 84) ✓
+x = x.permute(0, 3, 1, 2)          # → (2, 4, 84, 84) [x]
 ```
 
 ### 4. Dtype Mismatches

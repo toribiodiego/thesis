@@ -41,13 +41,13 @@ tail -f experiments/dqn_atari/runs/pong_123/logs/episodes.csv
 ```
 
 **What's included:**
-- ✅ Complete training loop with epsilon-greedy exploration
-- ✅ Structured logging (steps, episodes, evaluation, Q-values)
-- ✅ Periodic evaluation with low-ε policy
-- ✅ Checkpoint management (periodic + best model)
-- ✅ Metadata persistence (git hash, config, seed)
-- ✅ Smoke test for fast validation
-- ✅ 163+ unit tests for all components
+- [x] Complete training loop with epsilon-greedy exploration
+- [x] Structured logging (steps, episodes, evaluation, Q-values)
+- [x] Periodic evaluation with low-ε policy
+- [x] Checkpoint management (periodic + best model)
+- [x] Metadata persistence (git hash, config, seed)
+- [x] Smoke test for fast validation
+- [x] 163+ unit tests for all components
 
 ## Documentation
 

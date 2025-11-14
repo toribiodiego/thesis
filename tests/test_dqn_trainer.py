@@ -3595,358 +3595,358 @@ if __name__ == "__main__":
 
     # Target network tests
     test_hard_update_target_basic()
-    print("✓ Hard update basic test passed")
+    print("Hard update basic test passed")
 
     test_hard_update_target_all_layers()
-    print("✓ Hard update all layers test passed")
+    print("Hard update all layers test passed")
 
     test_hard_update_target_multiple_updates()
-    print("✓ Hard update multiple updates test passed")
+    print("Hard update multiple updates test passed")
 
     test_init_target_network_creates_copy()
-    print("✓ Init target network creates copy test passed")
+    print("Init target network creates copy test passed")
 
     test_init_target_network_freezes_gradients()
-    print("✓ Init target network freezes gradients test passed")
+    print("Init target network freezes gradients test passed")
 
     test_init_target_network_in_eval_mode()
-    print("✓ Init target network eval mode test passed")
+    print("Init target network eval mode test passed")
 
     test_target_network_no_gradient_computation()
-    print("✓ Target network no gradient computation test passed")
+    print("Target network no gradient computation test passed")
 
     test_hard_update_after_online_training()
-    print("✓ Hard update after online training test passed")
+    print("Hard update after online training test passed")
 
     test_hard_update_preserves_frozen_gradients()
-    print("✓ Hard update preserves frozen gradients test passed")
+    print("Hard update preserves frozen gradients test passed")
 
     test_target_network_different_devices()
-    print("✓ Target network different devices test passed")
+    print("Target network different devices test passed")
 
     test_hard_update_target_shape_mismatch()
-    print("✓ Hard update shape mismatch test passed")
+    print("Hard update shape mismatch test passed")
 
     test_init_target_network_num_actions()
-    print("✓ Init target network num_actions test passed")
+    print("Init target network num_actions test passed")
 
     # TD target computation tests
     print("\nTD Target Computation Tests:")
     test_compute_td_targets_basic()
-    print("✓ Compute TD targets basic test passed")
+    print("Compute TD targets basic test passed")
 
     test_compute_td_targets_terminal_states()
-    print("✓ Compute TD targets terminal states test passed")
+    print("Compute TD targets terminal states test passed")
 
     test_compute_td_targets_gamma()
-    print("✓ Compute TD targets gamma test passed")
+    print("Compute TD targets gamma test passed")
 
     test_compute_td_targets_no_grad()
-    print("✓ Compute TD targets no grad test passed")
+    print("Compute TD targets no grad test passed")
 
     test_select_q_values_basic()
-    print("✓ Select Q-values basic test passed")
+    print("Select Q-values basic test passed")
 
     test_select_q_values_gather_correctness()
-    print("✓ Select Q-values gather correctness test passed")
+    print("Select Q-values gather correctness test passed")
 
     test_select_q_values_gradient_flow()
-    print("✓ Select Q-values gradient flow test passed")
+    print("Select Q-values gradient flow test passed")
 
     test_compute_td_loss_components_basic()
-    print("✓ Compute TD loss components basic test passed")
+    print("Compute TD loss components basic test passed")
 
     test_compute_td_loss_components_terminal_handling()
-    print("✓ Compute TD loss components terminal handling test passed")
+    print("Compute TD loss components terminal handling test passed")
 
     test_compute_td_loss_components_mse_loss()
-    print("✓ Compute TD loss components MSE loss test passed")
+    print("Compute TD loss components MSE loss test passed")
 
     test_td_targets_shape_consistency()
-    print("✓ TD targets shape consistency test passed")
+    print("TD targets shape consistency test passed")
 
     test_q_selection_shape_consistency()
-    print("✓ Q-selection shape consistency test passed")
+    print("Q-selection shape consistency test passed")
 
     # Loss computation tests
     print("\nLoss Computation Tests:")
     test_compute_dqn_loss_mse_basic()
-    print("✓ Compute DQN loss MSE basic test passed")
+    print("Compute DQN loss MSE basic test passed")
 
     test_compute_dqn_loss_huber_basic()
-    print("✓ Compute DQN loss Huber basic test passed")
+    print("Compute DQN loss Huber basic test passed")
 
     test_compute_dqn_loss_gradient_flow()
-    print("✓ Compute DQN loss gradient flow test passed")
+    print("Compute DQN loss gradient flow test passed")
 
     test_compute_dqn_loss_td_error_stats()
-    print("✓ Compute DQN loss TD error stats test passed")
+    print("Compute DQN loss TD error stats test passed")
 
     test_compute_dqn_loss_invalid_type()
-    print("✓ Compute DQN loss invalid type test passed")
+    print("Compute DQN loss invalid type test passed")
 
     test_compute_dqn_loss_shape_mismatch()
-    print("✓ Compute DQN loss shape mismatch test passed")
+    print("Compute DQN loss shape mismatch test passed")
 
     test_compute_dqn_loss_gradient_assertions()
-    print("✓ Compute DQN loss gradient assertions test passed")
+    print("Compute DQN loss gradient assertions test passed")
 
     test_compute_dqn_loss_huber_delta()
-    print("✓ Compute DQN loss Huber delta test passed")
+    print("Compute DQN loss Huber delta test passed")
 
     test_compute_dqn_loss_zero_td_error()
-    print("✓ Compute DQN loss zero TD error test passed")
+    print("Compute DQN loss zero TD error test passed")
 
     test_compute_dqn_loss_batch_sizes()
-    print("✓ Compute DQN loss batch sizes test passed")
+    print("Compute DQN loss batch sizes test passed")
 
     test_compute_dqn_loss_mse_vs_huber()
-    print("✓ Compute DQN loss MSE vs Huber test passed")
+    print("Compute DQN loss MSE vs Huber test passed")
 
     # Optimizer configuration tests
     print("\nOptimizer Configuration Tests:")
     test_configure_optimizer_rmsprop_defaults()
-    print("✓ Configure optimizer RMSProp defaults test passed")
+    print("Configure optimizer RMSProp defaults test passed")
 
     test_configure_optimizer_rmsprop_custom()
-    print("✓ Configure optimizer RMSProp custom test passed")
+    print("Configure optimizer RMSProp custom test passed")
 
     test_configure_optimizer_adam_defaults()
-    print("✓ Configure optimizer Adam defaults test passed")
+    print("Configure optimizer Adam defaults test passed")
 
     test_configure_optimizer_adam_custom()
-    print("✓ Configure optimizer Adam custom test passed")
+    print("Configure optimizer Adam custom test passed")
 
     test_configure_optimizer_invalid_type()
-    print("✓ Configure optimizer invalid type test passed")
+    print("Configure optimizer invalid type test passed")
 
     test_configure_optimizer_parameters_linked()
-    print("✓ Configure optimizer parameters linked test passed")
+    print("Configure optimizer parameters linked test passed")
 
     test_optimizer_step_updates_parameters()
-    print("✓ Optimizer step updates parameters test passed")
+    print("Optimizer step updates parameters test passed")
 
     # Gradient clipping tests
     print("\nGradient Clipping Tests:")
     test_clip_gradients_basic()
-    print("✓ Clip gradients basic test passed")
+    print("Clip gradients basic test passed")
 
     test_clip_gradients_returns_norm()
-    print("✓ Clip gradients returns norm test passed")
+    print("Clip gradients returns norm test passed")
 
     test_clip_gradients_actually_clips()
-    print("✓ Clip gradients actually clips test passed")
+    print("Clip gradients actually clips test passed")
 
     test_clip_gradients_no_effect_when_small()
-    print("✓ Clip gradients no effect when small test passed")
+    print("Clip gradients no effect when small test passed")
 
     test_clip_gradients_different_norms()
-    print("✓ Clip gradients different norms test passed")
+    print("Clip gradients different norms test passed")
 
     test_clip_gradients_integration_with_optimizer()
-    print("✓ Clip gradients integration with optimizer test passed")
+    print("Clip gradients integration with optimizer test passed")
 
     test_clip_gradients_monitoring()
-    print("✓ Clip gradients monitoring test passed")
+    print("Clip gradients monitoring test passed")
 
     # Target network update scheduler tests
     print("\nTarget Network Update Scheduler Tests:")
     test_target_network_updater_initialization()
-    print("✓ Target network updater initialization test passed")
+    print("Target network updater initialization test passed")
 
     test_target_network_updater_invalid_interval()
-    print("✓ Target network updater invalid interval test passed")
+    print("Target network updater invalid interval test passed")
 
     test_target_network_updater_should_update()
-    print("✓ Target network updater should_update test passed")
+    print("Target network updater should_update test passed")
 
     test_target_network_updater_update()
-    print("✓ Target network updater update test passed")
+    print("Target network updater update test passed")
 
     test_target_network_updater_multiple_updates()
-    print("✓ Target network updater multiple updates test passed")
+    print("Target network updater multiple updates test passed")
 
     test_target_network_updater_step_method()
-    print("✓ Target network updater step method test passed")
+    print("Target network updater step method test passed")
 
     test_target_network_updater_no_duplicate_updates()
-    print("✓ Target network updater no duplicate updates test passed")
+    print("Target network updater no duplicate updates test passed")
 
     test_target_network_updater_reset()
-    print("✓ Target network updater reset test passed")
+    print("Target network updater reset test passed")
 
     test_target_network_updater_state_dict()
-    print("✓ Target network updater state_dict test passed")
+    print("Target network updater state_dict test passed")
 
     test_target_network_updater_load_state_dict()
-    print("✓ Target network updater load_state_dict test passed")
+    print("Target network updater load_state_dict test passed")
 
     test_target_network_updater_exact_multiples()
-    print("✓ Target network updater exact multiples test passed")
+    print("Target network updater exact multiples test passed")
 
     test_target_network_updater_repr()
-    print("✓ Target network updater repr test passed")
+    print("Target network updater repr test passed")
 
     test_target_network_updater_integration()
-    print("✓ Target network updater integration test passed")
+    print("Target network updater integration test passed")
 
     test_target_network_updater_parameters_actually_copied()
-    print("✓ Target network updater parameters actually copied test passed")
+    print("Target network updater parameters actually copied test passed")
 
     # Training scheduler tests
     print("\nTraining Scheduler Tests:")
     test_training_scheduler_initialization()
-    print("✓ Training scheduler initialization test passed")
+    print("Training scheduler initialization test passed")
 
     test_training_scheduler_invalid_train_every()
-    print("✓ Training scheduler invalid train_every test passed")
+    print("Training scheduler invalid train_every test passed")
 
     test_training_scheduler_warm_up_gating()
-    print("✓ Training scheduler warm-up gating test passed")
+    print("Training scheduler warm-up gating test passed")
 
     test_training_scheduler_train_every_multiples()
-    print("✓ Training scheduler train_every multiples test passed")
+    print("Training scheduler train_every multiples test passed")
 
     test_training_scheduler_mark_trained()
-    print("✓ Training scheduler mark_trained test passed")
+    print("Training scheduler mark_trained test passed")
 
     test_training_scheduler_no_duplicate_training()
-    print("✓ Training scheduler no duplicate training test passed")
+    print("Training scheduler no duplicate training test passed")
 
     test_training_scheduler_step_method()
-    print("✓ Training scheduler step method test passed")
+    print("Training scheduler step method test passed")
 
     test_training_scheduler_reset()
-    print("✓ Training scheduler reset test passed")
+    print("Training scheduler reset test passed")
 
     test_training_scheduler_state_dict()
-    print("✓ Training scheduler state_dict test passed")
+    print("Training scheduler state_dict test passed")
 
     test_training_scheduler_load_state_dict()
-    print("✓ Training scheduler load_state_dict test passed")
+    print("Training scheduler load_state_dict test passed")
 
     test_training_scheduler_integration()
-    print("✓ Training scheduler integration test passed")
+    print("Training scheduler integration test passed")
 
     test_training_scheduler_different_intervals()
-    print("✓ Training scheduler different intervals test passed")
+    print("Training scheduler different intervals test passed")
 
     test_training_scheduler_repr()
-    print("✓ Training scheduler repr test passed")
+    print("Training scheduler repr test passed")
 
     # Stability check tests
     print("\nStability Check Tests:")
     test_detect_nan_inf_no_issues()
-    print("✓ Detect NaN/Inf no issues test passed")
+    print("Detect NaN/Inf no issues test passed")
 
     test_detect_nan_inf_detects_nan()
-    print("✓ Detect NaN/Inf detects NaN test passed")
+    print("Detect NaN/Inf detects NaN test passed")
 
     test_detect_nan_inf_detects_inf()
-    print("✓ Detect NaN/Inf detects Inf test passed")
+    print("Detect NaN/Inf detects Inf test passed")
 
     test_detect_nan_inf_detects_neg_inf()
-    print("✓ Detect NaN/Inf detects negative Inf test passed")
+    print("Detect NaN/Inf detects negative Inf test passed")
 
     test_detect_nan_inf_multidimensional()
-    print("✓ Detect NaN/Inf multidimensional test passed")
+    print("Detect NaN/Inf multidimensional test passed")
 
     test_detect_nan_inf_zero_tensor()
-    print("✓ Detect NaN/Inf zero tensor test passed")
+    print("Detect NaN/Inf zero tensor test passed")
 
     test_validate_loss_decrease_basic()
-    print("✓ Validate loss decrease basic test passed")
+    print("Validate loss decrease basic test passed")
 
     test_validate_loss_decrease_huber()
-    print("✓ Validate loss decrease Huber test passed")
+    print("Validate loss decrease Huber test passed")
 
     test_validate_loss_decrease_fewer_updates()
-    print("✓ Validate loss decrease fewer updates test passed")
+    print("Validate loss decrease fewer updates test passed")
 
     test_validate_loss_decrease_terminal_states()
-    print("✓ Validate loss decrease terminal states test passed")
+    print("Validate loss decrease terminal states test passed")
 
     test_validate_loss_decrease_different_gamma()
-    print("✓ Validate loss decrease different gamma test passed")
+    print("Validate loss decrease different gamma test passed")
 
     test_validate_loss_decrease_larger_batch()
-    print("✓ Validate loss decrease larger batch test passed")
+    print("Validate loss decrease larger batch test passed")
 
     test_validate_loss_decrease_info_keys()
-    print("✓ Validate loss decrease info keys test passed")
+    print("Validate loss decrease info keys test passed")
 
     test_verify_target_sync_schedule_basic()
-    print("✓ Verify target sync schedule basic test passed")
+    print("Verify target sync schedule basic test passed")
 
     test_verify_target_sync_schedule_10k_interval()
-    print("✓ Verify target sync schedule 10k interval test passed")
+    print("Verify target sync schedule 10k interval test passed")
 
     test_verify_target_sync_schedule_small_interval()
-    print("✓ Verify target sync schedule small interval test passed")
+    print("Verify target sync schedule small interval test passed")
 
     test_verify_target_sync_schedule_partial_interval()
-    print("✓ Verify target sync schedule partial interval test passed")
+    print("Verify target sync schedule partial interval test passed")
 
     test_verify_target_sync_schedule_no_duplicates()
-    print("✓ Verify target sync schedule no duplicates test passed")
+    print("Verify target sync schedule no duplicates test passed")
 
     test_verify_target_sync_schedule_count()
-    print("✓ Verify target sync schedule count test passed")
+    print("Verify target sync schedule count test passed")
 
     test_verify_target_sync_schedule_info_keys()
-    print("✓ Verify target sync schedule info keys test passed")
+    print("Verify target sync schedule info keys test passed")
 
     test_verify_target_sync_schedule_different_intervals()
-    print("✓ Verify target sync schedule different intervals test passed")
+    print("Verify target sync schedule different intervals test passed")
 
     # Update metrics tests
     print("\nUpdate Metrics Tests:")
     test_update_metrics_initialization()
-    print("✓ Update metrics initialization test passed")
+    print("Update metrics initialization test passed")
 
     test_update_metrics_to_dict()
-    print("✓ Update metrics to_dict test passed")
+    print("Update metrics to_dict test passed")
 
     test_update_metrics_to_dict_keys()
-    print("✓ Update metrics to_dict keys test passed")
+    print("Update metrics to_dict keys test passed")
 
     test_update_metrics_repr()
-    print("✓ Update metrics repr test passed")
+    print("Update metrics repr test passed")
 
     test_perform_update_step_basic()
-    print("✓ Perform update step basic test passed")
+    print("Perform update step basic test passed")
 
     test_perform_update_step_updates_network()
-    print("✓ Perform update step updates network test passed")
+    print("Perform update step updates network test passed")
 
     test_perform_update_step_mse_loss()
-    print("✓ Perform update step MSE loss test passed")
+    print("Perform update step MSE loss test passed")
 
     test_perform_update_step_huber_loss()
-    print("✓ Perform update step Huber loss test passed")
+    print("Perform update step Huber loss test passed")
 
     test_perform_update_step_different_gamma()
-    print("✓ Perform update step different gamma test passed")
+    print("Perform update step different gamma test passed")
 
     test_perform_update_step_gradient_clipping()
-    print("✓ Perform update step gradient clipping test passed")
+    print("Perform update step gradient clipping test passed")
 
     test_perform_update_step_multiple_updates()
-    print("✓ Perform update step multiple updates test passed")
+    print("Perform update step multiple updates test passed")
 
     test_perform_update_step_batch_size_32()
-    print("✓ Perform update step batch size 32 test passed")
+    print("Perform update step batch size 32 test passed")
 
     test_perform_update_step_terminal_states()
-    print("✓ Perform update step terminal states test passed")
+    print("Perform update step terminal states test passed")
 
     test_perform_update_step_learning_rate_tracking()
-    print("✓ Perform update step learning rate tracking test passed")
+    print("Perform update step learning rate tracking test passed")
 
     test_perform_update_step_sets_train_mode()
-    print("✓ Perform update step sets train mode test passed")
+    print("Perform update step sets train mode test passed")
 
-    print("\nAll tests passed! ✓")
+    print("\nAll tests passed! ")
 
 
 # ============================================================================

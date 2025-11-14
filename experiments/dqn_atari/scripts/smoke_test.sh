@@ -347,7 +347,7 @@ def run_smoke_test(
     validate_smoke_test_outputs(run_dir)
 
     print("")
-    print("✓ Smoke test passed!")
+    print("[x] Smoke test passed!")
     return 0
 
 
@@ -376,7 +376,7 @@ def validate_smoke_test_outputs(run_dir):
     # Report
     print("")
     for name, passed in checks:
-        status = "✓" if passed else "✗"
+        status = "[x]" if passed else "[ ]"
         print(f"  {status} {name}")
 
     all_passed = all(passed for _, passed in checks)
@@ -426,7 +426,7 @@ rm /tmp/smoke_test_runner.py
 if [ $EXIT_CODE -eq 0 ]; then
     echo ""
     echo "========================================"
-    echo "Smoke test PASSED ✓"
+    echo "Smoke test PASSED [x]"
     echo "========================================"
     echo ""
     echo "Generated files in: $RUN_DIR"
@@ -439,7 +439,7 @@ if [ $EXIT_CODE -eq 0 ]; then
 else
     echo ""
     echo "========================================"
-    echo "Smoke test FAILED ✗"
+    echo "Smoke test FAILED [ ]"
     echo "========================================"
     exit 1
 fi

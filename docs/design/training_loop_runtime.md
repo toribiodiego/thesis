@@ -881,18 +881,18 @@ Total time: 215.3s
 
 Validating outputs...
 
-  ✓ metadata.json
-  ✓ git_info.txt
-  ✓ training_steps.csv
-  ✓ episodes.csv
-  ✓ reference_q_values.csv
-  ✓ evaluations.csv
-  ✓ checkpoints
+  [x] metadata.json
+  [x] git_info.txt
+  [x] training_steps.csv
+  [x] episodes.csv
+  [x] reference_q_values.csv
+  [x] evaluations.csv
+  [x] checkpoints
 
-✓ Smoke test passed!
+[x] Smoke test passed!
 
 ========================================
-Smoke test PASSED ✓
+Smoke test PASSED [x]
 ========================================
 ```
 
@@ -902,15 +902,15 @@ The smoke test checks for these files:
 
 ```bash
 runs/smoke_test_0/
-├── metadata.json          # ✓ Required
-├── git_info.txt           # ✓ Required
+├── metadata.json          # [x] Required
+├── git_info.txt           # [x] Required
 ├── logs/
-│   ├── training_steps.csv # ✓ Required
-│   ├── episodes.csv       # ✓ Required
-│   └── reference_q_values.csv # ✓ Required
+│   ├── training_steps.csv # [x] Required
+│   ├── episodes.csv       # [x] Required
+│   └── reference_q_values.csv # [x] Required
 ├── eval/
-│   └── evaluations.csv    # ✓ Required
-└── checkpoints/           # ✓ Required (non-empty)
+│   └── evaluations.csv    # [x] Required
+└── checkpoints/           # [x] Required (non-empty)
     └── step_50000.pt
 ```
 

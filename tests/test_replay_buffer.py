@@ -1124,141 +1124,141 @@ if __name__ == "__main__":
     print("Running replay buffer tests...")
 
     test_replay_buffer_init()
-    print("✓ Initialization test passed")
+    print("Initialization test passed")
 
     test_replay_buffer_append_single()
-    print("✓ Single append test passed")
+    print("Single append test passed")
 
     test_replay_buffer_append_multiple()
-    print("✓ Multiple append test passed")
+    print("Multiple append test passed")
 
     test_replay_buffer_episode_boundary_tracking()
-    print("✓ Episode boundary tracking test passed")
+    print("Episode boundary tracking test passed")
 
     test_replay_buffer_circular_wrap()
-    print("✓ Circular wrap test passed")
+    print("Circular wrap test passed")
 
     test_replay_buffer_dtype_conversion()
-    print("✓ Dtype conversion test passed")
+    print("Dtype conversion test passed")
 
     test_replay_buffer_shape_validation()
-    print("✓ Shape validation test passed")
+    print("Shape validation test passed")
 
     test_replay_buffer_valid_index_detection()
-    print("✓ Valid index detection test passed")
+    print("Valid index detection test passed")
 
     test_replay_buffer_get_valid_indices()
-    print("✓ Get valid indices test passed")
+    print("Get valid indices test passed")
 
     test_replay_buffer_wrap_around_boundary()
-    print("✓ Wrap-around boundary test passed")
+    print("Wrap-around boundary test passed")
 
     test_replay_buffer_empty_valid_indices()
-    print("✓ Empty valid indices test passed")
+    print("Empty valid indices test passed")
 
     test_replay_buffer_single_transition_no_valid()
-    print("✓ Single transition no valid test passed")
+    print("Single transition no valid test passed")
 
     test_replay_buffer_rewards_dtype()
-    print("✓ Rewards dtype test passed")
+    print("Rewards dtype test passed")
 
     test_replay_buffer_actions_dtype()
-    print("✓ Actions dtype test passed")
+    print("Actions dtype test passed")
 
     test_replay_buffer_dones_dtype()
-    print("✓ Dones dtype test passed")
+    print("Dones dtype test passed")
 
     test_replay_buffer_sample_basic()
-    print("✓ Sample basic test passed")
+    print("Sample basic test passed")
 
     test_replay_buffer_sample_insufficient_samples()
-    print("✓ Sample insufficient samples test passed")
+    print("Sample insufficient samples test passed")
 
     test_replay_buffer_sample_empty_buffer()
-    print("✓ Sample empty buffer test passed")
+    print("Sample empty buffer test passed")
 
     test_replay_buffer_sample_without_replacement()
-    print("✓ Sample without replacement test passed")
+    print("Sample without replacement test passed")
 
     test_replay_buffer_sample_respects_boundaries()
-    print("✓ Sample respects boundaries test passed")
+    print("Sample respects boundaries test passed")
 
     test_replay_buffer_sample_correct_next_states()
-    print("✓ Sample correct next states test passed")
+    print("Sample correct next states test passed")
 
     test_replay_buffer_sample_after_wrap()
-    print("✓ Sample after wrap test passed")
+    print("Sample after wrap test passed")
 
     test_replay_buffer_sample_deterministic_with_seed()
-    print("✓ Sample deterministic with seed test passed")
+    print("Sample deterministic with seed test passed")
 
     test_replay_buffer_sample_full_capacity()
-    print("✓ Sample full capacity test passed")
+    print("Sample full capacity test passed")
 
     test_replay_buffer_normalize_true()
-    print("✓ Normalize true test passed")
+    print("Normalize true test passed")
 
     test_replay_buffer_normalize_false()
-    print("✓ Normalize false test passed")
+    print("Normalize false test passed")
 
     test_replay_buffer_uint8_storage_memory_efficiency()
-    print("✓ Uint8 storage memory efficiency test passed")
+    print("Uint8 storage memory efficiency test passed")
 
     test_replay_buffer_conversion_accuracy()
-    print("✓ Conversion accuracy test passed")
+    print("Conversion accuracy test passed")
 
     test_replay_buffer_can_sample_basic()
-    print("✓ Can sample basic test passed")
+    print("Can sample basic test passed")
 
     test_replay_buffer_can_sample_with_batch_size()
-    print("✓ Can sample with batch size test passed")
+    print("Can sample with batch size test passed")
 
     test_replay_buffer_can_sample_default_min_size()
-    print("✓ Can sample default min_size test passed")
+    print("Can sample default min_size test passed")
 
     test_replay_buffer_can_sample_custom_min_size()
-    print("✓ Can sample custom min_size test passed")
+    print("Can sample custom min_size test passed")
 
     test_replay_buffer_warm_up_prevents_early_sampling()
-    print("✓ Warm-up prevents early sampling test passed")
+    print("Warm-up prevents early sampling test passed")
 
     test_replay_buffer_can_sample_with_episodes()
-    print("✓ Can sample with episodes test passed")
+    print("Can sample with episodes test passed")
 
     test_replay_buffer_uniform_sampling_without_replacement()
-    print("✓ Uniform sampling without replacement test passed")
+    print("Uniform sampling without replacement test passed")
 
     test_replay_buffer_boundary_safe_sampling()
-    print("✓ Boundary-safe sampling test passed")
+    print("Boundary-safe sampling test passed")
 
     test_replay_buffer_no_cross_episode_sampling()
-    print("✓ No cross-episode sampling test passed")
+    print("No cross-episode sampling test passed")
 
     test_replay_buffer_wrap_around_boundary_safety()
-    print("✓ Wrap-around boundary safety test passed")
+    print("Wrap-around boundary safety test passed")
 
     test_replay_buffer_sampling_deterministic()
-    print("✓ Sampling deterministic test passed")
+    print("Sampling deterministic test passed")
 
     test_replay_buffer_device_cpu()
-    print("✓ Device CPU transfer test passed")
+    print("Device CPU transfer test passed")
 
     test_replay_buffer_device_cuda()
-    print("✓ Device CUDA transfer test passed (or skipped)")
+    print("Device CUDA transfer test passed (or skipped)")
 
     test_replay_buffer_pinned_memory()
-    print("✓ Pinned memory test passed (or skipped)")
+    print("Pinned memory test passed (or skipped)")
 
     test_replay_buffer_no_device_returns_numpy()
-    print("✓ No device returns NumPy test passed")
+    print("No device returns NumPy test passed")
 
     test_replay_buffer_device_dtype_preservation()
-    print("✓ Device dtype preservation test passed")
+    print("Device dtype preservation test passed")
 
     test_replay_buffer_device_with_normalization()
-    print("✓ Device with normalization test passed")
+    print("Device with normalization test passed")
 
     test_replay_buffer_comprehensive_integration()
-    print("✓ Comprehensive integration test passed")
+    print("Comprehensive integration test passed")
 
-    print("\nAll tests passed! ✓")
+    print("\nAll tests passed! ")

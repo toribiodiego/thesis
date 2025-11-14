@@ -320,31 +320,31 @@ if __name__ == "__main__":
     print("Running DQN model tests...")
 
     test_dqn_output_shape()
-    print("✓ Output shape test passed (Breakout=4, Pong=6, BeamRider=9, etc.)")
+    print("Output shape test passed (Breakout=4, Pong=6, BeamRider=9, etc.)")
 
     test_dqn_no_nans()
-    print("✓ No NaNs/Infs test passed")
+    print("No NaNs/Infs test passed")
 
     test_dqn_gradient_flow()
-    print("✓ Gradient flow test passed")
+    print("Gradient flow test passed")
 
     test_dqn_mse_backward()
-    print("✓ MSE backward test passed (Breakout, Pong, BeamRider)")
+    print("MSE backward test passed (Breakout, Pong, BeamRider)")
 
     test_dqn_from_env()
-    print("✓ from_env test passed")
+    print("from_env test passed")
 
     test_dqn_channels_first()
-    print("✓ Channels-first test passed")
+    print("Channels-first test passed")
 
     test_dqn_initialization()
-    print("✓ Kaiming initialization test passed")
+    print("Kaiming initialization test passed")
 
     test_dqn_dtype()
-    print("✓ Float32 dtype test passed")
+    print("Float32 dtype test passed")
 
     test_dqn_device_transfer()
-    print("✓ Device transfer test passed")
+    print("Device transfer test passed")
 
     # Checkpoint tests (require tmp_path from pytest)
     import tempfile
@@ -354,18 +354,18 @@ if __name__ == "__main__":
         tmp_path = pathlib.Path(tmp_dir)
 
         test_dqn_save_checkpoint(tmp_path)
-        print("✓ Checkpoint save test passed")
+        print("Checkpoint save test passed")
 
         test_dqn_load_checkpoint(tmp_path)
-        print("✓ Checkpoint load test passed")
+        print("Checkpoint load test passed")
 
         test_dqn_checkpoint_strict_loading(tmp_path)
-        print("✓ Checkpoint strict loading test passed")
+        print("Checkpoint strict loading test passed")
 
         test_dqn_checkpoint_device_safe(tmp_path)
-        print("✓ Checkpoint device-safe loading test passed")
+        print("Checkpoint device-safe loading test passed")
 
         test_dqn_checkpoint_forward_equivalence(tmp_path)
-        print("✓ Checkpoint forward equivalence test passed")
+        print("Checkpoint forward equivalence test passed")
 
-    print("\nAll tests passed! ✓")
+    print("\nAll tests passed! ")

@@ -106,21 +106,21 @@ if __name__ == "__main__":
     print("Running model utility tests...")
 
     test_model_summary()
-    print("✓ model_summary test passed")
+    print("model_summary test passed")
 
     test_print_model_summary()
-    print("✓ print_model_summary test passed")
+    print("print_model_summary test passed")
 
     test_assert_output_shape_valid()
-    print("✓ assert_output_shape (valid) test passed")
+    print("assert_output_shape (valid) test passed")
 
     test_assert_output_shape_invalid()
-    print("✓ assert_output_shape (invalid) test passed")
+    print("assert_output_shape (invalid) test passed")
 
     test_model_validate_output_shape()
-    print("✓ model.validate_output_shape test passed")
+    print("model.validate_output_shape test passed")
 
     test_model_summary_different_action_sizes()
-    print("✓ model_summary with different action sizes test passed")
+    print("model_summary with different action sizes test passed")
 
-    print("\nAll tests passed! ✓")
+    print("\nAll tests passed! ")
