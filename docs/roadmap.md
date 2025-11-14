@@ -23,8 +23,16 @@ Re-implement and reproduce DeepMind's DQN (*Playing Atari with Deep Reinforcemen
 
 **Progress Summary**:
 - Subtasks 1-10: **Complete** (335+ tests, all passing)
-- Infrastructure ready: environment, wrappers, model, replay, training loop, checkpointing, config system, evaluation, logging/plotting
-- Next step: Integrate logging into training and launch first full runs
+- Subtask 11: **95% Complete** (implementation done, ready to execute training)
+- Infrastructure: Fully implemented and tested
+  - Environment, wrappers, preprocessing, frame stacking
+  - DQN model, replay buffer, Q-learning loss
+  - Training loop with epsilon-greedy exploration
+  - Multi-backend logging (TensorBoard, W&B, CSV)
+  - Checkpointing, resume, deterministic seeding
+  - Evaluation harness with video capture
+  - Plotting and results export scripts
+- **Next step**: Execute first full Pong training run (10M frames)
 
 ---
 
@@ -55,24 +63,42 @@ See `docs/papers/dqn_2013_notes.md` for details.
 
 ---
 
-## Next Steps (Practical Focus)
+## Next Steps (Execution Phase)
 
-**Immediate (Subtask 11)**:
-1. Integrate MetricsLogger into DQNTrainer
-2. Add logging config to YAML files
-3. Run smoke test with all logging backends
-4. Launch first full Pong training (10M frames)
-5. Generate plots and verify end-to-end pipeline
-6. Document game suite plan
+### Immediate (Complete Subtask 11 - This Week)
+1. [X] Integrate MetricsLogger into train_dqn.py (DONE)
+2. [X] Add logging config to YAML files (DONE)
+3. [X] Update schema validation (DONE)
+4. [ ] Run smoke test (200K frames, ~30 min)
+5. [ ] Launch first full Pong training (10M frames, ~8-12 hours)
+6. [ ] Verify all logging backends work (TensorBoard, CSV, W&B)
+7. [ ] Generate plots from training run
+8. [ ] Document game suite plan
 
-**Near-term (Subtask 12)**:
-1. Train Breakout and Beam Rider (50M frames each, 3 seeds)
-2. Verify stability across games
-3. Aggregate results and generate multi-seed plots
-4. Compare against paper baselines
-5. Upload all artifacts to W&B
+### Short-term (Subtask 12 - Multi-Game Training)
+1. Launch Breakout training (50M frames, 3 seeds)
+2. Launch Beam Rider training (50M frames, 3 seeds)
+3. Monitor for stability issues (NaN/Inf, crashes)
+4. Aggregate results with `export_results_table.py`
+5. Generate multi-seed plots with `plot_results.py --multi-seed`
+6. Compare to paper baselines
+7. Document any hyperparameter adjustments
 
-**Future Work** (Subtasks 13-21 provide detailed planning for ablations, reporting, code quality, and thesis integration - these can be tackled iteratively as needed)
+### Medium-term (Subtask 13 - Analysis & Reporting)
+1. Compare reproduction scores to DQN 2013 paper
+2. Analyze discrepancies (environment versions, etc.)
+3. Generate publication-quality plots and tables
+4. Write results summary (`docs/reports/dqn_results.md`)
+5. Upload final artifacts to W&B (if applicable)
+
+### Future Work (Optional - Subtasks 14-21)
+These provide valuable enhancements but are not critical for initial reproduction:
+- Ablation studies (reward clipping, target network, frame stack)
+- Automated report generation
+- Repository archival and organization
+- Thesis integration and write-up
+
+**Focus**: We've completed implementation (Subtasks 1-10). Now we execute, verify, and analyze (Subtasks 11-13).
 
 ---
 
@@ -339,20 +365,22 @@ Structured logging through TensorBoard, Weights & Biases (W&B), and CSV. Plottin
 Integrate MetricsLogger into DQN training loop, launch first full-length training runs on Pong (10M frames), verify all logging/checkpointing/evaluation systems work end-to-end, and document game suite plan with target scores. Complete when Pong training finishes successfully with complete logs, plots, and artifacts.
 
 **Checklist:**
-- [ ] Integrate MetricsLogger into DQNTrainer: instantiate logger from config, call `log_step()` during training steps, call `log_episode()` on episode completion, call `log_evaluation()` after eval runs, and call `close()` on shutdown.
-    - [ ] feat: Wire MetricsLogger into training loop with TensorBoard/W&B/CSV backends
-- [ ] Add logging configuration to training configs (enable_tensorboard, enable_wandb, wandb_project, flush_interval, upload_artifacts) and ensure defaults work for local-only development.
-    - [ ] feat: Add logging config section to base.yaml and per-game configs
+- [X] Integrate MetricsLogger into DQNTrainer: instantiate logger from config, call `log_step()` during training steps, call `log_episode()` on episode completion, call `log_evaluation()` after eval runs, and call `close()` on shutdown.
+    - [X] feat: Wire MetricsLogger into training loop with TensorBoard/W&B/CSV backends
+- [X] Add logging configuration to training configs (enable_tensorboard, enable_wandb, wandb_project, flush_interval, upload_artifacts) and ensure defaults work for local-only development.
+    - [X] feat: Add logging config section to base.yaml and per-game configs
+- [X] Update config schema validation to accept new logging backend fields.
+    - [X] fix: Update schema validator with tensorboard, csv, wandb fields
+- [X] Fix environment setup: register ALE environments, correct API calls for make_atari_env, configure_optimizer, ReplayBuffer.
+    - [X] fix: Register ALE environments and fix API compatibility
 - [ ] Test logging integration with smoke test: run 200K frame training with all backends enabled, verify CSV files exist, TensorBoard events are written, and W&B uploads work (or gracefully degrade if offline).
-    - [ ] test: Add smoke test for integrated logging with all backends
+    - [ ] test: Execute smoke test for integrated logging with all backends
 - [ ] Launch first full Pong training run (10M frames, seed 42): monitor logs in real-time, verify checkpoints save every 1M steps, confirm evaluation runs at specified intervals, and check W&B artifact uploads.
     - [ ] feat: Execute first full-length training run and document any issues
 - [ ] Generate plots from completed run: use `scripts/plot_results.py` to create learning curves, loss plots, eval trends, and epsilon schedule; verify metadata bundle and W&B uploads work.
     - [ ] test: Validate end-to-end plotting pipeline on real training data
 - [ ] Document game suite plan in `docs/design/game_suite_plan.md`: list chosen games (Pong, Breakout, Beam Rider), target scores from paper, frame budgets (10M for Pong, 50M for others), evaluation cadence (every 250K steps), and expected runtimes.
     - [ ] docs: Create game suite plan with targets and budgets
-- [ ] Update experiment configs with finalized frame budgets and evaluation settings based on first Pong run experience; document any deviations from paper defaults.
-    - [ ] chore: Adjust configs based on initial training run learnings
 - [ ] Verify resume functionality on Pong run: interrupt training mid-run, resume from checkpoint, verify metrics/RNG continuity, and document any issues.
     - [ ] test: Exercise resume on real training run (not just unit tests)
 
@@ -364,19 +392,21 @@ Integrate MetricsLogger into DQN training loop, launch first full-length trainin
 Execute full-length training runs for game suite (Pong, Breakout, Beam Rider) across multiple seeds, verify stability, collect results, and generate comparison tables against paper baselines. Complete when all games have finished runs with aggregated metrics and plots.
 
 **Checklist:**
-- [ ] Launch Breakout and Beam Rider training (50M frames each, 3 seeds per game): use same configs as Pong, monitor for stability issues (NaN/Inf, gradient explosions), document any hyperparameter adjustments needed.
-    - [ ] feat: Execute full training suite with stability monitoring
+- [ ] Launch Breakout training (50M frames, 3 seeds): use same configs as Pong baseline, monitor for stability issues (NaN/Inf, gradient explosions), log all runs with deterministic seeds.
+    - [ ] feat: Execute Breakout training suite with stability monitoring
+- [ ] Launch Beam Rider training (50M frames, 3 seeds): use same configs as Pong baseline, monitor for stability issues, log all runs with deterministic seeds.
+    - [ ] feat: Execute Beam Rider training suite with stability monitoring
 - [ ] Verify paper-default hyperparameters work across all games: replay=1M, batch=32, LR=2.5e-4, gamma=0.99, target_update=10k, RMSProp(rho=0.95, eps=0.01); if instability occurs, run limited sweep (2-3 LR values, 2M frames) and document in `docs/design/stability_notes.md`.
     - [ ] test: Confirm stability or document minimal tuning adjustments
-- [ ] Aggregate results using `scripts/export_results_table.py`: generate `results/summary/results_summary.csv` and `.md` with columns (game, seed, mean_return, std_return, frames, wall_time, commit_hash); upload to W&B.
+- [ ] Aggregate results using `scripts/export_results_table.py`: generate `results/summary/results_summary.csv` and `.md` with columns (game, seed, mean_return, std_return, frames, wall_time, commit_hash).
     - [ ] feat: Export aggregated results table for all completed runs
 - [ ] Generate multi-seed plots using `scripts/plot_results.py --multi-seed`: create learning curves with 95% CI for each game, save to `results/plots/<game>/multi_seed/`.
     - [ ] feat: Create publication-quality multi-seed aggregation plots
 - [ ] Compare against paper baselines: create comparison table with columns (Game, Our Score, Paper Score, % of Paper, Status); document in `results/summary/paper_comparison.md` with brief analysis of gaps.
     - [ ] docs: Document results comparison with paper and note discrepancies
-- [ ] Exercise resume on each game: interrupt one run per game mid-training, resume from checkpoint, verify metrics continuity; document pass/fail in `docs/design/run_management.md`.
+- [ ] Exercise resume functionality: interrupt one run per game mid-training, resume from checkpoint, verify metrics/RNG continuity; document pass/fail in `docs/design/run_management.md`.
     - [ ] test: Verify resume works on real multi-hour training runs
-- [ ] Upload all artifacts to W&B: checkpoints at 1M intervals, final plots, aggregated tables, and metadata bundles; ensure naming follows conventions from Subtask 10.
+- [ ] Upload all artifacts to W&B (if used): checkpoints at 1M intervals, final plots, aggregated tables, and metadata bundles; ensure naming follows conventions from Subtask 10.
     - [ ] chore: Complete W&B artifact uploads with proper naming
 - [ ] Document runtime performance: record actual FPS, wall-clock time per game/seed, GPU utilization; save to `results/summary/runtime_stats.csv` for future planning.
     - [ ] docs: Capture performance metrics for reproducibility
