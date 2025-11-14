@@ -637,3 +637,228 @@ print(df[['step', 'mean_return', 'median_return', 'std_return']])
 ```
 
 See [docs/design/eval_harness.md](../../../docs/design/eval_harness.md) for complete evaluation harness documentation.
+
+---
+
+## Logging & Plotting
+
+Training metrics are logged to three backends simultaneously: **TensorBoard**, **Weights & Biases (W&B)**, and **CSV files**.
+
+### Configure Logging Backends
+
+Edit your config file (e.g., `experiments/dqn_atari/configs/pong.yaml`):
+
+```yaml
+logging:
+  # TensorBoard (local event files)
+  enable_tensorboard: true
+  tensorboard_dir: "results/logs/{game}/{run_id}/tensorboard"
+
+  # Weights & Biases (cloud logging)
+  enable_wandb: true
+  wandb_project: "dqn-atari"
+  wandb_entity: "my-team"  # optional
+  upload_artifacts: true
+  artifact_upload_interval: 1000000  # Upload every 1M steps
+
+  # CSV files (always enabled)
+  enable_csv: true
+  csv_dir: "results/logs/{game}/{run_id}/csv"
+  flush_interval: 1000  # Flush every 1K steps
+```
+
+### Enable W&B
+
+**One-time setup:**
+```bash
+# Install W&B (if not already installed)
+pip install wandb
+
+# Login with your API key
+wandb login
+
+# Or set directly
+export WANDB_API_KEY="your_api_key_here"
+```
+
+**Use offline mode** (sync later):
+```bash
+export WANDB_MODE=offline
+
+# Run training...
+
+# Later, sync offline runs
+wandb sync results/logs/pong/pong_seed42/wandb/
+```
+
+**Disable W&B completely:**
+```bash
+export WANDB_DISABLED=true
+```
+
+### View Logs
+
+**TensorBoard:**
+```bash
+# Launch TensorBoard
+tensorboard --logdir results/logs/pong/
+
+# Open browser to: http://localhost:6006
+```
+
+**W&B Dashboard:**
+- Visit: `https://wandb.ai/<entity>/<project>`
+- View runs, compare metrics, and download artifacts
+
+**CSV Files:**
+```bash
+# Training steps (loss, epsilon, FPS)
+cat results/logs/pong/pong_seed42/csv/training_steps.csv
+
+# Episodes (return, length)
+cat results/logs/pong/pong_seed42/csv/episodes.csv
+
+# Watch live
+tail -f results/logs/pong/pong_seed42/csv/episodes.csv
+```
+
+### File Locations
+
+```
+results/logs/<game>/<run_id>/
+├── tensorboard/
+│   └── events.out.tfevents.*
+├── csv/
+│   ├── training_steps.csv
+│   └── episodes.csv
+├── wandb/                  # W&B cache (if enabled)
+└── checkpoints/            # Model checkpoints
+```
+
+### Generate Plots
+
+Use `scripts/plot_results.py` to generate publication-quality figures:
+
+**From local CSV files:**
+```bash
+python scripts/plot_results.py \
+  --episodes results/logs/pong/run_123/csv/episodes.csv \
+  --steps results/logs/pong/run_123/csv/training_steps.csv \
+  --output plots/pong \
+  --game-name pong \
+  --formats png pdf svg
+```
+
+**From W&B artifacts:**
+```bash
+python scripts/plot_results.py \
+  --wandb-project dqn-atari \
+  --wandb-run abc123 \
+  --wandb-artifact training_logs_step_10000000:latest \
+  --output plots/pong \
+  --game-name pong
+```
+
+**Multi-seed aggregation (with 95% CI):**
+```bash
+python scripts/plot_results.py \
+  --multi-seed results/logs/pong/seed1/csv/episodes.csv \
+               results/logs/pong/seed2/csv/episodes.csv \
+               results/logs/pong/seed3/csv/episodes.csv \
+  --output plots/pong_multi_seed \
+  --game-name pong \
+  --smoothing 100
+```
+
+**Performance options for large files:**
+```bash
+# Downsample to 10K points (faster plotting)
+python scripts/plot_results.py \
+  --episodes results/logs/pong/run_123/csv/episodes.csv \
+  --downsample 10000 \
+  --warn-size-mb 100 \
+  --output plots/pong
+```
+
+**Upload plots to W&B:**
+```bash
+python scripts/plot_results.py \
+  --episodes results/logs/pong/run_123/csv/episodes.csv \
+  --output plots/pong \
+  --upload-wandb \
+  --wandb-project dqn-atari \
+  --wandb-upload-run abc123
+```
+
+### Export Results Tables
+
+Generate summary tables from multiple runs:
+
+```bash
+# Scan all runs and generate Markdown/CSV tables
+python scripts/export_results_table.py \
+  --runs-dir results/logs/pong/ \
+  --output results/summary
+
+# Outputs:
+# - results/summary/results_summary.md
+# - results/summary/results_summary.csv
+```
+
+**With W&B upload:**
+```bash
+python scripts/export_results_table.py \
+  --runs-dir results/logs/pong/ \
+  --output results/summary \
+  --upload-wandb \
+  --wandb-project dqn-atari
+```
+
+### Plot Types Generated
+
+| Plot | Filename | Description |
+|------|----------|-------------|
+| Episode Returns | `{game}_episode_returns.{fmt}` | Return over training steps |
+| Training Loss | `{game}_training_loss.{fmt}` | TD loss progression |
+| Evaluation Scores | `{game}_evaluation_scores.{fmt}` | Periodic eval performance |
+| Epsilon Schedule | `{game}_epsilon_schedule.{fmt}` | Exploration decay |
+
+All plots are 300 DPI publication-quality with configurable smoothing.
+
+### Troubleshooting
+
+**W&B not logging:**
+```bash
+# Check W&B is installed
+pip install wandb
+
+# Check login status
+wandb login --verify
+
+# Test connection
+python -c "import wandb; wandb.init(project='test', mode='online')"
+```
+
+**TensorBoard not showing logs:**
+```bash
+# Check files exist
+ls -la results/logs/pong/pong_seed42/tensorboard/
+
+# Try different port
+tensorboard --logdir results/logs/pong/ --port 6007
+```
+
+**CSV files missing:**
+```bash
+# Check training actually ran
+ls -la results/logs/pong/pong_seed42/csv/
+
+# Check file isn't empty
+wc -l results/logs/pong/pong_seed42/csv/episodes.csv
+```
+
+### See Also
+
+- **[docs/design/logging_pipeline.md](../../../docs/design/logging_pipeline.md)** - Complete logging architecture and API reference
+- **[scripts/plot_results.py](../../../scripts/plot_results.py)** - Run with `--help` for full CLI reference
+- **[scripts/export_results_table.py](../../../scripts/export_results_table.py)** - Results table generator

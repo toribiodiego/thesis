@@ -118,6 +118,90 @@ See [experiments/dqn_atari/configs/README.md](experiments/dqn_atari/configs/READ
 - [x] Smoke test for fast validation
 - [x] 163+ unit tests for all components
 
+### Logging & Plots
+
+Training metrics are logged to **three backends simultaneously**: TensorBoard, Weights & Biases (W&B), and CSV files.
+
+**Enable W&B logging:**
+```bash
+# Set API key (one-time setup)
+export WANDB_API_KEY="your_key_here"
+
+# Configure in training config
+# experiments/dqn_atari/configs/pong.yaml
+logging:
+  enable_wandb: true
+  wandb_project: "dqn-atari"
+  wandb_entity: "my-team"  # optional
+  upload_artifacts: true
+
+# Or use offline mode (sync later)
+export WANDB_MODE=offline
+```
+
+**View TensorBoard logs:**
+```bash
+# Launch TensorBoard
+tensorboard --logdir results/logs/pong/
+
+# Logs are written to:
+# results/logs/<game>/<run_id>/tensorboard/
+```
+
+**CSV logs location:**
+```bash
+# Per-step metrics (loss, epsilon, FPS)
+results/logs/<game>/<run_id>/csv/training_steps.csv
+
+# Per-episode metrics (return, length)
+results/logs/<game>/<run_id>/csv/episodes.csv
+
+# Quick check
+tail -f results/logs/pong/pong_seed42/csv/episodes.csv
+```
+
+**Generate plots:**
+```bash
+# From local CSV files
+python scripts/plot_results.py \
+  --episodes results/logs/pong/run_123/csv/episodes.csv \
+  --steps results/logs/pong/run_123/csv/training_steps.csv \
+  --output plots/pong \
+  --game-name pong
+
+# From W&B artifacts
+python scripts/plot_results.py \
+  --wandb-project dqn-atari \
+  --wandb-run abc123 \
+  --wandb-artifact training_logs_step_1000000:latest \
+  --output plots/pong
+
+# Multi-seed aggregation (with 95% CI)
+python scripts/plot_results.py \
+  --multi-seed results/logs/pong/seed1/csv/episodes.csv \
+               results/logs/pong/seed2/csv/episodes.csv \
+               results/logs/pong/seed3/csv/episodes.csv \
+  --output plots/pong_multi_seed \
+  --game-name pong
+```
+
+**Export results table:**
+```bash
+# Generate Markdown/CSV summary tables
+python scripts/export_results_table.py \
+  --runs-dir results/logs/pong/ \
+  --output results/summary
+
+# Outputs:
+# - results/summary/results_summary.csv
+# - results/summary/results_summary.md
+```
+
+**See also:**
+- [docs/design/logging_pipeline.md](docs/design/logging_pipeline.md) - Complete logging & plotting documentation
+- [scripts/plot_results.py](scripts/plot_results.py) - Full CLI reference with `--help`
+- [scripts/export_results_table.py](scripts/export_results_table.py) - Results table generator
+
 ## Documentation
 
 **New to the project?** Start with the [Quick Start](#quick-start) above, then explore:
