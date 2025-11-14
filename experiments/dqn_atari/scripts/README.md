@@ -64,6 +64,146 @@ Launch DQN training or dry-run validation with specified config.
 - Dry run: `experiments/dqn_atari/runs/{experiment_name}_{seed}/` (frames, logs, metadata)
 - Training: `experiments/dqn_atari/runs/{experiment_name}_{seed}/` (checkpoints, logs, metrics)
 
+### Resume a Run
+
+Resume training from a saved checkpoint using the `--resume` flag.
+
+**Basic Resume:**
+```bash
+./experiments/dqn_atari/scripts/run_dqn.sh \
+  experiments/dqn_atari/configs/pong.yaml \
+  --resume experiments/dqn_atari/runs/pong_123/checkpoints/checkpoint_1000000.pt
+```
+
+**Resume with Strict Config Validation:**
+```bash
+./experiments/dqn_atari/scripts/run_dqn.sh \
+  experiments/dqn_atari/configs/pong.yaml \
+  --resume experiments/dqn_atari/runs/pong_123/checkpoints/checkpoint_1000000.pt \
+  --strict-resume
+```
+
+**Resume from Best Model:**
+```bash
+./experiments/dqn_atari/scripts/run_dqn.sh \
+  experiments/dqn_atari/configs/pong.yaml \
+  --resume experiments/dqn_atari/runs/pong_123/checkpoints/best_model.pt
+```
+
+**What Gets Restored:**
+- ✓ Model weights (online and target Q-networks)
+- ✓ Optimizer state (momentum buffers, learning rate)
+- ✓ Training counters (step, episode, epsilon)
+- ✓ Replay buffer state (write index and size)
+- ✓ RNG states (Python, NumPy, PyTorch, CUDA, environment)
+
+**Expected Output on Resume:**
+```
+================================================================================
+RESUMING FROM CHECKPOINT
+================================================================================
+Checkpoint: experiments/dqn_atari/runs/pong_123/checkpoints/checkpoint_1000000.pt
+
+Checkpoint Info:
+  Step: 1,000,000
+  Episode: 5,000
+  Epsilon: 0.5000
+  Saved at: 2025-01-15T10:30:45.123456
+  Commit: a1b2c3d
+
+Restoring epsilon scheduler...
+  Setting epsilon to: 0.5000
+  Setting frame counter to: 1000000
+
+Restoring RNG states for reproducibility...
+  ✓ Python random state restored
+  ✓ NumPy random state restored
+  ✓ PyTorch random state restored
+
+Replay buffer state:
+  Size: 1,000,000 / 1,000,000
+  Write index: 0
+
+Optimizer state restored:
+  Type: RMSprop
+  Learning rate: 0.00025
+
+Model weights restored:
+  Online model parameters: 677,686
+  Target model parameters: 677,686
+  Device: cuda
+
+================================================================================
+RESUME COMPLETE - Starting from step 1,000,001
+================================================================================
+```
+
+**Files Written by Checkpoint Manager:**
+
+During training, the checkpoint manager creates these files:
+```
+experiments/dqn_atari/runs/pong_123/
+├── checkpoints/
+│   ├── checkpoint_1000000.pt     # Periodic checkpoint (every 1M steps)
+│   ├── checkpoint_2000000.pt     # Periodic checkpoint
+│   ├── checkpoint_3000000.pt     # Periodic checkpoint
+│   └── best_model.pt             # Best model by eval score
+├── logs/
+│   ├── episodes.csv              # Episode metrics
+│   ├── steps.csv                 # Step-level metrics
+│   └── eval.csv                  # Evaluation results
+└── meta.json                     # Run metadata (seed, git hash, config)
+```
+
+**Verification Checklist for Deterministic Resume:**
+
+To verify a resume produces identical results:
+
+1. ✓ **Enable deterministic mode in config:**
+   ```yaml
+   experiment:
+     deterministic:
+       enabled: true
+       strict: false
+   ```
+
+2. ✓ **Use same seed and config:**
+   ```bash
+   # Original run
+   ./run_dqn.sh config.yaml --seed 42
+
+   # Resume must use same config
+   ./run_dqn.sh config.yaml --resume checkpoint.pt
+   ```
+
+3. ✓ **Check git commit hash:**
+   - Resume warns if code version differs
+   - Ensure working directory is clean (`git status`)
+
+4. ✓ **Verify RNG states restored:**
+   - Check console output: "✓ RNG states restored"
+   - Run smoke test: `pytest tests/test_save_resume_determinism.py -v -s`
+
+5. ✓ **Compare metrics after resume:**
+   - Epsilon values should match exactly
+   - Actions should be identical
+   - Rewards should be identical (with tiny FP tolerance)
+
+**Run Determinism Smoke Test:**
+```bash
+# Verify save/resume determinism
+pytest tests/test_save_resume_determinism.py -v -s
+
+# Expected output:
+# ✓ PERFECT DETERMINISM - All metrics match exactly
+# Epsilon Matches: 100.0%
+# Reward Matches: 100.0%
+# Action Matches: 100.0%
+# Checksum Match: ✓ PASS
+```
+
+See [docs/design/checkpointing.md](../../../docs/design/checkpointing.md) for complete checkpoint/resume documentation.
+
 ## `setup_roms.sh`
 
 Download and install Atari 2600 ROMs required for ALE environments.
