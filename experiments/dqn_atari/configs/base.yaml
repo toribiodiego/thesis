@@ -49,6 +49,23 @@ experiment:
   seed: 0
   output_dir: experiments/dqn_atari/runs/${experiment.name}_${experiment.seed}
 
+  # Deterministic execution settings
+  # Controls reproducibility vs performance trade-off
+  deterministic:
+    # Enable deterministic mode (may reduce performance by 10-20%)
+    # Sets torch.backends.cudnn.deterministic=True and cudnn.benchmark=False
+    enabled: false
+
+    # Strict determinism mode (may cause errors with some operations)
+    # Calls torch.use_deterministic_algorithms(True)
+    # WARNING: Some operations don't have deterministic implementations
+    # and will raise errors instead of using non-deterministic fallbacks
+    strict: false
+
+    # Warn on non-deterministic operations instead of raising errors
+    # Only applies when strict=True
+    warn_only: true
+
 env:
   id: ALE/Pong-v5
   mode: train

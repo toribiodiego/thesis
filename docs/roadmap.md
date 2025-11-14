@@ -219,8 +219,8 @@ Save/restore models, optimizer, replay position, counters, ε, RNG states. Suppo
     - [X] feat: Implement robust resume path restoring counters, schedules, and replay buffer
 - [X] Centralize deterministic seeding with `set_seed(seed, deterministic=True)` to seed Python, NumPy, Torch (CPU/GPU), and the env on every reset; record the seed in run metadata and propagate to workers if using multiprocessing.
     - [X] feat: Add deterministic seeding utility and metadata recording
-- [ ] Control randomness for reproducibility by setting `torch.backends.cudnn.deterministic=True`, `torch.backends.cudnn.benchmark=False`, and optionally `torch.use_deterministic_algorithms(True)` behind a config flag; document potential performance trade-offs.
-    - [ ] docs: Document deterministic flags and performance implications
+- [X] Control randomness for reproducibility by setting `torch.backends.cudnn.deterministic=True`, `torch.backends.cudnn.benchmark=False`, and optionally `torch.use_deterministic_algorithms(True)` behind a config flag; document potential performance trade-offs.
+    - [X] docs: Document deterministic flags and performance implications
 - [ ] Create a smoke test: run ~10k steps, save a checkpoint, resume from it, and verify identical ε, rewards, and selected actions for a fixed number of frames (allow tiny FP tolerance); emit a short comparison report (match/ mismatch counts, checksums).
     - [ ] test: Add save/resume determinism test with metric comparison and checksum report
 - [ ] Capture checkpoint/resume procedures in `docs/design/checkpointing.md`: list saved tensors, metadata schema, resume CLI usage, deterministic seeding requirements, and debugging steps for mismatched states.
