@@ -819,12 +819,12 @@ Validate end-to-end training stability **before** launching long experiments.
 
 ### What It Checks
 
-- ✅ Training loop executes without crashes
-- ✅ Logs are created and grow over time
-- ✅ Checkpoints appear (if interval reached)
-- ✅ Evaluation runs trigger and complete
-- ✅ Reference Q logging works
-- ✅ Metrics are recorded correctly
+- [pass] Training loop executes without crashes
+- [pass] Logs are created and grow over time
+- [pass] Checkpoints appear (if interval reached)
+- [pass] Evaluation runs trigger and complete
+- [pass] Reference Q logging works
+- [pass] Metrics are recorded correctly
 
 ### Running the Smoke Test
 
@@ -916,11 +916,11 @@ runs/smoke_test_0/
 
 ### When to Run Smoke Tests
 
-- ✅ After implementing new training components
-- ✅ Before starting long training runs (10M+ frames)
-- ✅ After changing environment/dependency versions
-- ✅ After modifying training loop logic
-- ✅ As part of CI/CD pipeline
+- [pass] After implementing new training components
+- [pass] Before starting long training runs (10M+ frames)
+- [pass] After changing environment/dependency versions
+- [pass] After modifying training loop logic
+- [pass] As part of CI/CD pipeline
 
 ### Smoke Test vs. Full Training
 
@@ -931,6 +931,93 @@ runs/smoke_test_0/
 | **Purpose** | Validate pipeline | Train agent |
 | **Checkpoints** | 1-2 checkpoints | 10-20 checkpoints |
 | **Evaluations** | 1-4 evals | 40+ evals |
+
+---
+
+## Testing
+
+### Unit Test Suites
+
+The training loop components are covered by comprehensive unit tests in `tests/test_dqn_trainer.py`.
+
+**Running all training tests:**
+```bash
+# Full training module test suite (163+ tests)
+pytest tests/test_dqn_trainer.py -v
+
+# With coverage report
+pytest tests/test_dqn_trainer.py --cov=src.training --cov-report=html
+```
+
+**Targeted test suites:**
+
+```bash
+# Scheduler tests (epsilon, training, target sync)
+pytest tests/test_dqn_trainer.py -k "scheduler" -v
+
+# Training step orchestration
+pytest tests/test_dqn_trainer.py -k "training_step" -v
+
+# Logging components (step, episode, checkpoint)
+pytest tests/test_dqn_trainer.py -k "logger" -v
+
+# Evaluation system
+pytest tests/test_dqn_trainer.py -k "evaluation" -v
+
+# Reference Q tracking
+pytest tests/test_dqn_trainer.py -k "reference" -v
+
+# Metadata and git utilities
+pytest tests/test_dqn_trainer.py -k "metadata or git" -v
+
+# Stability checks (NaN/Inf detection)
+pytest tests/test_dqn_trainer.py -k "stability or nan or inf" -v
+```
+
+**Test coverage by component:**
+
+| Component | Tests | What's Covered |
+|-----------|-------|----------------|
+| **Target Network** | 6 | hard_update, init, scheduler |
+| **Loss Functions** | 12 | TD targets, Q-selection, MSE/Huber loss |
+| **Optimization** | 8 | Optimizer config, gradient clipping |
+| **Schedulers** | 18 | Epsilon decay, training frequency, target sync |
+| **Stability Checks** | 21 | NaN/Inf detection, loss validation, target sync verification |
+| **Metrics** | 15 | UpdateMetrics, perform_update_step |
+| **Training Loop** | 22 | training_step, action selection, frame counter |
+| **Logging** | 24 | StepLogger, EpisodeLogger, CheckpointManager |
+| **Evaluation** | 18 | evaluate(), EvaluationScheduler, EvaluationLogger |
+| **Q Tracking** | 9 | ReferenceStateQTracker, ReferenceQLogger |
+| **Metadata** | 8 | Git utilities, MetadataWriter |
+| **Integration** | 2 | End-to-end training step with all components |
+
+**Fast subset for CI:**
+```bash
+# Quick smoke test of core functionality (~30s)
+pytest tests/test_dqn_trainer.py -k "not slow" -v
+
+# Just the integration tests
+pytest tests/test_dqn_trainer.py::test_training_step_integration -v
+```
+
+### Relationship to Smoke Test
+
+**Unit tests** verify individual components in isolation:
+- Fast (seconds to minutes)
+- No environment interaction
+- Mocked dependencies
+- Test edge cases and error handling
+
+**Smoke test** validates end-to-end integration:
+- Slower (~5-10 minutes)
+- Uses mock environment
+- All components working together
+- Validates file outputs and logging
+
+**Recommended testing workflow:**
+1. Run unit tests during development: `pytest tests/test_dqn_trainer.py -k component`
+2. Run smoke test before commits: `./experiments/dqn_atari/scripts/smoke_test.sh`
+3. Run full test suite before PRs: `pytest tests/ -v`
 
 ---
 
