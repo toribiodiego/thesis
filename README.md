@@ -4,21 +4,50 @@ Masters thesis on sample- and data-efficient reinforcement learning. First miles
 
 ## Quick Start
 
+### Environment Setup
+
 ```bash
-# 1. Setup environment
+# 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. Download Atari ROMs
+# 2. Download Atari ROMs (one-time setup)
 ./experiments/dqn_atari/scripts/setup_roms.sh
 
-# 3. Validate preprocessing with dry run
+# 3. Capture system info for reproducibility
+./experiments/dqn_atari/scripts/capture_env.sh
+```
+
+### Run a Training Job
+
+The complete DQN training pipeline is ready to use (Subtask 6 complete):
+
+```bash
+# 1. Validate training loop with smoke test (~5-10 min)
+./experiments/dqn_atari/scripts/smoke_test.sh
+
+# 2. Validate preprocessing with dry run (3 episodes, real env)
 ./experiments/dqn_atari/scripts/run_dqn.sh \
   experiments/dqn_atari/configs/pong.yaml --dry-run
 
-# 4. Start training
+# 3. Run unit tests (optional, verify components)
+pytest tests/test_dqn_trainer.py -k "training_step" -v
+
+# 4. Start full training (10M frames for Pong)
 ./experiments/dqn_atari/scripts/run_dqn.sh \
   experiments/dqn_atari/configs/pong.yaml --seed 123
+
+# 5. Monitor training progress
+tail -f experiments/dqn_atari/runs/pong_123/logs/episodes.csv
 ```
+
+**What's included:**
+- ✅ Complete training loop with epsilon-greedy exploration
+- ✅ Structured logging (steps, episodes, evaluation, Q-values)
+- ✅ Periodic evaluation with low-ε policy
+- ✅ Checkpoint management (periodic + best model)
+- ✅ Metadata persistence (git hash, config, seed)
+- ✅ Smoke test for fast validation
+- ✅ 163+ unit tests for all components
 
 ## Documentation
 
@@ -33,6 +62,8 @@ Core implementation specifications and guides:
 - **[docs/design/dqn_model.md](docs/design/dqn_model.md)** – Q-network architecture and forward pass details
 - **[docs/design/replay_buffer.md](docs/design/replay_buffer.md)** – Experience replay storage and sampling
 - **[docs/design/dqn_training.md](docs/design/dqn_training.md)** – Q-learning update flow, loss functions, and debugging guide
+- **[docs/design/episode_handling.md](docs/design/episode_handling.md)** – Episode management, termination policies, training vs. evaluation
+- **[docs/design/training_loop_runtime.md](docs/design/training_loop_runtime.md)** – Training loop orchestration, logging, evaluation, troubleshooting
 
 ### Running DQN
 
@@ -40,8 +71,25 @@ See [experiments/dqn_atari/README.md](experiments/dqn_atari/README.md) for exper
 
 **Key scripts:**
 - `run_dqn.sh` – Training and dry-run validation
+- `smoke_test.sh` – Fast end-to-end validation (~200K frames)
 - `setup_roms.sh` – One-time ROM installation
 - `capture_env.sh` – System and package information capture
+
+### Testing
+
+See [tests/README.md](tests/README.md) for complete test documentation.
+
+**Run tests:**
+```bash
+# All tests
+pytest tests/ -v
+
+# Training loop tests (Subtask 6)
+pytest tests/test_dqn_trainer.py -v
+
+# Targeted component tests
+pytest tests/test_dqn_trainer.py -k "scheduler" -v
+```
 
 ## Structure
 
