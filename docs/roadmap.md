@@ -141,8 +141,8 @@ Circular buffer storing ~1M transitions (s,a,r,s',done). Store as uint8, convert
     - [X] perf: Add device move, optional pinned memory, and normalization toggle
 - [X] Add tests: fill buffer past `batch_size`, call `sample`, verify exact shapes and dtypes, ensure no cross-episode indices, check wrap-around correctness at buffer edges, and assert reproducibility with a fixed RNG seed.
     - [X] test: Add shape/boundary/repro tests for sampling and ring wrap-around
-- [ ] Capture replay design in `docs/design/replay_buffer.md`: diagram memory layout, document sampling pseudocode, warm-up policy, config flags, and known failure modes (e.g., episode leakage, dtype mismatch) with troubleshooting steps.
-    - [ ] docs: Reference the commands/tests used to validate the buffer and instructions for dumping sample batches for inspection.
+- [X] Capture replay design in `docs/design/replay_buffer.md`: diagram memory layout, document sampling pseudocode, warm-up policy, config flags, and known failure modes (e.g., episode leakage, dtype mismatch) with troubleshooting steps.
+    - [X] docs: Reference the commands/tests used to validate the buffer and instructions for dumping sample batches for inspection.
 
 ---
 
