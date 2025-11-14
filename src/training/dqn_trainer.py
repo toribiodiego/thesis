@@ -1383,3 +1383,79 @@ def select_epsilon_greedy_action(
             action = q_values.argmax(dim=1).item()
         network.train()
         return action
+
+
+# ============================================================================
+# Training Loop Utilities
+# ============================================================================
+
+class FrameCounter:
+    """
+    Track environment frames vs decision steps for action repeat.
+
+    With frame skip k=4, each decision step corresponds to k environment frames.
+    This class tracks both counts to ensure correct frame budgets and logging.
+
+    Parameters
+    ----------
+    frameskip : int
+        Number of frames per decision step (default: 4)
+
+    Examples
+    --------
+    >>> counter = FrameCounter(frameskip=4)
+    >>> counter.step()  # Increment by 1 decision step
+    >>> counter.frames  # Returns 4 (1 decision * 4 frames)
+    >>> counter.steps   # Returns 1
+    >>> counter.fps(elapsed_time=1.0)  # Returns frames per second
+    """
+
+    def __init__(self, frameskip: int = 4):
+        assert frameskip > 0, f"frameskip must be positive, got {frameskip}"
+        self.frameskip = frameskip
+        self._steps = 0
+        self._start_time = None
+
+    def step(self, num_steps: int = 1):
+        """Increment decision step counter."""
+        self._steps += num_steps
+
+    @property
+    def steps(self) -> int:
+        """Total decision steps taken."""
+        return self._steps
+
+    @property
+    def frames(self) -> int:
+        """Total environment frames (steps * frameskip)."""
+        return self._steps * self.frameskip
+
+    def fps(self, elapsed_time: float) -> float:
+        """
+        Calculate frames per second.
+
+        Parameters
+        ----------
+        elapsed_time : float
+            Elapsed time in seconds
+
+        Returns
+        -------
+        float
+            Frames per second (frames / elapsed_time)
+        """
+        if elapsed_time <= 0:
+            return 0.0
+        return self.frames / elapsed_time
+
+    def reset(self):
+        """Reset counter to zero."""
+        self._steps = 0
+
+    def to_dict(self) -> dict:
+        """Export counter state as dictionary."""
+        return {
+            'steps': self.steps,
+            'frames': self.frames,
+            'frameskip': self.frameskip
+        }

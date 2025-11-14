@@ -2571,6 +2571,137 @@ def test_epsilon_scheduler_edge_cases():
     assert scheduler_short.get_epsilon(10) == 0.1
 
 
+# ============================================================================
+# Frame Counter Tests
+# ============================================================================
+
+def test_frame_counter_initialization():
+    """Test FrameCounter initializes correctly."""
+    from src.training import FrameCounter
+
+    counter = FrameCounter(frameskip=4)
+    assert counter.frameskip == 4
+    assert counter.steps == 0
+    assert counter.frames == 0
+
+
+def test_frame_counter_step_increment():
+    """Test step() increments decision steps."""
+    from src.training import FrameCounter
+
+    counter = FrameCounter(frameskip=4)
+
+    counter.step()
+    assert counter.steps == 1
+    assert counter.frames == 4
+
+    counter.step()
+    assert counter.steps == 2
+    assert counter.frames == 8
+
+
+def test_frame_counter_multi_step():
+    """Test step() with multiple steps at once."""
+    from src.training import FrameCounter
+
+    counter = FrameCounter(frameskip=4)
+
+    counter.step(num_steps=5)
+    assert counter.steps == 5
+    assert counter.frames == 20
+
+
+def test_frame_counter_frames_calculation():
+    """Test frames property calculates correctly."""
+    from src.training import FrameCounter
+
+    # Default frameskip=4
+    counter = FrameCounter(frameskip=4)
+    counter.step(num_steps=100)
+    assert counter.frames == 400
+
+    # Custom frameskip
+    counter2 = FrameCounter(frameskip=2)
+    counter2.step(num_steps=100)
+    assert counter2.frames == 200
+
+
+def test_frame_counter_fps():
+    """Test FPS calculation."""
+    from src.training import FrameCounter
+
+    counter = FrameCounter(frameskip=4)
+    counter.step(num_steps=100)  # 400 frames
+
+    fps = counter.fps(elapsed_time=10.0)
+    assert fps == 40.0  # 400 frames / 10 seconds
+
+
+def test_frame_counter_fps_zero_time():
+    """Test FPS with zero elapsed time."""
+    from src.training import FrameCounter
+
+    counter = FrameCounter(frameskip=4)
+    counter.step(num_steps=100)
+
+    fps = counter.fps(elapsed_time=0.0)
+    assert fps == 0.0
+
+
+def test_frame_counter_reset():
+    """Test reset() clears counters."""
+    from src.training import FrameCounter
+
+    counter = FrameCounter(frameskip=4)
+    counter.step(num_steps=50)
+    assert counter.steps == 50
+    assert counter.frames == 200
+
+    counter.reset()
+    assert counter.steps == 0
+    assert counter.frames == 0
+
+
+def test_frame_counter_to_dict():
+    """Test to_dict() exports state."""
+    from src.training import FrameCounter
+
+    counter = FrameCounter(frameskip=4)
+    counter.step(num_steps=25)
+
+    state = counter.to_dict()
+    assert state['steps'] == 25
+    assert state['frames'] == 100
+    assert state['frameskip'] == 4
+
+
+def test_frame_counter_invalid_frameskip():
+    """Test counter raises on invalid frameskip."""
+    from src.training import FrameCounter
+    import pytest
+
+    with pytest.raises(AssertionError):
+        FrameCounter(frameskip=0)
+
+    with pytest.raises(AssertionError):
+        FrameCounter(frameskip=-1)
+
+
+def test_frame_counter_different_frameskips():
+    """Test counter works with different frameskip values."""
+    from src.training import FrameCounter
+
+    # Frameskip 1 (no repeat)
+    counter1 = FrameCounter(frameskip=1)
+    counter1.step(num_steps=10)
+    assert counter1.frames == 10
+
+    # Frameskip 8 (double normal)
+    counter8 = FrameCounter(frameskip=8)
+    counter8.step(num_steps=10)
+    assert counter8.frames == 80
+
+
 if __name__ == "__main__":
     # Run tests manually
     print("Running DQN trainer tests...")
