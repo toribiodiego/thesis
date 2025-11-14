@@ -37,7 +37,31 @@ The `setup_env.sh` script:
 source .venv/bin/activate
 ```
 
-**2. Additional setup (optional):**
+**2. Verify installation:**
+
+Once the virtual environment is active, verify all dependencies are correctly installed:
+
+```bash
+# Check core dependencies are importable
+python -c "import torch, gymnasium, ale_py"
+
+# Verify pytest is available (install if needed: pip install pytest)
+pytest --version
+
+# Verify PyTorch version
+python -c "import torch; print(f'PyTorch {torch.__version__}')"
+
+# Check Gymnasium and ALE-py versions
+python -c "import gymnasium; import ale_py; print(f'Gymnasium {gymnasium.__version__}, ALE-py {ale_py.__version__}')"
+```
+
+Expected output:
+- No import errors from the first command
+- pytest version 8.x or higher
+- PyTorch 2.4.1
+- Gymnasium 0.29.1, ALE-py 0.8.1
+
+**3. Additional setup (optional):**
 
 ```bash
 # Capture system info for reproducibility
