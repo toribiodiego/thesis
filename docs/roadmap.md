@@ -246,8 +246,8 @@ Base config + per-game overrides. Merge utility. CLI: `python train_dqn.py --cfg
     - [X] chore: Auto-create standard run subfolders (logs, checkpoints, artifacts)
 - [X] Validate schema on load: assert positive ints, γ in [0,1], known optimizer names, valid env IDs/action_set, nonzero frameskip; reject unknown fields and fail fast with a helpful error.
     - [X] build: Add strict config schema validation with clear error messages
-- [ ] Summarize config/CLI conventions in `docs/design/config_cli.md`: explain file hierarchy, override precedence, required flags, schema validation, and how merged configs/meta snapshots are stored.
-    - [ ] docs: Include example commands, troubleshooting tips for schema errors, and pointers to generated config artifacts.
+- [X] Summarize config/CLI conventions in `docs/design/config_cli.md`: explain file hierarchy, override precedence, required flags, schema validation, and how merged configs/meta snapshots are stored.
+    - [X] docs: Add config/CLI guide with examples and troubleshooting
 
 ---
 
