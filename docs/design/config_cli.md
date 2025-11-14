@@ -938,6 +938,73 @@ python train_dqn.py --cfg <run_dir>/config.yaml --seed <seed_from_meta>
 cat <run_dir>/meta.json | grep -A 5 '"cli"'
 ```
 
+### Using Artifacts for Reproduction
+
+Every run directory contains complete reproducibility information. Here's how to use these artifacts:
+
+**1. Diff configs to understand what changed:**
+```bash
+# Compare your current config against what was actually used
+diff experiments/dqn_atari/configs/pong.yaml \
+     experiments/dqn_atari/runs/pong_42_20250113_143022/config.yaml
+
+# Compare two runs to see parameter differences
+diff experiments/dqn_atari/runs/pong_42_*/config.yaml \
+     experiments/dqn_atari/runs/pong_123_*/config.yaml
+```
+
+**2. Extract exact CLI command used:**
+```bash
+# View CLI arguments from metadata
+cat experiments/dqn_atari/runs/pong_42_*/meta.json | jq '.cli.args'
+
+# Reconstruct original command
+echo "python train_dqn.py --cfg $(jq -r '.cli.args.config_file' meta.json) --seed $(jq -r '.cli.args.seed' meta.json)"
+```
+
+**3. Verify code version match:**
+```bash
+# Check git commit used for run
+jq -r '.git.commit_hash' experiments/dqn_atari/runs/pong_42_*/meta.json
+
+# Check if there were uncommitted changes
+jq -r '.git.dirty' experiments/dqn_atari/runs/pong_42_*/meta.json  # Should be false
+
+# Checkout exact code version
+git checkout $(jq -r '.git.commit_hash_full' meta.json)
+```
+
+**4. Reproduce run exactly:**
+```bash
+# Method 1: Use saved config snapshot (recommended)
+RUN_DIR=experiments/dqn_atari/runs/pong_42_20250113_143022
+python train_dqn.py --cfg $RUN_DIR/config.yaml --seed $(jq -r '.seed' $RUN_DIR/meta.json)
+
+# Method 2: Reconstruct from original config + overrides
+python train_dqn.py --cfg experiments/dqn_atari/configs/pong.yaml --seed 42 \
+  $(jq -r '.cli.args.overrides[]' meta.json | sed 's/^/--set /' | tr '\n' ' ')
+```
+
+**5. Compare package versions:**
+```bash
+# Check Python and PyTorch versions used
+jq '.python_version, .pytorch_version' experiments/dqn_atari/runs/pong_42_*/meta.json
+
+# Current versions
+python -c "import sys; import torch; print(f'Python: {sys.version.split()[0]}, PyTorch: {torch.__version__}')"
+```
+
+**Why this matters:**
+- **Config snapshot** = single source of truth (no base references, all values resolved)
+- **Metadata** = exact code version, CLI args, package versions
+- **Together** = complete reproducibility without reverse-engineering
+
+**Common workflow:**
+1. Train multiple runs with different seeds/hyperparameters
+2. Find best-performing run
+3. Use `config.yaml` from that run for production training
+4. Check `meta.json` to verify clean git state and package versions
+
 ### Multi-Seed Sweeps
 
 Run same config with multiple seeds:
