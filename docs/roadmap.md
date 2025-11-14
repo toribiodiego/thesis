@@ -279,29 +279,29 @@ Dedicated eval loop: greedy or low-ε, compute mean/median/std returns. Capture 
 ### Subtask 10 — Logging & Plotting Pipeline
 
 **Objective:**
-Structured logging (TensorBoard/W&B/CSV). Plotting script: reward vs frames, loss vs updates, eval trends, ε schedule. Multi-seed aggregation. Complete when full pipeline (logs→plots) works with one command.
+Structured logging through TensorBoard, Weights & Biases (W&B), and CSV. Plotting script: reward vs frames, loss vs updates, eval trends, ε schedule. Multi-seed aggregation. Upload relevant artifacts (plots, CSVs, checkpoints) to W&B for long-term storage. Complete when full pipeline (logs → plots → artifact uploads) works with one command.
 
 **Checklist:**
-- [ ] Implement structured logging backend (TensorBoard, Weights & Biases, or CSV) that records per-step metrics (loss, epsilon, learning rate, replay size, FPS) and per-episode metrics (return, length, rolling mean over last N); standardize metric names and units.
-    - [ ] feat: Add unified training/eval logging with standardized metric keys
-- [ ] Persist complete episode histories and evaluation summaries alongside raw step logs; ensure log flushing at fixed intervals and stable file naming under `results/logs/<game>/<run_id>/`.
-    - [ ] chore: Add periodic flush and consistent log directory structure
-- [ ] Create `scripts/plot_results.py` to generate figures: reward vs frames (100-episode moving average), loss vs updates, eval score vs frames, and epsilon schedule vs frames; support saving PNG and optional PDF/SVG.
-    - [ ] feat: Add plotting script for reward/loss/eval/epsilon curves
-- [ ] Support multi-run aggregation across seeds: align curves by environment frames, compute mean and 95% confidence intervals (or standard error shading), and render aggregated plots.
-    - [ ] feat: Add multi-seed aggregation with shaded confidence intervals
-- [ ] Write outputs to `results/plots/<game>/` with deterministic filenames (include run set or seed list) and embed plot metadata (smoothing window, commit hash) in a sidecar JSON.
-    - [ ] chore: Save plots with deterministic names and sidecar metadata
-- [ ] Build a metadata summary generator that outputs Markdown and CSV tables listing `run_id | game | mean_eval_return | frames | wall_time | seed | commit_hash` and links to logs/plots.
-    - [ ] feat: Add results table exporter (Markdown and CSV)
-- [ ] Provide a CLI for the plotting pipeline: accept one or more run directories or a glob, set smoothing window, output directory, and options to include/exclude seeds; fail fast with helpful errors.
-    - [ ] feat: Add CLI flags for plot script (inputs, smoothing, outputs, filters)
-- [ ] Add performance safeguards for large logs: optional downsampling or rolling aggregation before plotting to keep runtime/memory reasonable on long runs.
-    - [ ] perf: Add log downsampling/rolling aggregation for scalable plotting
-- [ ] Include sanity tests and examples: run plotting on a small synthetic log to verify figures render and files are created; validate CSV headers and TensorBoard/W&B export parsing paths.
-    - [ ] test: Add plotting smoke tests and log parser checks
-- [ ] Document the logging/plotting stack in `docs/design/logging_pipeline.md`: cover metric naming standards, log storage layout, plotting script usage, aggregation semantics, and strategies for handling large logs.
-    - [ ] docs: Reference sample commands (`python scripts/plot_results.py ...`) and expected outputs for both single-run and multi-seed cases.
+- [ ] Implement unified logging hooks that emit metrics simultaneously to TensorBoard, W&B, and CSV: per-step (loss, epsilon, learning rate, replay size, FPS) plus per-episode (return, length, rolling mean). Ensure consistent metric naming across backends.
+    - [ ] feat: Add multi-backend logging (TensorBoard/W&B/CSV) with standardized keys
+- [ ] Persist complete episode histories and evaluation summaries locally under `results/logs/<game>/<run_id>/`, flush on a fixed cadence, and mirror the key CSV files to W&B as artifacts after each eval/checkpoint.
+    - [ ] chore: Add periodic flush, deterministic filenames, and W&B artifact uploads for logs
+- [ ] Create `scripts/plot_results.py` to generate figures (reward vs frames, loss vs updates, eval score vs frames, epsilon schedule) from either local CSVs or W&B artifact downloads; support PNG and optional PDF/SVG outputs.
+    - [ ] feat: Add plotting script for reward/loss/eval/epsilon curves with local/W&B inputs
+- [ ] Support multi-run aggregation across seeds: align curves by environment frames, compute mean ± 95% CI (or standard error shading), and write aggregated curves to CSV + upload the summary plot/CSV to W&B.
+    - [ ] feat: Add multi-seed aggregation with shaded confidence intervals and artifact sync
+- [ ] Write outputs to `results/plots/<game>/` with deterministic filenames and embed plot metadata (smoothing window, commit hash). Mirror the plot bundle (images + metadata JSON) to W&B as an artifact for the corresponding run group.
+    - [ ] chore: Save plots/metadata locally and publish as W&B artifacts
+- [ ] Build a metadata summary generator that outputs Markdown/CSV tables (`run_id | game | mean_eval_return | frames | wall_time | seed | commit_hash`) and pushes the summary CSV/Markdown to W&B for provenance.
+    - [ ] feat: Add results table exporter with optional W&B upload
+- [ ] Provide a CLI for the plotting/aggregation pipeline: accept run directories or W&B run IDs/globs, set smoothing window/output directory, toggle artifact uploads, and fail fast on missing inputs.
+    - [ ] feat: Add CLI flags for plot script (local vs W&B sources, smoothing, upload toggle)
+- [ ] Add performance safeguards for large logs: optional downsampling/rolling aggregation prior to plotting; warn when logs exceed thresholds and automatically chunk uploads to W&B.
+    - [ ] perf: Add scalable log downsampling and chunked artifact uploads
+- [ ] Include sanity tests/examples: run plotting off synthetic logs (CSV + TensorBoard + W&B mock), verify figures render, files exist, and W&B artifact uploads succeed (use offline/sandbox mode in tests).
+    - [ ] test: Add plotting/logging pipeline smoke tests covering TensorBoard/W&B/CSV paths
+- [ ] Document the logging/plotting stack in `docs/design/logging_pipeline.md`: describe backend configs (TensorBoard dir, W&B project/entity, CSV layout), artifact upload workflow, CLI usage, and strategies for handling large logs.
+    - [ ] docs: Reference sample commands (`python scripts/plot_results.py ... --upload-wandb`) and expected outputs for single-run vs multi-seed cases.
 
 ---
 
