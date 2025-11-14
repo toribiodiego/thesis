@@ -152,8 +152,8 @@ Circular buffer storing ~1M transitions (s,a,r,s',done). Store as uint8, convert
 TD target: *y = r + γ(1−done)×maxₐ′ Q_target(s′,a′)*. MSE or Huber loss. RMSProp/Adam (LR 2.5e-4, γ=0.99, batch=32). Target sync every 10k steps. Train every 4 steps. Complete when loss decreases smoothly and target updates are correct.
 
 **Checklist:**
-- [ ] Create online and target Q-networks with identical architecture; initialize target as a hard copy of online, freeze target grads, and provide `hard_update_target()` utility.
-    - [ ] feat: Initialize online/target Q-nets and hard-copy sync helper
+- [X] Create online and target Q-networks with identical architecture; initialize target as a hard copy of online, freeze target grads, and provide `hard_update_target()` utility.
+    - [X] feat: Initialize online/target Q-nets and hard-copy sync helper
 - [ ] Compute TD targets per minibatch using `y = r + γ * (1 - done) * max_a' Q_target(s', a')` under `no_grad`, and gather `Q_online(s, a)` with `gather` for chosen actions; ensure correct broadcasting and shapes `(B,)` after squeeze.
     - [ ] feat: Implement TD target computation and online Q selection
 - [ ] Add configurable loss: default MSE on `(Q_selected - y)` with `reduction='mean'`, optional Huber (δ=1.0) via config flag; return loss and aux stats (mean |TD error|).
