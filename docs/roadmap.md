@@ -286,8 +286,8 @@ Structured logging through TensorBoard, Weights & Biases (W&B), and CSV. Plottin
     - [X] feat: Add multi-backend logging (TensorBoard/W&B/CSV) with standardized keys
 - [X] Persist complete episode histories and evaluation summaries locally under `results/logs/<game>/<run_id>/`, flush on a fixed cadence, and mirror the key CSV files to W&B as artifacts after each eval/checkpoint.
     - [X] chore: Add periodic flush, deterministic filenames, and W&B artifact uploads for logs
-- [ ] Create `scripts/plot_results.py` to generate figures (reward vs frames, loss vs updates, eval score vs frames, epsilon schedule) from either local CSVs or W&B artifact downloads; support PNG and optional PDF/SVG outputs.
-    - [ ] feat: Add plotting script for reward/loss/eval/epsilon curves with local/W&B inputs
+- [X] Create `scripts/plot_results.py` to generate figures (reward vs frames, loss vs updates, eval score vs frames, epsilon schedule) from either local CSVs or W&B artifact downloads; support PNG and optional PDF/SVG outputs.
+    - [X] feat: Add plotting script for reward/loss/eval/epsilon curves with local/W&B inputs
 - [ ] Support multi-run aggregation across seeds: align curves by environment frames, compute mean ± 95% CI (or standard error shading), and write aggregated curves to CSV + upload the summary plot/CSV to W&B.
     - [ ] feat: Add multi-seed aggregation with shaded confidence intervals and artifact sync
 - [ ] Write outputs to `results/plots/<game>/` with deterministic filenames and embed plot metadata (smoothing window, commit hash). Mirror the plot bundle (images + metadata JSON) to W&B as an artifact for the corresponding run group.
