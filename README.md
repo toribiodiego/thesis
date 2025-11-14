@@ -21,6 +21,17 @@ The `setup_env.sh` script:
 - Installs all pinned dependencies from `envs/requirements.txt`
 - Sets up Atari ROM tooling (AutoROM)
 
+**Pinned Dependencies** (see `envs/requirements.txt` for authoritative versions):
+- **PyTorch 2.4.1** (CUDA 12.1)
+- **Gymnasium 0.29.1** (with Atari ROM license acceptance)
+- **ALE-py 0.8.1** (Atari emulator)
+- **NumPy 1.26.4**, **SciPy 1.13.1**
+- **OpenCV 4.10.0** (image preprocessing)
+- **matplotlib 3.9.1** (plotting)
+- **OmegaConf 2.3.0** (config management)
+- Additional utilities: tqdm, rich, typing-extensions
+- Testing: pytest (install separately with `pip install pytest`)
+
 **Important:** Always activate the virtual environment before running any commands:
 ```bash
 source .venv/bin/activate
