@@ -1,42 +1,48 @@
-# ============================================================================
-# Pong-specific DQN configuration
-# ============================================================================
+# Pong Configuration
+# ==================
+# Game-specific overrides for Pong (PongNoFrameskip-v4).
 #
-# Game: Pong (ALE/Pong-v5)
-# Difficulty: Easy (fastest convergence of selected games)
-# Expected training time: 10M frames (~12-24 hours on GPU)
+# Inherits all settings from base.yaml and overrides only game-specific fields.
 #
-# OVERRIDES from base.yaml:
-# - experiment.name: dqn_pong (for output directory naming)
-# - env.id: ALE/Pong-v5 (game selection)
-# - training.total_frames: 10M (Pong converges faster than other games)
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/pong.yaml --seed 42
 #
-# INHERITS from base.yaml:
-# - All hyperparameters (learning rate, batch size, etc.)
-# - Wrapper configuration (frame skip, stack size, etc.)
-# - Training protocol (episode_life, reward_clip, etc.)
-# - Evaluation settings
-#
-# WHEN TO USE:
-# - First DQN training run (easiest game)
-# - Validating training pipeline
-# - Quick convergence testing
-#
-# REFERENCE:
-# - Design doc: docs/design/dqn_setup.md
-# - Wrapper spec: docs/design/atari_env_wrapper.md
-# - Config guide: experiments/dqn_atari/configs/README.md
-#
-# ============================================================================
+# Expected results (DQN 2013 paper):
+#   - Training: ~10M frames to reach good performance
+#   - Score: Average reward ~18-21 (paper reports 18.9 ± 1.3)
+#   - Convergence: Usually converges faster than other Atari games
 
-defaults:
-  - base
+# Inherit base configuration
+base_config: "experiments/dqn_atari/configs/base.yaml"
 
+# =============================================================================
+# Game-Specific Overrides
+# =============================================================================
+
+# Environment
+environment:
+  env_id: "PongNoFrameskip-v4"  # Pong environment ID
+
+# Experiment metadata
 experiment:
-  name: dqn_pong
+  name: "pong"  # Experiment name (used in run directory: runs/pong_<seed>_<timestamp>/)
+  notes: "Pong training with DQN (2013 paper reproduction)"
 
-env:
-  id: "ALE/Pong-v5"
-
+# Training budget
 training:
-  total_frames: 10000000  # 10M frames for Pong (faster convergence)
+  total_frames: 10000000  # 10M frames (paper uses 50M, but Pong converges faster)
+  # Note: Pong is one of the easier Atari games and often converges in 5-10M frames
+
+# Evaluation
+evaluation:
+  num_episodes: 30  # Use 30 episodes for final evaluation (DQN paper standard)
+
+# Action space notes:
+# Pong has 6 discrete actions in the full action set:
+#   0: NOOP (no operation)
+#   1: FIRE (not used in Pong)
+#   2: RIGHT (move paddle right)
+#   3: LEFT (move paddle left)
+#   4: RIGHTFIRE (not used in Pong)
+#   5: LEFTFIRE (not used in Pong)
+# Effective actions: NOOP, RIGHT, LEFT

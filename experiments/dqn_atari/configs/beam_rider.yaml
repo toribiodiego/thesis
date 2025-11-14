@@ -1,48 +1,61 @@
-# ============================================================================
-# Beam Rider-specific DQN configuration
-# ============================================================================
+# Beam Rider Configuration
+# =========================
+# Game-specific overrides for Beam Rider (BeamRiderNoFrameskip-v4).
 #
-# Game: Beam Rider (ALE/BeamRider-v5)
-# Difficulty: Hard (multi-object tracking, complex patterns)
-# Expected training time: 20M frames (~24-48 hours on GPU)
+# Inherits all settings from base.yaml and overrides only game-specific fields.
 #
-# OVERRIDES from base.yaml:
-# - experiment.name: dqn_beam_rider (for output directory naming)
-# - env.id: ALE/BeamRider-v5 (game selection)
-# - training.total_frames: 20M (complex game requiring extended training)
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/beam_rider.yaml --seed 42
 #
-# INHERITS from base.yaml:
-# - All hyperparameters (learning rate, batch size, etc.)
-# - Wrapper configuration (frame skip, stack size, etc.)
-# - Training protocol (episode_life, reward_clip, etc.)
-# - Evaluation settings
-#
-# WHEN TO USE:
-# - After successful Pong and Breakout training
-# - Testing on high-difficulty game
-# - Multi-object tracking and pattern recognition
-#
-# NOTES:
-# - Beam Rider is one of the harder Atari games for DQN
-# - May require 20M+ frames to see significant improvement
-# - Agent must learn to track multiple enemies and avoid collisions
-# - Longer episodes than Pong (more complex strategy)
-#
-# REFERENCE:
-# - Design doc: docs/design/dqn_setup.md
-# - Wrapper spec: docs/design/atari_env_wrapper.md
-# - Config guide: experiments/dqn_atari/configs/README.md
-#
-# ============================================================================
+# Expected results (DQN 2013 paper):
+#   - Training: ~50M frames for convergence
+#   - Score: Average reward ~5000-8000 (paper reports 6846 ± 1619)
+#   - Note: Beam Rider is more challenging and has higher variance
 
-defaults:
-  - base
+# Inherit base configuration
+base_config: "experiments/dqn_atari/configs/base.yaml"
 
+# =============================================================================
+# Game-Specific Overrides
+# =============================================================================
+
+# Environment
+environment:
+  env_id: "BeamRiderNoFrameskip-v4"  # Beam Rider environment ID
+
+# Experiment metadata
 experiment:
-  name: dqn_beam_rider
+  name: "beam_rider"  # Experiment name (used in run directory: runs/beam_rider_<seed>_<timestamp>/)
+  notes: "Beam Rider training with DQN (2013 paper reproduction)"
 
-env:
-  id: "ALE/BeamRider-v5"
-
+# Training budget
 training:
-  total_frames: 20000000  # 20M frames for Beam Rider (high complexity)
+  total_frames: 50000000  # 50M frames (full DQN paper training)
+  # Note: Beam Rider is challenging and benefits from full training duration
+
+# Evaluation
+evaluation:
+  num_episodes: 30  # Use 30 episodes for final evaluation (DQN paper standard)
+  eval_every: 250000  # Evaluate every 250K frames
+
+# Action space notes:
+# Beam Rider has 9 discrete actions (full action set):
+#   0: NOOP (no operation)
+#   1: FIRE (shoot)
+#   2: UP (move up)
+#   3: RIGHT (move right)
+#   4: LEFT (move left)
+#   5: DOWN (move down)
+#   6: UPRIGHT (move up-right)
+#   7: UPLEFT (move up-left)
+#   8: DOWNRIGHT (move down-right)
+#   9: DOWNLEFT (move down-left)
+#   10: UPFIRE (move up and fire)
+#   11: RIGHTFIRE (move right and fire)
+#   12: LEFTFIRE (move left and fire)
+#   13: DOWNFIRE (move down and fire)
+#   14: UPRIGHTFIRE (move up-right and fire)
+#   15: UPLEFTFIRE (move up-left and fire)
+#   16: DOWNRIGHTFIRE (move down-right and fire)
+#   17: DOWNLEFTFIRE (move down-left and fire)
+# Beam Rider uses a large action space with directional movement and firing

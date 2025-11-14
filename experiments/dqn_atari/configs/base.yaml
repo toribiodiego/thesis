@@ -1,148 +1,290 @@
-# ============================================================================
-# Base DQN Atari Configuration
-# ============================================================================
+# DQN Base Configuration
+# ======================
+# Global default settings for DQN training on Atari games.
+# Per-game configs override only game-specific fields (env_id, action_set, frame_budget).
 #
-# PURPOSE:
-# Default hyperparameters and runtime settings for DQN reproduction.
-# This file defines the complete configuration scaffold that all game-specific
-# configs inherit from via OmegaConf defaults mechanism.
+# Based on "Playing Atari with Deep Reinforcement Learning" (Mnih et al., 2013)
+# and "Human-level control through deep reinforcement learning" (Mnih et al., 2015)
 #
-# USAGE:
-# - Do NOT modify this file for game-specific settings
-# - Create per-game configs (pong.yaml, breakout.yaml) that inherit from this
-# - Override specific fields in per-game configs (env.id, total_frames, etc.)
-# - Use CLI overrides for quick parameter sweeps
-#
-# INHERITANCE:
-# Game-specific configs inherit all settings from this file:
-#   defaults:
-#     - base
-#
-# WHAT'S CONFIGURED:
-# - Experiment metadata (name, seed, output directory)
-# - Environment settings (game ID, frameskip, no-op starts)
-# - Preprocessing (frame size, grayscale, frame stacking)
-# - Agent hyperparameters (learning rate, batch size, replay capacity)
-# - Target network synchronization (2013 vs 2015 DQN toggle)
-# - Exploration schedule (epsilon-greedy parameters)
-# - Evaluation protocol (episodes, epsilon, episode_life policy)
-# - Training protocol (frame budget, episode_life, reward clipping)
-# - Logging intervals (checkpoints, evaluation, metrics)
-# - Hardware settings (device selection)
-#
-# KEY TOGGLES:
-# - training.episode_life: Life loss as terminal (true) vs full episodes (false)
-# - agent.target_update_interval: Target net sync (>0) vs disabled (0)
-# - training.reward_clip: Reward clipping on (true) vs off (false)
-# - env.max_noop_start: Random no-ops (30) vs deterministic starts (0)
-#
-# REFERENCE:
-# - Config guide: experiments/dqn_atari/configs/README.md
-# - Training spec: docs/design/dqn_training.md
-# - Wrapper spec: docs/design/atari_env_wrapper.md
-# - Quick start: docs/quick_start.md
-#
-# ============================================================================
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/pong.yaml --seed 42
 
+# =============================================================================
+# Experiment Metadata
+# =============================================================================
 experiment:
-  name: dqn_atari_base
-  seed: 0
-  output_dir: experiments/dqn_atari/runs/${experiment.name}_${experiment.seed}
+  name: "dqn_atari"  # Experiment name for run directory organization
+  run_id: null  # Auto-generated timestamp-based ID if null
+  notes: ""  # Optional notes about this run
 
-  # Deterministic execution settings
-  # Controls reproducibility vs performance trade-off
+  # Deterministic execution (for reproducibility)
   deterministic:
-    # Enable deterministic mode (may reduce performance by 10-20%)
-    # Sets torch.backends.cudnn.deterministic=True and cudnn.benchmark=False
-    enabled: false
+    enabled: false  # Enable deterministic mode (torch.use_deterministic_algorithms)
+    strict: false  # Fail on non-deterministic ops (true) or warn only (false)
+    warn_only: true  # Only warn about non-deterministic ops (backward compat)
+    # Performance note: Deterministic mode ~10-20% slower due to algorithmic constraints
 
-    # Strict determinism mode (may cause errors with some operations)
-    # Calls torch.use_deterministic_algorithms(True)
-    # WARNING: Some operations don't have deterministic implementations
-    # and will raise errors instead of using non-deterministic fallbacks
-    strict: false
+# =============================================================================
+# Environment Configuration
+# =============================================================================
+environment:
+  # Game ID - OVERRIDE IN PER-GAME CONFIGS
+  # Example: "PongNoFrameskip-v4", "BreakoutNoFrameskip-v4"
+  env_id: null  # REQUIRED: Must be set in per-game config
 
-    # Warn on non-deterministic operations instead of raising errors
-    # Only applies when strict=True
-    warn_only: true
+  # Frame preprocessing (following DQN paper)
+  preprocessing:
+    # Grayscale conversion and resize
+    frame_size: 84  # Resize frames to 84x84 (DQN paper standard)
+    grayscale: true  # Convert RGB to grayscale
 
-env:
-  id: ALE/Pong-v5
-  mode: train
-  action_set: minimal
-  frameskip: 4
-  repeat_action_probability: 0.0
-  max_noop_start: 30
+    # Frame stacking (temporal context)
+    frame_stack: 4  # Stack last 4 frames as input to network
 
-preprocess:
-  frame_size: 84
-  grayscale: true
-  stack_size: 4
-  normalize: false
+    # Frame max-pooling (reduce flickering artifacts)
+    frame_max_pool: true  # Max-pool over 2 consecutive frames
+    max_pool_frames: 2  # Number of frames to max-pool
 
-agent:
-  architecture: nature_cnn
-  gamma: 0.99
-  learning_rate: 0.00025
-  optimizer: rmsprop
-  optimizer_eps: 0.00001
-  optimizer_alpha: 0.95
-  replay_capacity: 1000000
-  replay_min_transitions: 50000
-  batch_size: 32
-  # Target network synchronization:
-  # - target_update_interval > 0: 2015 Nature DQN (separate target network, updated every N steps)
-  # - target_update_interval = 0: 2013 NIPS DQN (no target network, less stable)
-  # See docs/design/dqn_training.md for detailed comparison
-  target_update_interval: 10000  # Hard-copy every 10K steps (2015 standard)
-  gradient_clip_norm: 10.0
+    # Reward clipping (stabilize learning)
+    clip_rewards: true  # Clip rewards to {-1, 0, +1}
+    reward_range: [-1, 1]  # Clipping range
 
-exploration:
-  schedule: linear
-  epsilon_start: 1.0
-  epsilon_end: 0.1
-  epsilon_decay_frames: 1000000
+  # Action repeat (frame-skip)
+  action_repeat: 4  # Execute each action for 4 frames (DQN paper)
 
-eval:
-  # Evaluation protocol settings
-  epsilon: 0.05  # Small ε-greedy for evaluation (use 0.0 for fully greedy)
-  episodes: 10  # Number of episodes to run per evaluation checkpoint
-  # Episode termination policy for evaluation:
-  # - episode_life: false (DEFAULT) -> Full episode termination only on game over
-  # - episode_life: true -> Treat life loss as terminal (NOT recommended for eval)
-  episode_life: false  # DEFAULT: Full episodes for evaluation
-  deterministic: false  # Set true for fully greedy evaluation (overrides epsilon)
+  # Episode handling
+  episode:
+    # Life-loss as episode termination
+    episodic_life: true  # Treat life loss as episode end (training only)
+    # Note: Evaluation always uses full-episode termination
 
+    # No-op reset (Bellemare/Mnih evaluation protocol)
+    noop_max: 30  # Random no-ops (0-30) at episode start
+    fire_on_reset: true  # Press FIRE on reset for games that need it
+
+  # Episode limits
+  max_episode_steps: null  # No time limit per episode (use game's natural termination)
+
+# =============================================================================
+# Network Architecture
+# =============================================================================
+network:
+  # Model type
+  architecture: "dqn"  # CNN architecture from DQN paper
+
+  # Layer configuration (DQN paper architecture)
+  # Conv1: 16 filters, 8x8 kernel, stride 4
+  # Conv2: 32 filters, 4x4 kernel, stride 2
+  # FC: 256 hidden units
+  # Output: Linear layer with |A| units (action space size)
+  conv1_channels: 16
+  conv1_kernel: 8
+  conv1_stride: 4
+
+  conv2_channels: 32
+  conv2_kernel: 4
+  conv2_stride: 2
+
+  fc_hidden: 256
+
+  # Initialization
+  init_method: "kaiming_normal"  # Kaiming He initialization for ReLU
+  init_mode: "fan_out"  # fan_out mode (paper default)
+
+  # Data types and device
+  dtype: "float32"  # Parameter and computation dtype
+  device: "cuda"  # 'cuda' or 'cpu' (auto-detect if cuda unavailable)
+
+# =============================================================================
+# Replay Buffer
+# =============================================================================
+replay:
+  # Buffer capacity
+  capacity: 1000000  # 1M transitions (DQN paper)
+
+  # Batch sampling
+  batch_size: 32  # Minibatch size for training (DQN paper)
+
+  # Warm-up (pre-fill before training)
+  min_size: 50000  # Minimum transitions before training starts (DQN paper)
+  warmup_steps: 50000  # Number of random actions during warm-up
+
+  # Memory optimization
+  store_uint8: true  # Store observations as uint8 (4x memory savings)
+  normalize_on_sample: true  # Normalize to [0,1] on sampling
+  pin_memory: false  # Use pinned memory for faster GPU transfer (if CUDA available)
+
+  # Episode boundary tracking
+  track_episodes: true  # Track episode boundaries to prevent cross-episode sampling
+
+# =============================================================================
+# Training Configuration
+# =============================================================================
 training:
-  # Training protocol settings
-  total_frames: 10000000  # 10M frames (Pong baseline)
-  # Episode termination policy for training:
-  # - episode_life: false (DEFAULT) -> Full episode termination only on game over
-  # - episode_life: true -> Treat life loss as terminal (optional training optimization)
-  # NOTE: Many implementations use episode_life=true during training to help agents
-  # learn to preserve lives, but this is NOT required and can be disabled.
-  episode_life: true  # OPTIONAL: Life loss as terminal (set false for pure full-episode training)
-  train_frequency: 4  # Train every 4 steps
-  reward_clip: true  # Clip rewards to {-1, 0, +1}
+  # Total training budget
+  total_frames: 10000000  # 10M environment frames (DQN paper: 50M per game)
+  # Note: For full reproduction, use 50M frames per game
 
-  # Frame budgets per game (can override in per-game configs)
-  frame_budget:
-    pong: 10000000  # 10M frames
-    breakout: 20000000  # 20M frames
-    beam_rider: 20000000  # 20M frames
-    smoke_test: 100000  # 100K frames for quick testing
+  # Training frequency
+  train_every: 4  # Perform 1 optimization step every 4 environment steps (DQN paper)
 
-intervals:
-  log_frames: 10000
-  eval_frames: 250000
-  checkpoint_frames: 1000000
+  # Discount factor
+  gamma: 0.99  # Discount factor γ for TD targets (DQN paper)
 
+  # Loss function
+  loss:
+    type: "mse"  # Loss function: 'mse' or 'huber'
+    # MSE: Mean squared error (DQN paper default)
+    # Huber: Smooth L1 loss (more robust to outliers)
+    huber_delta: 1.0  # Delta parameter for Huber loss (if type='huber')
+
+  # Gradient clipping
+  gradient_clip:
+    enabled: true  # Enable gradient clipping
+    max_norm: 10.0  # Maximum gradient norm (DQN paper)
+    norm_type: 2.0  # L2 norm
+
+  # Optimizer configuration (RMSProp from DQN paper)
+  optimizer:
+    type: "rmsprop"  # 'rmsprop' or 'adam'
+    lr: 0.00025  # Learning rate (2.5e-4, DQN paper)
+
+    # RMSProp-specific parameters (used if type='rmsprop')
+    rmsprop:
+      alpha: 0.95  # Smoothing constant ρ (DQN paper)
+      eps: 0.01  # Numerical stability ε (DQN paper, note: 1e-2 not 1e-8)
+      momentum: 0.0  # Momentum (DQN paper uses 0)
+
+    # Adam-specific parameters (used if type='adam')
+    adam:
+      betas: [0.9, 0.999]  # Momentum parameters
+      eps: 0.00000001  # Numerical stability (1e-8)
+
+# =============================================================================
+# Target Network Configuration
+# =============================================================================
+target_network:
+  # Target network update frequency
+  update_interval: 10000  # Hard-copy online → target every 10K steps (2015 Nature DQN)
+  # Note: Set to 1 or null to disable target network (2013 arXiv DQN, less stable)
+
+  # Update method
+  update_method: "hard"  # 'hard' (full copy) - DQN paper uses hard updates
+  # Alternative: 'soft' (polyak averaging) not in original DQN, used in later methods
+
+# =============================================================================
+# Exploration (ε-greedy)
+# =============================================================================
+exploration:
+  # Epsilon schedule
+  schedule:
+    type: "linear"  # 'linear', 'exponential', or 'constant'
+
+    # Linear decay (DQN paper)
+    start_epsilon: 1.0  # Initial ε (full random)
+    end_epsilon: 0.1  # Final ε (10% random, DQN paper)
+    decay_frames: 1000000  # Decay from 1.0 → 0.1 over 1M frames (DQN paper)
+    # Note: Epsilon is measured in environment frames, not steps
+
+  # Evaluation epsilon (for periodic evaluation)
+  eval_epsilon: 0.05  # Low ε during evaluation (5%, DQN paper)
+
+# =============================================================================
+# Evaluation Configuration
+# =============================================================================
+evaluation:
+  # Evaluation frequency
+  enabled: true  # Enable periodic evaluation
+  eval_every: 250000  # Evaluate every 250K environment frames
+
+  # Evaluation episodes
+  num_episodes: 10  # Number of episodes per evaluation (interim checks)
+  # Note: Use 30 episodes for final reporting (DQN paper)
+
+  # Evaluation mode
+  epsilon: 0.05  # ε-greedy with ε=0.05 during eval (mostly greedy)
+  deterministic: false  # If true, use pure greedy (ε=0)
+
+  # Video capture
+  record_video: true  # Record videos during evaluation
+  video_frequency: 1  # Record first N episodes (1 = first episode only)
+  video_format: "mp4"  # Video format: 'mp4' or 'gif'
+
+  # Metric collection
+  metrics:
+    - "episode_return"  # Total episode reward
+    - "episode_length"  # Episode length in steps
+    - "lives_lost"  # Number of lives lost (if applicable)
+    - "q_values"  # Mean Q-value on visited states
+
+# =============================================================================
+# Logging Configuration
+# =============================================================================
 logging:
-  use_wandb: false
-  project: thesis-dqn
-  entity: null
-  tensorboard_dir: experiments/dqn_atari/tensorboard
+  # Log output directory structure
+  # Results saved to: experiments/dqn_atari/runs/<game>_<seed>_<timestamp>/
+  base_dir: "experiments/dqn_atari/runs"
 
-hardware:
-  device: cuda
-  num_envs: 1
+  # Logging frequencies
+  log_every_steps: 1000  # Log training metrics every N steps
+  log_every_episodes: 1  # Log episode metrics every N episodes
+
+  # Checkpoint saving
+  checkpoint:
+    enabled: true  # Save checkpoints
+    save_every: 1000000  # Save checkpoint every 1M frames
+    keep_last_n: 3  # Keep only last N checkpoints (saves disk space)
+    save_best: true  # Save best model (by evaluation return)
+
+  # Metrics to log
+  step_metrics:
+    - "loss"  # Training loss
+    - "td_error"  # Mean absolute TD error
+    - "grad_norm"  # Gradient norm (before clipping)
+    - "q_values"  # Mean Q-value from online network
+    - "epsilon"  # Current ε value
+    - "learning_rate"  # Current learning rate
+
+  episode_metrics:
+    - "episode_return"  # Total episode reward
+    - "episode_length"  # Episode length
+    - "lives_lost"  # Lives lost (if applicable)
+
+  # Reference state Q-value tracking (optional, for debugging)
+  reference_q:
+    enabled: false  # Track Q-values on fixed reference states
+    num_states: 10  # Number of reference states to track
+    log_every: 10000  # Log reference Q-values every N steps
+
+  # Wandb integration (optional)
+  wandb:
+    enabled: false  # Enable Weights & Biases logging
+    project: "dqn-atari"  # W&B project name
+    entity: null  # W&B entity (username or team)
+    tags: []  # Tags for this run
+
+# =============================================================================
+# Seeding & Reproducibility
+# =============================================================================
+seed:
+  # Random seed (set via CLI: --seed 42)
+  value: null  # If null, use random seed
+  # Seed controls: Python random, NumPy, PyTorch, environment
+
+  # RNG state tracking
+  save_rng_states: true  # Save RNG states in checkpoints (for exact resume)
+
+# =============================================================================
+# Performance & System
+# =============================================================================
+system:
+  # Compute resources
+  num_workers: 0  # Number of data loading workers (0 = main process only)
+  # Note: Set to 0 for deterministic behavior
+
+  # Memory management
+  empty_cache_every: 1000  # Call torch.cuda.empty_cache() every N steps (if CUDA)
+
+  # Progress tracking
+  progress_bar: true  # Show progress bar during training
+  verbose: true  # Print detailed logging to console
