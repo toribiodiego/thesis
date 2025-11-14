@@ -259,8 +259,8 @@ Base config + per-game overrides. Merge utility. CLI: `python train_dqn.py --cfg
 Dedicated eval loop: greedy or low-ε, compute mean/median/std returns. Capture video (MP4) per interval. Write CSV/JSONL. Complete when evaluations run automatically with metrics and videos.
 
 **Checklist:**
-- [ ] Implement a separate evaluation loop `evaluate(policy, env, n_episodes, eval_epsilon)` that runs greedily or with small ε, disables gradients, sets model to eval mode, and returns a summary dict plus per-episode stats.
-    - [ ] feat: Add standalone evaluate() with greedy/low-ε option and no-grad inference
+- [X] Implement a separate evaluation loop `evaluate(policy, env, n_episodes, eval_epsilon)` that runs greedily or with small ε, disables gradients, sets model to eval mode, and returns a summary dict plus per-episode stats.
+    - [X] feat: Add standalone evaluate() with greedy/low-ε option and no-grad inference
 - [ ] Collect standardized metrics: per-episode return, length, (optional) lives lost; compute mean, median, std, min, max across episodes; include seed and step in the summary.
     - [ ] feat: Aggregate episode metrics with summary statistics and run metadata
 - [ ] Integrate video capture: record the first evaluation episode each interval using Gym RecordVideo or a custom writer; ensure deterministic frame rate and save to `results/videos/<game>/<step>.mp4` (optional GIF export).
