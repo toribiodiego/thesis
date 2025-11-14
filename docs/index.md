@@ -104,6 +104,23 @@ Episode management, termination policies, and training vs. evaluation modes.
 
 ---
 
+### [Training Loop Runtime](design/training_loop_runtime.md)
+Complete training loop orchestration, component integration, and runtime behavior.
+
+**What's inside:**
+- High-level control flow (action select → env step → replay → optimize → eval)
+- Component orchestration (10+ schedulers, loggers, trackers)
+- Logging schema (CSV formats, directory structure, plotting examples)
+- Evaluation cadence (when/how to evaluate, interpreting results)
+- Command reference (training, dry-run, smoke test, monitoring)
+- Smoke test procedure (validation checklist, expected output)
+- Troubleshooting guide (common issues, diagnosis, fixes)
+- Configuration knobs (epsilon, intervals, logging frequency)
+
+**When to read:** Running training, debugging training issues, understanding component interaction, monitoring progress
+
+---
+
 ## Configuration Reference
 
 ### [Config Documentation](../experiments/dqn_atari/configs/README.md)

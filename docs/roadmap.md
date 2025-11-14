@@ -202,8 +202,8 @@ The target network is a 2015 Nature paper improvement (Mnih et al.). The origina
     - [X] chore: Write run metadata (config, seed, commit) to run folder
 - [X] Run a smoke test (~200,000 frames) to verify end-to-end stability: confirm logs grow, checkpoints appear, eval runs trigger, and quick plots render without errors.
     - [X] test: Add smoke-test script to validate loop, logging, checkpoints, and eval cadence
-- [ ] Document the orchestration in `docs/design/training_loop_runtime.md`: describe the control flow (action select → env step → replay append → optimize → eval), logging schema, evaluation cadence, smoke-test procedure, and knobs for troubleshooting (epsilon schedule, frame counters, eval triggers).
-    - [ ] docs: Include command examples (`python src/train_dqn.py ...`, `scripts/run_dqn.sh --dry-run`, smoke-test runner) and guidance for interpreting logs/metrics during debugging.
+- [X] Document the orchestration in `docs/design/training_loop_runtime.md`: describe the control flow (action select → env step → replay append → optimize → eval), logging schema, evaluation cadence, smoke-test procedure, and knobs for troubleshooting (epsilon schedule, frame counters, eval triggers).
+    - [X] docs: Include command examples (`python src/train_dqn.py ...`, `scripts/run_dqn.sh --dry-run`, smoke-test runner) and guidance for interpreting logs/metrics during debugging.
 
 ---
 
