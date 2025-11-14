@@ -13,13 +13,18 @@ Supports:
 - W&B artifact downloads
 - Multiple output formats (PNG, PDF, SVG)
 - Configurable smoothing and styling
+- Metadata embedding (smoothing, commit hash)
+- W&B artifact uploads
 """
 
 import argparse
 import csv
 import sys
+import json
+import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+from datetime import datetime
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -35,6 +40,110 @@ mpl.rcParams['xtick.labelsize'] = 9
 mpl.rcParams['ytick.labelsize'] = 9
 mpl.rcParams['legend.fontsize'] = 9
 mpl.rcParams['figure.titlesize'] = 13
+
+
+# ============================================================================
+# Utility Functions
+# ============================================================================
+
+def get_git_commit_hash() -> str:
+    """Get current git commit hash."""
+    try:
+        result = subprocess.run(
+            ['git', 'rev-parse', 'HEAD'],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return result.stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return 'unknown'
+
+
+def save_plot_metadata(
+    output_dir: Path,
+    game_name: str,
+    metadata: Dict
+) -> Path:
+    """
+    Save plot generation metadata to JSON file.
+
+    Args:
+        output_dir: Directory containing plots
+        game_name: Name of game
+        metadata: Metadata dict to save
+
+    Returns:
+        Path to saved metadata file
+    """
+    metadata_path = output_dir / f"{game_name}_plot_metadata.json"
+
+    with open(metadata_path, 'w') as f:
+        json.dump(metadata, f, indent=2)
+
+    return metadata_path
+
+
+def upload_plots_to_wandb(
+    wandb_project: str,
+    wandb_run_id: str,
+    plot_files: List[Path],
+    metadata_file: Optional[Path] = None,
+    artifact_name: Optional[str] = None
+):
+    """
+    Upload plot files and metadata to W&B as artifact.
+
+    Args:
+        wandb_project: W&B project name
+        wandb_run_id: W&B run ID
+        plot_files: List of plot file paths
+        metadata_file: Optional metadata JSON file
+        artifact_name: Optional custom artifact name
+    """
+    try:
+        import wandb
+    except ImportError:
+        print("Warning: wandb not installed. Skipping artifact upload.")
+        return
+
+    # Initialize API
+    api = wandb.Api()
+
+    # Get run
+    run_path = f"{wandb_project}/{wandb_run_id}"
+    try:
+        run = api.run(run_path)
+    except Exception as e:
+        print(f"Warning: Could not access W&B run {run_path}: {e}")
+        return
+
+    # Create artifact name
+    if artifact_name is None:
+        artifact_name = f"plots_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+
+    # Create artifact
+    artifact = wandb.Artifact(
+        name=artifact_name,
+        type="plots",
+        metadata={"generated_at": datetime.now().isoformat()}
+    )
+
+    # Add plot files
+    for plot_file in plot_files:
+        if plot_file.exists():
+            artifact.add_file(str(plot_file))
+
+    # Add metadata file
+    if metadata_file and metadata_file.exists():
+        artifact.add_file(str(metadata_file))
+
+    # Log artifact
+    try:
+        run.log_artifact(artifact)
+        print(f"Uploaded {len(plot_files)} plots to W&B artifact: {artifact_name}")
+    except Exception as e:
+        print(f"Warning: Failed to upload artifact: {e}")
 
 
 # ============================================================================
@@ -387,8 +496,12 @@ def plot_all_metrics(
     output_dir: Path,
     game_name: str = "game",
     smoothing_window: int = 100,
-    formats: List[str] = ['png']
-):
+    formats: List[str] = ['png'],
+    save_metadata: bool = True,
+    upload_to_wandb: bool = False,
+    wandb_project: Optional[str] = None,
+    wandb_run_id: Optional[str] = None
+) -> Tuple[List[Path], Optional[Path]]:
     """
     Generate all available plots from training data.
 
@@ -400,8 +513,17 @@ def plot_all_metrics(
         game_name: Name of game for plot titles
         smoothing_window: Smoothing window size
         formats: Output formats
+        save_metadata: Whether to save plot metadata JSON
+        upload_to_wandb: Whether to upload plots to W&B
+        wandb_project: W&B project (required if upload_to_wandb=True)
+        wandb_run_id: W&B run ID (required if upload_to_wandb=True)
+
+    Returns:
+        Tuple of (plot_files, metadata_file)
     """
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    plot_files = []
 
     # Plot episode returns
     if episodes_data is not None and 'return' in episodes_data:
@@ -412,6 +534,8 @@ def plot_all_metrics(
             title=f"{game_name.title()} - Episode Returns",
             formats=formats
         )
+        for fmt in formats:
+            plot_files.append(output_dir / f"{game_name}_episode_returns.{fmt}")
 
     # Plot training loss
     if steps_data is not None and 'loss' in steps_data:
@@ -422,6 +546,8 @@ def plot_all_metrics(
             title=f"{game_name.title()} - Training Loss",
             formats=formats
         )
+        for fmt in formats:
+            plot_files.append(output_dir / f"{game_name}_training_loss.{fmt}")
 
     # Plot evaluation scores
     if eval_data is not None and 'mean_return' in eval_data:
@@ -431,6 +557,8 @@ def plot_all_metrics(
             title=f"{game_name.title()} - Evaluation Scores",
             formats=formats
         )
+        for fmt in formats:
+            plot_files.append(output_dir / f"{game_name}_evaluation_scores.{fmt}")
 
     # Plot epsilon schedule
     if steps_data is not None and 'epsilon' in steps_data:
@@ -440,6 +568,37 @@ def plot_all_metrics(
             title=f"{game_name.title()} - Epsilon Schedule",
             formats=formats
         )
+        for fmt in formats:
+            plot_files.append(output_dir / f"{game_name}_epsilon_schedule.{fmt}")
+
+    # Save metadata
+    metadata_file = None
+    if save_metadata:
+        metadata = {
+            "game_name": game_name,
+            "smoothing_window": smoothing_window,
+            "commit_hash": get_git_commit_hash(),
+            "generated_at": datetime.now().isoformat(),
+            "formats": formats,
+            "plots_generated": [p.name for p in plot_files if p.exists()]
+        }
+        metadata_file = save_plot_metadata(output_dir, game_name, metadata)
+        print(f"Saved metadata: {metadata_file}")
+
+    # Upload to W&B if requested
+    if upload_to_wandb:
+        if wandb_project and wandb_run_id:
+            upload_plots_to_wandb(
+                wandb_project,
+                wandb_run_id,
+                plot_files,
+                metadata_file,
+                artifact_name=f"{game_name}_plots"
+            )
+        else:
+            print("Warning: W&B upload requested but project/run ID not provided")
+
+    return plot_files, metadata_file
 
 
 # ============================================================================
@@ -528,6 +687,21 @@ Examples:
         default='game',
         help='Game name for plot titles (default: game)'
     )
+    output_group.add_argument(
+        '--no-metadata',
+        action='store_true',
+        help='Disable saving plot metadata JSON'
+    )
+    output_group.add_argument(
+        '--upload-wandb',
+        action='store_true',
+        help='Upload plots to W&B as artifacts'
+    )
+    output_group.add_argument(
+        '--wandb-upload-run',
+        type=str,
+        help='W&B run ID to upload plots to (required with --upload-wandb)'
+    )
 
     # Plot options
     plot_group = parser.add_argument_group('Plot Options')
@@ -600,17 +774,22 @@ Examples:
 
     # Generate plots
     print(f"\nGenerating plots...")
-    plot_all_metrics(
+    plot_files, metadata_file = plot_all_metrics(
         episodes_data=episodes_data,
         steps_data=steps_data,
         eval_data=eval_data,
         output_dir=args.output,
         game_name=args.game_name,
         smoothing_window=smoothing_window,
-        formats=args.formats
+        formats=args.formats,
+        save_metadata=not args.no_metadata,
+        upload_to_wandb=args.upload_wandb,
+        wandb_project=args.wandb_project if args.upload_wandb else None,
+        wandb_run_id=args.wandb_upload_run if args.upload_wandb else None
     )
 
-    print(f"\nDone! Plots saved to: {args.output}")
+    print(f"\nDone! Generated {len([p for p in plot_files if p.exists()])} plots")
+    print(f"Plots saved to: {args.output}")
 
 
 if __name__ == '__main__':

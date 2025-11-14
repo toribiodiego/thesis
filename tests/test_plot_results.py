@@ -295,7 +295,7 @@ def test_plot_all_metrics(sample_episodes_csv, sample_steps_csv, sample_eval_csv
 
     output_dir = temp_dir / 'plots'
 
-    plot_all_metrics(
+    plot_files, metadata_file = plot_all_metrics(
         episodes_data=episodes_data,
         steps_data=steps_data,
         eval_data=eval_data,
@@ -311,6 +311,13 @@ def test_plot_all_metrics(sample_episodes_csv, sample_steps_csv, sample_eval_csv
     assert (output_dir / 'pong_evaluation_scores.png').exists()
     assert (output_dir / 'pong_epsilon_schedule.png').exists()
 
+    # Check metadata was saved
+    assert metadata_file is not None
+    assert metadata_file.exists()
+
+    # Check plot files list
+    assert len(plot_files) == 4
+
 
 def test_plot_all_metrics_partial_data(sample_episodes_csv, temp_dir):
     """Test plotting with only partial data available."""
@@ -319,7 +326,7 @@ def test_plot_all_metrics_partial_data(sample_episodes_csv, temp_dir):
     output_dir = temp_dir / 'plots'
 
     # Should not raise errors with missing data
-    plot_all_metrics(
+    plot_files, metadata_file = plot_all_metrics(
         episodes_data=episodes_data,
         steps_data=None,
         eval_data=None,
@@ -331,6 +338,9 @@ def test_plot_all_metrics_partial_data(sample_episodes_csv, temp_dir):
     # Only episode returns plot should exist
     assert (output_dir / 'pong_episode_returns.png').exists()
     assert not (output_dir / 'pong_training_loss.png').exists()
+
+    # Should still have metadata
+    assert metadata_file is not None
 
 
 def test_plot_with_nan_values(temp_dir):
@@ -389,7 +399,7 @@ def test_plot_directory_creation(temp_dir):
     output_dir = temp_dir / 'nested' / 'plots'
     assert not output_dir.exists()
 
-    plot_all_metrics(
+    plot_files, metadata_file = plot_all_metrics(
         episodes_data=data,
         steps_data=None,
         eval_data=None,
@@ -408,7 +418,7 @@ def test_plot_deterministic_filenames(sample_episodes_csv, temp_dir):
 
     output_dir = temp_dir / 'plots'
 
-    plot_all_metrics(
+    plot_files, metadata_file = plot_all_metrics(
         episodes_data=data,
         steps_data=None,
         eval_data=None,
@@ -420,3 +430,56 @@ def test_plot_deterministic_filenames(sample_episodes_csv, temp_dir):
     # Filename should match pattern: {game_name}_{metric_type}.{format}
     expected_file = output_dir / 'breakout_episode_returns.png'
     assert expected_file.exists()
+
+
+def test_plot_metadata_saved(sample_episodes_csv, temp_dir):
+    """Test that plot metadata is saved correctly."""
+    data = load_csv_data(sample_episodes_csv)
+
+    output_dir = temp_dir / 'plots'
+
+    plot_files, metadata_file = plot_all_metrics(
+        episodes_data=data,
+        steps_data=None,
+        eval_data=None,
+        output_dir=output_dir,
+        game_name='pong',
+        smoothing_window=50,
+        formats=['png'],
+        save_metadata=True
+    )
+
+    # Metadata file should exist
+    assert metadata_file is not None
+    assert metadata_file.exists()
+
+    # Load and verify metadata
+    import json
+    with open(metadata_file) as f:
+        metadata = json.load(f)
+
+    assert metadata['game_name'] == 'pong'
+    assert metadata['smoothing_window'] == 50
+    assert 'commit_hash' in metadata
+    assert 'generated_at' in metadata
+    assert metadata['formats'] == ['png']
+
+
+def test_plot_no_metadata(sample_episodes_csv, temp_dir):
+    """Test disabling metadata saving."""
+    data = load_csv_data(sample_episodes_csv)
+
+    output_dir = temp_dir / 'plots'
+
+    plot_files, metadata_file = plot_all_metrics(
+        episodes_data=data,
+        steps_data=None,
+        eval_data=None,
+        output_dir=output_dir,
+        game_name='pong',
+        formats=['png'],
+        save_metadata=False
+    )
+
+    # Metadata file should not exist
+    assert metadata_file is None
