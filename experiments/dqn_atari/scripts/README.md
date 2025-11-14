@@ -512,3 +512,128 @@ ls experiments/dqn_atari/runs/pong_42/frames/
 # Inspect rollout log
 python -m json.tool experiments/dqn_atari/runs/pong_42/rollout_log.json
 ```
+
+### Run evaluation on existing checkpoint
+
+Evaluate a trained model from a checkpoint without continuing training.
+
+**Basic evaluation (DQN paper protocol: ε=0.05, 10 episodes):**
+```bash
+python src/train_dqn.py \
+  --cfg experiments/dqn_atari/configs/pong.yaml \
+  --eval-only \
+  --checkpoint experiments/dqn_atari/runs/pong_123/checkpoints/step_1000000.pt \
+  --seed 42
+```
+
+**Final reporting evaluation (30 episodes for paper results):**
+```bash
+python src/train_dqn.py \
+  --cfg experiments/dqn_atari/configs/pong.yaml \
+  --eval-only \
+  --checkpoint experiments/dqn_atari/runs/pong_123/checkpoints/best_model.pt \
+  --set evaluation.num_episodes=30 \
+  --seed 42
+```
+
+**Pure greedy evaluation (ε=0, no exploration):**
+```bash
+python src/train_dqn.py \
+  --cfg experiments/dqn_atari/configs/pong.yaml \
+  --eval-only \
+  --checkpoint experiments/dqn_atari/runs/pong_123/checkpoints/step_2000000.pt \
+  --set evaluation.epsilon=0.0 \
+  --seed 42
+```
+
+**Evaluation with video recording:**
+```bash
+python src/train_dqn.py \
+  --cfg experiments/dqn_atari/configs/pong.yaml \
+  --eval-only \
+  --checkpoint experiments/dqn_atari/runs/pong_123/checkpoints/best_model.pt \
+  --set evaluation.record_video=true \
+  --set evaluation.num_episodes=5 \
+  --seed 42
+```
+
+**Expected outputs (in checkpoint's run directory):**
+
+```
+experiments/dqn_atari/runs/pong_123/
+├── eval/
+│   ├── evaluations.csv              # Summary: step, mean_return, median_return, std_return, etc.
+│   ├── evaluations.jsonl            # Same data in JSONL format (streaming-friendly)
+│   ├── per_episode_returns.jsonl    # Raw per-episode returns and lengths
+│   └── detailed/
+│       └── eval_step_<step>.json    # Complete evaluation details
+└── videos/                          # If record_video=true
+    └── step_<step>.mp4              # First episode recording
+```
+
+**Troubleshooting evaluation issues:**
+
+| Issue | Diagnosis | Solution |
+|-------|-----------|----------|
+| **Checkpoint not found** | Path incorrect or file doesn't exist | Check path with `ls experiments/dqn_atari/runs/*/checkpoints/*.pt` |
+| **Config mismatch** | Checkpoint trained with different config | Use original config or disable strict validation with `--no-strict-config` |
+| **CUDA out of memory** | Evaluation still uses GPU | Add `--set system.device=cpu` or use smaller batch |
+| **Video file missing** | OpenCV not installed or render failed | `pip install opencv-python` and check `env.render()` works |
+| **NaN in metrics** | Model producing NaN Q-values | Check model checkpoint integrity with `torch.load(checkpoint)` |
+| **Evaluation hangs** | Episode never terminates | Check environment termination logic or add timeout |
+
+**Evaluation metrics explained:**
+
+The `evaluations.csv` file contains:
+- `step`: Training step when checkpoint was saved
+- `mean_return`: Average episode return across all evaluation episodes
+- `median_return`: Median episode return (more robust to outliers)
+- `std_return`: Standard deviation of returns (measures consistency)
+- `min_return`, `max_return`: Range of episode performance
+- `episodes`: Number of episodes evaluated (typically 10 or 30)
+- `eval_epsilon`: Epsilon used during evaluation (typically 0.05)
+
+**Batch evaluation across multiple checkpoints:**
+
+```bash
+# Evaluate all checkpoints from a run
+for ckpt in experiments/dqn_atari/runs/pong_123/checkpoints/step_*.pt; do
+    python src/train_dqn.py \
+      --cfg experiments/dqn_atari/configs/pong.yaml \
+      --eval-only \
+      --checkpoint $ckpt \
+      --seed 42
+done
+
+# Aggregate results
+cat experiments/dqn_atari/runs/pong_123/eval/evaluations.csv
+```
+
+**Comparing models:**
+
+```bash
+# Evaluate best model
+python src/train_dqn.py \
+  --cfg experiments/dqn_atari/configs/pong.yaml \
+  --eval-only \
+  --checkpoint experiments/dqn_atari/runs/pong_123/checkpoints/best_model.pt \
+  --set evaluation.num_episodes=30 \
+  --seed 0
+
+# Evaluate latest checkpoint
+python src/train_dqn.py \
+  --cfg experiments/dqn_atari/configs/pong.yaml \
+  --eval-only \
+  --checkpoint experiments/dqn_atari/runs/pong_123/checkpoints/step_10000000.pt \
+  --set evaluation.num_episodes=30 \
+  --seed 0
+
+# Compare results
+python -c "
+import pandas as pd
+df = pd.read_csv('experiments/dqn_atari/runs/pong_123/eval/evaluations.csv')
+print(df[['step', 'mean_return', 'median_return', 'std_return']])
+"
+```
+
+See [docs/design/eval_harness.md](../../../docs/design/eval_harness.md) for complete evaluation harness documentation.
