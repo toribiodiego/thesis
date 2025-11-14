@@ -492,6 +492,216 @@ with open('evaluations.jsonl', 'r') as f:
 
 ---
 
+## Artifact Directory Layout
+
+### Complete Directory Structure
+
+Evaluation artifacts are organized under the run directory with dedicated subdirectories for different output types:
+
+```
+experiments/dqn_atari/runs/
+└── <game>_<seed>_<timestamp>/          # Run directory (e.g., pong_42_20250114_1430/)
+    ├── eval/                            # Evaluation outputs
+    │   ├── evaluations.csv              # Summary statistics (CSV format)
+    │   ├── evaluations.jsonl            # Summary statistics (JSONL format)
+    │   ├── per_episode_returns.jsonl    # Raw per-episode data
+    │   └── detailed/                    # Complete evaluation details
+    │       ├── eval_step_250000.json
+    │       ├── eval_step_500000.json
+    │       ├── eval_step_750000.json
+    │       └── ...
+    ├── videos/                          # Video recordings (if enabled)
+    │   ├── step_250000.mp4
+    │   ├── step_500000.mp4
+    │   ├── step_750000.mp4
+    │   └── ...
+    ├── checkpoints/                     # Model checkpoints
+    │   ├── step_250000.pt
+    │   ├── step_500000.pt
+    │   ├── best_model.pt                # Best model by eval score
+    │   └── ...
+    ├── logs/                            # Training logs
+    │   ├── training.csv
+    │   ├── episodes.csv
+    │   └── ...
+    ├── config.yaml                      # Merged configuration
+    └── meta.json                        # Run metadata
+```
+
+### File-by-File Description
+
+#### Evaluation Outputs (`eval/`)
+
+| File | Format | Purpose | When Created |
+|------|--------|---------|--------------|
+| `evaluations.csv` | CSV | Summary statistics per evaluation | After each evaluation |
+| `evaluations.jsonl` | JSONL | Summary statistics (streaming) | After each evaluation |
+| `per_episode_returns.jsonl` | JSONL | Raw per-episode returns/lengths | After each evaluation |
+| `detailed/eval_step_<step>.json` | JSON | Complete evaluation details | After each evaluation |
+
+**Size estimates:**
+- `evaluations.csv`: ~100 bytes per evaluation (~40KB for 400 evaluations)
+- `evaluations.jsonl`: ~150 bytes per evaluation (~60KB for 400 evaluations)
+- `per_episode_returns.jsonl`: ~300 bytes per evaluation (~120KB for 400 evaluations)
+- `detailed/*.json`: ~1-2KB per evaluation (~800KB for 400 evaluations)
+
+#### Video Recordings (`videos/`)
+
+| File | Format | Purpose | When Created |
+|------|--------|---------|--------------|
+| `step_<step>.mp4` | MP4 | First episode video | If `record_video=true` |
+| `step_<step>.gif` | GIF | Optional GIF export | If `export_gif=true` |
+
+**Size estimates:**
+- MP4: ~500KB - 2MB per video (depends on resolution, FPS, episode length)
+- GIF: ~1-5MB per video (larger than MP4 due to format inefficiency)
+
+**Naming convention:** Files named by training step (e.g., `step_250000.mp4` = evaluation at 250K steps)
+
+### Directory Access Patterns
+
+**During training:**
+```python
+# Evaluation logger creates and writes to eval/ directory
+logger = EvaluationLogger(log_dir='runs/pong_42/eval')
+logger.log_evaluation(step=250000, results=eval_results)
+
+# Video recorder creates and writes to videos/ directory
+recorder = VideoRecorder(output_path='runs/pong_42/videos/step_250000.mp4')
+```
+
+**Post-training analysis:**
+```python
+import pandas as pd
+import json
+
+# Load summary statistics
+df = pd.read_csv('runs/pong_42/eval/evaluations.csv')
+
+# Load per-episode data
+with open('runs/pong_42/eval/per_episode_returns.jsonl') as f:
+    episodes = [json.loads(line) for line in f]
+
+# Load detailed evaluation
+with open('runs/pong_42/eval/detailed/eval_step_250000.json') as f:
+    details = json.load(f)
+```
+
+### Storage Requirements
+
+For a typical 10M frame training run with evaluations every 250K frames:
+
+| Component | Count | Size per Item | Total Size |
+|-----------|-------|---------------|------------|
+| Evaluations (CSV) | 40 | ~100 bytes | ~4 KB |
+| Evaluations (JSONL) | 40 | ~150 bytes | ~6 KB |
+| Per-episode sidecar | 40 | ~300 bytes | ~12 KB |
+| Detailed JSON | 40 | ~1.5 KB | ~60 KB |
+| Videos (MP4) | 40 | ~1 MB | ~40 MB |
+| **Total evaluation artifacts** | - | - | **~40 MB** |
+
+**Storage optimization:**
+- Disable video recording if not needed (`record_video=false`)
+- Videos account for >99% of evaluation artifact size
+- Text formats (CSV/JSON) are negligible (<100KB total)
+
+### Common Artifact Locations
+
+**Finding evaluation results:**
+```bash
+# List all evaluation summaries
+find experiments/dqn_atari/runs -name "evaluations.csv"
+
+# Latest evaluation for a run
+tail -1 experiments/dqn_atari/runs/pong_42/eval/evaluations.csv
+
+# All videos from a run
+ls -lh experiments/dqn_atari/runs/pong_42/videos/
+```
+
+**Aggregating across runs:**
+```bash
+# Collect all evaluation CSVs
+cat experiments/dqn_atari/runs/*/eval/evaluations.csv > all_evals.csv
+
+# Compare final performance
+for run in experiments/dqn_atari/runs/pong_*; do
+    echo "=== $run ==="
+    tail -1 $run/eval/evaluations.csv
+done
+```
+
+### Artifact Cleanup
+
+**Selective cleanup (keep text, remove videos):**
+```bash
+# Remove all videos to save space
+find experiments/dqn_atari/runs -name "videos" -type d -exec rm -rf {} +
+
+# Or remove old videos (keep last N)
+cd experiments/dqn_atari/runs/pong_42/videos
+ls -t step_*.mp4 | tail -n +6 | xargs rm  # Keep 5 most recent
+```
+
+**Complete cleanup (remove all evaluation artifacts):**
+```bash
+# Remove eval/ and videos/ directories
+find experiments/dqn_atari/runs -name "eval" -type d -exec rm -rf {} +
+find experiments/dqn_atari/runs -name "videos" -type d -exec rm -rf {} +
+```
+
+**Archival (compress before storage):**
+```bash
+# Compress evaluation artifacts for long-term storage
+tar -czf pong_42_eval.tar.gz \
+    experiments/dqn_atari/runs/pong_42/eval/ \
+    experiments/dqn_atari/runs/pong_42/videos/
+
+# Original: ~40MB → Compressed: ~10-15MB (videos compress well)
+```
+
+### Missing Artifacts Troubleshooting
+
+**No `eval/` directory:**
+- Evaluation never triggered (check `evaluation.enabled` in config)
+- Training didn't reach first eval interval (default 250K frames)
+- Evaluation crashed before writing outputs
+
+**No `evaluations.csv`:**
+- EvaluationLogger not initialized
+- Permissions error writing to run directory
+- Disk full
+
+**No `videos/` directory:**
+- Video recording disabled (`record_video=false`)
+- No evaluations completed yet
+- OpenCV not installed (`pip install opencv-python`)
+
+**Empty video files or playback errors:**
+- Environment doesn't support `render()` in `rgb_array` mode
+- OpenCV codec issue (try `pip install opencv-python-headless`)
+- Frame shape mismatch (check environment render output)
+
+### Best Practices
+
+1. **Enable video recording selectively:**
+   - Enable for final runs and important checkpoints
+   - Disable for hyperparameter sweeps (saves 99% of space)
+
+2. **Use JSONL for streaming analysis:**
+   - Process evaluations as they complete during training
+   - No need to wait for full training run to finish
+
+3. **Archive old runs:**
+   - Compress eval/ and videos/ after analysis
+   - Keep only summary CSVs for quick lookups
+
+4. **Backup raw per-episode data:**
+   - `per_episode_returns.jsonl` enables post-hoc statistical analysis
+   - Can recompute summary statistics if needed
+
+---
+
 ## Video Capture Settings
 
 ### Configuration
