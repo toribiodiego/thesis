@@ -260,16 +260,22 @@ class CSVBackend:
 
         # Initialize CSV if first write
         if not self._step_csv_initialized:
-            self._step_fieldnames = list(log_entry.keys())
+            # Define all expected fields upfront to avoid dynamic schema issues
+            self._step_fieldnames = [
+                'step', 'epsilon', 'replay_size', 'fps',
+                'loss', 'td_error', 'grad_norm', 'learning_rate',
+                'loss_ma'  # moving average
+            ]
             with open(self.step_csv_path, 'w', newline='') as f:
                 writer = csv.DictWriter(f, fieldnames=self._step_fieldnames)
                 writer.writeheader()
             self._step_csv_initialized = True
 
-        # Append to CSV
+        # Append to CSV (only write fields that are in fieldnames)
+        filtered_entry = {k: v for k, v in log_entry.items() if k in self._step_fieldnames}
         with open(self.step_csv_path, 'a', newline='') as f:
             writer = csv.DictWriter(f, fieldnames=self._step_fieldnames)
-            writer.writerow(log_entry)
+            writer.writerow(filtered_entry)
 
     def log_episode_metrics(self, metrics: Dict[str, Any], step: int, episode: int):
         """

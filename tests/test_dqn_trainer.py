@@ -1040,8 +1040,10 @@ def test_clip_gradients_different_norms():
     grad_norm_l2 = clip_gradients(online_net, max_norm=10.0, norm_type=2.0)
     assert grad_norm_l2 > 0.0
 
-    # Reset gradients and recompute
+    # Reset gradients and recompute with new forward pass
     online_net.zero_grad()
+    output = online_net(x)
+    loss = output['q_values'].mean()
     loss.backward()
 
     # Clip with L1 norm
@@ -1421,7 +1423,7 @@ def test_training_scheduler_invalid_train_every():
 
 def test_training_scheduler_warm_up_gating():
     """Test that training is gated by replay buffer warm-up."""
-    buffer = ReplayBuffer(capacity=1000, batch_size=32, min_size=100)
+    buffer = ReplayBuffer(capacity=1000, obs_shape=(84, 84), min_size=100)
     scheduler = TrainingScheduler(train_every=4)
 
     # Before warm-up: should not train even at multiples of train_every
@@ -1431,8 +1433,9 @@ def test_training_scheduler_warm_up_gating():
 
     # Fill buffer past min_size
     for _ in range(150):
-        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8)
-        buffer.add(state, action=0, reward=0.0, done=False)
+        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8).numpy()
+        next_state = torch.randint(0, 255, (84, 84), dtype=torch.uint8).numpy()
+        buffer.append(state, action=0, reward=0.0, next_state=next_state, done=False)
 
     # After warm-up: should train at multiples
     assert buffer.can_sample()
@@ -1441,13 +1444,14 @@ def test_training_scheduler_warm_up_gating():
 
 def test_training_scheduler_train_every_multiples():
     """Test training occurs at exact multiples of train_every."""
-    buffer = ReplayBuffer(capacity=1000, batch_size=32, min_size=50)
+    buffer = ReplayBuffer(capacity=1000, obs_shape=(84, 84), min_size=50)
     scheduler = TrainingScheduler(train_every=4)
 
     # Fill buffer
     for _ in range(100):
-        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8)
-        buffer.add(state, action=0, reward=0.0, done=False)
+        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8).numpy()
+        next_state = torch.randint(0, 255, (84, 84), dtype=torch.uint8).numpy()
+        buffer.append(state, action=0, reward=0.0, next_state=next_state, done=False)
 
     # Check multiples
     assert not scheduler.should_train(0, buffer)  # Step 0
@@ -1463,13 +1467,14 @@ def test_training_scheduler_train_every_multiples():
 
 def test_training_scheduler_mark_trained():
     """Test mark_trained updates counters."""
-    buffer = ReplayBuffer(capacity=1000, batch_size=32, min_size=50)
+    buffer = ReplayBuffer(capacity=1000, obs_shape=(84, 84), min_size=50)
     scheduler = TrainingScheduler(train_every=4)
 
     # Fill buffer
     for _ in range(100):
-        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8)
-        buffer.add(state, action=0, reward=0.0, done=False)
+        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8).numpy()
+        next_state = torch.randint(0, 255, (84, 84), dtype=torch.uint8).numpy()
+        buffer.append(state, action=0, reward=0.0, next_state=next_state, done=False)
 
     # Mark trained
     scheduler.mark_trained(env_step=4)
@@ -1488,13 +1493,14 @@ def test_training_scheduler_mark_trained():
 
 def test_training_scheduler_no_duplicate_training():
     """Test that training at same step doesn't happen twice."""
-    buffer = ReplayBuffer(capacity=1000, batch_size=32, min_size=50)
+    buffer = ReplayBuffer(capacity=1000, obs_shape=(84, 84), min_size=50)
     scheduler = TrainingScheduler(train_every=4)
 
     # Fill buffer
     for _ in range(100):
-        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8)
-        buffer.add(state, action=0, reward=0.0, done=False)
+        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8).numpy()
+        next_state = torch.randint(0, 255, (84, 84), dtype=torch.uint8).numpy()
+        buffer.append(state, action=0, reward=0.0, next_state=next_state, done=False)
 
     # First call at step 4
     assert scheduler.should_train(4, buffer)
@@ -1506,13 +1512,14 @@ def test_training_scheduler_no_duplicate_training():
 
 def test_training_scheduler_step_method():
     """Test convenience step() method."""
-    buffer = ReplayBuffer(capacity=1000, batch_size=32, min_size=50)
+    buffer = ReplayBuffer(capacity=1000, obs_shape=(84, 84), min_size=50)
     scheduler = TrainingScheduler(train_every=4)
 
     # Fill buffer
     for _ in range(100):
-        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8)
-        buffer.add(state, action=0, reward=0.0, done=False)
+        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8).numpy()
+        next_state = torch.randint(0, 255, (84, 84), dtype=torch.uint8).numpy()
+        buffer.append(state, action=0, reward=0.0, next_state=next_state, done=False)
 
     # Should return False when not time to train
     result = scheduler.step(2, buffer)
@@ -1528,13 +1535,14 @@ def test_training_scheduler_step_method():
 
 def test_training_scheduler_reset():
     """Test reset() clears all counters."""
-    buffer = ReplayBuffer(capacity=1000, batch_size=32, min_size=50)
+    buffer = ReplayBuffer(capacity=1000, obs_shape=(84, 84), min_size=50)
     scheduler = TrainingScheduler(train_every=4)
 
     # Fill buffer and train
     for _ in range(100):
-        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8)
-        buffer.add(state, action=0, reward=0.0, done=False)
+        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8).numpy()
+        next_state = torch.randint(0, 255, (84, 84), dtype=torch.uint8).numpy()
+        buffer.append(state, action=0, reward=0.0, next_state=next_state, done=False)
 
     scheduler.mark_trained(4)
     scheduler.mark_trained(8)
@@ -1583,13 +1591,14 @@ def test_training_scheduler_load_state_dict():
 
 def test_training_scheduler_integration():
     """Test full integration in training-like loop."""
-    buffer = ReplayBuffer(capacity=1000, batch_size=32, min_size=50)
+    buffer = ReplayBuffer(capacity=1000, obs_shape=(84, 84), min_size=50)
     scheduler = TrainingScheduler(train_every=4)
 
     # Fill buffer
     for i in range(100):
-        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8)
-        buffer.add(state, action=0, reward=0.0, done=False)
+        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8).numpy()
+        next_state = torch.randint(0, 255, (84, 84), dtype=torch.uint8).numpy()
+        buffer.append(state, action=0, reward=0.0, next_state=next_state, done=False)
 
     # Simulate training loop
     training_steps = []
@@ -1605,12 +1614,13 @@ def test_training_scheduler_integration():
 
 def test_training_scheduler_different_intervals():
     """Test scheduler with different train_every values."""
-    buffer = ReplayBuffer(capacity=1000, batch_size=32, min_size=50)
+    buffer = ReplayBuffer(capacity=1000, obs_shape=(84, 84), min_size=50)
 
     # Fill buffer
     for _ in range(100):
-        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8)
-        buffer.add(state, action=0, reward=0.0, done=False)
+        state = torch.randint(0, 255, (84, 84), dtype=torch.uint8).numpy()
+        next_state = torch.randint(0, 255, (84, 84), dtype=torch.uint8).numpy()
+        buffer.append(state, action=0, reward=0.0, next_state=next_state, done=False)
 
     # Test train_every=1
     scheduler1 = TrainingScheduler(train_every=1)
@@ -3042,12 +3052,15 @@ def test_checkpoint_manager_periodic_save():
         manager = CheckpointManager(checkpoint_dir=tmpdir, save_interval=1000000, keep_last_n=2)
 
         # Create model and optimizer
-        model = DQN(num_actions=6)
-        optimizer = configure_optimizer(model)
+        online_model = DQN(num_actions=6)
+        target_model = DQN(num_actions=6)
+        optimizer = configure_optimizer(online_model)
 
         # Should save at 1M steps
         assert manager.should_save(1000000)
-        path = manager.save_checkpoint(step=1000000, model=model, optimizer=optimizer)
+        path = manager.save_checkpoint(step=1000000, episode=100, epsilon=0.5,
+                                       online_model=online_model, target_model=target_model,
+                                       optimizer=optimizer)
 
         assert os.path.exists(path)
         assert '1000000' in path
@@ -3063,12 +3076,15 @@ def test_checkpoint_manager_keep_last_n():
     with tempfile.TemporaryDirectory() as tmpdir:
         manager = CheckpointManager(checkpoint_dir=tmpdir, save_interval=1000000, keep_last_n=2)
 
-        model = DQN(num_actions=6)
-        optimizer = configure_optimizer(model)
+        online_model = DQN(num_actions=6)
+        target_model = DQN(num_actions=6)
+        optimizer = configure_optimizer(online_model)
 
         # Save 3 checkpoints
         for i in range(1, 4):
-            manager.save_checkpoint(step=i * 1000000, model=model, optimizer=optimizer)
+            manager.save_checkpoint(step=i * 1000000, episode=i*100, epsilon=0.5,
+                                   online_model=online_model, target_model=target_model,
+                                   optimizer=optimizer)
 
         # Should only have 2 checkpoints (last 2)
         checkpoints = [f for f in os.listdir(tmpdir) if f.startswith('checkpoint_')]
@@ -3085,20 +3101,27 @@ def test_checkpoint_manager_best_model():
     with tempfile.TemporaryDirectory() as tmpdir:
         manager = CheckpointManager(checkpoint_dir=tmpdir, save_best=True)
 
-        model = DQN(num_actions=6)
-        optimizer = configure_optimizer(model)
+        online_model = DQN(num_actions=6)
+        target_model = DQN(num_actions=6)
+        optimizer = configure_optimizer(online_model)
 
         # First eval (return=20) - should save
-        saved = manager.save_best(step=1000000, eval_return=20.0, model=model, optimizer=optimizer)
+        saved = manager.save_best(step=1000000, episode=100, epsilon=0.5, eval_return=20.0,
+                                 online_model=online_model, target_model=target_model,
+                                 optimizer=optimizer)
         assert saved
         assert os.path.exists(os.path.join(tmpdir, 'best_model.pt'))
 
         # Second eval (return=15) - should NOT save
-        saved = manager.save_best(step=2000000, eval_return=15.0, model=model, optimizer=optimizer)
+        saved = manager.save_best(step=2000000, episode=200, epsilon=0.4, eval_return=15.0,
+                                 online_model=online_model, target_model=target_model,
+                                 optimizer=optimizer)
         assert not saved
 
         # Third eval (return=25) - should save
-        saved = manager.save_best(step=3000000, eval_return=25.0, model=model, optimizer=optimizer)
+        saved = manager.save_best(step=3000000, episode=300, epsilon=0.3, eval_return=25.0,
+                                 online_model=online_model, target_model=target_model,
+                                 optimizer=optimizer)
         assert saved
         assert manager.best_eval_return == 25.0
 
@@ -3114,30 +3137,40 @@ def test_checkpoint_manager_load():
         manager = CheckpointManager(checkpoint_dir=tmpdir)
 
         # Create and save model
-        model1 = DQN(num_actions=6)
-        optimizer1 = configure_optimizer(model1)
+        online_model1 = DQN(num_actions=6)
+        target_model1 = DQN(num_actions=6)
+        optimizer1 = configure_optimizer(online_model1)
 
         # Modify model weights
         with torch.no_grad():
-            for param in model1.parameters():
+            for param in online_model1.parameters():
+                param.fill_(1.0)
+            for param in target_model1.parameters():
                 param.fill_(1.0)
 
-        path = manager.save_checkpoint(step=1000000, model=model1, optimizer=optimizer1,
-                                       metadata={'epsilon': 0.5})
+        path = manager.save_checkpoint(step=1000000, episode=100, epsilon=0.5,
+                                       online_model=online_model1, target_model=target_model1,
+                                       optimizer=optimizer1,
+                                       extra_metadata={'test_key': 'test_value'})
 
         # Create new model and load checkpoint
-        model2 = DQN(num_actions=6)
-        optimizer2 = configure_optimizer(model2)
+        online_model2 = DQN(num_actions=6)
+        target_model2 = DQN(num_actions=6)
+        optimizer2 = configure_optimizer(online_model2)
 
-        metadata = manager.load_checkpoint(path, model2, optimizer2)
+        metadata = manager.load_checkpoint(path, online_model2, target_model2, optimizer2)
 
         # Check weights were loaded
-        for p1, p2 in zip(model1.parameters(), model2.parameters()):
+        for p1, p2 in zip(online_model1.parameters(), online_model2.parameters()):
+            assert torch.allclose(p1, p2)
+        for p1, p2 in zip(target_model1.parameters(), target_model2.parameters()):
             assert torch.allclose(p1, p2)
 
         # Check metadata
         assert metadata['step'] == 1000000
-        assert metadata['metadata']['epsilon'] == 0.5
+        assert metadata['episode'] == 100
+        assert metadata['epsilon'] == 0.5
+        assert metadata['metadata']['test_key'] == 'test_value'
 
 
 # ============================================================================

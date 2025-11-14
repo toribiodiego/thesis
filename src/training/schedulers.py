@@ -6,6 +6,8 @@ import torch
 import torch.nn as nn
 from typing import Optional, Dict, Tuple
 
+from .target_network import hard_update_target
+
 
 class TargetNetworkUpdater:
     """

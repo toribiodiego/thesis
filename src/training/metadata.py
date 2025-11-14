@@ -5,6 +5,7 @@ import os
 import json
 import subprocess
 from typing import Optional, Dict, Any
+import torch
 
 
 def get_git_commit_hash() -> str:

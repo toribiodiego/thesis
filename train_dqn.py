@@ -59,13 +59,34 @@ def set_random_seeds(seed: int):
 
 
 def setup_device(config):
-    """Setup compute device (CPU or CUDA)."""
-    if config.network.device == 'cuda' and torch.cuda.is_available():
-        device = torch.device('cuda')
-        print(f"Using CUDA device: {torch.cuda.get_device_name(0)}")
-    else:
-        device = torch.device('cpu')
-        print("Using CPU device")
+    """
+    Setup compute device with automatic fallback.
+
+    Checks availability in order: CUDA > MPS > CPU
+    If config specifies a device, attempts to use it with fallback to CPU.
+    """
+    requested_device = config.network.device
+
+    # Auto-detect best available device
+    if requested_device == 'auto' or requested_device == 'cuda':
+        if torch.cuda.is_available():
+            device = torch.device('cuda')
+            print(f"Using CUDA device: {torch.cuda.get_device_name(0)}")
+            return device
+        elif requested_device == 'cuda':
+            print("Warning: CUDA requested but not available. Falling back to CPU.")
+
+    if requested_device == 'auto' or requested_device == 'mps':
+        if hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+            device = torch.device('mps')
+            print("Using MPS device (Apple Silicon GPU)")
+            return device
+        elif requested_device == 'mps':
+            print("Warning: MPS requested but not available. Falling back to CPU.")
+
+    # Default to CPU
+    device = torch.device('cpu')
+    print("Using CPU device")
     return device
 
 
@@ -125,8 +146,8 @@ def initialize_components(config, paths, device, resuming=False):
 
     # Create schedulers
     epsilon_scheduler = EpsilonScheduler(
-        start_epsilon=config.exploration.schedule.start_epsilon,
-        end_epsilon=config.exploration.schedule.end_epsilon,
+        epsilon_start=config.exploration.schedule.start_epsilon,
+        epsilon_end=config.exploration.schedule.end_epsilon,
         decay_frames=config.exploration.schedule.decay_frames
     )
 
@@ -135,7 +156,6 @@ def initialize_components(config, paths, device, resuming=False):
     )
 
     training_scheduler = TrainingScheduler(
-        warmup_steps=config.replay.warmup_steps,
         train_every=config.training.train_every
     )
 
@@ -144,25 +164,25 @@ def initialize_components(config, paths, device, resuming=False):
     # Create loggers
     metrics_logger = MetricsLogger(
         log_dir=paths['run_dir'],
-        tensorboard_enabled=config.logging.get('tensorboard', {}).get('enabled', True),
-        wandb_enabled=config.logging.get('wandb', {}).get('enabled', False),
-        csv_enabled=config.logging.get('csv', {}).get('enabled', True),
+        enable_tensorboard=config.logging.get('tensorboard', {}).get('enabled', True),
+        enable_wandb=config.logging.get('wandb', {}).get('enabled', False),
+        enable_csv=config.logging.get('csv', {}).get('enabled', True),
         wandb_project=config.logging.get('wandb', {}).get('project', 'dqn-atari'),
-        wandb_entity=config.logging.get('wandb', {}).get('entity', None),
-        wandb_config=OmegaConf.to_container(config, resolve=True),
-        run_name=paths['run_id']
+        wandb_name=paths['run_dir'].name,
+        wandb_config=OmegaConf.to_container(config, resolve=True)
     )
 
     checkpoint_manager = CheckpointManager(
-        checkpoint_dir=paths['checkpoint_dir'],
+        checkpoint_dir=paths['checkpoints'],
         save_interval=config.logging.checkpoint.save_every,
         keep_last_n=config.logging.checkpoint.keep_last_n,
         save_best=config.logging.checkpoint.save_best
     )
 
     eval_scheduler = EvaluationScheduler(
-        eval_every=config.evaluation.eval_every,
-        eval_enabled=config.evaluation.enabled
+        eval_interval=config.evaluation.eval_every,
+        num_episodes=config.evaluation.num_episodes,
+        eval_epsilon=config.evaluation.epsilon
     )
 
     return {
@@ -292,6 +312,7 @@ def run_training(config, paths, device):
             # Log episode metrics
             metrics_logger.log_episode(
                 step=frame_counter.frames,
+                episode=episode_count,
                 episode_return=episode_return,
                 episode_length=episode_length,
                 epsilon=step_result['epsilon']
@@ -310,21 +331,20 @@ def run_training(config, paths, device):
 
             eval_results = evaluate(
                 env=eval_env,
-                network=online_net,
+                model=online_net,
                 num_episodes=config.evaluation.num_episodes,
-                epsilon=config.evaluation.epsilon,
-                device=device,
-                render=False
+                eval_epsilon=config.evaluation.epsilon,
+                device=device
             )
 
-            mean_return = np.mean(eval_results['returns'])
-            std_return = np.std(eval_results['returns'])
-            mean_length = np.mean(eval_results['lengths'])
+            mean_return = np.mean(eval_results['episode_returns'])
+            std_return = np.std(eval_results['episode_returns'])
+            mean_length = np.mean(eval_results['episode_lengths'])
 
             print(f"Evaluation Results:")
             print(f"  Mean Return: {mean_return:.2f} ± {std_return:.2f}")
             print(f"  Mean Length: {mean_length:.1f}")
-            print(f"  Episodes: {len(eval_results['returns'])}")
+            print(f"  Episodes: {len(eval_results['episode_returns'])}")
             print(f"{'='*80}\n")
 
             # Log evaluation metrics
@@ -381,19 +401,18 @@ def run_training(config, paths, device):
     print("Running final evaluation...")
     eval_results = evaluate(
         env=eval_env,
-        network=online_net,
+        model=online_net,
         num_episodes=config.evaluation.num_episodes,
-        epsilon=config.evaluation.epsilon,
-        device=device,
-        render=False
+        eval_epsilon=config.evaluation.epsilon,
+        device=device
     )
 
-    mean_return = np.mean(eval_results['returns'])
-    std_return = np.std(eval_results['returns'])
+    mean_return = np.mean(eval_results['episode_returns'])
+    std_return = np.std(eval_results['episode_returns'])
 
     print(f"Final Evaluation Results:")
     print(f"  Mean Return: {mean_return:.2f} ± {std_return:.2f}")
-    print(f"  Episodes: {len(eval_results['returns'])}")
+    print(f"  Episodes: {len(eval_results['episode_returns'])}")
 
     # Close environments
     env.close()
