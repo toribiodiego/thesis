@@ -529,22 +529,37 @@ class EvaluationLogger:
         self.csv_path = os.path.join(log_dir, 'evaluations.csv')
         self._csv_initialized = False
 
+        # JSONL file for evaluation summary (one JSON object per line)
+        self.jsonl_path = os.path.join(log_dir, 'evaluations.jsonl')
+
         # JSON directory for detailed per-eval results
         self.json_dir = os.path.join(log_dir, 'detailed')
         os.makedirs(self.json_dir, exist_ok=True)
 
+        # Sidecar file for per-episode returns
+        self.episodes_path = os.path.join(log_dir, 'per_episode_returns.jsonl')
+
     def log_evaluation(self, step: int, results: dict, epsilon: float = None):
         """
-        Log evaluation results to CSV and JSON.
+        Log evaluation results to CSV, JSONL, and detailed JSON files.
+
+        Writes:
+        - evaluations.csv: Summary statistics per evaluation
+        - evaluations.jsonl: Summary statistics in JSONL format
+        - per_episode_returns.jsonl: Raw per-episode returns for analysis
+        - detailed/eval_step_<step>.json: Complete evaluation details
 
         Args:
             step: Environment step when evaluation occurred
             results: Dictionary returned by evaluate()
-            epsilon: Current training epsilon (optional)
+            epsilon: Current training epsilon (optional, for logging context)
         """
         import csv
         import json
         import os
+
+        # Get eval_epsilon from results (preferred) or use parameter
+        eval_epsilon = results.get('eval_epsilon', epsilon)
 
         # Prepare CSV entry (summary statistics)
         csv_entry = {
@@ -554,10 +569,11 @@ class EvaluationLogger:
             'std_return': results['std_return'],
             'min_return': results['min_return'],
             'max_return': results['max_return'],
-            'mean_length': results['mean_length'],
-            'num_episodes': results['num_episodes']
+            'episodes': results['num_episodes'],
+            'eval_epsilon': eval_epsilon if eval_epsilon is not None else 0.0
         }
 
+        # Optionally include training epsilon for context
         if epsilon is not None:
             csv_entry['training_epsilon'] = epsilon
 
@@ -571,6 +587,21 @@ class EvaluationLogger:
         with open(self.csv_path, 'a', newline='') as f:
             writer = csv.DictWriter(f, fieldnames=csv_entry.keys())
             writer.writerow(csv_entry)
+
+        # Write JSONL (one JSON object per line for easy streaming)
+        with open(self.jsonl_path, 'a') as f:
+            json.dump(csv_entry, f)
+            f.write('\n')
+
+        # Save per-episode returns to sidecar file
+        per_episode_entry = {
+            'step': step,
+            'episode_returns': [float(r) for r in results['episode_returns']],
+            'episode_lengths': [int(l) for l in results['episode_lengths']]
+        }
+        with open(self.episodes_path, 'a') as f:
+            json.dump(per_episode_entry, f)
+            f.write('\n')
 
         # Save detailed results to JSON
         json_path = os.path.join(self.json_dir, f'eval_step_{step}.json')
@@ -586,7 +617,8 @@ class EvaluationLogger:
             },
             'episode_returns': [float(r) for r in results['episode_returns']],
             'episode_lengths': [int(l) for l in results['episode_lengths']],
-            'num_episodes': results['num_episodes']
+            'num_episodes': results['num_episodes'],
+            'eval_epsilon': eval_epsilon if eval_epsilon is not None else 0.0
         }
 
         if epsilon is not None:

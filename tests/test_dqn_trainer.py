@@ -3643,7 +3643,8 @@ def test_evaluation_logger_csv():
             'mean_length': 1200.5,
             'episode_returns': [15.0, 20.0, 25.0],
             'episode_lengths': [1000, 1200, 1400],
-            'num_episodes': 3
+            'num_episodes': 3,
+            'eval_epsilon': 0.05
         }
 
         logger.log_evaluation(step=250000, results=results, epsilon=0.5)
@@ -3660,6 +3661,8 @@ def test_evaluation_logger_csv():
         assert len(rows) == 1
         assert int(rows[0]['step']) == 250000
         assert float(rows[0]['mean_return']) == 20.5
+        assert float(rows[0]['eval_epsilon']) == 0.05
+        assert int(rows[0]['episodes']) == 3
 
 
 def test_evaluation_logger_json():
@@ -3725,6 +3728,124 @@ def test_evaluation_logger_get_all_results():
         # Retrieve all results
         all_results = logger.get_all_results()
         assert len(all_results) == 3
+
+
+def test_evaluation_logger_jsonl():
+    """Test EvaluationLogger writes JSONL format."""
+    from src.training import EvaluationLogger
+    import tempfile
+    import os
+    import json
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        logger = EvaluationLogger(log_dir=tmpdir)
+
+        # Log multiple evaluations
+        for i, step in enumerate([250000, 500000]):
+            results = {
+                'mean_return': 10.0 + i * 5,
+                'median_return': 10.0 + i * 5,
+                'std_return': 2.0,
+                'min_return': 5.0,
+                'max_return': 15.0,
+                'mean_length': 1000.0,
+                'episode_returns': [5.0, 10.0, 15.0],
+                'episode_lengths': [1000, 1000, 1000],
+                'num_episodes': 3,
+                'eval_epsilon': 0.05
+            }
+            logger.log_evaluation(step=step, results=results)
+
+        # Check JSONL file exists
+        jsonl_path = os.path.join(tmpdir, 'evaluations.jsonl')
+        assert os.path.exists(jsonl_path)
+
+        # Read JSONL (one JSON object per line)
+        with open(jsonl_path, 'r') as f:
+            lines = f.readlines()
+
+        assert len(lines) == 2
+
+        # Parse each line
+        obj1 = json.loads(lines[0])
+        obj2 = json.loads(lines[1])
+
+        assert obj1['step'] == 250000
+        assert obj1['mean_return'] == 10.0
+        assert obj2['step'] == 500000
+        assert obj2['mean_return'] == 15.0
+
+
+def test_evaluation_logger_per_episode_sidecar():
+    """Test EvaluationLogger writes per-episode returns sidecar file."""
+    from src.training import EvaluationLogger
+    import tempfile
+    import os
+    import json
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        logger = EvaluationLogger(log_dir=tmpdir)
+
+        results = {
+            'mean_return': 20.0,
+            'median_return': 20.0,
+            'std_return': 5.0,
+            'min_return': 10.0,
+            'max_return': 30.0,
+            'mean_length': 1000.0,
+            'episode_returns': [10.0, 20.0, 30.0],
+            'episode_lengths': [800, 1000, 1200],
+            'num_episodes': 3,
+            'eval_epsilon': 0.05
+        }
+
+        logger.log_evaluation(step=250000, results=results)
+
+        # Check sidecar file exists
+        episodes_path = os.path.join(tmpdir, 'per_episode_returns.jsonl')
+        assert os.path.exists(episodes_path)
+
+        # Read sidecar file
+        with open(episodes_path, 'r') as f:
+            line = f.readline()
+
+        data = json.loads(line)
+        assert data['step'] == 250000
+        assert len(data['episode_returns']) == 3
+        assert data['episode_returns'] == [10.0, 20.0, 30.0]
+        assert len(data['episode_lengths']) == 3
+        assert data['episode_lengths'] == [800, 1000, 1200]
+
+
+def test_evaluation_logger_all_output_files():
+    """Test EvaluationLogger creates all required output files."""
+    from src.training import EvaluationLogger
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        logger = EvaluationLogger(log_dir=tmpdir)
+
+        results = {
+            'mean_return': 20.0,
+            'median_return': 20.0,
+            'std_return': 5.0,
+            'min_return': 10.0,
+            'max_return': 30.0,
+            'mean_length': 1000.0,
+            'episode_returns': [10.0, 20.0, 30.0],
+            'episode_lengths': [1000, 1000, 1000],
+            'num_episodes': 3,
+            'eval_epsilon': 0.05
+        }
+
+        logger.log_evaluation(step=250000, results=results)
+
+        # Check all files exist
+        assert os.path.exists(os.path.join(tmpdir, 'evaluations.csv'))
+        assert os.path.exists(os.path.join(tmpdir, 'evaluations.jsonl'))
+        assert os.path.exists(os.path.join(tmpdir, 'per_episode_returns.jsonl'))
+        assert os.path.exists(os.path.join(tmpdir, 'detailed', 'eval_step_250000.json'))
 
 
 # ============================================================================

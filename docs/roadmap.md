@@ -267,8 +267,8 @@ Dedicated eval loop: greedy or low-ε, compute mean/median/std returns. Capture 
     - [X] feat: Add MP4 video capture pipeline for eval episodes
 - [X] Schedule evaluations automatically every E environment frames (default 250_000) or by wall-clock; pause learning during eval, restore training mode afterward, and log the schedule in run metadata.
     - [X] feat: Add periodic evaluation trigger with proper train/eval mode switching
-- [ ] Write structured outputs: append a row per eval to CSV/JSONL with `step, mean_return, median_return, std_return, min_return, max_return, episodes, eval_epsilon`; save raw per-episode returns to a sidecar file for later analysis.
-    - [ ] chore: Persist eval summaries and per-episode details to CSV/JSONL files
+- [X] Write structured outputs: append a row per eval to CSV/JSONL with `step, mean_return, median_return, std_return, min_return, max_return, episodes, eval_epsilon`; save raw per-episode returns to a sidecar file for later analysis.
+    - [X] chore: Persist eval summaries and per-episode details to CSV/JSONL files
 - [ ] Ensure evaluation defaults follow the paper: greedy policy with `eval_epsilon=0.05`, ≥10 episodes for interim checks, and ~30 episodes for final reporting; make the episode count configurable via CLI/config.
     - [ ] docs: State the ε=0.05 convention and recommended episode counts in the evaluation harness docs/config comments
 - [ ] Document the evaluation harness in `docs/design/eval_harness.md`: describe loop structure, metric definitions, video capture settings, scheduling triggers, output file schemas, and debugging steps for desyncs or video corruption.
