@@ -782,6 +782,463 @@ Tests verify:
 - Workers inherit parent's seed if not explicitly set
 - Use `worker_init_fn` for DataLoader workers
 
+## Checkpoint/Resume Procedures
+
+### Complete Checkpoint Save Procedure
+
+**Step 1: Initialize CheckpointManager**
+
+```python
+from src.training import CheckpointManager, get_rng_states
+
+manager = CheckpointManager(
+    checkpoint_dir='runs/pong_123/checkpoints',
+    save_interval=1_000_000,  # Every 1M steps
+    keep_last_n=3,            # Keep last 3 checkpoints
+    save_best=True,           # Track best eval score
+    save_replay_buffer=False  # Don't save full buffer (saves space)
+)
+```
+
+**Step 2: During Training Loop**
+
+```python
+# Check if it's time to save
+if manager.should_save(current_step):
+    # Capture current RNG states
+    rng_states = get_rng_states(env)
+
+    # Save periodic checkpoint
+    checkpoint_path = manager.save_checkpoint(
+        step=current_step,
+        episode=episode_count,
+        epsilon=current_epsilon,
+        online_model=online_model,
+        target_model=target_model,
+        optimizer=optimizer,
+        replay_buffer=replay_buffer,
+        rng_states=rng_states,
+        extra_metadata={'config': config}
+    )
+
+    print(f"Saved checkpoint: {checkpoint_path}")
+```
+
+**Step 3: Save Best Model After Evaluation**
+
+```python
+# After running evaluation
+if eval_return > best_return:
+    best_return = eval_return
+
+    saved = manager.save_best(
+        step=current_step,
+        episode=episode_count,
+        epsilon=current_epsilon,
+        eval_return=eval_return,
+        online_model=online_model,
+        target_model=target_model,
+        optimizer=optimizer,
+        rng_states=rng_states
+    )
+
+    if saved:
+        print(f"New best model! Return: {eval_return:.2f}")
+```
+
+### Complete Resume Procedure
+
+**Step 1: Add CLI Arguments**
+
+```python
+import argparse
+from src.training import add_resume_args
+
+parser = argparse.ArgumentParser()
+add_resume_args(parser)
+args = parser.parse_args()
+
+# Usage:
+# python train.py --resume checkpoints/checkpoint_1000000.pt
+# python train.py --resume checkpoints/checkpoint_1000000.pt --strict-resume
+```
+
+**Step 2: Initialize Fresh Objects**
+
+```python
+from src.training import resume_from_checkpoint
+from src.models.dqn import DQN
+
+# Create fresh objects (will be loaded from checkpoint)
+online_model = DQN(num_actions=num_actions)
+target_model = DQN(num_actions=num_actions)
+optimizer = configure_optimizer(online_model, optimizer_type='rmsprop')
+epsilon_scheduler = EpsilonScheduler(
+    epsilon_start=1.0,
+    epsilon_end=0.1,
+    decay_frames=1_000_000
+)
+replay_buffer = ReplayBuffer(capacity=1_000_000)
+```
+
+**Step 3: Resume from Checkpoint**
+
+```python
+if args.resume:
+    resumed = resume_from_checkpoint(
+        checkpoint_path=args.resume,
+        online_model=online_model,
+        target_model=target_model,
+        optimizer=optimizer,
+        epsilon_scheduler=epsilon_scheduler,
+        replay_buffer=replay_buffer,
+        env=env,
+        config=config,
+        device=device,
+        strict_config=args.strict_resume
+    )
+
+    # Extract resumed state
+    start_step = resumed['next_step']  # Resume from next step
+    episode_count = resumed['episode']
+    current_epsilon = resumed['epsilon']
+
+    print(f"Resumed from step {start_step}")
+else:
+    # Fresh start
+    start_step = 0
+    episode_count = 0
+    current_epsilon = 1.0
+```
+
+**Step 4: Continue Training Loop**
+
+```python
+for step in range(start_step, total_steps):
+    # Training continues normally
+    epsilon = epsilon_scheduler.get_epsilon(step)
+    # ... rest of training loop
+```
+
+### Saved Tensors Reference
+
+Complete list of tensors and data saved in checkpoints:
+
+**Model Weights:**
+- `online_model_state_dict`: Online Q-network parameters
+- `target_model_state_dict`: Target Q-network parameters
+
+**Optimizer:**
+- `optimizer_state_dict`: Momentum buffers, learning rate, step counts
+
+**Training State:**
+- `step`: Environment step counter (int)
+- `episode`: Episode counter (int)
+- `epsilon`: Current epsilon value (float)
+
+**Replay Buffer:**
+- `replay_buffer_state`:
+  - `index`: Write index (int)
+  - `size`: Current size (int)
+  - `capacity`: Maximum capacity (int)
+  - `obs_shape`: Observation shape (tuple)
+  - `data`: Full buffer content (optional, only if `save_replay_buffer=True`)
+    - `observations`: numpy array
+    - `actions`: numpy array
+    - `rewards`: numpy array
+    - `dones`: numpy array
+    - `episode_starts`: numpy array
+
+**RNG States:**
+- `rng_states`:
+  - `python_random`: Python random.getstate()
+  - `numpy_random`: numpy.random.get_state()
+  - `torch_cpu`: torch.get_rng_state()
+  - `torch_cuda`: torch.cuda.get_rng_state_all() (if CUDA)
+  - `env`: env.get_rng_state() (if supported)
+
+**Metadata:**
+- `schema_version`: Checkpoint format version (string)
+- `timestamp`: ISO 8601 timestamp (string)
+- `commit_hash`: Git commit hash (string)
+- `metadata`: Custom user metadata (dict, optional)
+
+### Metadata Schema
+
+Checkpoints use schema version `1.0.0` with the following structure:
+
+```python
+{
+    # Required fields
+    'schema_version': '1.0.0',
+    'timestamp': '2025-01-15T10:30:45.123456',
+    'commit_hash': 'a1b2c3d',
+    'step': 1000000,
+    'episode': 5000,
+    'epsilon': 0.5,
+
+    # Model states
+    'online_model_state_dict': OrderedDict(...),
+    'target_model_state_dict': OrderedDict(...),
+
+    # Optimizer
+    'optimizer_state_dict': {...},
+
+    # RNG states
+    'rng_states': {
+        'python_random': (...),
+        'numpy_random': (...),
+        'torch_cpu': tensor(...),
+        'torch_cuda': [tensor(...), ...],  # If CUDA
+        'env': {...}  # If env supports it
+    },
+
+    # Replay buffer
+    'replay_buffer_state': {
+        'index': 250000,
+        'size': 250000,
+        'capacity': 1000000,
+        'obs_shape': (4, 84, 84),
+        # Optional 'data' dict if save_replay_buffer=True
+    },
+
+    # Optional metadata
+    'metadata': {
+        'config': {...},
+        'notes': '...'
+    }
+}
+```
+
+### Resume CLI Usage
+
+**Basic Resume:**
+```bash
+python train_dqn.py --resume checkpoints/checkpoint_1000000.pt
+```
+
+**Strict Resume (enforce config compatibility):**
+```bash
+python train_dqn.py --resume checkpoints/checkpoint_1000000.pt --strict-resume
+```
+
+**Resume without RNG restoration:**
+```bash
+python train_dqn.py --resume checkpoints/checkpoint_1000000.pt --no-restore-rng
+```
+
+**Resume from best model:**
+```bash
+python train_dqn.py --resume checkpoints/best_model.pt
+```
+
+### Verifying Deterministic Resumes
+
+**Checklist for Deterministic Resumes:**
+
+1. ✓ **Enable deterministic mode:**
+   ```python
+   configure_determinism(enabled=True, strict=False)
+   set_seed(seed, deterministic=True)
+   ```
+
+2. ✓ **Save checkpoint with RNG states:**
+   ```python
+   rng_states = get_rng_states(env)
+   checkpoint_path = manager.save_checkpoint(..., rng_states=rng_states)
+   ```
+
+3. ✓ **Resume with RNG restoration:**
+   ```python
+   resumed = resume_from_checkpoint(..., env=env)  # RNG states auto-restored
+   ```
+
+4. ✓ **Verify git commit hash matches:**
+   - Check warning: "Git commit hash mismatch"
+   - Ensure code version is identical
+
+5. ✓ **Check config compatibility:**
+   - Critical params must match (env ID, frame size, stack size)
+   - Important params should match (learning rate, gamma, batch size)
+
+**Run Smoke Test:**
+
+```bash
+# Run determinism verification smoke test
+pytest tests/test_save_resume_determinism.py -v -s
+
+# Expected output:
+# ✓ PERFECT DETERMINISM - All metrics match exactly
+# Epsilon Matches: 100.0%
+# Reward Matches: 100.0%
+# Action Matches: 100.0%
+# Checksum Match: ✓ PASS
+```
+
+The smoke test:
+- Runs 5000 steps total
+- Saves checkpoint at step 2500
+- Resumes from checkpoint
+- Verifies epsilon, rewards, and actions match exactly
+- Reports detailed comparison with checksums
+
+### Debugging Mismatched States
+
+**Issue: Different epsilon values after resume**
+
+Check:
+1. Epsilon scheduler state restoration:
+   ```python
+   assert epsilon_scheduler.frame_counter == checkpoint['step']
+   assert abs(epsilon_scheduler.current_epsilon - checkpoint['epsilon']) < 1e-6
+   ```
+
+2. Epsilon calculation is deterministic:
+   ```python
+   eps = epsilon_scheduler.get_epsilon(step)
+   # Should return same value for same step
+   ```
+
+**Issue: Different actions selected after resume**
+
+Check:
+1. RNG states were restored:
+   ```python
+   assert 'rng_states' in checkpoint
+   set_rng_states(checkpoint['rng_states'], env)
+   ```
+
+2. Action selection uses same epsilon:
+   ```python
+   # Both runs should use identical epsilon
+   action = select_epsilon_greedy_action(model, state, epsilon, num_actions)
+   ```
+
+3. Model weights are identical:
+   ```python
+   for p1, p2 in zip(model1.parameters(), model2.parameters()):
+       assert torch.allclose(p1, p2)
+   ```
+
+**Issue: Different rewards after resume**
+
+Check:
+1. Environment seeding:
+   ```python
+   obs, info = env.reset(seed=seed + episode)
+   ```
+
+2. Environment RNG state restored:
+   ```python
+   if hasattr(env, 'set_rng_state'):
+       env.set_rng_state(checkpoint['rng_states']['env'])
+   ```
+
+3. Action sequence is identical:
+   ```python
+   # Different actions lead to different rewards
+   # Verify actions match first
+   ```
+
+**Issue: Training diverges after resume**
+
+Check:
+1. Optimizer state restored:
+   ```python
+   optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+   # Momentum buffers should be restored
+   ```
+
+2. Target network weights match:
+   ```python
+   target_model.load_state_dict(checkpoint['target_model_state_dict'])
+   ```
+
+3. Replay buffer state restored:
+   ```python
+   assert replay_buffer.index == checkpoint['replay_buffer_state']['index']
+   assert replay_buffer.size == checkpoint['replay_buffer_state']['size']
+   ```
+
+### Commands for Creating/Restoring Checkpoints
+
+**Create Checkpoint Manually:**
+
+```python
+from src.training import CheckpointManager, get_rng_states
+import torch
+
+# Initialize manager
+manager = CheckpointManager(checkpoint_dir='checkpoints')
+
+# Save checkpoint
+checkpoint_path = manager.save_checkpoint(
+    step=10000,
+    episode=500,
+    epsilon=0.95,
+    online_model=online_model,
+    target_model=target_model,
+    optimizer=optimizer,
+    replay_buffer=replay_buffer,
+    rng_states=get_rng_states(env),
+    extra_metadata={'note': 'Manual checkpoint'}
+)
+```
+
+**Load Checkpoint Manually:**
+
+```python
+# Load checkpoint
+loaded = manager.load_checkpoint(
+    checkpoint_path='checkpoints/checkpoint_10000.pt',
+    online_model=online_model,
+    target_model=target_model,
+    optimizer=optimizer,
+    replay_buffer=replay_buffer,
+    device='cuda'
+)
+
+# Access state
+step = loaded['step']
+episode = loaded['episode']
+epsilon = loaded['epsilon']
+timestamp = loaded['timestamp']
+```
+
+**Verify Checkpoint Integrity:**
+
+```python
+from src.training import verify_checkpoint_integrity
+
+is_valid = verify_checkpoint_integrity('checkpoints/checkpoint_10000.pt')
+
+if is_valid:
+    print("✓ Checkpoint is valid")
+else:
+    print("✗ Checkpoint is corrupted")
+```
+
+**Inspect Checkpoint Contents:**
+
+```python
+import torch
+
+checkpoint = torch.load('checkpoints/checkpoint_10000.pt', weights_only=False)
+
+print(f"Schema version: {checkpoint['schema_version']}")
+print(f"Step: {checkpoint['step']}")
+print(f"Epsilon: {checkpoint['epsilon']}")
+print(f"Timestamp: {checkpoint['timestamp']}")
+print(f"Commit: {checkpoint['commit_hash']}")
+
+# Check replay buffer
+if 'replay_buffer_state' in checkpoint:
+    buf = checkpoint['replay_buffer_state']
+    print(f"Buffer size: {buf['size']} / {buf['capacity']}")
+    has_data = 'data' in buf
+    print(f"Full buffer saved: {has_data}")
+```
+
 ## Related Documentation
 
 - [Training Loop](training_loop_runtime.md) - Integration with training loop
