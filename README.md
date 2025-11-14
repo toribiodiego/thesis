@@ -119,6 +119,7 @@ Core implementation specifications (read in this order):
 **Setup & Environment:**
 - **[docs/design/dqn_setup.md](docs/design/dqn_setup.md)** - Environment setup, dependencies, ROM installation, deterministic mode
 - **[docs/design/atari_env_wrapper.md](docs/design/atari_env_wrapper.md)** - Wrapper chain specification and preprocessing pipeline
+- **[docs/design/config_cli.md](docs/design/config_cli.md)** - Configuration system and CLI reference (hierarchical configs, overrides, validation, run artifacts)
 
 **Core Components:**
 - **[docs/design/dqn_model.md](docs/design/dqn_model.md)** - Q-network architecture and forward pass details

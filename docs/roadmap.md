@@ -233,6 +233,8 @@ Save/restore models, optimizer, replay position, counters, ε, RNG states. Suppo
 **Objective:**
 Base config + per-game overrides. Merge utility. CLI: `python train_dqn.py --cfg configs/pong.yaml --seed 123`. Auto-save merged config. Complete when reproducible single-command launch works.
 
+**Documentation:** See [docs/design/config_cli.md](docs/design/config_cli.md) for complete reference.
+
 **Checklist:**
 - [X] Create base and per-game config files: add `experiments/dqn_atari/configs/base.yaml` for global defaults (network, replay, optimizer, target_update, eval cadence) and `experiments/dqn_atari/configs/{pong,breakout,beam_rider}.yaml` that override only env-specific fields (e.g., `env_id`, `action_set`, `frame_budget`).
     - [X] docs: Add base and per-game YAML configs with clear comments on each field
