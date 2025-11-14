@@ -3509,6 +3509,120 @@ def test_evaluation_scheduler_trend():
     assert trend in ['declining', 'stable']
 
 
+def test_evaluation_scheduler_wall_clock():
+    """Test EvaluationScheduler with wall-clock scheduling."""
+    from src.training import EvaluationScheduler
+    import time
+
+    # Create scheduler with 0.1 second interval
+    scheduler = EvaluationScheduler(wall_clock_interval=0.1, num_episodes=5)
+
+    # Should trigger first evaluation immediately (after step 0)
+    assert scheduler.should_evaluate(100)
+
+    # Record first evaluation
+    scheduler.record_evaluation(100, {'mean_return': 10.0})
+
+    # Should not trigger immediately after
+    assert not scheduler.should_evaluate(200)
+
+    # Wait for interval to pass
+    time.sleep(0.15)
+
+    # Should trigger now
+    assert scheduler.should_evaluate(300)
+
+
+def test_evaluation_scheduler_timestamps():
+    """Test EvaluationScheduler tracks timestamps."""
+    from src.training import EvaluationScheduler
+    import time
+
+    scheduler = EvaluationScheduler(eval_interval=100)
+
+    # Record evaluations
+    scheduler.record_evaluation(100, {'mean_return': 10.0})
+    time.sleep(0.05)
+    scheduler.record_evaluation(200, {'mean_return': 15.0})
+
+    # Check timestamps were recorded
+    assert len(scheduler.eval_timestamps) == 2
+    assert scheduler.last_eval_time is not None
+    assert scheduler.eval_timestamps[1] > scheduler.eval_timestamps[0]
+
+
+def test_evaluation_scheduler_metadata():
+    """Test EvaluationScheduler provides schedule metadata."""
+    from src.training import EvaluationScheduler
+
+    # Frame-based scheduler
+    scheduler = EvaluationScheduler(eval_interval=250000, num_episodes=10, eval_epsilon=0.05)
+
+    scheduler.record_evaluation(250000, {'mean_return': 15.0})
+    scheduler.record_evaluation(500000, {'mean_return': 20.0})
+
+    metadata = scheduler.get_schedule_metadata()
+
+    # Check metadata structure
+    assert metadata['schedule_type'] == 'frame_based'
+    assert metadata['eval_interval'] == 250000
+    assert metadata['num_episodes'] == 10
+    assert metadata['eval_epsilon'] == 0.05
+    assert metadata['total_evaluations'] == 2
+    assert len(metadata['eval_steps']) == 2
+    assert len(metadata['eval_returns']) == 2
+    assert 'eval_timestamps' in metadata
+    assert 'elapsed_times' in metadata
+
+
+def test_evaluation_scheduler_wall_clock_metadata():
+    """Test EvaluationScheduler metadata for wall-clock scheduling."""
+    from src.training import EvaluationScheduler
+
+    scheduler = EvaluationScheduler(wall_clock_interval=1800, num_episodes=10)
+
+    scheduler.record_evaluation(100, {'mean_return': 10.0})
+
+    metadata = scheduler.get_schedule_metadata()
+
+    # Check schedule type
+    assert metadata['schedule_type'] == 'wall_clock'
+    assert metadata['wall_clock_interval'] == 1800
+    assert 'total_elapsed_time' in metadata
+
+
+def test_evaluate_train_eval_mode_switching():
+    """Test evaluate() properly switches between train and eval modes."""
+    from src.training import evaluate
+    from src.models import DQN
+    from unittest.mock import Mock
+
+    env = Mock()
+    env.action_space.n = 6
+    dummy_state = np.random.randint(0, 255, (4, 84, 84), dtype=np.uint8)
+    env.reset.return_value = (dummy_state, {})
+
+    step_count = [0]
+    def mock_step(action):
+        step_count[0] += 1
+        done = step_count[0] >= 5
+        if done:
+            step_count[0] = 0
+        return (dummy_state, 1.0, done, False, {})
+
+    env.step.side_effect = mock_step
+    model = DQN(num_actions=6)
+
+    # Model starts in train mode
+    assert model.training
+
+    # Evaluate (should set to eval mode and restore train mode)
+    results = evaluate(env, model, num_episodes=1, eval_epsilon=0.05, device='cpu')
+
+    # Model should be back in train mode
+    assert model.training
+
+
 def test_evaluation_logger_csv():
     """Test EvaluationLogger writes CSV correctly."""
     from src.training import EvaluationLogger

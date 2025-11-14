@@ -335,7 +335,8 @@ class EvaluationScheduler:
     """
     Scheduler for periodic evaluation during training.
 
-    Triggers evaluation at regular intervals and tracks evaluation history.
+    Triggers evaluation at regular intervals (frame-based or wall-clock)
+    and tracks evaluation history with metadata.
 
     Parameters
     ----------
@@ -345,34 +346,53 @@ class EvaluationScheduler:
         Number of episodes per evaluation (default: 10)
     eval_epsilon : float
         Exploration rate during evaluation (default: 0.05)
+    wall_clock_interval : float
+        Optional wall-clock time between evaluations in seconds (default: None)
+        If set, evaluations trigger based on elapsed time instead of steps
 
     Usage
     -----
+    >>> # Frame-based scheduling (default)
     >>> scheduler = EvaluationScheduler(eval_interval=250000, num_episodes=10)
     >>> if scheduler.should_evaluate(current_step):
     ...     results = evaluate(eval_env, model, num_episodes=scheduler.num_episodes,
     ...                        eval_epsilon=scheduler.eval_epsilon)
     ...     scheduler.record_evaluation(current_step, results)
+    >>>
+    >>> # Wall-clock scheduling (every 30 minutes)
+    >>> scheduler = EvaluationScheduler(wall_clock_interval=1800, num_episodes=10)
     """
 
     def __init__(
         self,
         eval_interval: int = 250_000,
         num_episodes: int = 10,
-        eval_epsilon: float = 0.05
+        eval_epsilon: float = 0.05,
+        wall_clock_interval: float = None
     ):
         self.eval_interval = eval_interval
         self.num_episodes = num_episodes
         self.eval_epsilon = eval_epsilon
+        self.wall_clock_interval = wall_clock_interval
 
         # Track evaluation history
         self.eval_steps = []
         self.eval_returns = []
+        self.eval_timestamps = []
         self.last_eval_step = 0
+        self.last_eval_time = None
+
+        # Metadata tracking
+        import time
+        self.start_time = time.time()
 
     def should_evaluate(self, step: int) -> bool:
         """
         Check if evaluation should be performed at this step.
+
+        Supports both frame-based and wall-clock scheduling:
+        - Frame-based: Triggers every eval_interval steps
+        - Wall-clock: Triggers every wall_clock_interval seconds
 
         Args:
             step: Current environment step
@@ -383,7 +403,23 @@ class EvaluationScheduler:
         if step == 0:
             return False
 
-        # Evaluate at intervals
+        # Wall-clock based scheduling
+        if self.wall_clock_interval is not None:
+            import time
+            current_time = time.time()
+
+            # First evaluation
+            if self.last_eval_time is None:
+                return True
+
+            # Check if enough time has elapsed
+            elapsed = current_time - self.last_eval_time
+            if elapsed >= self.wall_clock_interval:
+                return True
+
+            return False
+
+        # Frame-based scheduling (default)
         if step >= self.eval_interval and step % self.eval_interval == 0:
             # Avoid duplicate evaluations
             return step != self.last_eval_step
@@ -392,15 +428,21 @@ class EvaluationScheduler:
 
     def record_evaluation(self, step: int, results: dict):
         """
-        Record evaluation results.
+        Record evaluation results with timestamp metadata.
 
         Args:
             step: Environment step when evaluation occurred
             results: Dictionary returned by evaluate()
         """
+        import time
+        current_time = time.time()
+
         self.last_eval_step = step
+        self.last_eval_time = current_time
+
         self.eval_steps.append(step)
         self.eval_returns.append(results['mean_return'])
+        self.eval_timestamps.append(current_time)
 
     def get_best_return(self) -> float:
         """Get best mean return across all evaluations."""
@@ -428,6 +470,35 @@ class EvaluationScheduler:
             return 'declining'
         else:
             return 'stable'
+
+    def get_schedule_metadata(self) -> dict:
+        """
+        Get evaluation schedule metadata for logging.
+
+        Returns:
+            dict: Schedule configuration and history
+        """
+        import time
+
+        metadata = {
+            'schedule_type': 'wall_clock' if self.wall_clock_interval is not None else 'frame_based',
+            'eval_interval': self.eval_interval,
+            'wall_clock_interval': self.wall_clock_interval,
+            'num_episodes': self.num_episodes,
+            'eval_epsilon': self.eval_epsilon,
+            'total_evaluations': len(self.eval_steps),
+            'eval_steps': self.eval_steps.copy(),
+            'eval_returns': self.eval_returns.copy(),
+        }
+
+        # Add timing information
+        if self.eval_timestamps:
+            elapsed_times = [t - self.start_time for t in self.eval_timestamps]
+            metadata['eval_timestamps'] = self.eval_timestamps.copy()
+            metadata['elapsed_times'] = elapsed_times
+            metadata['total_elapsed_time'] = time.time() - self.start_time
+
+        return metadata
 
 
 class EvaluationLogger:
