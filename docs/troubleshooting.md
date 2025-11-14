@@ -158,6 +158,180 @@ python -c "from src.models import DQN; print('OK')"
 
 ## Training Issues
 
+### TypeError: Parameter mismatch errors
+
+**Symptom:**
+```
+TypeError: __init__() got an unexpected keyword argument 'start_epsilon'
+TypeError: __init__() missing 1 required positional argument: 'obs_shape'
+```
+
+**Cause:** API mismatch between training script and component implementations.
+
+**Common Issues:**
+
+**1. EpsilonScheduler parameter names:**
+```python
+# Wrong:
+epsilon_scheduler = EpsilonScheduler(
+    start_epsilon=1.0,
+    end_epsilon=0.1,
+    decay_frames=1_000_000
+)
+
+# Correct:
+epsilon_scheduler = EpsilonScheduler(
+    epsilon_start=1.0,
+    epsilon_end=0.1,
+    decay_frames=1_000_000
+)
+```
+
+**2. MetricsLogger parameter names:**
+```python
+# Wrong:
+logger = MetricsLogger(
+    tensorboard_enabled=True,
+    wandb_enabled=False,
+    csv_enabled=True
+)
+
+# Correct:
+logger = MetricsLogger(
+    enable_tensorboard=True,
+    enable_wandb=False,
+    enable_csv=True
+)
+```
+
+**3. ReplayBuffer initialization:**
+```python
+# Wrong:
+buffer = ReplayBuffer(capacity=1000000, batch_size=32)
+
+# Correct:
+buffer = ReplayBuffer(capacity=1000000, obs_shape=(84, 84))
+```
+
+**4. EvaluationScheduler parameter names:**
+```python
+# Wrong:
+eval_scheduler = EvaluationScheduler(
+    eval_every=250000,
+    eval_enabled=True
+)
+
+# Correct:
+eval_scheduler = EvaluationScheduler(
+    eval_interval=250000,
+    num_episodes=10,
+    eval_epsilon=0.05
+)
+```
+
+**Solution:**
+Check component API documentation and ensure all parameter names match current implementation.
+
+**Docs:** [Logging Pipeline](design/logging_pipeline.md), [Training Loop](design/training_loop_runtime.md)
+
+---
+
+### ImportError: cannot import name
+
+**Symptom:**
+```
+ImportError: cannot import name 'hard_update_target' from 'src.training.target_network'
+```
+
+**Cause:** Missing import statement in module.
+
+**Solution:**
+```python
+# In src/training/schedulers.py, add:
+from .target_network import hard_update_target
+```
+
+**Common missing imports:**
+- `hard_update_target` in `schedulers.py`
+- `torch` in `metadata.py`
+
+---
+
+### CSV schema errors
+
+**Symptom:**
+```
+ValueError: dict contains fields not in fieldnames
+```
+
+**Cause:** Dynamic CSV schema causes issues when fields change between writes.
+
+**Solution:**
+Define schema upfront in CSVBackend:
+
+```python
+# In metrics_logger.py CSVBackend:
+self._step_fieldnames = [
+    'step', 'epsilon', 'replay_size', 'fps',
+    'loss', 'td_error', 'grad_norm', 'learning_rate',
+    'loss_ma'  # moving average
+]
+
+# Filter log entries to only include defined fields:
+filtered_entry = {k: v for k, v in log_entry.items()
+                  if k in self._step_fieldnames}
+writer.writerow(filtered_entry)
+```
+
+**Docs:** [Logging Pipeline](design/logging_pipeline.md#csv-backend)
+
+---
+
+### Device detection failures
+
+**Symptom:**
+Training fails to start or uses wrong device (CPU when GPU available).
+
+**Cause:** Hardcoded device or missing device detection logic.
+
+**Solution:**
+Use automatic device detection with fallback:
+
+```python
+def setup_device(config):
+    """Setup compute device with automatic fallback."""
+    requested_device = config.network.device
+
+    # Try CUDA first
+    if requested_device in ['auto', 'cuda']:
+        if torch.cuda.is_available():
+            device = torch.device('cuda')
+            print(f"Using CUDA device: {torch.cuda.get_device_name(0)}")
+            return device
+
+    # Try MPS (Apple Silicon)
+    if requested_device in ['auto', 'mps']:
+        if hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+            device = torch.device('mps')
+            print("Using MPS device (Apple Silicon GPU)")
+            return device
+
+    # Fallback to CPU
+    device = torch.device('cpu')
+    print("Using CPU device")
+    return device
+```
+
+**Config:**
+```yaml
+network:
+  device: auto  # or 'cuda', 'mps', 'cpu'
+```
+
+**Docs:** [DQN Setup](design/dqn_setup.md#device-configuration)
+
+---
+
 ### NaN loss after training starts
 
 **Symptom:**

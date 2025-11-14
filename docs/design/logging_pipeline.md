@@ -1,6 +1,6 @@
 # Logging & Plotting Pipeline
 
-**Status**: ✅ Complete
+**Status**: DONE Complete
 **Location**: `src/training/metrics_logger.py`, `scripts/plot_results.py`, `scripts/export_results_table.py`
 
 ## Overview
@@ -393,6 +393,208 @@ All metrics follow a consistent naming scheme:
 | `q_values/mean` | Mean Q-value |
 | `q_values/std` | Q-value std dev |
 | `q_values/max` | Max Q-value |
+
+---
+
+## Implementation Decisions and Bug Fixes
+
+### CSV Schema Management (Fixed 2025-11-14)
+
+**Problem:** Dynamic CSV schemas caused failures when fieldnames changed between writes.
+
+**Original Implementation:**
+```python
+# Bug: Dynamic schema based on first write
+self._step_fieldnames = list(log_entry.keys())
+writer.writeheader()
+```
+
+**Issue:**
+- If later log entries had different fields, CSV writes would fail
+- Error: `ValueError: dict contains fields not in fieldnames`
+
+**Fixed Implementation:**
+```python
+# Define all expected fields upfront
+self._step_fieldnames = [
+    'step', 'epsilon', 'replay_size', 'fps',
+    'loss', 'td_error', 'grad_norm', 'learning_rate',
+    'loss_ma'  # moving average
+]
+
+# Filter log entries to only include defined fields
+filtered_entry = {k: v for k, v in log_entry.items()
+                  if k in self._step_fieldnames}
+writer.writerow(filtered_entry)
+```
+
+**Rationale:**
+- Predefined schema prevents runtime errors
+- Missing fields are simply not written (graceful degradation)
+- Extra fields are filtered out automatically
+- Schema is self-documenting
+
+**Location:** `src/training/metrics_logger.py:263-278`
+
+**Related Commit:** `3e67aa6` - fix: Resolve all integration bugs and test failures
+
+---
+
+### Device Auto-Detection (Added 2025-11-14)
+
+**Problem:** Training script used hardcoded device, failing when CUDA unavailable.
+
+**Original Implementation:**
+```python
+if config.network.device == 'cuda' and torch.cuda.is_available():
+    device = torch.device('cuda')
+else:
+    device = torch.device('cpu')
+```
+
+**Issues:**
+- No support for MPS (Apple Silicon GPU)
+- No automatic fallback
+- Unclear error messages when device unavailable
+
+**Fixed Implementation:**
+```python
+def setup_device(config):
+    """
+    Setup compute device with automatic fallback.
+    Checks availability in order: CUDA > MPS > CPU
+    """
+    requested_device = config.network.device
+
+    # Try CUDA first
+    if requested_device in ['auto', 'cuda']:
+        if torch.cuda.is_available():
+            device = torch.device('cuda')
+            print(f"Using CUDA device: {torch.cuda.get_device_name(0)}")
+            return device
+        elif requested_device == 'cuda':
+            print("Warning: CUDA requested but not available. Falling back to CPU.")
+
+    # Try MPS (Apple Silicon)
+    if requested_device in ['auto', 'mps']:
+        if hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+            device = torch.device('mps')
+            print("Using MPS device (Apple Silicon GPU)")
+            return device
+        elif requested_device == 'mps':
+            print("Warning: MPS requested but not available. Falling back to CPU.")
+
+    # Default to CPU
+    device = torch.device('cpu')
+    print("Using CPU device")
+    return device
+```
+
+**Features:**
+- Auto-detection mode (`device: auto`)
+- Explicit device requests with fallback warnings
+- MPS support for Apple Silicon
+- Clear user feedback on device selection
+
+**Location:** `train_dqn.py:61-90`
+
+**Related Commit:** `3e67aa6` - fix: Resolve all integration bugs and test failures
+
+---
+
+### API Parameter Naming Consistency
+
+**Problem:** Inconsistent parameter naming across components caused integration failures.
+
+**Fixed APIs:**
+
+**1. EpsilonScheduler:**
+```python
+# Before:
+EpsilonScheduler(start_epsilon=1.0, end_epsilon=0.1, decay_frames=1M)
+
+# After:
+EpsilonScheduler(epsilon_start=1.0, epsilon_end=0.1, decay_frames=1M)
+```
+
+**Rationale:** Prefix with parameter type for clarity and consistency with other schedulers.
+
+**2. MetricsLogger:**
+```python
+# Before:
+MetricsLogger(tensorboard_enabled=True, wandb_enabled=False, csv_enabled=True)
+
+# After:
+MetricsLogger(enable_tensorboard=True, enable_wandb=False, enable_csv=True)
+```
+
+**Rationale:** Verb-first naming (`enable_X`) is clearer than adjective-first (`X_enabled`).
+
+**3. EvaluationScheduler:**
+```python
+# Before:
+EvaluationScheduler(eval_every=250K, eval_enabled=True)
+
+# After:
+EvaluationScheduler(eval_interval=250K, num_episodes=10, eval_epsilon=0.05)
+```
+
+**Rationale:**
+- `eval_interval` is more descriptive than `eval_every`
+- All eval parameters now specified upfront (no hidden defaults)
+
+**4. CheckpointManager.save_checkpoint:**
+```python
+# Before:
+save_checkpoint(step=1M, model=model, optimizer=optimizer)
+
+# After:
+save_checkpoint(step=1M, episode=100, epsilon=0.5,
+                online_model=model, target_model=target, optimizer=optimizer)
+```
+
+**Rationale:**
+- Explicit online/target model separation
+- Include episode and epsilon for better checkpoint context
+
+**Location:** `train_dqn.py:146-178`
+
+**Related Commit:** `3e67aa6` - fix: Resolve all integration bugs and test failures
+
+---
+
+### Missing Imports Resolution
+
+**Problem:** Missing imports caused ImportErrors at runtime.
+
+**Fixes:**
+
+**1. schedulers.py:**
+```python
+# Added:
+from .target_network import hard_update_target
+```
+
+**Why missed:** TargetNetworkUpdater uses hard_update_target but import was missing.
+
+**2. metadata.py:**
+```python
+# Added:
+import torch
+```
+
+**Why missed:** Module uses torch.cuda.is_available() but torch import was missing.
+
+**Prevention:**
+- Run full integration tests before commits
+- Use static analysis tools (pyright, mypy)
+- Import what you use, even for type checking
+
+**Location:**
+- `src/training/schedulers.py:8`
+- `src/training/metadata.py:7`
+
+**Related Commit:** `3e67aa6` - fix: Resolve all integration bugs and test failures
 
 ---
 
@@ -1263,9 +1465,9 @@ The logging system is designed to **fail gracefully**. If one backend fails, the
 ```python
 # Example: W&B fails due to network error
 logger.log_step(step=1000, loss=0.5, ...)
-    ├─→ TensorBoard: ✅ Success
-    ├─→ W&B: ❌ Network timeout (logs warning, continues)
-    └─→ CSV: ✅ Success
+    ├─→ TensorBoard: DONE Success
+    ├─→ W&B: FAIL Network timeout (logs warning, continues)
+    └─→ CSV: DONE Success
 ```
 
 **Behavior**:
@@ -1572,13 +1774,13 @@ pytest tests/test_plot_results.py::test_plot_episode_returns -v
 
 The logging and plotting pipeline provides:
 
-✅ **Multi-backend logging** - TensorBoard, W&B, CSV
-✅ **Standardized metrics** - Consistent naming across backends
-✅ **Periodic flush** - Automatic buffer flushing
-✅ **W&B artifacts** - Incremental log uploads
-✅ **Publication plots** - High-quality figures (300 DPI)
-✅ **Multi-seed analysis** - Statistical aggregation with CI
-✅ **Results tables** - Markdown/CSV summaries
-✅ **Performance safeguards** - Downsampling and warnings
+DONE **Multi-backend logging** - TensorBoard, W&B, CSV
+DONE **Standardized metrics** - Consistent naming across backends
+DONE **Periodic flush** - Automatic buffer flushing
+DONE **W&B artifacts** - Incremental log uploads
+DONE **Publication plots** - High-quality figures (300 DPI)
+DONE **Multi-seed analysis** - Statistical aggregation with CI
+DONE **Results tables** - Markdown/CSV summaries
+DONE **Performance safeguards** - Downsampling and warnings
 
 **Next Steps**: Integrate with training loop and run experiments!
