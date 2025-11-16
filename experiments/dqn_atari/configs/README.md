@@ -379,9 +379,10 @@ python train_dqn.py --cfg experiments/dqn_atari/configs/pong.yaml --seed 42
 # Override LR
 python train_dqn.py --cfg pong.yaml --seed 42 --set training.optimizer.lr=0.001
 
-# Multiple overrides
+# Multiple overrides (repeat --set flag)
 python train_dqn.py --cfg pong.yaml --seed 42 \
-  --set training.gamma=0.95 training.total_frames=5000000
+  --set training.gamma=0.95 \
+  --set training.total_frames=5000000
 
 # Ablation: disable target network
 python train_dqn.py --cfg pong.yaml --seed 42 --set target_network.update_interval=null

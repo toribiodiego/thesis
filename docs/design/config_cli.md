@@ -229,12 +229,14 @@ CLI overrides use dot notation to modify nested values:
 # Modify deeply nested value
 --set training.optimizer.rmsprop.alpha=0.99
 
-# Multiple overrides
---set training.gamma=0.95 training.lr=0.001 replay.capacity=500000
+# Multiple overrides (repeat --set flag for each)
+--set training.gamma=0.95 --set training.lr=0.001 --set replay.capacity=500000
 
 # Override list values (replaces entire list)
 --set logging.step_metrics=loss,td_error,q_values
 ```
+
+**Note:** `--set` is repeatable - use one `--set` flag per KEY=VALUE override.
 
 ---
 

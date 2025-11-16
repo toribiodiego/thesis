@@ -1376,9 +1376,11 @@ python train_dqn.py \
 # Enable video recording with GIF export
 --set evaluation.record_video=true --set evaluation.export_gif=true
 
-# Multiple overrides at once
---set evaluation.num_episodes=30 evaluation.epsilon=0.0 evaluation.record_video=true
+# Multiple overrides (repeat --set flag)
+--set evaluation.num_episodes=30 --set evaluation.epsilon=0.0 --set evaluation.record_video=true
 ```
+
+**Note:** `--set` is repeatable - use one `--set` flag per KEY=VALUE override.
 
 **Config file overrides (experiments/dqn_atari/configs/custom_eval.yaml):**
 
