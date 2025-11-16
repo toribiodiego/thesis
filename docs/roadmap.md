@@ -381,10 +381,12 @@ Integrate MetricsLogger into DQN training loop, launch first full-length trainin
     - [ ] feat: Execute first full-length training run and document any issues
 - [ ] Generate plots from completed run: use `scripts/plot_results.py` to create learning curves, loss plots, eval trends, and epsilon schedule; verify metadata bundle and W&B uploads work.
     - [ ] test: Validate end-to-end plotting pipeline on real training data
-- [ ] Document game suite plan in `docs/design/game_suite_plan.md`: list chosen games (Pong, Breakout, Beam Rider), target scores from paper, frame budgets (10M for Pong, 50M for others), evaluation cadence (every 250K steps), and expected runtimes.
-    - [ ] docs: Create game suite plan with targets and budgets
+- [X] Document game suite plan in `docs/design/game_suite_plan.md`: list chosen games (Pong, Breakout, Beam Rider), target scores from paper, frame budgets (10M for Pong, 50M for others), evaluation cadence (every 250K steps), and expected runtimes.
+    - [X] docs: Create game suite plan with targets and budgets
 - [ ] Verify resume functionality on Pong run: interrupt training mid-run, resume from checkpoint, verify metrics/RNG continuity, and document any issues.
     - [ ] test: Exercise resume on real training run (not just unit tests)
+- [ ] Run GPU comparison test: execute same 1M frame run on GPU hardware to compare FPS, training time, and verify identical convergence behavior with CPU baseline.
+    - [ ] perf: Document CPU vs GPU performance metrics and validate consistency
 
 ---
 
