@@ -209,9 +209,9 @@ def evaluate(
     episode_lengths = []
     episode_lives_lost = [] if track_lives else None
 
-    # Setup video recording for first episode if requested
-    video_recorder = None
+    # Setup video recording for best episode if requested
     video_info = None
+    episode_frames = {}  # Store frames for each episode
     if record_video:
         # Determine video filename
         if video_dir is None:
@@ -224,20 +224,12 @@ def evaluate(
         else:
             env_name = 'env'
 
-        # Create filename with step if provided
-        if step is not None:
-            video_filename = f"{env_name}_step_{step}.mp4"
-        else:
-            video_filename = f"{env_name}_eval.mp4"
-
-        video_path = os.path.join(video_dir, video_filename)
-        video_recorder = VideoRecorder(video_path, fps=video_fps, export_gif=export_gif)
-
     for ep in range(num_episodes):
         obs, info = env.reset()
         episode_return = 0.0
         episode_length = 0
         done = False
+        current_episode_frames = []
 
         # Track initial lives if requested
         if track_lives:
@@ -274,12 +266,12 @@ def evaluate(
             episode_length += 1
             done = terminated or truncated
 
-            # Capture video frame for first episode
-            if video_recorder is not None and ep == 0:
+            # Capture video frame for this episode
+            if record_video:
                 try:
                     frame = env.render()
                     if frame is not None:
-                        video_recorder.capture_frame(frame)
+                        current_episode_frames.append(frame)
                 except Exception:
                     # Rendering not supported or failed, skip
                     pass
@@ -287,6 +279,10 @@ def evaluate(
         # Record episode statistics
         episode_returns.append(episode_return)
         episode_lengths.append(episode_length)
+
+        # Store frames for this episode (to save best one later)
+        if record_video and current_episode_frames:
+            episode_frames[ep] = (episode_return, current_episode_frames)
 
         # Track lives lost if requested
         if track_lives:
@@ -300,9 +296,28 @@ def evaluate(
                 lives_lost = None
             episode_lives_lost.append(lives_lost)
 
-        # Save video after first episode
-        if video_recorder is not None and ep == 0:
-            video_info = video_recorder.save()
+    # Save video for best performing episode
+    if record_video and episode_frames:
+        # Find episode with highest return
+        best_ep = max(episode_frames.keys(), key=lambda ep: episode_frames[ep][0])
+        best_return, best_frames = episode_frames[best_ep]
+
+        # Create video filename with step and episode info
+        if step is not None:
+            video_filename = f"{env_name}_step_{step}_best_ep{best_ep}_r{best_return:.0f}.mp4"
+        else:
+            video_filename = f"{env_name}_best_ep{best_ep}_r{best_return:.0f}.mp4"
+
+        video_path = os.path.join(video_dir, video_filename)
+        video_recorder = VideoRecorder(video_path, fps=video_fps, export_gif=export_gif)
+
+        # Add frames to recorder
+        for frame in best_frames:
+            video_recorder.capture_frame(frame)
+
+        video_info = video_recorder.save()
+        video_info['best_episode'] = best_ep
+        video_info['best_return'] = float(best_return)
 
     # Compute statistics
     results = {
