@@ -434,8 +434,8 @@ Compare reproduced scores against the original DQN paper. Aggregate final-eval s
     - [ ] feat: Script plot creation + W&B upload
 - [ ] Flag outcomes (match/exceed/lag) with short diagnoses (env/version differences, reward clipping, budget). Include this narrative in both the Markdown summary and `docs/design/results_comparison.md`.
     - [ ] docs: Record the diagnosis rubric and update when causes change
-- [ ] Document environment/toolchain differences affecting comparability (Gymnasium vs. ALE versions, hardware precision, reward preprocessing, action set choices) in `results/summary/notes.md` and reference it from the design doc.
-    - [ ] docs: Keep the notes file current with each reproduction pass
+- [X] Document environment/toolchain differences affecting comparability (Gymnasium vs. ALE versions, hardware precision, reward preprocessing, action set choices) in `results/summary/notes.md` and reference it from the design doc.
+    - [X] docs: Keep the notes file current with each reproduction pass (199 lines)
 - [ ] Maintain `docs/design/results_comparison.md` as the authoritative “how-to regenerate” guide: list scripts, CLI args, W&B queries, and validation steps for verifying percentage-of-paper calculations.
     - [ ] docs: Ensure the guide includes both local and W&B regeneration paths
 
@@ -460,8 +460,8 @@ Quantify the effect of key design choices (reward clipping, frame stack size, ta
     - [ ] feat: Automate summary export + W&B artifact upload
 - [ ] Document findings in `docs/design/ablations_plan.md` (or `docs/papers/dqn_2013_notes.md` if more appropriate): describe hypothesis, setup, observed impacts, and recommendations; link to plots and run directories/W&B reports.
     - [ ] docs: Capture lessons learned per ablation with links to artifacts
-- [ ] Provide a convenience runner (e.g., `experiments/dqn_atari/scripts/run_ablations.sh`) that launches the configured ablation suite with consistent seeds/output paths.
-    - [ ] chore: Script reproducible ablation execution
+- [X] Provide a convenience runner (e.g., `experiments/dqn_atari/scripts/run_ablations.sh`) that launches the configured ablation suite with consistent seeds/output paths.
+    - [X] chore: Script reproducible ablation execution (288 lines with parallel support)
 - [ ] Capture ablation design/interpretation guidance in `docs/design/ablations_plan.md`: list the experiments, hypotheses, runtime costs, artifact locations, and how to interpret deltas/stability flags.
     - [ ] docs: Link to config files, plotting outputs, and the report section summarizing ablation findings.
 
@@ -484,8 +484,8 @@ Consolidate the reproduction into a polished report (`docs/reports/dqn_results.m
     - [ ] docs: Keep this section updated as new insights emerge
 - [ ] Publish a condensed version of the report as a W&B Report (or similar dashboard) linking to the same plots/tables/videos so collaborators can review results without cloning the repo.
     - [ ] docs: Mention the W&B report URL inside `docs/reports/dqn_results.md`
-- [ ] Maintain `docs/design/report_outline.md` to track the structure of `docs/reports/dqn_results.md`, mapping each section to source artifacts, plots, and data files for quick updates or peer review.
-    - [ ] docs: Record which scripts regenerate each figure/table and any open questions/todo items for the report.
+- [X] Maintain `docs/design/report_outline.md` to track the structure of `docs/reports/dqn_results.md`, mapping each section to source artifacts, plots, and data files for quick updates or peer review.
+    - [X] docs: Record which scripts regenerate each figure/table and any open questions/todo items for the report (291 lines).
 
 ---
 
@@ -519,10 +519,10 @@ Ship a one-command reproduction script (`scripts/reproduce_dqn.sh` + optional Py
 **Checklist:**
 - [X] Implement `scripts/reproduce_dqn.sh` to orchestrate existing component scripts: (1) `envs/setup_env.sh` for venv creation and dependency install, (2) `experiments/dqn_atari/scripts/setup_roms.sh` for ROM download, (3) `train_dqn.py` for training execution, (4) `scripts/plot_results.py` for visualization, (5) optional W&B artifact uploads.
     - [X] feat: Create unified reproduction wrapper that chains existing scripts (465 lines)
-- [ ] Make the script configurable via flags (`--game`, `--seed`, `--frames`, `--disable-wandb`), auto-create directories (`experiments/dqn_atari/runs`, `results/`), and avoid manual path edits.
-    - [ ] chore: Provide sensible defaults + overrides documented in `docs/design/reproduce_recipe.md`
-- [ ] Capture environment provenance (pip freeze, Python/CUDA/Torch versions, ROM status) into `experiments/dqn_atari/system_info.txt`, plus run metadata (`meta.json`, `git_info.txt`). Include these files in any W&B artifact uploads.
-    - [ ] chore: Keep provenance up to date and referenced in the doc
+- [X] Make the script configurable via flags (`--game`, `--seed`, `--frames`, `--disable-wandb`), auto-create directories (`experiments/dqn_atari/runs`, `results/`), and avoid manual path edits.
+    - [X] chore: Provide sensible defaults + overrides documented in `docs/design/reproduce_recipe.md`
+- [X] Capture environment provenance (pip freeze, Python/CUDA/Torch versions, ROM status) into `experiments/dqn_atari/system_info.txt`, plus run metadata (`meta.json`, `git_info.txt`). Include these files in any W&B artifact uploads.
+    - [X] chore: Keep provenance up to date and referenced in the doc
 - [ ] After training, run the evaluation harness and plotting script automatically, dropping outputs into `results/` and attaching them to the W&B run.
     - [ ] feat: Integrate evaluation + plotting steps, respecting config defaults
 - [ ] Add a verification step: compare produced metrics against a reference JSON/CSV (with tolerance) and exit non-zero on failure to catch regressions.
