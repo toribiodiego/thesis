@@ -163,9 +163,10 @@ def test_parse_args_with_set_multiple(temp_config_file):
     """Test parsing with multiple --set overrides."""
     args = parse_args([
         '--cfg', temp_config_file,
-        '--set', 'training.lr=0.001', 'training.gamma=0.95'
+        '--set', 'training.lr=0.001',
+        '--set', 'training.gamma=0.95'
     ])
-    
+
     assert args.overrides == ['training.lr=0.001', 'training.gamma=0.95']
 
 
@@ -210,11 +211,12 @@ def test_parse_args_all_flags(temp_config_file):
         '--cfg', temp_config_file,
         '--seed', '123',
         '--resume', '/path/to/checkpoint.pt',
-        '--set', 'training.lr=0.001', 'training.gamma=0.95',
+        '--set', 'training.lr=0.001',
+        '--set', 'training.gamma=0.95',
         '--device', 'cuda',
         '--verbose'
     ])
-    
+
     assert args.config == temp_config_file
     assert args.seed == 123
     assert args.resume == '/path/to/checkpoint.pt'
@@ -513,14 +515,15 @@ def test_cli_with_all_flags(temp_config_file):
         '--cfg', temp_config_file,
         '--seed', '999',
         '--resume', '/path/to/checkpoint.pt',
-        '--set', 'training.optimizer.lr=0.0001', 'experiment.name=custom',
+        '--set', 'training.optimizer.lr=0.0001',
+        '--set', 'experiment.name=custom',
         '--device', 'cuda',
         '--quiet'
     ]
-    
+
     args = parse_args(argv)
     config = setup_from_args(args)
-    
+
     assert config['seed']['value'] == 999
     assert config['network']['device'] == 'cuda'
     assert config['training']['optimizer']['lr'] == 0.0001

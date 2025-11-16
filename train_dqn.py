@@ -169,7 +169,8 @@ def initialize_components(config, paths, device, resuming=False):
         enable_csv=config.logging.get('csv', {}).get('enabled', True),
         wandb_project=config.logging.get('wandb', {}).get('project', 'dqn-atari'),
         wandb_name=paths['run_dir'].name,
-        wandb_config=OmegaConf.to_container(config, resolve=True)
+        wandb_config=OmegaConf.to_container(config, resolve=True),
+        wandb_tags=config.logging.get('wandb', {}).get('tags', [])
     )
 
     checkpoint_manager = CheckpointManager(

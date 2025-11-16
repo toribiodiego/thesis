@@ -75,11 +75,11 @@ Examples:
     parser.add_argument(
         '--set',
         type=str,
-        nargs='+',
         default=[],
+        action='append',
         metavar='KEY=VALUE',
         dest='overrides',
-        help='Override config values using dot notation (e.g., training.lr=0.001)'
+        help='Override config values using dot notation (e.g., --set training.lr=0.001). Can be specified multiple times.'
     )
     
     # Operational flags
@@ -108,13 +108,22 @@ Examples:
         action='store_true',
         help='Enable verbose output'
     )
-    
+
     parser.add_argument(
         '--quiet', '-q',
         action='store_true',
         help='Suppress non-essential output'
     )
-    
+
+    parser.add_argument(
+        '--tags',
+        type=str,
+        default=[],
+        action='append',
+        metavar='TAG',
+        help='Tags for W&B run organization (e.g., --tags test --tags debug). Can be specified multiple times.'
+    )
+
     return parser
 
 
@@ -249,16 +258,27 @@ def setup_from_args(
     # Add CLI metadata to config
     if 'cli' not in config:
         config['cli'] = {}
-    
+
     config['cli']['args'] = {
         'config_file': args.config,
         'seed': args.seed,
         'resume': args.resume,
         'overrides': args.overrides,
         'dry_run': args.dry_run,
-        'device': args.device
+        'device': args.device,
+        'tags': args.tags
     }
-    
+
+    # Apply --tags to W&B config if provided
+    if args.tags:
+        if 'logging' not in config:
+            config['logging'] = {}
+        if 'wandb' not in config['logging']:
+            config['logging']['wandb'] = {}
+        # Merge with existing tags (don't overwrite)
+        existing_tags = config['logging']['wandb'].get('tags', [])
+        config['logging']['wandb']['tags'] = list(set(existing_tags + args.tags))
+
     return config
 
 
