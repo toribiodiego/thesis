@@ -17,6 +17,7 @@ For full documentation, see docs/design/config_cli.md
 import sys
 import os
 import time
+import json
 from pathlib import Path
 
 # Add src to path for imports
@@ -170,7 +171,8 @@ def initialize_components(config, paths, device, resuming=False):
         wandb_project=config.logging.get('wandb', {}).get('project', 'dqn-atari'),
         wandb_name=paths['run_dir'].name,
         wandb_config=OmegaConf.to_container(config, resolve=True),
-        wandb_tags=config.logging.get('wandb', {}).get('tags', [])
+        wandb_tags=config.logging.get('wandb', {}).get('tags', []),
+        upload_artifacts=config.logging.get('wandb', {}).get('upload_artifacts', False)
     )
 
     checkpoint_manager = CheckpointManager(
@@ -335,7 +337,12 @@ def run_training(config, paths, device):
                 model=online_net,
                 num_episodes=config.evaluation.num_episodes,
                 eval_epsilon=config.evaluation.epsilon,
-                device=device
+                device=device,
+                step=frame_counter.frames,
+                record_video=config.evaluation.get('record_video', False),
+                video_dir=str(paths['videos']) if 'videos' in paths else None,
+                video_fps=30,
+                export_gif=False
             )
 
             mean_return = np.mean(eval_results['episode_returns'])
@@ -351,7 +358,40 @@ def run_training(config, paths, device):
             print(f"  Min/Max Return: {min_return:.2f} / {max_return:.2f}")
             print(f"  Mean Length: {mean_length:.1f}")
             print(f"  Episodes: {len(eval_results['episode_returns'])}")
+            if 'video_info' in eval_results and eval_results['video_info']:
+                print(f"  Video saved: {eval_results['video_info'].get('video_path', 'N/A')}")
             print(f"{'='*80}\n")
+
+            # Save evaluation results to CSV/JSONL
+            eval_csv_path = paths['eval'] / 'evaluations.csv'
+            eval_json_path = paths['eval'] / 'evaluations.jsonl'
+
+            # Write CSV header if file doesn't exist
+            if not eval_csv_path.exists():
+                with open(eval_csv_path, 'w') as f:
+                    f.write('step,mean_return,median_return,std_return,min_return,max_return,mean_length,num_episodes,eval_epsilon\n')
+
+            # Append evaluation results to CSV
+            with open(eval_csv_path, 'a') as f:
+                f.write(f"{frame_counter.frames},{mean_return:.4f},{median_return:.4f},{std_return:.4f},{min_return:.4f},{max_return:.4f},{mean_length:.2f},{config.evaluation.num_episodes},{config.evaluation.epsilon}\n")
+
+            # Append to JSONL (one JSON object per line)
+            eval_record = {
+                'step': frame_counter.frames,
+                'mean_return': float(mean_return),
+                'median_return': float(median_return),
+                'std_return': float(std_return),
+                'min_return': float(min_return),
+                'max_return': float(max_return),
+                'mean_length': float(mean_length),
+                'episode_returns': [float(r) for r in eval_results['episode_returns']],
+                'episode_lengths': [int(l) for l in eval_results['episode_lengths']],
+                'num_episodes': config.evaluation.num_episodes,
+                'eval_epsilon': config.evaluation.epsilon,
+                'video_info': eval_results.get('video_info', None)
+            }
+            with open(eval_json_path, 'a') as f:
+                f.write(json.dumps(eval_record) + '\n')
 
             # Log evaluation metrics
             metrics_logger.log_evaluation(

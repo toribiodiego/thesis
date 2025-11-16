@@ -57,19 +57,20 @@ def create_run_dir(
 def create_run_subdirs(run_dir: Path) -> Dict[str, Path]:
     """
     Create standard subdirectories within run directory.
-    
+
     Creates:
         - logs/          : Training logs (CSV, TensorBoard)
         - checkpoints/   : Model checkpoints
         - artifacts/     : Debug artifacts (plots, videos, etc.)
         - eval/          : Evaluation results
-        
+        - videos/        : Video recordings from evaluation
+
     Args:
         run_dir: Run directory path
-        
+
     Returns:
         Dictionary mapping subdirectory names to Path objects
-        
+
     Example:
         >>> subdirs = create_run_subdirs(run_dir)
         >>> checkpoint_dir = subdirs['checkpoints']
@@ -78,7 +79,8 @@ def create_run_subdirs(run_dir: Path) -> Dict[str, Path]:
         'logs': run_dir / 'logs',
         'checkpoints': run_dir / 'checkpoints',
         'artifacts': run_dir / 'artifacts',
-        'eval': run_dir / 'eval'
+        'eval': run_dir / 'eval',
+        'videos': run_dir / 'videos'
     }
     
     for subdir in subdirs.values():
