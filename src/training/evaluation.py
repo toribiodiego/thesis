@@ -305,11 +305,11 @@ def evaluate(
     if record_video and best_episode_frames is not None:
         # Create video filename with step and episode info
         if step is not None:
-            video_filename = (
-                f"{env_name}_step_{step}_best_ep{best_episode_index}_r{best_episode_return:.0f}.mp4"
-            )
+            video_filename = f"{env_name}_step_{step}_best_ep{best_episode_index}_r{best_episode_return:.0f}.mp4"
         else:
-            video_filename = f"{env_name}_best_ep{best_episode_index}_r{best_episode_return:.0f}.mp4"
+            video_filename = (
+                f"{env_name}_best_ep{best_episode_index}_r{best_episode_return:.0f}.mp4"
+            )
 
         video_path = os.path.join(video_dir, video_filename)
         video_recorder = VideoRecorder(video_path, fps=video_fps, export_gif=export_gif)

@@ -435,7 +435,9 @@ def plot_evaluation_with_video_overlay(
     if len(x) <= max_thumbnails:
         selected_indices = list(range(len(x)))
     else:
-        selected_indices = np.linspace(0, len(x) - 1, max_thumbnails, dtype=int).tolist()
+        selected_indices = np.linspace(
+            0, len(x) - 1, max_thumbnails, dtype=int
+        ).tolist()
 
     selected_steps = [int(x[i]) for i in selected_indices]
 
@@ -502,9 +504,14 @@ def plot_evaluation_with_video_overlay(
                 xycoords="data",
                 boxcoords="offset points",
                 pad=0.3,
-                arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=0.1", color="gray"),
+                arrowprops=dict(
+                    arrowstyle="->", connectionstyle="arc3,rad=0.1", color="gray"
+                ),
                 bboxprops=dict(
-                    boxstyle="round,pad=0.1", facecolor="white", edgecolor="gray", alpha=0.9
+                    boxstyle="round,pad=0.1",
+                    facecolor="white",
+                    edgecolor="gray",
+                    alpha=0.9,
                 ),
             )
             ax.add_artist(ab)
@@ -1291,7 +1298,9 @@ Examples:
                 max_thumbnails=args.max_thumbnails,
             )
             for fmt in args.formats:
-                plot_files.append(args.output / f"{args.game_name}_eval_with_videos.{fmt}")
+                plot_files.append(
+                    args.output / f"{args.game_name}_eval_with_videos.{fmt}"
+                )
         else:
             print(f"Warning: Video directory not found: {args.video_dir}")
 

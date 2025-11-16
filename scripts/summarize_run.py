@@ -83,9 +83,13 @@ def summarize_run(run_dir: Path) -> Dict[str, Any]:
     if meta_path.exists():
         meta = load_json(meta_path)
         summary["metadata"] = {
-            "env_id": meta.get("config", {}).get("environment", {}).get("env_id", "unknown"),
+            "env_id": meta.get("config", {})
+            .get("environment", {})
+            .get("env_id", "unknown"),
             "seed": meta.get("seed", "unknown"),
-            "total_frames": meta.get("config", {}).get("training", {}).get("total_frames", "unknown"),
+            "total_frames": meta.get("config", {})
+            .get("training", {})
+            .get("total_frames", "unknown"),
             "start_time": meta.get("start_time", "unknown"),
         }
 
@@ -248,12 +252,16 @@ def print_summary(summary: Dict[str, Any], as_json: bool = False):
             best = ev["best_eval"]
             print("  Best Evaluation:")
             print(f"    Step: {best.get('step', 0):,}")
-            print(f"    Mean Return: {best.get('mean_return', 0):.2f} +/- {best.get('std_return', 0):.2f}")
+            print(
+                f"    Mean Return: {best.get('mean_return', 0):.2f} +/- {best.get('std_return', 0):.2f}"
+            )
         if "last_eval" in ev:
             last = ev["last_eval"]
             print("  Last Evaluation:")
             print(f"    Step: {last.get('step', 0):,}")
-            print(f"    Mean Return: {last.get('mean_return', 0):.2f} +/- {last.get('std_return', 0):.2f}")
+            print(
+                f"    Mean Return: {last.get('mean_return', 0):.2f} +/- {last.get('std_return', 0):.2f}"
+            )
 
     # Checkpoints
     if "checkpoints" in summary:

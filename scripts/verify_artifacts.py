@@ -108,7 +108,9 @@ def verify_artifacts(run_dir: Path, strict: bool = False) -> Dict[str, Any]:
             results["missing"].append("eval/")
             results["valid"] = False
         else:
-            results["warnings"].append("eval/ directory not found (no evaluations run yet)")
+            results["warnings"].append(
+                "eval/ directory not found (no evaluations run yet)"
+            )
 
     # Check optional files
     for file in optional_files:
@@ -142,7 +144,9 @@ def verify_artifacts(run_dir: Path, strict: bool = False) -> Dict[str, Any]:
         else:
             results["warnings"].append("videos/ directory exists but is empty")
     else:
-        results["warnings"].append("videos/ directory not found (video recording may be disabled)")
+        results["warnings"].append(
+            "videos/ directory not found (video recording may be disabled)"
+        )
 
     # Validate file contents
     results["content_checks"] = {}
@@ -182,7 +186,9 @@ def verify_artifacts(run_dir: Path, strict: bool = False) -> Dict[str, Any]:
                         results["content_checks"][csv_file] = "has header"
                     else:
                         results["content_checks"][csv_file] = "missing header"
-                        results["warnings"].append(f"{csv_file} may be missing header row")
+                        results["warnings"].append(
+                            f"{csv_file} may be missing header row"
+                        )
             except Exception as e:
                 results["content_checks"][csv_file] = f"error: {str(e)}"
 
@@ -249,7 +255,9 @@ Examples:
     )
     parser.add_argument("run_dir", type=Path, help="Path to run directory")
     parser.add_argument(
-        "--strict", action="store_true", help="Require all artifacts including evaluation files"
+        "--strict",
+        action="store_true",
+        help="Require all artifacts including evaluation files",
     )
     parser.add_argument("--json", action="store_true", help="Output as JSON")
 

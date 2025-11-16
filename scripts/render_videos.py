@@ -153,7 +153,9 @@ def render_video_from_checkpoint(
     env.close()
 
     # Print results
-    print(f"  Mean Return: {eval_results['mean_return']:.2f} +/- {eval_results['std_return']:.2f}")
+    print(
+        f"  Mean Return: {eval_results['mean_return']:.2f} +/- {eval_results['std_return']:.2f}"
+    )
     if "video_info" in eval_results and eval_results["video_info"]:
         print(f"  Video saved: {eval_results['video_info'].get('video_path', 'N/A')}")
         if export_gif and "gif_path" in eval_results["video_info"]:
