@@ -402,9 +402,11 @@ All metrics follow a consistent naming scheme:
 | Key | Description |
 |-----|-------------|
 | `eval/mean_return` | Mean eval return |
+| `eval/median_return` | Median eval return |
 | `eval/std_return` | Std eval return |
 | `eval/min_return` | Min eval return |
 | `eval/max_return` | Max eval return |
+| `eval/mean_length` | Mean episode length |
 | `eval/num_episodes` | # eval episodes |
 
 ### Q-Value Metrics (`q_values/`)
