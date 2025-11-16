@@ -339,11 +339,18 @@ logger.upload_logs_as_artifacts(
 ```
 
 **Artifact Contents**:
-- `training_steps.csv` - Per-step metrics
-- `episodes.csv` - Per-episode metrics
-- Metadata with step, timestamp, custom fields
+- `csv/training_steps.csv` - Per-step training metrics (loss, epsilon, replay size, etc.)
+- `csv/episodes.csv` - Per-episode metrics (returns, lengths)
+- `config.yaml` - Full resolved configuration for reproducibility
+- `meta.json` - Run metadata (environment, seed, timestamps)
+- `eval/evaluations.csv` - Periodic evaluation summaries
+- `eval/evaluations.jsonl` - Same evaluation data in JSONL format
+- `videos/*.mp4` - Best episode recordings from evaluations
+- Artifact metadata includes step, total_size_mb, and any custom fields
 
 **Artifact Naming**: `training_logs_step_{step}`
+
+**Guaranteed Final Upload**: When training completes, a forced artifact upload is performed via `maybe_flush_and_upload(..., force=True)`, ensuring all final results are captured in W&B even if the normal upload interval hasn't been reached. This final upload includes the complete evaluation history and all generated videos.
 
 ### Closing
 
