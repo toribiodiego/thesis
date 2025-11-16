@@ -23,7 +23,7 @@ Re-implement and reproduce DeepMind's DQN (*Playing Atari with Deep Reinforcemen
 
 **Progress Summary**:
 - Subtasks 1-10: **Complete** (335+ tests, all passing)
-- Subtask 11: **95% Complete** (implementation done, ready to execute training)
+- Subtask 11: **98% Complete** (1M frame test run successful, ready for 10M full run)
 - Infrastructure: Fully implemented and tested
   - Environment, wrappers, preprocessing, frame stacking
   - DQN model, replay buffer, Q-learning loss
@@ -32,7 +32,9 @@ Re-implement and reproduce DeepMind's DQN (*Playing Atari with Deep Reinforcemen
   - Checkpointing, resume, deterministic seeding
   - Evaluation harness with video capture
   - Plotting and results export scripts
-- **Next step**: Execute first full Pong training run (10M frames)
+  - 1M frame test run completed: 2.72 hours, 102 FPS, loss converged (12->0.36)
+  - Paper comparison table and runtime stats documented
+- **Next step**: Launch full 10M Pong training run (~27 hours estimated)
 
 ---
 
@@ -379,8 +381,8 @@ Integrate MetricsLogger into DQN training loop, launch first full-length trainin
     - [X] test: Validate integrated logging with comprehensive unit tests (28 tests, all passing)
 - [ ] Launch first full Pong training run (10M frames, seed 42): monitor logs in real-time, verify checkpoints save every 1M steps, confirm evaluation runs at specified intervals, and check W&B artifact uploads.
     - [ ] feat: Execute first full-length training run and document any issues
-- [ ] Generate plots from completed run: use `scripts/plot_results.py` to create learning curves, loss plots, eval trends, and epsilon schedule; verify metadata bundle and W&B uploads work.
-    - [ ] test: Validate end-to-end plotting pipeline on real training data
+- [X] Generate plots from completed run: use `scripts/plot_results.py` to create learning curves, loss plots, eval trends, and epsilon schedule; verify metadata bundle and W&B uploads work.
+    - [X] test: Validate end-to-end plotting pipeline on real training data (1M frame test run)
 - [X] Document game suite plan in `docs/design/game_suite_plan.md`: list chosen games (Pong, Breakout, Beam Rider), target scores from paper, frame budgets (10M for Pong, 50M for others), evaluation cadence (every 250K steps), and expected runtimes.
     - [X] docs: Create game suite plan with targets and budgets
 - [ ] Verify resume functionality on Pong run: interrupt training mid-run, resume from checkpoint, verify metrics/RNG continuity, and document any issues.
@@ -424,8 +426,8 @@ Execute full-length training runs for game suite (Pong, Breakout, Beam Rider) ac
 Compare reproduced scores against the original DQN paper. Aggregate final-eval statistics, build Markdown/CSV tables, generate comparison plots, and upload the outputs to both `results/summary/` and W&B reports. Highlight gaps with diagnoses. Completion = reproducible tables/plots exist locally and in W&B, with documented interpretation guidance.
 
 **Checklist:**
-- [ ] Implement `scripts/analyze_results.py` (or extend existing tooling) to ingest per-game eval CSV/JSONL, compute stats over the final evaluation window (default last 100 episodes / final 5 checkpoints), and emit both per-game JSON + combined dataframe.
-    - [ ] feat: Produce machine-readable summaries for downstream table/plot generation
+- [X] Implement `scripts/analyze_results.py` (or extend existing tooling) to ingest per-game eval CSV/JSONL, compute stats over the final evaluation window (default last 100 episodes / final 5 checkpoints), and emit both per-game JSON + combined dataframe.
+    - [X] feat: Produce machine-readable summaries for downstream table/plot generation (493 lines)
 - [ ] Export comparison tables (`results/summary/metrics.csv` + `.md`) with columns `Game | Mean Score (Ours) | Paper Score | % of Paper | Std Dev | Frames | Seeds | Notes`, and publish the same tables to W&B (Artifacts or Tables) with commit references.
     - [ ] feat: Keep table filenames deterministic and mirrored in W&B
 - [ ] Generate bar charts and optional learning-curve overlays (`results/summary/plots/`) comparing ours vs. paper per game; attach these plots to W&B reports/dashboards for broader sharing.
@@ -446,8 +448,8 @@ Compare reproduced scores against the original DQN paper. Aggregate final-eval s
 Quantify the effect of key design choices (reward clipping, frame stack size, target network, etc.) on a benchmark game (Pong or Breakout). Each ablation runs ~5M frames across fixed seeds, producing comparable logs/plots/tables locally and in W&B. Completion requires documented findings and reproducible configs/scripts.
 
 **Checklist:**
-- [ ] Define ablation configs under `experiments/dqn_atari/configs/ablations/` (e.g., `reward_clip_off.yaml`, `stack_2.yaml`, `no_target_net.yaml`) with annotated headers describing the change and rationale. Reference them in `docs/design/ablations_plan.md`.
-    - [ ] feat: Add/annotate ablation configs + plan doc entries
+- [X] Define ablation configs under `experiments/dqn_atari/configs/ablations/` (e.g., `reward_clip_off.yaml`, `stack_2.yaml`, `no_target_net.yaml`) with annotated headers describing the change and rationale. Reference them in `docs/design/ablations_plan.md`.
+    - [X] feat: Add/annotate ablation configs + plan doc entries (3 configs with hypotheses)
 - [ ] Run each ablation for ≥5M frames on the chosen benchmark game with deterministic seeds (e.g., `{0,1,2}`) and store outputs under `experiments/dqn_atari/runs/<game>/ablations/<ablation>/seed_<n>/`. Tag the corresponding W&B runs for easy filtering.
     - [ ] feat: Ensure directory + W&B naming stays consistent
 - [ ] Keep logging/eval cadence identical to baseline so comparisons are apples-to-apples (same eval episodes/cadence, epsilon schedule, reporting intervals).
@@ -515,8 +517,8 @@ Guarantee reliability and contributor readiness by maintaining a comprehensive a
 Ship a one-command reproduction script (`scripts/reproduce_dqn.sh` + optional Python driver) that automates env setup, dependency install, ROM download, training, evaluation, plotting, and W&B artifact uploads. Completion means anyone can run the script on a fresh machine and reproduce a baseline run with documented outputs/metrics.
 
 **Checklist:**
-- [ ] Implement `scripts/reproduce_dqn.sh` to orchestrate existing component scripts: (1) `envs/setup_env.sh` for venv creation and dependency install, (2) `experiments/dqn_atari/scripts/setup_roms.sh` for ROM download, (3) `train_dqn.py` for training execution, (4) `scripts/plot_results.py` for visualization, (5) optional W&B artifact uploads.
-    - [ ] feat: Create unified reproduction wrapper that chains existing scripts
+- [X] Implement `scripts/reproduce_dqn.sh` to orchestrate existing component scripts: (1) `envs/setup_env.sh` for venv creation and dependency install, (2) `experiments/dqn_atari/scripts/setup_roms.sh` for ROM download, (3) `train_dqn.py` for training execution, (4) `scripts/plot_results.py` for visualization, (5) optional W&B artifact uploads.
+    - [X] feat: Create unified reproduction wrapper that chains existing scripts (465 lines)
 - [ ] Make the script configurable via flags (`--game`, `--seed`, `--frames`, `--disable-wandb`), auto-create directories (`experiments/dqn_atari/runs`, `results/`), and avoid manual path edits.
     - [ ] chore: Provide sensible defaults + overrides documented in `docs/design/reproduce_recipe.md`
 - [ ] Capture environment provenance (pip freeze, Python/CUDA/Torch versions, ROM status) into `experiments/dqn_atari/system_info.txt`, plus run metadata (`meta.json`, `git_info.txt`). Include these files in any W&B artifact uploads.

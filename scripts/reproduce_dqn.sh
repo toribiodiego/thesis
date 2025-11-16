@@ -393,16 +393,24 @@ if [[ "$SKIP_PLOTS" == "false" ]]; then
 
         if [[ -d "$ACTUAL_RUN_DIR" ]]; then
             EPISODES_CSV="$ACTUAL_RUN_DIR/csv/episodes.csv"
+            STEPS_CSV="$ACTUAL_RUN_DIR/csv/training_steps.csv"
             PLOT_OUTPUT="$RESULTS_DIR/plots/${GAME}_${SEED}"
 
             if [[ -f "$EPISODES_CSV" ]]; then
                 print_info "Generating plots from: $EPISODES_CSV"
                 mkdir -p "$PLOT_OUTPUT"
 
-                python "$PROJECT_ROOT/scripts/plot_results.py" \
-                    --episodes "$EPISODES_CSV" \
-                    --output "$PLOT_OUTPUT" \
-                    --game-name "${GAME^} (Seed $SEED)"
+                PLOT_CMD="python $PROJECT_ROOT/scripts/plot_results.py"
+                PLOT_CMD="$PLOT_CMD --episodes $EPISODES_CSV"
+                PLOT_CMD="$PLOT_CMD --output $PLOT_OUTPUT"
+                PLOT_CMD="$PLOT_CMD --game-name ${GAME^}"
+
+                # Add steps CSV if available (for loss plots)
+                if [[ -f "$STEPS_CSV" ]]; then
+                    PLOT_CMD="$PLOT_CMD --steps $STEPS_CSV"
+                fi
+
+                $PLOT_CMD
 
                 print_info "Plots saved to: $PLOT_OUTPUT"
             else
@@ -438,13 +446,13 @@ if [[ "$DRY_RUN" == "false" ]]; then
         fi
 
         # Show final evaluation if available
-        EVAL_CSV="$ACTUAL_RUN_DIR/csv/evaluation.csv"
+        EVAL_CSV="$ACTUAL_RUN_DIR/eval/evaluations.csv"
         if [[ -f "$EVAL_CSV" ]]; then
             echo ""
-            echo "Final evaluation (last 5 checkpoints):"
-            tail -5 "$EVAL_CSV" | while IFS=, read -r frame mean_return std_return min_ret max_ret median_ret mean_len episodes; do
-                if [[ "$frame" != "frame" ]]; then
-                    printf "  Frame %s: Mean=%.2f +/- %.2f\n" "$frame" "$mean_return" "$std_return"
+            echo "Final evaluation results:"
+            tail -5 "$EVAL_CSV" | while IFS=, read -r step mean_return median_return std_return min_ret max_ret mean_len episodes eval_eps; do
+                if [[ "$step" != "step" ]]; then
+                    printf "  Step %s: Mean=%.2f +/- %.2f (median=%.2f)\n" "$step" "$mean_return" "$std_return" "$median_return"
                 fi
             done
         fi
