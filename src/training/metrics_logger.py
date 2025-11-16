@@ -733,7 +733,7 @@ class MetricsLogger:
 
     def upload_logs_as_artifacts(self, step: int, metadata: Optional[Dict] = None):
         """
-        Upload CSV logs as W&B artifacts.
+        Upload training logs and run artifacts to W&B.
 
         Args:
             step: Current training step
@@ -742,22 +742,43 @@ class MetricsLogger:
         if not self.upload_artifacts or self.wandb is None or not self.wandb.enabled:
             return
 
-        if self.csv is None:
-            return
-
-        # Collect CSV files with size check
-        csv_files = []
+        # Collect artifact files with size check
+        artifact_files = []
         total_size_mb = 0.0
 
-        if self.csv.step_csv_path.exists():
-            csv_files.append(str(self.csv.step_csv_path))
-            total_size_mb += self.csv.step_csv_path.stat().st_size / (1024 * 1024)
+        # Add CSV files
+        if self.csv is not None:
+            if self.csv.step_csv_path.exists():
+                artifact_files.append(str(self.csv.step_csv_path))
+                total_size_mb += self.csv.step_csv_path.stat().st_size / (1024 * 1024)
 
-        if self.csv.episode_csv_path.exists():
-            csv_files.append(str(self.csv.episode_csv_path))
-            total_size_mb += self.csv.episode_csv_path.stat().st_size / (1024 * 1024)
+            if self.csv.episode_csv_path.exists():
+                artifact_files.append(str(self.csv.episode_csv_path))
+                total_size_mb += self.csv.episode_csv_path.stat().st_size / (1024 * 1024)
 
-        if not csv_files:
+        # Add config and meta files from run directory
+        config_path = self.log_dir / 'config.yaml'
+        if config_path.exists():
+            artifact_files.append(str(config_path))
+            total_size_mb += config_path.stat().st_size / (1024 * 1024)
+
+        meta_path = self.log_dir / 'meta.json'
+        if meta_path.exists():
+            artifact_files.append(str(meta_path))
+            total_size_mb += meta_path.stat().st_size / (1024 * 1024)
+
+        # Add evaluation results
+        eval_csv = self.log_dir / 'eval' / 'evaluations.csv'
+        if eval_csv.exists():
+            artifact_files.append(str(eval_csv))
+            total_size_mb += eval_csv.stat().st_size / (1024 * 1024)
+
+        eval_jsonl = self.log_dir / 'eval' / 'evaluations.jsonl'
+        if eval_jsonl.exists():
+            artifact_files.append(str(eval_jsonl))
+            total_size_mb += eval_jsonl.stat().st_size / (1024 * 1024)
+
+        if not artifact_files:
             return
 
         # Warn if uploading large files
@@ -777,7 +798,7 @@ class MetricsLogger:
         self.wandb.upload_artifact(
             artifact_name=artifact_name,
             artifact_type="logs",
-            file_paths=csv_files,
+            file_paths=artifact_files,
             metadata=artifact_metadata
         )
 

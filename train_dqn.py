@@ -301,6 +301,9 @@ def run_training(config, paths, device):
 
             last_log_time = current_time
 
+            # Periodic flush and artifact upload
+            metrics_logger.maybe_flush_and_upload(frame_counter.frames)
+
             # Print progress
             if frame_counter.steps % (config.logging.log_every_steps * 10) == 0:
                 progress = (frame_counter.frames / config.training.total_frames) * 100
@@ -468,6 +471,10 @@ def run_training(config, paths, device):
     # Close environments
     env.close()
     eval_env.close()
+
+    # Final artifact upload
+    print("Uploading final artifacts to W&B...")
+    metrics_logger.maybe_flush_and_upload(frame_counter.frames, force=True)
 
     # Close logger
     metrics_logger.close()
