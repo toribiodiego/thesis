@@ -17,7 +17,7 @@ from src.training import VideoRecorder, evaluate
 
 # Check if cv2 is available
 try:
-    import cv2
+    import cv2  # noqa: F401
 
     CV2_AVAILABLE = True
 except ImportError:

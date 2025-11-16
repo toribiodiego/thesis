@@ -119,7 +119,7 @@ def test_init_target_network_creates_copy():
     target_net = init_target_network(online_net, num_actions=6)
 
     # Should have same architecture
-    assert type(online_net) == type(target_net)
+    assert type(online_net) is type(target_net)
     assert online_net.num_actions == target_net.num_actions
 
     # Should have same parameters
@@ -255,7 +255,7 @@ def test_init_target_network_num_actions():
         target_net = init_target_network(online_net, num_actions=num_actions)
 
         assert target_net.num_actions == num_actions
-        assert type(target_net) == type(online_net)
+        assert type(target_net) is type(online_net)
 
 
 # ============================================================================

@@ -631,7 +631,7 @@ class EvaluationLogger:
         per_episode_entry = {
             "step": step,
             "episode_returns": [float(r) for r in results["episode_returns"]],
-            "episode_lengths": [int(l) for l in results["episode_lengths"]],
+            "episode_lengths": [int(length) for length in results["episode_lengths"]],
         }
         with open(self.episodes_path, "a") as f:
             json.dump(per_episode_entry, f)
@@ -650,7 +650,7 @@ class EvaluationLogger:
                 "mean_length": float(results["mean_length"]),
             },
             "episode_returns": [float(r) for r in results["episode_returns"]],
-            "episode_lengths": [int(l) for l in results["episode_lengths"]],
+            "episode_lengths": [int(length) for length in results["episode_lengths"]],
             "num_episodes": results["num_episodes"],
             "eval_epsilon": eval_epsilon if eval_epsilon is not None else 0.0,
         }

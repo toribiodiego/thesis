@@ -5,6 +5,8 @@ from typing import Dict, Optional, Tuple
 import torch
 import torch.nn as nn
 
+from .loss import compute_dqn_loss, compute_td_targets, select_q_values
+from .optimization import clip_gradients
 from .target_network import hard_update_target
 
 

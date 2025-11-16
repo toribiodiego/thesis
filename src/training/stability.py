@@ -1,11 +1,14 @@
 """Stability checks for detecting NaN/Inf and validating training behavior."""
 
-from typing import Dict, Tuple
+from typing import TYPE_CHECKING, Dict, Tuple
 
 import torch
 import torch.nn as nn
 
 from .loss import compute_td_targets, select_q_values
+
+if TYPE_CHECKING:
+    from .schedulers import TargetNetworkUpdater
 
 
 def detect_nan_inf(tensor: torch.Tensor, name: str = "tensor") -> bool:
