@@ -19,7 +19,6 @@ Supports:
 
 import argparse
 import csv
-import sys
 import json
 import subprocess
 from pathlib import Path
@@ -29,6 +28,7 @@ from datetime import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 
 # Set publication-quality defaults
 mpl.rcParams["figure.dpi"] = 100
@@ -301,6 +301,245 @@ def smooth_curve(
 
     else:
         raise ValueError(f"Unknown smoothing method: {method}")
+
+
+# ============================================================================
+# Video Overlay Functions
+# ============================================================================
+
+
+def extract_video_frame(video_path: Path, frame_index: int = 0) -> Optional[np.ndarray]:
+    """
+    Extract a single frame from a video file.
+
+    Args:
+        video_path: Path to video file (MP4, etc.)
+        frame_index: Which frame to extract (0 = first frame)
+
+    Returns:
+        Frame as numpy array (RGB) or None if extraction fails
+    """
+    try:
+        import cv2
+    except ImportError:
+        print("Warning: cv2 not installed. Cannot extract video frames.")
+        return None
+
+    if not video_path.exists():
+        return None
+
+    cap = cv2.VideoCapture(str(video_path))
+    if not cap.isOpened():
+        return None
+
+    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
+    ret, frame = cap.read()
+    cap.release()
+
+    if not ret:
+        return None
+
+    # Convert BGR to RGB
+    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    return frame_rgb
+
+
+def load_video_thumbnails(
+    video_dir: Path, steps: List[int], thumbnail_size: Tuple[int, int] = (160, 120)
+) -> Dict[int, np.ndarray]:
+    """
+    Load video thumbnails for specific training steps.
+
+    Args:
+        video_dir: Directory containing evaluation videos
+        steps: List of training steps to load videos for
+        thumbnail_size: Size to resize thumbnails (width, height)
+
+    Returns:
+        Dictionary mapping step -> thumbnail array
+    """
+    try:
+        import cv2
+    except ImportError:
+        print("Warning: cv2 not installed. Cannot load video thumbnails.")
+        return {}
+
+    thumbnails = {}
+
+    # Look for videos matching step numbers
+    for step in steps:
+        # Try common naming patterns
+        patterns = [
+            f"eval_{step}.mp4",
+            f"eval_step_{step}.mp4",
+            f"evaluation_{step}.mp4",
+            f"*{step}*.mp4",
+        ]
+
+        video_found = None
+        for pattern in patterns:
+            matches = list(video_dir.glob(pattern))
+            if matches:
+                video_found = matches[0]
+                break
+
+        if video_found:
+            frame = extract_video_frame(video_found, frame_index=0)
+            if frame is not None:
+                # Resize to thumbnail size
+                thumbnail = cv2.resize(
+                    frame, thumbnail_size, interpolation=cv2.INTER_AREA
+                )
+                thumbnails[step] = thumbnail
+
+    return thumbnails
+
+
+def plot_evaluation_with_video_overlay(
+    eval_data: Dict[str, np.ndarray],
+    video_dir: Path,
+    output_path: Path,
+    title: str = "Evaluation Score with Video Snapshots",
+    formats: List[str] = ["png"],
+    max_thumbnails: int = 6,
+    thumbnail_size: Tuple[int, int] = (160, 120),
+):
+    """
+    Plot evaluation scores with video frame thumbnails overlaid.
+
+    Creates a learning curve with video snapshots showing agent behavior
+    at key evaluation points.
+
+    Args:
+        eval_data: Dict with 'step' and 'mean_return' arrays
+        video_dir: Directory containing evaluation videos
+        output_path: Base path for output files
+        title: Plot title
+        formats: Output formats
+        max_thumbnails: Maximum number of video thumbnails to overlay
+        thumbnail_size: Size of thumbnails (width, height)
+    """
+    x = eval_data["step"]
+    y = eval_data["mean_return"]
+
+    # Remove NaN values
+    mask = ~np.isnan(y)
+    x = x[mask]
+    y = y[mask]
+
+    if len(x) == 0:
+        print("Warning: No valid evaluation data for video overlay plot")
+        return
+
+    # Select steps for video thumbnails (evenly spaced)
+    if len(x) <= max_thumbnails:
+        selected_indices = list(range(len(x)))
+    else:
+        selected_indices = np.linspace(0, len(x) - 1, max_thumbnails, dtype=int).tolist()
+
+    selected_steps = [int(x[i]) for i in selected_indices]
+
+    # Load video thumbnails
+    print(f"Loading video thumbnails from: {video_dir}")
+    thumbnails = load_video_thumbnails(video_dir, selected_steps, thumbnail_size)
+
+    if not thumbnails:
+        print("Warning: No video thumbnails found. Falling back to standard plot.")
+        plot_evaluation_scores(eval_data, output_path, title, formats)
+        return
+
+    print(f"Found {len(thumbnails)} video thumbnails")
+
+    # Create figure with extra space for thumbnails
+    fig, ax = plt.subplots(figsize=(14, 8))
+
+    # Plot evaluation scores
+    ax.plot(
+        x,
+        y,
+        marker="o",
+        linewidth=2,
+        markersize=6,
+        color="#2ca02c",
+        label="Mean Eval Return",
+        zorder=2,
+    )
+
+    # Add error bars if std is available
+    if "std_return" in eval_data:
+        y_std = eval_data["std_return"][mask]
+        ax.fill_between(
+            x, y - y_std, y + y_std, alpha=0.2, color="#2ca02c", label="std", zorder=1
+        )
+
+    # Add video thumbnails
+    y_range = y.max() - y.min()
+    y_offset_step = y_range * 0.15  # Offset between thumbnails vertically
+
+    for i, (idx, step) in enumerate(zip(selected_indices, selected_steps)):
+        if step in thumbnails:
+            thumbnail = thumbnails[step]
+
+            # Calculate position for thumbnail
+            data_x = x[idx]
+            data_y = y[idx]
+
+            # Alternate thumbnails above and below the curve
+            if i % 2 == 0:
+                y_offset = y_offset_step * 1.5
+            else:
+                y_offset = -y_offset_step * 2.5
+
+            # Create thumbnail image
+            imagebox = OffsetImage(thumbnail, zoom=0.4)
+            imagebox.image.axes = ax
+
+            # Add annotation box
+            ab = AnnotationBbox(
+                imagebox,
+                (data_x, data_y),
+                xybox=(0, y_offset * 100),  # Offset in points
+                xycoords="data",
+                boxcoords="offset points",
+                pad=0.3,
+                arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=0.1", color="gray"),
+                bboxprops=dict(
+                    boxstyle="round,pad=0.1", facecolor="white", edgecolor="gray", alpha=0.9
+                ),
+            )
+            ax.add_artist(ab)
+
+            # Add step label below thumbnail
+            ax.annotate(
+                f"Step {step:,}",
+                xy=(data_x, data_y),
+                xytext=(0, y_offset * 100 - 50),
+                xycoords="data",
+                textcoords="offset points",
+                ha="center",
+                va="top",
+                fontsize=7,
+                color="gray",
+            )
+
+    ax.set_xlabel("Environment Steps")
+    ax.set_ylabel("Evaluation Return")
+    ax.set_title(title)
+    ax.legend(loc="upper left")
+    ax.grid(True, alpha=0.3, zorder=0)
+
+    # Adjust y-axis limits to accommodate thumbnails
+    current_ylim = ax.get_ylim()
+    y_margin = y_range * 0.5
+    ax.set_ylim(current_ylim[0] - y_margin, current_ylim[1] + y_margin)
+
+    # Save in all requested formats
+    for fmt in formats:
+        save_path = output_path.with_suffix(f".{fmt}")
+        fig.savefig(save_path, bbox_inches="tight", format=fmt, dpi=150)
+        print(f"Saved: {save_path}")
+
+    plt.close(fig)
 
 
 # ============================================================================
@@ -824,6 +1063,13 @@ Examples:
     --wandb-run abc123 \\
     --wandb-artifact training_logs_step_1000000:latest \\
     --output plots/pong
+
+  # Plot with video overlay (shows agent behavior at evaluation points)
+  python scripts/plot_results.py \\
+    --eval runs/pong_123/eval/evaluations.csv \\
+    --video-dir runs/pong_123/videos \\
+    --game-name pong \\
+    --output plots/pong
         """,
     )
 
@@ -890,6 +1136,17 @@ Examples:
         "--no-smoothing",
         action="store_true",
         help="Disable smoothing (plot raw data only)",
+    )
+    plot_group.add_argument(
+        "--video-dir",
+        type=Path,
+        help="Directory containing evaluation videos for overlay plot",
+    )
+    plot_group.add_argument(
+        "--max-thumbnails",
+        type=int,
+        default=6,
+        help="Maximum number of video thumbnails in overlay (default: 6)",
     )
 
     # Performance options
@@ -1021,6 +1278,23 @@ Examples:
         wandb_project=args.wandb_project if args.upload_wandb else None,
         wandb_run_id=args.wandb_upload_run if args.upload_wandb else None,
     )
+
+    # Generate video overlay plot if requested
+    if args.video_dir and eval_data is not None:
+        print(f"\nGenerating video overlay plot...")
+        if args.video_dir.exists():
+            plot_evaluation_with_video_overlay(
+                eval_data,
+                args.video_dir,
+                args.output / f"{args.game_name}_eval_with_videos",
+                title=f"{args.game_name.title()} - Evaluation with Video Snapshots",
+                formats=args.formats,
+                max_thumbnails=args.max_thumbnails,
+            )
+            for fmt in args.formats:
+                plot_files.append(args.output / f"{args.game_name}_eval_with_videos.{fmt}")
+        else:
+            print(f"Warning: Video directory not found: {args.video_dir}")
 
     print(f"\nDone! Generated {len([p for p in plot_files if p.exists()])} plots")
     print(f"Plots saved to: {args.output}")
