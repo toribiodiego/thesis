@@ -121,6 +121,13 @@ Examples:
         help="Tags for W&B run organization (e.g., --tags test --tags debug). Can be specified multiple times.",
     )
 
+    parser.add_argument(
+        "--dev-run",
+        action="store_true",
+        help="Development mode: adds ['dev', 'no-artifacts'] tags, disables video recording, "
+        "shortens eval intervals. Use for quick iteration without full artifacts.",
+    )
+
     return parser
 
 
@@ -262,7 +269,38 @@ def setup_from_args(
         "dry_run": args.dry_run,
         "device": args.device,
         "tags": args.tags,
+        "dev_run": getattr(args, "dev_run", False),
     }
+
+    # Apply --dev-run settings for lightweight experimentation
+    if getattr(args, "dev_run", False):
+        # Add dev tags
+        dev_tags = ["dev", "no-artifacts"]
+        args.tags = list(set(args.tags + dev_tags))
+
+        # Disable video recording
+        if "evaluation" not in config:
+            config["evaluation"] = {}
+        config["evaluation"]["record_video"] = False
+
+        # Shorten evaluation interval (every 100K frames instead of 250K)
+        config["evaluation"]["eval_every"] = 100_000
+
+        # Disable W&B artifact uploads
+        if "logging" not in config:
+            config["logging"] = {}
+        if "wandb" not in config["logging"]:
+            config["logging"]["wandb"] = {}
+        config["logging"]["wandb"]["upload_artifacts"] = False
+
+        # Add note about dev mode
+        if "experiment" not in config:
+            config["experiment"] = {}
+        existing_notes = config["experiment"].get("notes", "")
+        if existing_notes:
+            config["experiment"]["notes"] = f"{existing_notes} [DEV MODE]"
+        else:
+            config["experiment"]["notes"] = "[DEV MODE]"
 
     # Apply --tags to W&B config if provided
     if args.tags:
