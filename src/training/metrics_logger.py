@@ -427,6 +427,7 @@ class MetricsLogger:
         moving_avg_window: int = 100,
         flush_interval: int = 1000,
         upload_artifacts: bool = False,
+        artifact_upload_interval: int = 1_000_000,
     ):
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
@@ -434,6 +435,7 @@ class MetricsLogger:
         self.moving_avg_window = moving_avg_window
         self.flush_interval = flush_interval
         self.upload_artifacts = upload_artifacts
+        self.artifact_upload_interval = artifact_upload_interval
 
         # Initialize backends
         self.backends = []
@@ -740,11 +742,9 @@ class MetricsLogger:
 
     def _should_upload_artifacts(self, step: int) -> bool:
         """Check if artifact upload is needed."""
-        # Upload artifacts at checkpoint intervals (default: 1M steps)
-        upload_interval = 1_000_000
         return (
             self.upload_artifacts
-            and (step - self.last_artifact_upload_step) >= upload_interval
+            and (step - self.last_artifact_upload_step) >= self.artifact_upload_interval
         )
 
     def flush(self, step: Optional[int] = None):

@@ -47,6 +47,7 @@ from src.training import (
     get_rng_states,
     resume_from_checkpoint
 )
+from src.training.evaluation import EvaluationLogger
 
 
 def set_random_seeds(seed: int):
@@ -174,7 +175,8 @@ def initialize_components(config, paths, device, resuming=False):
         wandb_name=paths['run_dir'].name,
         wandb_config=OmegaConf.to_container(config, resolve=True),
         wandb_tags=config.logging.get('wandb', {}).get('tags', []),
-        upload_artifacts=config.logging.get('wandb', {}).get('upload_artifacts', False)
+        upload_artifacts=config.logging.get('wandb', {}).get('upload_artifacts', False),
+        artifact_upload_interval=config.logging.get('wandb', {}).get('artifact_upload_interval', 1_000_000)
     )
 
     checkpoint_manager = CheckpointManager(
@@ -190,6 +192,8 @@ def initialize_components(config, paths, device, resuming=False):
         eval_epsilon=config.evaluation.epsilon
     )
 
+    evaluation_logger = EvaluationLogger(log_dir=str(paths['eval']))
+
     return {
         'env': env,
         'eval_env': eval_env,
@@ -204,7 +208,8 @@ def initialize_components(config, paths, device, resuming=False):
         'frame_counter': frame_counter,
         'metrics_logger': metrics_logger,
         'checkpoint_manager': checkpoint_manager,
-        'eval_scheduler': eval_scheduler
+        'eval_scheduler': eval_scheduler,
+        'evaluation_logger': evaluation_logger
     }
 
 
@@ -232,6 +237,7 @@ def run_training(config, paths, device):
     metrics_logger = components['metrics_logger']
     checkpoint_manager = components['checkpoint_manager']
     eval_scheduler = components['eval_scheduler']
+    evaluation_logger = components['evaluation_logger']
 
     # Training state
     episode_count = 0
@@ -350,63 +356,32 @@ def run_training(config, paths, device):
                 export_gif=False
             )
 
-            mean_return = np.mean(eval_results['episode_returns'])
-            median_return = np.median(eval_results['episode_returns'])
-            std_return = np.std(eval_results['episode_returns'])
-            min_return = np.min(eval_results['episode_returns'])
-            max_return = np.max(eval_results['episode_returns'])
-            mean_length = np.mean(eval_results['episode_lengths'])
-
             print(f"Evaluation Results:")
-            print(f"  Mean Return: {mean_return:.2f} +/- {std_return:.2f}")
-            print(f"  Median Return: {median_return:.2f}")
-            print(f"  Min/Max Return: {min_return:.2f} / {max_return:.2f}")
-            print(f"  Mean Length: {mean_length:.1f}")
+            print(f"  Mean Return: {eval_results['mean_return']:.2f} +/- {eval_results['std_return']:.2f}")
+            print(f"  Median Return: {eval_results['median_return']:.2f}")
+            print(f"  Min/Max Return: {eval_results['min_return']:.2f} / {eval_results['max_return']:.2f}")
+            print(f"  Mean Length: {eval_results['mean_length']:.1f}")
             print(f"  Episodes: {len(eval_results['episode_returns'])}")
             if 'video_info' in eval_results and eval_results['video_info']:
                 print(f"  Video saved: {eval_results['video_info'].get('video_path', 'N/A')}")
             print(f"{'='*80}\n")
 
-            # Save evaluation results to CSV/JSONL
-            eval_csv_path = paths['eval'] / 'evaluations.csv'
-            eval_json_path = paths['eval'] / 'evaluations.jsonl'
+            # Save evaluation results using EvaluationLogger (handles CSV, JSONL, per-episode data, and detailed JSON)
+            evaluation_logger.log_evaluation(
+                step=frame_counter.frames,
+                results=eval_results,
+                epsilon=epsilon_scheduler.get_epsilon(frame_counter.frames)
+            )
 
-            # Write CSV header if file doesn't exist
-            if not eval_csv_path.exists():
-                with open(eval_csv_path, 'w') as f:
-                    f.write('step,mean_return,median_return,std_return,min_return,max_return,mean_length,num_episodes,eval_epsilon\n')
-
-            # Append evaluation results to CSV
-            with open(eval_csv_path, 'a') as f:
-                f.write(f"{frame_counter.frames},{mean_return:.4f},{median_return:.4f},{std_return:.4f},{min_return:.4f},{max_return:.4f},{mean_length:.2f},{config.evaluation.num_episodes},{config.evaluation.epsilon}\n")
-
-            # Append to JSONL (one JSON object per line)
-            eval_record = {
-                'step': frame_counter.frames,
-                'mean_return': float(mean_return),
-                'median_return': float(median_return),
-                'std_return': float(std_return),
-                'min_return': float(min_return),
-                'max_return': float(max_return),
-                'mean_length': float(mean_length),
-                'episode_returns': [float(r) for r in eval_results['episode_returns']],
-                'episode_lengths': [int(l) for l in eval_results['episode_lengths']],
-                'num_episodes': config.evaluation.num_episodes,
-                'eval_epsilon': config.evaluation.epsilon,
-                'video_info': eval_results.get('video_info', None)
-            }
-            with open(eval_json_path, 'a') as f:
-                f.write(json.dumps(eval_record) + '\n')
-
-            # Log evaluation metrics
+            # Log evaluation metrics to TensorBoard/W&B
             metrics_logger.log_evaluation(
                 step=frame_counter.frames,
-                mean_return=mean_return,
-                median_return=median_return,
-                std_return=std_return,
-                min_return=min_return,
-                max_return=max_return,
-                mean_length=mean_length,
+                mean_return=eval_results['mean_return'],
+                median_return=eval_results['median_return'],
+                std_return=eval_results['std_return'],
+                min_return=eval_results['min_return'],
+                max_return=eval_results['max_return'],
+                mean_length=eval_results['mean_length'],
                 num_episodes=config.evaluation.num_episodes
             )
 
@@ -416,7 +391,7 @@ def run_training(config, paths, device):
                     step=frame_counter.frames,
                     episode=episode_count,
                     epsilon=step_result['epsilon'],
-                    eval_return=mean_return,
+                    eval_return=eval_results['mean_return'],
                     online_model=online_net,
                     target_model=target_net,
                     optimizer=optimizer,
@@ -424,7 +399,7 @@ def run_training(config, paths, device):
                     rng_states=get_rng_states(env)
                 )
                 if is_new_best:
-                    print(f"New best model saved (return: {mean_return:.2f})")
+                    print(f"New best model saved (return: {eval_results['mean_return']:.2f})")
 
         # Periodic checkpoint
         if checkpoint_manager.should_save(frame_counter.frames):

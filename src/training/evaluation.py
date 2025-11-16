@@ -206,16 +206,20 @@ def evaluate(
 
     # Setup video recording for best episode if requested
     video_info = None
-    episode_frames = {}  # Store frames for each episode
+    # Keep only the best episode's frames in memory to minimize memory usage
+    best_episode_frames = None
+    best_episode_return = float("-inf")
+    best_episode_index = -1
+    env_name = "env"
     if record_video:
         # Determine video filename
         if video_dir is None:
             video_dir = "results/videos"
 
         # Get environment name for filename
-        env_name = getattr(env.unwrapped, "spec", None)
-        if env_name is not None and hasattr(env_name, "id"):
-            env_name = env_name.id.replace("/", "_").replace("NoFrameskip-v4", "")
+        env_spec = getattr(env.unwrapped, "spec", None)
+        if env_spec is not None and hasattr(env_spec, "id"):
+            env_name = env_spec.id.replace("/", "_").replace("NoFrameskip-v4", "")
         else:
             env_name = "env"
 
@@ -275,9 +279,15 @@ def evaluate(
         episode_returns.append(episode_return)
         episode_lengths.append(episode_length)
 
-        # Store frames for this episode (to save best one later)
+        # Update best episode if this one is better (memory optimization)
         if record_video and current_episode_frames:
-            episode_frames[ep] = (episode_return, current_episode_frames)
+            if episode_return > best_episode_return:
+                # Replace previous best with current episode
+                best_episode_frames = current_episode_frames
+                best_episode_return = episode_return
+                best_episode_index = ep
+            # Clear current frames to free memory
+            del current_episode_frames
 
         # Track lives lost if requested
         if track_lives:
@@ -292,29 +302,25 @@ def evaluate(
             episode_lives_lost.append(lives_lost)
 
     # Save video for best performing episode
-    if record_video and episode_frames:
-        # Find episode with highest return
-        best_ep = max(episode_frames.keys(), key=lambda ep: episode_frames[ep][0])
-        best_return, best_frames = episode_frames[best_ep]
-
+    if record_video and best_episode_frames is not None:
         # Create video filename with step and episode info
         if step is not None:
             video_filename = (
-                f"{env_name}_step_{step}_best_ep{best_ep}_r{best_return:.0f}.mp4"
+                f"{env_name}_step_{step}_best_ep{best_episode_index}_r{best_episode_return:.0f}.mp4"
             )
         else:
-            video_filename = f"{env_name}_best_ep{best_ep}_r{best_return:.0f}.mp4"
+            video_filename = f"{env_name}_best_ep{best_episode_index}_r{best_episode_return:.0f}.mp4"
 
         video_path = os.path.join(video_dir, video_filename)
         video_recorder = VideoRecorder(video_path, fps=video_fps, export_gif=export_gif)
 
         # Add frames to recorder
-        for frame in best_frames:
+        for frame in best_episode_frames:
             video_recorder.capture_frame(frame)
 
         video_info = video_recorder.save()
-        video_info["best_episode"] = best_ep
-        video_info["best_return"] = float(best_return)
+        video_info["best_episode"] = best_episode_index
+        video_info["best_return"] = float(best_episode_return)
 
     # Compute statistics
     results = {
