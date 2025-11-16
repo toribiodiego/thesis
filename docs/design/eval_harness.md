@@ -28,7 +28,7 @@ This document describes the evaluation harness implementation for periodic perfo
 - Evaluation runs in `model.eval()` mode with `torch.no_grad()`
 - Uses separate `eval_epsilon` (default 0.05) from training epsilon
 - Supports full-episode evaluation (no life-loss termination)
-- Records first episode per evaluation interval for video inspection
+- Records best-performing episode (highest return) per evaluation interval for video inspection
 - Persists results to multiple formats for analysis and plotting
 
 ---
@@ -66,7 +66,7 @@ def evaluate(
 - Uses `torch.no_grad()` to disable gradient computation
 - Supports ε-greedy (eval_epsilon > 0) or pure greedy (eval_epsilon = 0)
 - Optional lives tracking via `info['lives']` or ALE API
-- Optional video recording of first episode
+- Optional video recording of best-performing episode (highest return)
 - Includes run metadata (seed, step) in results
 
 **Returns:**
@@ -276,10 +276,10 @@ logger = EvaluationLogger(log_dir='runs/pong_123/eval')
 │      │    │       • Reset environment                │  │       │
 │      │    │       • Run full episode with ε_eval     │  │       │
 │      │    │       • Record return, length, lives     │  │       │
-│      │    │       • Capture video (first episode)    │  │       │
+│      │    │       • Buffer video frames              │  │       │
 │      │    │                                           │  │       │
 │      │    │   • Compute summary statistics           │  │       │
-│      │    │   • Save video (if recording)            │  │       │
+│      │    │   • Save best episode video (highest return) │       │
 │      │    │   • Log results (CSV/JSONL/JSON)         │  │       │
 │      │    │   • Update scheduler history             │  │       │
 │      │    │                                           │  │       │
@@ -712,7 +712,7 @@ tar -czf pong_42_eval.tar.gz \
 evaluation:
   # Video capture
   record_video: true          # Enable video recording
-  video_frequency: 1          # Record first N episodes (1 = first episode only)
+  # Note: Videos are always recorded for the best-performing episode (highest return)
   video_format: "mp4"         # Video format: 'mp4' or 'gif'
 ```
 
@@ -752,7 +752,7 @@ runs/
 | **FPS** | `30` | Frames per second |
 | **Resolution** | Native | Matches environment render resolution |
 | **Color** | RGB → BGR | Converted for OpenCV |
-| **Recording** | First episode only | Minimizes overhead |
+| **Recording** | Best episode only (highest return) | Minimizes overhead while capturing best performance |
 
 ### Video Metadata
 
@@ -760,8 +760,10 @@ When `record_video=True`, results include `video_info`:
 
 ```python
 {
-    'video_path': 'runs/videos/step_250000.mp4',
-    'gif_path': 'runs/videos/step_250000.gif',  # If export_gif=True
+    'video_path': 'runs/videos/Pong_step_250000_best_ep3_r21.mp4',
+    'gif_path': 'runs/videos/Pong_step_250000_best_ep3_r21.gif',  # If export_gif=True
+    'best_episode': 3,                                             # Episode index with highest return
+    'best_return': 21.0,                                           # Return achieved in that episode
     'num_frames': 1234,
     'fps': 30
 }

@@ -568,7 +568,7 @@ experiments/dqn_atari/runs/pong_123/
 │   └── detailed/
 │       └── eval_step_<step>.json    # Complete evaluation details
 └── videos/                          # If record_video=true
-    └── step_<step>.mp4              # First episode recording
+    └── Pong_step_<step>_best_ep<N>_r<return>.mp4  # Best episode recording (highest return)
 ```
 
 **Troubleshooting evaluation issues:**

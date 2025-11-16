@@ -317,7 +317,7 @@ Dedicated eval loop: greedy or low-ε, compute mean/median/std returns. Capture 
     - [X] feat: Add standalone evaluate() with greedy/low-ε option and no-grad inference
 - [X] Collect standardized metrics: per-episode return, length, (optional) lives lost; compute mean, median, std, min, max across episodes; include seed and step in the summary.
     - [X] feat: Aggregate episode metrics with summary statistics and run metadata
-- [X] Integrate video capture: record the first evaluation episode each interval using Gym RecordVideo or a custom writer; ensure deterministic frame rate and save to `results/videos/<game>/<step>.mp4` (optional GIF export).
+- [X] Integrate video capture: record the best-performing evaluation episode (highest return) each interval using a custom writer; ensure deterministic frame rate and save to `videos/<Game>_step_<step>_best_ep<N>_r<return>.mp4` (optional GIF export). Video metadata includes `best_episode` and `best_return` fields.
     - [X] feat: Add MP4 video capture pipeline for eval episodes
 - [X] Schedule evaluations automatically every E environment frames (default 250_000) or by wall-clock; pause learning during eval, restore training mode afterward, and log the schedule in run metadata.
     - [X] feat: Add periodic evaluation trigger with proper train/eval mode switching
