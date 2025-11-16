@@ -999,7 +999,6 @@ def plot_multi_seed_aggregation(
 
     x = aggregated_data["step"]
     y_mean = aggregated_data[f"{metric_name}_mean"]
-    y_std = aggregated_data[f"{metric_name}_std"]
     y_ci95 = aggregated_data[f"{metric_name}_ci95"]
 
     # Plot individual runs if requested
@@ -1259,12 +1258,12 @@ Examples:
                 plot_individual_runs=True,
             )
 
-        print(f"\nDone! Multi-seed aggregation complete")
+        print("\nDone! Multi-seed aggregation complete")
         print(f"Plots saved to: {args.output}")
         return
 
     # Generate plots
-    print(f"\nGenerating plots...")
+    print("\nGenerating plots...")
     plot_files, metadata_file = plot_all_metrics(
         episodes_data=episodes_data,
         steps_data=steps_data,
@@ -1281,7 +1280,7 @@ Examples:
 
     # Generate video overlay plot if requested
     if args.video_dir and eval_data is not None:
-        print(f"\nGenerating video overlay plot...")
+        print("\nGenerating video overlay plot...")
         if args.video_dir.exists():
             plot_evaluation_with_video_overlay(
                 eval_data,

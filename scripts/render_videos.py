@@ -130,7 +130,7 @@ def render_video_from_checkpoint(
     model.load_state_dict(checkpoint_data["online_model_state_dict"])
     model.eval()
 
-    print(f"  Model loaded successfully")
+    print("  Model loaded successfully")
 
     # Create output directory
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -312,7 +312,7 @@ Examples:
         all_results.append(results)
 
     print(f"\n{'='*60}")
-    print(f"Video rendering complete!")
+    print("Video rendering complete!")
     print(f"{'='*60}")
     print(f"Total videos rendered: {len(all_results)}")
     print(f"Output directory: {output_dir}")
@@ -321,7 +321,7 @@ Examples:
     if output_dir.exists():
         videos = list(output_dir.glob("*.mp4")) + list(output_dir.glob("*.gif"))
         if videos:
-            print(f"\nGenerated files:")
+            print("\nGenerated files:")
             for v in sorted(videos)[-10:]:  # Show last 10
                 print(f"  - {v.name}")
             if len(videos) > 10:

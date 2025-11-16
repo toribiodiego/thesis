@@ -337,7 +337,7 @@ def save_results(
 
     # Save Markdown table
     md_path = output_dir / f"{prefix}.md"
-    md_content = f"# DQN Results Analysis\n\n"
+    md_content = "# DQN Results Analysis\n\n"
     md_content += f"Generated: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
     md_content += "## Summary Table\n\n"
     md_content += generate_summary_table(results, "markdown")

@@ -15,7 +15,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 
 def verify_artifacts(run_dir: Path, strict: bool = False) -> Dict[str, Any]:
@@ -224,7 +224,7 @@ def print_results(results: Dict[str, Any], as_json: bool = False):
             print(f"  [WARN] {warning}")
 
     if results.get("content_checks"):
-        print(f"\nContent Validation:")
+        print("\nContent Validation:")
         for file, status in results["content_checks"].items():
             print(f"  {file}: {status}")
 

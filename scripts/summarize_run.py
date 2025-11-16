@@ -18,7 +18,7 @@ import csv
 import json
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 def load_csv(path: Path) -> List[Dict[str, Any]]:
@@ -221,7 +221,7 @@ def print_summary(summary: Dict[str, Any], as_json: bool = False):
     # Training progress
     if "training_progress" in summary:
         prog = summary["training_progress"]
-        print(f"\nTraining Progress:")
+        print("\nTraining Progress:")
         print(f"  Last Frame: {prog.get('last_frame', 0):,}")
         print(f"  Last Epsilon: {prog.get('last_epsilon', 0):.4f}")
         if prog.get("last_loss") is not None:
@@ -232,7 +232,7 @@ def print_summary(summary: Dict[str, Any], as_json: bool = False):
     # Episode statistics
     if "episode_stats" in summary:
         eps = summary["episode_stats"]
-        print(f"\nEpisode Statistics:")
+        print("\nEpisode Statistics:")
         print(f"  Total Episodes: {eps.get('total_episodes', 0):,}")
         print(f"  Mean Return: {eps.get('mean_return', 0):.2f}")
         print(f"  Max Return: {eps.get('max_return', 0):.2f}")
@@ -242,23 +242,23 @@ def print_summary(summary: Dict[str, Any], as_json: bool = False):
     # Evaluation results
     if "evaluation" in summary:
         ev = summary["evaluation"]
-        print(f"\nEvaluation Results:")
+        print("\nEvaluation Results:")
         print(f"  Total Evaluations: {ev.get('total_evaluations', 0)}")
         if "best_eval" in ev:
             best = ev["best_eval"]
-            print(f"  Best Evaluation:")
+            print("  Best Evaluation:")
             print(f"    Step: {best.get('step', 0):,}")
             print(f"    Mean Return: {best.get('mean_return', 0):.2f} +/- {best.get('std_return', 0):.2f}")
         if "last_eval" in ev:
             last = ev["last_eval"]
-            print(f"  Last Evaluation:")
+            print("  Last Evaluation:")
             print(f"    Step: {last.get('step', 0):,}")
             print(f"    Mean Return: {last.get('mean_return', 0):.2f} +/- {last.get('std_return', 0):.2f}")
 
     # Checkpoints
     if "checkpoints" in summary:
         cp = summary["checkpoints"]
-        print(f"\nCheckpoints:")
+        print("\nCheckpoints:")
         print(f"  Count: {cp.get('count', 0)}")
         print(f"  Has Best Model: {cp.get('has_best', False)}")
         if "latest_step" in cp:
@@ -267,7 +267,7 @@ def print_summary(summary: Dict[str, Any], as_json: bool = False):
     # Videos
     if "videos" in summary:
         vid = summary["videos"]
-        print(f"\nVideos:")
+        print("\nVideos:")
         print(f"  Count: {vid.get('count', 0)}")
         if vid.get("files"):
             for f in vid["files"][:5]:  # Show first 5
@@ -277,7 +277,7 @@ def print_summary(summary: Dict[str, Any], as_json: bool = False):
 
     # W&B
     if "wandb" in summary:
-        print(f"\nWeights & Biases:")
+        print("\nWeights & Biases:")
         print(f"  Enabled: {summary['wandb'].get('enabled', False)}")
         print(f"  Local Dir: {summary['wandb'].get('local_dir', 'N/A')}")
 
