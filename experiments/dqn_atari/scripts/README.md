@@ -655,21 +655,25 @@ Edit your config file (e.g., `experiments/dqn_atari/configs/pong.yaml`):
 ```yaml
 logging:
   # TensorBoard (local event files)
-  enable_tensorboard: true
-  tensorboard_dir: "results/logs/{game}/{run_id}/tensorboard"
+  tensorboard:
+    enabled: true
+    flush_interval: 1000
+
+  # CSV files (local structured logs)
+  csv:
+    enabled: true
+    smoothing_window: 100
 
   # Weights & Biases (cloud logging)
-  enable_wandb: true
-  wandb_project: "dqn-atari"
-  wandb_entity: "my-team"  # optional
-  upload_artifacts: true
-  artifact_upload_interval: 1000000  # Upload every 1M steps
-
-  # CSV files (always enabled)
-  enable_csv: true
-  csv_dir: "results/logs/{game}/{run_id}/csv"
-  flush_interval: 1000  # Flush every 1K steps
+  wandb:
+    enabled: true
+    project: "dqn-atari"
+    entity: "my-team"  # optional
+    upload_artifacts: true
+    artifact_upload_interval: 1000000  # Upload every 1M steps
 ```
+
+**Note:** Directories are automatically created by `setup_run_directory()` in `experiments/dqn_atari/runs/<game>_<seed>_<timestamp>/`. You don't need to specify `tensorboard_dir` or `csv_dir`.
 
 ### Enable W&B
 
@@ -692,7 +696,7 @@ export WANDB_MODE=offline
 # Run training...
 
 # Later, sync offline runs
-wandb sync results/logs/pong/pong_seed42/wandb/
+wandb sync experiments/dqn_atari/runs/pong_42_20251115/wandb/
 ```
 
 **Disable W&B completely:**
@@ -705,7 +709,7 @@ export WANDB_DISABLED=true
 **TensorBoard:**
 ```bash
 # Launch TensorBoard
-tensorboard --logdir results/logs/pong/
+tensorboard --logdir experiments/dqn_atari/runs/
 
 # Open browser to: http://localhost:6006
 ```
@@ -717,26 +721,32 @@ tensorboard --logdir results/logs/pong/
 **CSV Files:**
 ```bash
 # Training steps (loss, epsilon, FPS)
-cat results/logs/pong/pong_seed42/csv/training_steps.csv
+cat experiments/dqn_atari/runs/pong_42_20251115/csv/training_steps.csv
 
 # Episodes (return, length)
-cat results/logs/pong/pong_seed42/csv/episodes.csv
+cat experiments/dqn_atari/runs/pong_42_20251115/csv/episodes.csv
 
 # Watch live
-tail -f results/logs/pong/pong_seed42/csv/episodes.csv
+tail -f experiments/dqn_atari/runs/pong_42_20251115/csv/episodes.csv
 ```
 
 ### File Locations
 
 ```
-results/logs/<game>/<run_id>/
+experiments/dqn_atari/runs/<game>_<seed>_<timestamp>/
+├── config.yaml             # Frozen config snapshot
+├── meta.json               # Run metadata (git hash, etc.)
 ├── tensorboard/
 │   └── events.out.tfevents.*
 ├── csv/
 │   ├── training_steps.csv
 │   └── episodes.csv
-├── wandb/                  # W&B cache (if enabled)
-└── checkpoints/            # Model checkpoints
+├── eval/
+│   └── evaluations.csv
+├── videos/
+│   └── <Env>_step_<step>_best_ep<N>_r<return>.mp4
+├── checkpoints/            # Model checkpoints
+└── artifacts/
 ```
 
 ### Generate Plots
@@ -746,8 +756,8 @@ Use `scripts/plot_results.py` to generate publication-quality figures:
 **From local CSV files:**
 ```bash
 python scripts/plot_results.py \
-  --episodes results/logs/pong/run_123/csv/episodes.csv \
-  --steps results/logs/pong/run_123/csv/training_steps.csv \
+  --episodes experiments/dqn_atari/runs/pong_42_20251115/csv/episodes.csv \
+  --steps experiments/dqn_atari/runs/pong_42_20251115/csv/training_steps.csv \
   --output plots/pong \
   --game-name pong \
   --formats png pdf svg
@@ -766,9 +776,9 @@ python scripts/plot_results.py \
 **Multi-seed aggregation (with 95% CI):**
 ```bash
 python scripts/plot_results.py \
-  --multi-seed results/logs/pong/seed1/csv/episodes.csv \
-               results/logs/pong/seed2/csv/episodes.csv \
-               results/logs/pong/seed3/csv/episodes.csv \
+  --multi-seed experiments/dqn_atari/runs/pong_42_20251115/csv/episodes.csv \
+               experiments/dqn_atari/runs/pong_43_20251115/csv/episodes.csv \
+               experiments/dqn_atari/runs/pong_44_20251115/csv/episodes.csv \
   --output plots/pong_multi_seed \
   --game-name pong \
   --smoothing 100

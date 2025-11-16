@@ -41,13 +41,13 @@ The three backends operate **independently** and **in parallel**:
 MetricsLogger.log_step(step=1000, loss=0.5, ...)
     │
     ├──→ TensorBoardBackend.log_scalar("train/loss", 0.5, step=1000)
-    │    └─→ writes to: results/logs/<game>/<run_id>/tensorboard/events.out.tfevents.*
+    │    └─→ writes to: experiments/dqn_atari/runs/<game>_<seed>_<timestamp>/tensorboard/events.out.tfevents.*
     │
     ├──→ WandBBackend.log({"train/loss": 0.5}, step=1000)
     │    └─→ uploads to: W&B cloud (wandb.ai/<entity>/<project>/<run_id>)
     │
     └──→ CSVBackend.log_step_metric(step=1000, loss=0.5, ...)
-         └─→ writes to: results/logs/<game>/<run_id>/csv/training_steps.csv
+         └─→ writes to: experiments/dqn_atari/runs/<game>_<seed>_<timestamp>/csv/training_steps.csv
 ```
 
 **Key Properties**:
@@ -59,19 +59,23 @@ MetricsLogger.log_step(step=1000, loss=0.5, ...)
 ### File System Layout
 
 ```
-results/
-└── logs/
-    └── <game>/              # e.g., "pong"
-        └── <run_id>/        # e.g., "pong_seed42_20231114_120000"
-            ├── tensorboard/
-            │   └── events.out.tfevents.1699977600.hostname
-            ├── csv/
-            │   ├── training_steps.csv    # Per-step metrics
-            │   └── episodes.csv          # Per-episode metrics
-            ├── wandb/                    # W&B local cache (optional)
-            │   └── run-<wandb_id>/
-            └── checkpoints/              # Model checkpoints (separate system)
-                └── checkpoint_250000.pt
+experiments/dqn_atari/runs/
+└── <game>_<seed>_<timestamp>/   # e.g., "pong_42_20251115_230409"
+    ├── config.yaml              # Frozen config snapshot
+    ├── meta.json                # Run metadata (git hash, python version, etc.)
+    ├── tensorboard/
+    │   └── events.out.tfevents.1699977600.hostname
+    ├── csv/
+    │   ├── training_steps.csv   # Per-step metrics
+    │   └── episodes.csv         # Per-episode metrics
+    ├── eval/
+    │   └── evaluations.csv      # Periodic evaluation results
+    ├── videos/
+    │   └── <Env>_step_<step>_best_ep<N>_r<return>.mp4
+    ├── checkpoints/             # Model checkpoints
+    │   └── checkpoint_250000.pt
+    ├── artifacts/               # Additional artifacts
+    └── logs/                    # Reserved for future use
 ```
 
 **Directory Creation**:
@@ -123,10 +127,10 @@ Each backend is configured independently:
 enable_tensorboard=True
 
 # Output directory (automatically created)
-log_dir = "results/logs/<game>/<run_id>/tensorboard"
+log_dir = "experiments/dqn_atari/runs/<game>_<seed>_<timestamp>/tensorboard"
 
 # Usage: view with TensorBoard
-# $ tensorboard --logdir results/logs/pong/
+# $ tensorboard --logdir experiments/dqn_atari/runs/
 ```
 
 **Config Fields**:

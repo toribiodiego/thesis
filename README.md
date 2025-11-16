@@ -152,30 +152,30 @@ export WANDB_MODE=offline
 **View TensorBoard logs:**
 ```bash
 # Launch TensorBoard
-tensorboard --logdir results/logs/pong/
+tensorboard --logdir experiments/dqn_atari/runs/
 
 # Logs are written to:
-# results/logs/<game>/<run_id>/tensorboard/
+# experiments/dqn_atari/runs/<game>_<seed>_<timestamp>/tensorboard/
 ```
 
 **CSV logs location:**
 ```bash
 # Per-step metrics (loss, epsilon, FPS)
-results/logs/<game>/<run_id>/csv/training_steps.csv
+experiments/dqn_atari/runs/<game>_<seed>_<timestamp>/csv/training_steps.csv
 
 # Per-episode metrics (return, length)
-results/logs/<game>/<run_id>/csv/episodes.csv
+experiments/dqn_atari/runs/<game>_<seed>_<timestamp>/csv/episodes.csv
 
 # Quick check
-tail -f results/logs/pong/pong_seed42/csv/episodes.csv
+tail -f experiments/dqn_atari/runs/pong_42_20251115/csv/episodes.csv
 ```
 
 **Generate plots:**
 ```bash
 # From local CSV files
 python scripts/plot_results.py \
-  --episodes results/logs/pong/run_123/csv/episodes.csv \
-  --steps results/logs/pong/run_123/csv/training_steps.csv \
+  --episodes experiments/dqn_atari/runs/pong_42_20251115/csv/episodes.csv \
+  --steps experiments/dqn_atari/runs/pong_42_20251115/csv/training_steps.csv \
   --output plots/pong \
   --game-name pong
 
@@ -188,9 +188,9 @@ python scripts/plot_results.py \
 
 # Multi-seed aggregation (with 95% CI)
 python scripts/plot_results.py \
-  --multi-seed results/logs/pong/seed1/csv/episodes.csv \
-               results/logs/pong/seed2/csv/episodes.csv \
-               results/logs/pong/seed3/csv/episodes.csv \
+  --multi-seed experiments/dqn_atari/runs/pong_42_20251115/csv/episodes.csv \
+               experiments/dqn_atari/runs/pong_43_20251115/csv/episodes.csv \
+               experiments/dqn_atari/runs/pong_44_20251115/csv/episodes.csv \
   --output plots/pong_multi_seed \
   --game-name pong
 ```
@@ -199,7 +199,7 @@ python scripts/plot_results.py \
 ```bash
 # Generate Markdown/CSV summary tables
 python scripts/export_results_table.py \
-  --runs-dir results/logs/pong/ \
+  --runs-dir experiments/dqn_atari/runs/ \
   --output results/summary
 
 # Outputs:

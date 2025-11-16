@@ -355,7 +355,7 @@ step_logger.log_step(
 )
 ```
 
-**Output**: `logs/training_steps.csv`
+**Output**: `csv/training_steps.csv`
 
 **CSV Schema**:
 ```csv
@@ -684,7 +684,7 @@ All CSV files follow these conventions:
 import pandas as pd
 
 # Training curves
-steps = pd.read_csv('logs/training_steps.csv')
+steps = pd.read_csv('csv/training_steps.csv')
 steps.plot(x='step', y=['loss_ma', 'td_error_mean'])
 
 # Episode returns
@@ -802,7 +802,7 @@ q_vals.plot(x='step', y=['avg_max_q', 'max_q', 'min_q'])
 
 ```bash
 # Watch training progress
-tail -f experiments/dqn_atari/runs/pong_42/logs/training_steps.csv
+tail -f experiments/dqn_atari/runs/pong_42/csv/training_steps.csv
 
 # Check episode returns
 tail -f experiments/dqn_atari/runs/pong_42/logs/episodes.csv
@@ -1047,7 +1047,7 @@ pytest tests/test_dqn_trainer.py::test_training_step_integration -v
 **Diagnosis**:
 ```bash
 # Check if replay buffer warm-up is stuck
-tail -f experiments/dqn_atari/runs/{game}_{seed}/logs/training_steps.csv
+tail -f experiments/dqn_atari/runs/{game}_{seed}/csv/training_steps.csv
 
 # Should see initial random exploration
 # If nothing appears, check environment creation
@@ -1083,7 +1083,7 @@ grep -A5 "replay" experiments/dqn_atari/configs/base.yaml
 ```python
 import pandas as pd
 
-steps = pd.read_csv('logs/training_steps.csv')
+steps = pd.read_csv('csv/training_steps.csv')
 print(steps[['step', 'loss', 'loss_ma', 'td_error_mean']].tail(20))
 
 # Check if loss is stuck at high value
@@ -1127,7 +1127,7 @@ agent:
 **Diagnosis**:
 ```python
 # Check for NaN/Inf in logs
-steps = pd.read_csv('logs/training_steps.csv')
+steps = pd.read_csv('csv/training_steps.csv')
 print(steps[steps['loss'].isna() | (steps['loss'] == float('inf'))])
 
 # Check gradient norms
@@ -1320,7 +1320,7 @@ training:
 **Diagnosis**:
 ```bash
 # Check FPS in logs
-tail -n 20 experiments/dqn_atari/runs/{game}_{seed}/logs/training_steps.csv | cut -d',' -f8
+tail -n 20 experiments/dqn_atari/runs/{game}_{seed}/csv/training_steps.csv | cut -d',' -f8
 
 # Expected FPS:
 # CPU: 200-300 FPS

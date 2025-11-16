@@ -511,17 +511,17 @@ experiments/dqn_atari/runs/
     │       ├── eval_step_750000.json
     │       └── ...
     ├── videos/                          # Video recordings (if enabled)
-    │   ├── step_250000.mp4
-    │   ├── step_500000.mp4
-    │   ├── step_750000.mp4
+    │   ├── Pong_step_250000_best_ep0_r-20.mp4
+    │   ├── Pong_step_500000_best_ep2_r-19.mp4
+    │   ├── Pong_step_750000_best_ep1_r-18.mp4
     │   └── ...
     ├── checkpoints/                     # Model checkpoints
     │   ├── step_250000.pt
     │   ├── step_500000.pt
     │   ├── best_model.pt                # Best model by eval score
     │   └── ...
-    ├── logs/                            # Training logs
-    │   ├── training.csv
+    ├── csv/                             # Training logs
+    │   ├── training_steps.csv
     │   ├── episodes.csv
     │   └── ...
     ├── config.yaml                      # Merged configuration
@@ -549,25 +549,25 @@ experiments/dqn_atari/runs/
 
 | File | Format | Purpose | When Created |
 |------|--------|---------|--------------|
-| `step_<step>.mp4` | MP4 | First episode video | If `record_video=true` |
-| `step_<step>.gif` | GIF | Optional GIF export | If `export_gif=true` |
+| `<Env>_step_<step>_best_ep<N>_r<return>.mp4` | MP4 | Best episode video | If `record_video=true` |
+| `<Env>_step_<step>_best_ep<N>_r<return>.gif` | GIF | Optional GIF export | If `export_gif=true` |
 
 **Size estimates:**
 - MP4: ~500KB - 2MB per video (depends on resolution, FPS, episode length)
 - GIF: ~1-5MB per video (larger than MP4 due to format inefficiency)
 
-**Naming convention:** Files named by training step (e.g., `step_250000.mp4` = evaluation at 250K steps)
+**Naming convention:** Files include environment name, training step, best episode index, and return (e.g., `Pong_step_250000_best_ep0_r-20.mp4` = evaluation at 250K steps, episode 0 had best return of -20)
 
 ### Directory Access Patterns
 
 **During training:**
 ```python
 # Evaluation logger creates and writes to eval/ directory
-logger = EvaluationLogger(log_dir='runs/pong_42/eval')
+logger = EvaluationLogger(log_dir='experiments/dqn_atari/runs/pong_42_20251115/eval')
 logger.log_evaluation(step=250000, results=eval_results)
 
 # Video recorder creates and writes to videos/ directory
-recorder = VideoRecorder(output_path='runs/pong_42/videos/step_250000.mp4')
+recorder = VideoRecorder(output_path='experiments/dqn_atari/runs/pong_42_20251115/videos/Pong_step_250000_best_ep0_r-20.mp4')
 ```
 
 **Post-training analysis:**
@@ -576,14 +576,14 @@ import pandas as pd
 import json
 
 # Load summary statistics
-df = pd.read_csv('runs/pong_42/eval/evaluations.csv')
+df = pd.read_csv('experiments/dqn_atari/runs/pong_42_20251115/eval/evaluations.csv')
 
 # Load per-episode data
-with open('runs/pong_42/eval/per_episode_returns.jsonl') as f:
+with open('experiments/dqn_atari/runs/pong_42_20251115/eval/per_episode_returns.jsonl') as f:
     episodes = [json.loads(line) for line in f]
 
 # Load detailed evaluation
-with open('runs/pong_42/eval/detailed/eval_step_250000.json') as f:
+with open('experiments/dqn_atari/runs/pong_42_20251115/eval/detailed/eval_step_250000.json') as f:
     details = json.load(f)
 ```
 
