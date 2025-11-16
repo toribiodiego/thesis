@@ -35,8 +35,8 @@ experiment:
   name: "ablation_no_target_net"
   notes: "Ablation study: No target network (2013 DQN behavior) to test stability"
 
-training:
-  target_network:
-    update_interval: 1  # ABLATION: Update every step (effectively no target network)
+target_network:
+  update_interval: 1  # ABLATION: Update every step (effectively no target network)
 
+training:
   total_frames: 5000000  # 5M frames for ablation (reduced from 10M)

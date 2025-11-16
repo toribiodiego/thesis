@@ -95,7 +95,7 @@ Comprehensive wrapper chain specification for Atari preprocessing.
 Q-network architecture and forward pass specification.
 
 **What's inside:**
-- Nature CNN architecture (3 conv layers + 2 FC layers)
+- DQN 2013 CNN architecture (2 conv layers + 2 FC layers)
 - Layer specifications (filters, kernels, strides, activations)
 - Forward pass implementation and output format
 - Weight initialization strategies

@@ -497,7 +497,7 @@ def make_atari_env(
     try:
         import ale_py
         gym.register_envs(ale_py)
-    except:
+    except Exception:
         pass  # Already registered or ale_py not available
 
     # Create base environment
