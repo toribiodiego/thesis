@@ -15,11 +15,19 @@ import numpy as np
 from src.models import DQN
 from src.training import VideoRecorder, evaluate
 
+# Check if cv2 is available
+try:
+    import cv2
+    CV2_AVAILABLE = True
+except ImportError:
+    CV2_AVAILABLE = False
+
 
 # ============================================================================
 # VideoRecorder Tests
 # ============================================================================
 
+@pytest.mark.skipif(not CV2_AVAILABLE, reason="cv2 not installed")
 def test_video_recorder_basic():
     """Test VideoRecorder captures and saves frames."""
     import tempfile
@@ -45,6 +53,7 @@ def test_video_recorder_basic():
         assert os.path.exists(video_path)
 
 
+@pytest.mark.skipif(not CV2_AVAILABLE, reason="cv2 not installed")
 def test_video_recorder_grayscale():
     """Test VideoRecorder handles grayscale frames."""
     import tempfile
@@ -64,6 +73,7 @@ def test_video_recorder_grayscale():
         assert os.path.exists(video_path)
 
 
+@pytest.mark.skipif(not CV2_AVAILABLE, reason="cv2 not installed")
 def test_video_recorder_float_frames():
     """Test VideoRecorder handles float32 frames."""
     import tempfile
@@ -84,6 +94,7 @@ def test_video_recorder_float_frames():
         assert os.path.exists(video_path)
 
 
+@pytest.mark.skipif(not CV2_AVAILABLE, reason="cv2 not installed")
 def test_video_recorder_empty():
     """Test VideoRecorder handles empty frame list gracefully."""
     import tempfile
@@ -100,6 +111,7 @@ def test_video_recorder_empty():
         assert info is None
 
 
+@pytest.mark.skipif(not CV2_AVAILABLE, reason="cv2 not installed")
 def test_video_recorder_directory_creation():
     """Test VideoRecorder creates output directory if needed."""
     import tempfile
@@ -122,6 +134,7 @@ def test_video_recorder_directory_creation():
         assert os.path.exists(video_path)
 
 
+@pytest.mark.skipif(not CV2_AVAILABLE, reason="cv2 not installed")
 def test_video_recorder_different_fps():
     """Test VideoRecorder with different frame rates."""
     import tempfile
@@ -144,6 +157,7 @@ def test_video_recorder_different_fps():
             assert os.path.exists(video_path)
 
 
+@pytest.mark.skipif(not CV2_AVAILABLE, reason="cv2 not installed")
 def test_video_recorder_different_resolutions():
     """Test VideoRecorder with different frame sizes."""
     import tempfile
@@ -170,6 +184,7 @@ def test_video_recorder_different_resolutions():
 # Integration with evaluate() Tests
 # ============================================================================
 
+@pytest.mark.skipif(not CV2_AVAILABLE, reason="cv2 not installed")
 def test_evaluate_with_video_recording():
     """Test evaluate records video when requested."""
     from unittest.mock import Mock
@@ -250,6 +265,7 @@ def test_evaluate_without_video():
     assert 'video_info' not in results
 
 
+@pytest.mark.skipif(not CV2_AVAILABLE, reason="cv2 not installed")
 def test_evaluate_video_only_first_episode():
     """Test evaluate records video only for first episode."""
     from unittest.mock import Mock

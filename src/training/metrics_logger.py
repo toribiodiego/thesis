@@ -183,15 +183,26 @@ class WandBBackend:
             )
 
             # Add files to artifact
+            files_added = 0
             for file_path in file_paths:
                 if os.path.exists(file_path):
                     artifact.add_file(file_path)
+                    files_added += 1
+                else:
+                    print(f"  Warning: File not found: {file_path}")
 
-            # Log artifact
+            if files_added == 0:
+                print(f"  Warning: No files added to artifact '{artifact_name}'")
+                return
+
+            # Log artifact and wait for upload to complete
             self.run.log_artifact(artifact)
+            print(f"  W&B artifact '{artifact_name}' logged with {files_added} file(s)")
 
         except Exception as e:
             print(f"Warning: Failed to upload W&B artifact: {e}")
+            import traceback
+            traceback.print_exc()
 
     def log_scalar(self, key: str, value: float, step: int):
         """Log a scalar metric."""
@@ -742,6 +753,9 @@ class MetricsLogger:
         if not self.upload_artifacts or self.wandb is None or not self.wandb.enabled:
             return
 
+        print(f"Preparing artifact upload for step {step}...")
+        print(f"  Run directory: {self.log_dir}")
+
         # Collect artifact files with size check
         artifact_files = []
         total_size_mb = 0.0
@@ -750,35 +764,61 @@ class MetricsLogger:
         if self.csv is not None:
             if self.csv.step_csv_path.exists():
                 artifact_files.append(str(self.csv.step_csv_path))
-                total_size_mb += self.csv.step_csv_path.stat().st_size / (1024 * 1024)
+                size_mb = self.csv.step_csv_path.stat().st_size / (1024 * 1024)
+                total_size_mb += size_mb
+                print(f"  + {self.csv.step_csv_path.name} ({size_mb:.3f} MB)")
 
             if self.csv.episode_csv_path.exists():
                 artifact_files.append(str(self.csv.episode_csv_path))
-                total_size_mb += self.csv.episode_csv_path.stat().st_size / (1024 * 1024)
+                size_mb = self.csv.episode_csv_path.stat().st_size / (1024 * 1024)
+                total_size_mb += size_mb
+                print(f"  + {self.csv.episode_csv_path.name} ({size_mb:.3f} MB)")
 
         # Add config and meta files from run directory
         config_path = self.log_dir / 'config.yaml'
         if config_path.exists():
             artifact_files.append(str(config_path))
-            total_size_mb += config_path.stat().st_size / (1024 * 1024)
+            size_mb = config_path.stat().st_size / (1024 * 1024)
+            total_size_mb += size_mb
+            print(f"  + config.yaml ({size_mb:.3f} MB)")
+        else:
+            print(f"  ! config.yaml not found at {config_path}")
 
         meta_path = self.log_dir / 'meta.json'
         if meta_path.exists():
             artifact_files.append(str(meta_path))
-            total_size_mb += meta_path.stat().st_size / (1024 * 1024)
+            size_mb = meta_path.stat().st_size / (1024 * 1024)
+            total_size_mb += size_mb
+            print(f"  + meta.json ({size_mb:.3f} MB)")
+        else:
+            print(f"  ! meta.json not found at {meta_path}")
 
         # Add evaluation results
         eval_csv = self.log_dir / 'eval' / 'evaluations.csv'
         if eval_csv.exists():
             artifact_files.append(str(eval_csv))
-            total_size_mb += eval_csv.stat().st_size / (1024 * 1024)
+            size_mb = eval_csv.stat().st_size / (1024 * 1024)
+            total_size_mb += size_mb
+            print(f"  + eval/evaluations.csv ({size_mb:.3f} MB)")
 
         eval_jsonl = self.log_dir / 'eval' / 'evaluations.jsonl'
         if eval_jsonl.exists():
             artifact_files.append(str(eval_jsonl))
-            total_size_mb += eval_jsonl.stat().st_size / (1024 * 1024)
+            size_mb = eval_jsonl.stat().st_size / (1024 * 1024)
+            total_size_mb += size_mb
+            print(f"  + eval/evaluations.jsonl ({size_mb:.3f} MB)")
+
+        # Add video files
+        videos_dir = self.log_dir / 'videos'
+        if videos_dir.exists():
+            for video_file in videos_dir.glob('*.mp4'):
+                artifact_files.append(str(video_file))
+                size_mb = video_file.stat().st_size / (1024 * 1024)
+                total_size_mb += size_mb
+                print(f"  + videos/{video_file.name} ({size_mb:.3f} MB)")
 
         if not artifact_files:
+            print("  No artifact files found to upload.")
             return
 
         # Warn if uploading large files
@@ -790,9 +830,11 @@ class MetricsLogger:
         artifact_name = f"training_logs_step_{step}"
 
         # Add step to metadata
-        artifact_metadata = {"step": step}
+        artifact_metadata = {"step": step, "total_size_mb": total_size_mb}
         if metadata:
             artifact_metadata.update(metadata)
+
+        print(f"Uploading {len(artifact_files)} files ({total_size_mb:.3f} MB total) as artifact '{artifact_name}'...")
 
         # Upload artifact
         self.wandb.upload_artifact(
@@ -802,6 +844,7 @@ class MetricsLogger:
             metadata=artifact_metadata
         )
 
+        print(f"Artifact upload complete.")
         self.last_artifact_upload_step = step
 
     def maybe_flush_and_upload(self, step: int, force: bool = False):
