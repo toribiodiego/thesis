@@ -130,12 +130,19 @@ export WANDB_API_KEY="your_key_here"
 # Configure in training config
 # experiments/dqn_atari/configs/pong.yaml
 logging:
-  enable_wandb: true
-  wandb_project: "dqn-atari"
-  wandb_entity: "my-team"  # optional
-  upload_artifacts: true
+  wandb:
+    enabled: true
+    project: "dqn-atari"
+    entity: "my-team"      # optional
+    upload_artifacts: true
+    tags: ["baseline", "pong"]  # optional run tags
 
-# Or use offline mode (sync later)
+# Or use CLI flags (tags merge with config tags, not overwrite)
+python train_dqn.py --cfg configs/pong.yaml \
+  --set logging.wandb.enabled=true \
+  --tags experiment-v2 --tags ablation
+
+# Use offline mode (sync later)
 export WANDB_MODE=offline
 ```
 

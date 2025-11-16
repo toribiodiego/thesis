@@ -232,6 +232,20 @@ logger = MetricsLogger(
 | `flush_interval` | int | 1000 | Steps between flushes |
 | `upload_artifacts` | bool | False | Upload logs to W&B |
 | `wandb_config` | dict | None | W&B configuration |
+| `wandb_tags` | list | [] | W&B run tags for filtering and grouping |
+
+**W&B Tagging:**
+
+Tags can be specified via config file (`logging.wandb.tags`) or CLI (`--tags`). CLI tags **merge** with config tags (they don't overwrite):
+
+```bash
+# Config file: tags: ["baseline", "pong"]
+# CLI: --tags experiment-v2 --tags ablation
+# Result: ["baseline", "pong", "experiment-v2", "ablation"]
+
+python train_dqn.py --cfg configs/pong.yaml \
+  --tags experiment-v2 --tags ablation
+```
 
 ### Logging Methods
 

@@ -258,7 +258,8 @@ python train_dqn.py --cfg <config_file> [OPTIONS]
 |------|------|---------|-------------|
 | `--seed N` | int | None | Random seed for reproducibility |
 | `--resume PATH` | str | None | Resume training from checkpoint |
-| `--set KEY=VALUE` | str[] | [] | Override config values (dot notation) |
+| `--set KEY=VALUE` | str[] | [] | Override config values (dot notation, repeatable) |
+| `--tags TAG` | str[] | [] | W&B run tags (repeatable, merges with config tags) |
 | `--device DEVICE` | str | None | Force device: cuda/cpu/mps |
 | `--dry-run` | flag | False | Load config and exit (no training) |
 | `--print-config` | flag | False | Print resolved config and exit |
