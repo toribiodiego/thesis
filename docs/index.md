@@ -261,7 +261,7 @@ End-to-end workflow from setup to training.
 
 ## Document Maintenance
 
-**Last updated:** 2025-11-13
+**Last updated:** 2025-11-16
 
 **How to update this index:**
 1. Add new design docs to appropriate section

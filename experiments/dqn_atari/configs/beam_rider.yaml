@@ -39,7 +39,7 @@ evaluation:
   eval_every: 250000  # Evaluate every 250K frames
 
 # Action space notes:
-# Beam Rider has 9 discrete actions (full action set):
+# Beam Rider has 18 discrete actions (full action set):
 #   0: NOOP (no operation)
 #   1: FIRE (shoot)
 #   2: UP (move up)
