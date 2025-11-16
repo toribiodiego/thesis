@@ -1,0 +1,42 @@
+# Ablation: No Target Network (2013 DQN Purist)
+# ================================================
+# Tests DQN without the target network stabilization mechanism.
+#
+# Hypothesis: The target network (introduced in Nature DQN 2015) stabilizes
+# learning by preventing the "moving target" problem. Without it, Q-targets
+# change with each update, potentially causing oscillations or divergence.
+#
+# Key change: training.target_network.update_interval = 1 (sync every step)
+#
+# Expected outcome:
+# - More unstable training (oscillating loss curves)
+# - Possible divergence or slower convergence
+# - This matches the original 2013 arXiv DQN (no separate target network)
+# - Modern implementations benefit significantly from target network
+#
+# Note: The original 2013 DQN paper did not use a separate target network.
+# The target network was introduced in the 2015 Nature paper as a key
+# stabilization technique. This ablation recreates the 2013 behavior.
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/ablations/no_target_net.yaml --seed 42
+#
+# Reference: Nature DQN (2015) Section 2: "The second modification... is to
+# use a separate network for generating the targets"
+
+# Inherit from Pong baseline
+base_config: "experiments/dqn_atari/configs/pong.yaml"
+
+# =============================================================================
+# Ablation-Specific Overrides
+# =============================================================================
+
+experiment:
+  name: "ablation_no_target_net"
+  notes: "Ablation study: No target network (2013 DQN behavior) to test stability"
+
+training:
+  target_network:
+    update_interval: 1  # ABLATION: Update every step (effectively no target network)
+
+  total_frames: 5000000  # 5M frames for ablation (reduced from 10M)

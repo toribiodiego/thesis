@@ -1,0 +1,38 @@
+# Ablation: Reduced Frame Stack (2 frames)
+# ==========================================
+# Tests the effect of using 2-frame stack instead of 4-frame stack.
+#
+# Hypothesis: 4-frame stacking provides sufficient temporal context for
+# velocity/motion estimation in Atari games. With only 2 frames, the agent
+# may struggle to infer object velocities, especially for fast-moving objects.
+#
+# Key change: environment.preprocessing.frame_stack = 2
+#
+# Expected outcome:
+# - Reduced temporal context may hurt performance on motion-dependent games
+# - Pong (ball velocity) should show moderate degradation
+# - Games requiring precise timing/velocity may fail more severely
+# - Network input shape changes from (4,84,84) to (2,84,84)
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/ablations/stack_2.yaml --seed 42
+#
+# Reference: DQN 2013 paper uses 4-frame stack for temporal context
+
+# Inherit from Pong baseline
+base_config: "experiments/dqn_atari/configs/pong.yaml"
+
+# =============================================================================
+# Ablation-Specific Overrides
+# =============================================================================
+
+experiment:
+  name: "ablation_stack_2"
+  notes: "Ablation study: 2-frame stack to test temporal context importance"
+
+environment:
+  preprocessing:
+    frame_stack: 2  # ABLATION: Reduce from 4 to 2 frames
+
+training:
+  total_frames: 5000000  # 5M frames for ablation (reduced from 10M)

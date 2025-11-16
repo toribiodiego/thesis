@@ -1,0 +1,37 @@
+# Ablation: Reward Clipping Disabled
+# ====================================
+# Tests the effect of removing reward clipping from DQN training.
+#
+# Hypothesis: Reward clipping stabilizes learning by normalizing gradients.
+# Without clipping, larger reward magnitudes may cause gradient explosions
+# or unstable learning, especially in games with large score ranges.
+#
+# Key change: environment.preprocessing.clip_rewards = false
+#
+# Expected outcome:
+# - Possible gradient instability in games with high score variance
+# - May see larger TD errors and more volatile loss curves
+# - Could fail completely on some games (Breakout has scores 0-400+)
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/ablations/reward_clip_off.yaml --seed 42
+#
+# Reference: DQN 2013 paper Section 4: "We also found it helpful to clip the reward"
+
+# Inherit from Pong baseline
+base_config: "experiments/dqn_atari/configs/pong.yaml"
+
+# =============================================================================
+# Ablation-Specific Overrides
+# =============================================================================
+
+experiment:
+  name: "ablation_reward_clip_off"
+  notes: "Ablation study: Reward clipping disabled to measure stability impact"
+
+environment:
+  preprocessing:
+    clip_rewards: false  # ABLATION: Disable reward clipping
+
+training:
+  total_frames: 5000000  # 5M frames for ablation (reduced from 10M)
