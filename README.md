@@ -88,7 +88,7 @@ pytest tests/test_dqn_trainer.py -k "training_step" -v
   experiments/dqn_atari/configs/pong.yaml --seed 123
 
 # 5. Monitor training progress
-tail -f experiments/dqn_atari/runs/pong_123/logs/episodes.csv
+tail -f experiments/dqn_atari/runs/pong_123/csv/episodes.csv
 ```
 
 **Config overrides** (adjust runs without editing YAML):

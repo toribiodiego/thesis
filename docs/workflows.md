@@ -140,16 +140,21 @@ experiments/dqn_atari/runs/pong_<timestamp>/
 **Expected output:**
 ```
 experiments/dqn_atari/runs/pong_42/
-├── logs/
-│   ├── steps.csv         # Per-step metrics (loss, epsilon, etc.)
-│   └── episodes.csv      # Per-episode returns
+├── config.yaml                      # Full resolved configuration
+├── meta.json                        # Run metadata
+├── csv/
+│   ├── training_steps.csv           # Per-step metrics (loss, epsilon, etc.)
+│   └── episodes.csv                 # Per-episode returns
 ├── checkpoints/
 │   ├── checkpoint_1000000.pt
 │   ├── checkpoint_2000000.pt
 │   └── best_model.pt
 ├── eval/
-│   └── eval_results.csv  # Periodic evaluation scores
-└── meta.json             # Run metadata
+│   ├── evaluations.csv              # Periodic evaluation summaries
+│   └── evaluations.jsonl            # Same data in JSONL format
+├── tensorboard/                     # TensorBoard event files
+└── videos/                          # Evaluation episode recordings
+    └── Pong_step_250000_best_ep3_r21.mp4
 ```
 
 **Docs:** [Training Loop](design/training_loop_runtime.md), [Scripts README](../experiments/dqn_atari/scripts/README.md)
@@ -193,17 +198,21 @@ ls experiments/dqn_atari/runs/pong_42/checkpoints/
 
 ```bash
 # Monitor episode returns (updates every episode)
-tail -f experiments/dqn_atari/runs/pong_42/logs/episodes.csv
+tail -f experiments/dqn_atari/runs/pong_42/csv/episodes.csv
 
 # Monitor step metrics (loss, epsilon, etc.)
-tail -f experiments/dqn_atari/runs/pong_42/logs/steps.csv
+tail -f experiments/dqn_atari/runs/pong_42/csv/training_steps.csv
 
-# Check evaluation results
-cat experiments/dqn_atari/runs/pong_42/eval/eval_results.csv
+# Check evaluation results (CSV or JSONL format)
+cat experiments/dqn_atari/runs/pong_42/eval/evaluations.csv
+cat experiments/dqn_atari/runs/pong_42/eval/evaluations.jsonl
 
 # Quick stats
-tail -n 20 experiments/dqn_atari/runs/pong_42/logs/episodes.csv | \
+tail -n 20 experiments/dqn_atari/runs/pong_42/csv/episodes.csv | \
   awk -F',' '{sum+=$2; count++} END {print "Avg return:", sum/count}'
+
+# List video recordings
+ls -la experiments/dqn_atari/runs/pong_42/videos/
 ```
 
 **Key metrics to watch:**
