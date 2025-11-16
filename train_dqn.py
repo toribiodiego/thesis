@@ -338,11 +338,16 @@ def run_training(config, paths, device):
             )
 
             mean_return = np.mean(eval_results['episode_returns'])
+            median_return = np.median(eval_results['episode_returns'])
             std_return = np.std(eval_results['episode_returns'])
+            min_return = np.min(eval_results['episode_returns'])
+            max_return = np.max(eval_results['episode_returns'])
             mean_length = np.mean(eval_results['episode_lengths'])
 
             print(f"Evaluation Results:")
-            print(f"  Mean Return: {mean_return:.2f} ± {std_return:.2f}")
+            print(f"  Mean Return: {mean_return:.2f} +/- {std_return:.2f}")
+            print(f"  Median Return: {median_return:.2f}")
+            print(f"  Min/Max Return: {min_return:.2f} / {max_return:.2f}")
             print(f"  Mean Length: {mean_length:.1f}")
             print(f"  Episodes: {len(eval_results['episode_returns'])}")
             print(f"{'='*80}\n")
@@ -351,7 +356,10 @@ def run_training(config, paths, device):
             metrics_logger.log_evaluation(
                 step=frame_counter.frames,
                 mean_return=mean_return,
+                median_return=median_return,
                 std_return=std_return,
+                min_return=min_return,
+                max_return=max_return,
                 mean_length=mean_length,
                 num_episodes=config.evaluation.num_episodes
             )

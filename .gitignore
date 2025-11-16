@@ -41,6 +41,7 @@ env/
 
 # Claude Code
 .claude/
+CLAUDE.md
 
 # Experiment artifacts
 experiments/**/runs/

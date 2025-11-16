@@ -425,6 +425,60 @@ grep "epsilon" experiments/dqn_atari/runs/pong_42/logs/steps.csv | head -n 20
 
 ---
 
+### MetricsLogger.log_evaluation() missing arguments (FIXED)
+
+**Symptom:**
+```
+TypeError: MetricsLogger.log_evaluation() missing 3 required positional arguments:
+'median_return', 'min_return', and 'max_return'
+```
+
+**Cause:** Training loop was not computing or passing all required statistics to the MetricsLogger.
+
+**Fix Applied:** Added missing metric computations to `train_dqn.py`:
+```python
+mean_return = np.mean(eval_results['episode_returns'])
+median_return = np.median(eval_results['episode_returns'])  # Added
+std_return = np.std(eval_results['episode_returns'])
+min_return = np.min(eval_results['episode_returns'])  # Added
+max_return = np.max(eval_results['episode_returns'])  # Added
+mean_length = np.mean(eval_results['episode_lengths'])
+
+metrics_logger.log_evaluation(
+    step=frame_counter.frames,
+    mean_return=mean_return,
+    median_return=median_return,  # Added
+    std_return=std_return,
+    min_return=min_return,  # Added
+    max_return=max_return,  # Added
+    mean_length=mean_length,
+    num_episodes=config.evaluation.num_episodes
+)
+```
+
+**Status:** Fixed in train_dqn.py
+
+---
+
+### TensorBoard not available
+
+**Symptom:**
+```
+Warning: torch.utils.tensorboard not available. TensorBoard logging disabled.
+```
+
+**Cause:** Missing tensorboard dependency in Python environment.
+
+**Solution:**
+```bash
+source .venv/bin/activate
+pip install tensorboard
+```
+
+**Note:** Training continues without TensorBoard, but CSV logging still works.
+
+---
+
 ### Training diverges
 
 **Symptom:**
