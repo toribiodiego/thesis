@@ -39,18 +39,10 @@ class DQN(nn.Module):
 
         # Convolutional layers
         self.conv1 = nn.Conv2d(
-            in_channels=4,
-            out_channels=16,
-            kernel_size=8,
-            stride=4,
-            padding=0
+            in_channels=4, out_channels=16, kernel_size=8, stride=4, padding=0
         )
         self.conv2 = nn.Conv2d(
-            in_channels=16,
-            out_channels=32,
-            kernel_size=4,
-            stride=2,
-            padding=0
+            in_channels=16, out_channels=32, kernel_size=4, stride=2, padding=0
         )
 
         # Compute size after convolutions to determine FC input size
@@ -78,9 +70,7 @@ class DQN(nn.Module):
             if isinstance(module, (nn.Conv2d, nn.Linear)):
                 # Kaiming normal initialization for layers with ReLU
                 nn.init.kaiming_normal_(
-                    module.weight,
-                    mode='fan_out',
-                    nonlinearity='relu'
+                    module.weight, mode="fan_out", nonlinearity="relu"
                 )
                 if module.bias is not None:
                     nn.init.zeros_(module.bias)
@@ -124,10 +114,7 @@ class DQN(nn.Module):
         # Q-value head (no activation)
         q_values = self.q_head(features)
 
-        return {
-            'q_values': q_values,
-            'features': features
-        }
+        return {"q_values": q_values, "features": features}
 
     def validate_output_shape(self, batch_size: int = 2):
         """
@@ -146,15 +133,17 @@ class DQN(nn.Module):
 
             # Check q_values shape
             expected_q_shape = (batch_size, self.num_actions)
-            actual_q_shape = output['q_values'].shape
-            assert actual_q_shape == expected_q_shape, \
-                f"Expected q_values shape {expected_q_shape}, got {actual_q_shape}"
+            actual_q_shape = output["q_values"].shape
+            assert (
+                actual_q_shape == expected_q_shape
+            ), f"Expected q_values shape {expected_q_shape}, got {actual_q_shape}"
 
             # Check features shape
             expected_feat_shape = (batch_size, 256)
-            actual_feat_shape = output['features'].shape
-            assert actual_feat_shape == expected_feat_shape, \
-                f"Expected features shape {expected_feat_shape}, got {actual_feat_shape}"
+            actual_feat_shape = output["features"].shape
+            assert (
+                actual_feat_shape == expected_feat_shape
+            ), f"Expected features shape {expected_feat_shape}, got {actual_feat_shape}"
 
     def save_checkpoint(self, path: str, meta: dict = None):
         """
@@ -169,18 +158,18 @@ class DQN(nn.Module):
             ...                       {'step': 10000, 'episode': 100})
         """
         checkpoint = {
-            'model_state_dict': self.state_dict(),
-            'num_actions': self.num_actions,
+            "model_state_dict": self.state_dict(),
+            "num_actions": self.num_actions,
         }
 
         # Add metadata if provided
         if meta is not None:
-            checkpoint['meta'] = meta
+            checkpoint["meta"] = meta
 
         torch.save(checkpoint, path)
 
     @classmethod
-    def load_checkpoint(cls, path: str, device: str = 'cpu', strict: bool = True):
+    def load_checkpoint(cls, path: str, device: str = "cpu", strict: bool = True):
         """
         Load model from checkpoint.
 
@@ -199,17 +188,17 @@ class DQN(nn.Module):
         checkpoint = torch.load(path, map_location=device)
 
         # Create model with correct action space size
-        num_actions = checkpoint['num_actions']
+        num_actions = checkpoint["num_actions"]
         model = cls(num_actions)
 
         # Load state dict with strict key matching
-        model.load_state_dict(checkpoint['model_state_dict'], strict=strict)
+        model.load_state_dict(checkpoint["model_state_dict"], strict=strict)
 
         # Move to device and ensure float32
         model = model.to(device)
 
         # Extract metadata
-        meta = checkpoint.get('meta', {})
+        meta = checkpoint.get("meta", {})
 
         return model, meta
 

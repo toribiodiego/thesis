@@ -146,9 +146,7 @@ def load_evaluations(run_dir: Path) -> pd.DataFrame:
 
 
 def compute_run_statistics(
-    df: pd.DataFrame,
-    last_n_evals: int = 5,
-    use_final_only: bool = False
+    df: pd.DataFrame, last_n_evals: int = 5, use_final_only: bool = False
 ) -> dict:
     """
     Compute summary statistics for a single run.
@@ -312,9 +310,7 @@ def generate_summary_table(results: list[dict], output_format: str = "markdown")
 
 
 def save_results(
-    results: list[dict],
-    output_dir: Path,
-    prefix: str = "analysis"
+    results: list[dict], output_dir: Path, prefix: str = "analysis"
 ) -> None:
     """
     Save results to multiple formats.
@@ -364,40 +360,35 @@ def main():
         "--run-dir",
         type=Path,
         required=True,
-        help="Path to run directory or parent directory containing runs"
+        help="Path to run directory or parent directory containing runs",
     )
     parser.add_argument(
-        "--game",
-        type=str,
-        default=None,
-        help="Filter runs by game name"
+        "--game", type=str, default=None, help="Filter runs by game name"
     )
     parser.add_argument(
         "--all-games",
         action="store_true",
-        help="Analyze all games found in run directory"
+        help="Analyze all games found in run directory",
     )
     parser.add_argument(
         "--last-n-evals",
         type=int,
         default=5,
-        help="Number of final evaluations to average (default: 5)"
+        help="Number of final evaluations to average (default: 5)",
     )
     parser.add_argument(
         "--final-only",
         action="store_true",
-        help="Use only the final evaluation (not average)"
+        help="Use only the final evaluation (not average)",
     )
     parser.add_argument(
         "--output",
         type=Path,
         default=None,
-        help="Output directory for results (default: print to stdout)"
+        help="Output directory for results (default: print to stdout)",
     )
     parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Print detailed information"
+        "--verbose", action="store_true", help="Print detailed information"
     )
 
     args = parser.parse_args()

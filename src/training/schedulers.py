@@ -1,10 +1,9 @@
-"""Schedulers for target network updates, training frequency, and epsilon decay.
-"""
+"""Schedulers for target network updates, training frequency, and epsilon decay."""
 
-import numpy as np
+from typing import Dict, Optional, Tuple
+
 import torch
 import torch.nn as nn
-from typing import Optional, Dict, Tuple
 
 from .target_network import hard_update_target
 
@@ -104,7 +103,7 @@ class TargetNetworkUpdater:
         self,
         online_net: nn.Module,
         target_net: nn.Module,
-        current_step: Optional[int] = None
+        current_step: Optional[int] = None,
     ) -> Dict[str, int]:
         """
         Perform hard update of target network.
@@ -141,16 +140,13 @@ class TargetNetworkUpdater:
         self.total_updates += 1
 
         return {
-            'step': self.step_count,
-            'total_updates': self.total_updates,
-            'steps_since_last': steps_since_last
+            "step": self.step_count,
+            "total_updates": self.total_updates,
+            "steps_since_last": steps_since_last,
         }
 
     def step(
-        self,
-        online_net: nn.Module,
-        target_net: nn.Module,
-        current_step: int
+        self, online_net: nn.Module, target_net: nn.Module, current_step: int
     ) -> Optional[Dict[str, int]]:
         """
         Convenience method to check and update in one call.
@@ -197,10 +193,10 @@ class TargetNetworkUpdater:
             ... }
         """
         return {
-            'update_interval': self.update_interval,
-            'step_count': self.step_count,
-            'last_update_step': self.last_update_step,
-            'total_updates': self.total_updates
+            "update_interval": self.update_interval,
+            "step_count": self.step_count,
+            "last_update_step": self.last_update_step,
+            "total_updates": self.total_updates,
         }
 
     def load_state_dict(self, state_dict: Dict[str, int]):
@@ -213,10 +209,10 @@ class TargetNetworkUpdater:
         Example:
             >>> updater.load_state_dict(checkpoint['updater'])
         """
-        self.update_interval = state_dict['update_interval']
-        self.step_count = state_dict['step_count']
-        self.last_update_step = state_dict['last_update_step']
-        self.total_updates = state_dict['total_updates']
+        self.update_interval = state_dict["update_interval"]
+        self.step_count = state_dict["step_count"]
+        self.last_update_step = state_dict["last_update_step"]
+        self.total_updates = state_dict["total_updates"]
 
     def __repr__(self) -> str:
         """String representation for debugging."""
@@ -376,10 +372,10 @@ class TrainingScheduler:
             ... }
         """
         return {
-            'train_every': self.train_every,
-            'env_step_count': self.env_step_count,
-            'training_step_count': self.training_step_count,
-            'last_train_step': self.last_train_step
+            "train_every": self.train_every,
+            "env_step_count": self.env_step_count,
+            "training_step_count": self.training_step_count,
+            "last_train_step": self.last_train_step,
         }
 
     def load_state_dict(self, state_dict: Dict[str, int]):
@@ -392,10 +388,10 @@ class TrainingScheduler:
         Example:
             >>> scheduler.load_state_dict(checkpoint['scheduler'])
         """
-        self.train_every = state_dict['train_every']
-        self.env_step_count = state_dict['env_step_count']
-        self.training_step_count = state_dict['training_step_count']
-        self.last_train_step = state_dict['last_train_step']
+        self.train_every = state_dict["train_every"]
+        self.env_step_count = state_dict["env_step_count"]
+        self.training_step_count = state_dict["training_step_count"]
+        self.last_train_step = state_dict["last_train_step"]
 
     def __repr__(self) -> str:
         """String representation for debugging."""
@@ -442,7 +438,7 @@ def validate_loss_decrease(
     target_net: nn.Module,
     num_updates: int = 10,
     gamma: float = 0.99,
-    loss_type: str = 'mse'
+    loss_type: str = "mse",
 ) -> Tuple[bool, Dict[str, any]]:
     """
     Validate that loss decreases over several updates on a synthetic batch.
@@ -505,12 +501,12 @@ def validate_loss_decrease(
 
         # Compute loss
         loss_dict = loss_fn(q_selected, td_targets, loss_type=loss_type)
-        loss = loss_dict['loss']
+        loss = loss_dict["loss"]
 
         # Check for NaN/Inf
         if detect_nan_inf(loss, "loss"):
             nan_inf_detected = True
-            loss_history.append(float('nan'))
+            loss_history.append(float("nan"))
             break
 
         loss_history.append(loss.item())
@@ -520,29 +516,29 @@ def validate_loss_decrease(
         loss.backward()
         optimizer.step()
 
-    initial_loss = loss_history[0] if loss_history else float('nan')
-    final_loss = loss_history[-1] if loss_history else float('nan')
+    initial_loss = loss_history[0] if loss_history else float("nan")
+    final_loss = loss_history[-1] if loss_history else float("nan")
     loss_decreased = final_loss < initial_loss
 
     success = loss_decreased and not nan_inf_detected
 
     info = {
-        'initial_loss': initial_loss,
-        'final_loss': final_loss,
-        'loss_history': loss_history,
-        'loss_decreased': loss_decreased,
-        'nan_inf_detected': nan_inf_detected
+        "initial_loss": initial_loss,
+        "final_loss": final_loss,
+        "loss_history": loss_history,
+        "loss_decreased": loss_decreased,
+        "nan_inf_detected": nan_inf_detected,
     }
 
     return success, info
 
 
 def verify_target_sync_schedule(
-    updater: 'TargetNetworkUpdater',
+    updater: "TargetNetworkUpdater",
     online_net: nn.Module,
     target_net: nn.Module,
     max_steps: int,
-    expected_interval: int
+    expected_interval: int,
 ) -> Tuple[bool, Dict[str, any]]:
     """
     Verify that target network updates occur at exact multiples of update_interval.
@@ -596,10 +592,10 @@ def verify_target_sync_schedule(
     success = schedule_correct and count_correct
 
     info = {
-        'update_steps': update_steps,
-        'expected_steps': expected_steps,
-        'schedule_correct': schedule_correct,
-        'count_correct': count_correct
+        "update_steps": update_steps,
+        "expected_steps": expected_steps,
+        "schedule_correct": schedule_correct,
+        "count_correct": count_correct,
     }
 
     return success, info
@@ -645,7 +641,7 @@ class UpdateMetrics:
         td_error_std: float,
         grad_norm: float,
         learning_rate: float,
-        update_count: int
+        update_count: int,
     ):
         """
         Initialize update metrics.
@@ -679,12 +675,12 @@ class UpdateMetrics:
             >>> assert 'td_error' in metrics_dict
         """
         return {
-            'loss': self.loss,
-            'td_error': self.td_error,
-            'td_error_std': self.td_error_std,
-            'grad_norm': self.grad_norm,
-            'learning_rate': self.learning_rate,
-            'update_count': self.update_count
+            "loss": self.loss,
+            "td_error": self.td_error,
+            "td_error_std": self.td_error_std,
+            "grad_norm": self.grad_norm,
+            "learning_rate": self.learning_rate,
+            "update_count": self.update_count,
         }
 
     def __repr__(self) -> str:
@@ -702,9 +698,9 @@ def perform_update_step(
     optimizer: torch.optim.Optimizer,
     batch: Dict[str, torch.Tensor],
     gamma: float = 0.99,
-    loss_type: str = 'mse',
+    loss_type: str = "mse",
     max_grad_norm: float = 10.0,
-    update_count: int = 0
+    update_count: int = 0,
 ) -> UpdateMetrics:
     """
     Perform a single training update and return metrics.
@@ -749,11 +745,11 @@ def perform_update_step(
     online_net.train()
 
     # Extract batch data
-    states = batch['states']
-    actions = batch['actions']
-    rewards = batch['rewards']
-    next_states = batch['next_states']
-    dones = batch['dones']
+    states = batch["states"]
+    actions = batch["actions"]
+    rewards = batch["rewards"]
+    next_states = batch["next_states"]
+    dones = batch["dones"]
 
     # Compute TD targets (no gradient)
     td_targets = compute_td_targets(rewards, next_states, dones, target_net, gamma)
@@ -763,9 +759,9 @@ def perform_update_step(
 
     # Compute loss and TD error stats
     loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type=loss_type)
-    loss = loss_dict['loss']
-    td_error = loss_dict['td_error'].item()
-    td_error_std = loss_dict['td_error_std'].item()
+    loss = loss_dict["loss"]
+    td_error = loss_dict["td_error"].item()
+    td_error_std = loss_dict["td_error_std"].item()
 
     # Backward pass
     optimizer.zero_grad()
@@ -778,7 +774,7 @@ def perform_update_step(
     optimizer.step()
 
     # Get current learning rate
-    learning_rate = optimizer.param_groups[0]['lr']
+    learning_rate = optimizer.param_groups[0]["lr"]
 
     # Create and return metrics
     metrics = UpdateMetrics(
@@ -787,7 +783,7 @@ def perform_update_step(
         td_error_std=td_error_std,
         grad_norm=grad_norm,
         learning_rate=learning_rate,
-        update_count=update_count
+        update_count=update_count,
     )
 
     return metrics

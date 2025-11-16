@@ -26,26 +26,23 @@ def load_run_metadata(run_dir: Path) -> Optional[Dict]:
     Returns:
         dict: Run metadata including eval results, or None if not found
     """
-    metadata = {
-        'run_id': run_dir.name,
-        'run_dir': str(run_dir)
-    }
+    metadata = {"run_id": run_dir.name, "run_dir": str(run_dir)}
 
     # Load meta.json if exists
-    meta_path = run_dir / 'meta.json'
+    meta_path = run_dir / "meta.json"
     if meta_path.exists():
         try:
             with open(meta_path) as f:
                 meta = json.load(f)
-                metadata['game'] = meta.get('game', 'unknown')
-                metadata['seed'] = meta.get('seed', -1)
-                metadata['commit_hash'] = meta.get('commit_hash', 'unknown')
-                metadata['start_time'] = meta.get('start_time', 'unknown')
+                metadata["game"] = meta.get("game", "unknown")
+                metadata["seed"] = meta.get("seed", -1)
+                metadata["commit_hash"] = meta.get("commit_hash", "unknown")
+                metadata["start_time"] = meta.get("start_time", "unknown")
         except Exception as e:
             print(f"Warning: Failed to load {meta_path}: {e}")
 
     # Load evaluation results
-    eval_csv = run_dir / 'eval' / 'evaluations.csv'
+    eval_csv = run_dir / "eval" / "evaluations.csv"
     if eval_csv.exists():
         try:
             with open(eval_csv) as f:
@@ -54,35 +51,38 @@ def load_run_metadata(run_dir: Path) -> Optional[Dict]:
                 if rows:
                     # Get final evaluation
                     final_eval = rows[-1]
-                    metadata['mean_eval_return'] = float(final_eval.get('mean_return', 0))
-                    metadata['std_eval_return'] = float(final_eval.get('std_return', 0))
-                    metadata['final_step'] = int(final_eval.get('step', 0))
+                    metadata["mean_eval_return"] = float(
+                        final_eval.get("mean_return", 0)
+                    )
+                    metadata["std_eval_return"] = float(final_eval.get("std_return", 0))
+                    metadata["final_step"] = int(final_eval.get("step", 0))
         except Exception as e:
             print(f"Warning: Failed to load {eval_csv}: {e}")
 
     # Load config.yaml for frame count
-    config_path = run_dir / 'config.yaml'
+    config_path = run_dir / "config.yaml"
     if config_path.exists():
         try:
             import yaml
+
             with open(config_path) as f:
                 config = yaml.safe_load(f)
-                training = config.get('training', {})
-                metadata['total_frames'] = training.get('total_frames', 0)
+                training = config.get("training", {})
+                metadata["total_frames"] = training.get("total_frames", 0)
         except Exception as e:
             print(f"Warning: Failed to load {config_path}: {e}")
 
     # Estimate wall time if possible
-    if 'start_time' in metadata:
+    if "start_time" in metadata:
         try:
-            start = datetime.fromisoformat(metadata['start_time'])
+            start = datetime.fromisoformat(metadata["start_time"])
             # Try to get end time from checkpoint or logs
-            checkpoints = list((run_dir / 'checkpoints').glob('checkpoint_*.pt'))
+            checkpoints = list((run_dir / "checkpoints").glob("checkpoint_*.pt"))
             if checkpoints:
                 latest_checkpoint = max(checkpoints, key=lambda p: p.stat().st_mtime)
                 end = datetime.fromtimestamp(latest_checkpoint.stat().st_mtime)
                 wall_time_hours = (end - start).total_seconds() / 3600
-                metadata['wall_time_hours'] = round(wall_time_hours, 2)
+                metadata["wall_time_hours"] = round(wall_time_hours, 2)
         except Exception:
             pass
 
@@ -122,12 +122,19 @@ def export_to_csv(runs: List[Dict], output_path: Path):
 
     # Define column order
     fieldnames = [
-        'run_id', 'game', 'seed', 'mean_eval_return', 'std_eval_return',
-        'final_step', 'total_frames', 'wall_time_hours', 'commit_hash'
+        "run_id",
+        "game",
+        "seed",
+        "mean_eval_return",
+        "std_eval_return",
+        "final_step",
+        "total_frames",
+        "wall_time_hours",
+        "commit_hash",
     ]
 
-    with open(output_path, 'w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction='ignore')
+    with open(output_path, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(runs)
 
@@ -146,7 +153,7 @@ def export_to_markdown(runs: List[Dict], output_path: Path):
         print("Warning: No runs to export")
         return
 
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         # Write header
         f.write("# DQN Training Results Summary\n\n")
         f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
@@ -154,7 +161,7 @@ def export_to_markdown(runs: List[Dict], output_path: Path):
         # Group by game
         games = {}
         for run in runs:
-            game = run.get('game', 'unknown')
+            game = run.get("game", "unknown")
             if game not in games:
                 games[game] = []
             games[game].append(run)
@@ -164,21 +171,27 @@ def export_to_markdown(runs: List[Dict], output_path: Path):
             f.write(f"## {game.title()}\n\n")
 
             # Table header
-            f.write("| Run ID | Seed | Mean Return | Std | Frames | Wall Time (hrs) | Commit |\n")
-            f.write("|--------|------|-------------|-----|--------|----------------|--------|\n")
+            f.write(
+                "| Run ID | Seed | Mean Return | Std | Frames | Wall Time (hrs) | Commit |\n"
+            )
+            f.write(
+                "|--------|------|-------------|-----|--------|----------------|--------|\n"
+            )
 
             # Table rows
             for run in game_runs:
-                run_id = run.get('run_id', 'unknown')
-                seed = run.get('seed', -1)
-                mean_ret = run.get('mean_eval_return', 0.0)
-                std_ret = run.get('std_eval_return', 0.0)
-                frames = run.get('total_frames', 0)
-                wall_time = run.get('wall_time_hours', 0.0)
-                commit = run.get('commit_hash', 'unknown')[:7]
+                run_id = run.get("run_id", "unknown")
+                seed = run.get("seed", -1)
+                mean_ret = run.get("mean_eval_return", 0.0)
+                std_ret = run.get("std_eval_return", 0.0)
+                frames = run.get("total_frames", 0)
+                wall_time = run.get("wall_time_hours", 0.0)
+                commit = run.get("commit_hash", "unknown")[:7]
 
-                f.write(f"| {run_id} | {seed} | {mean_ret:.2f} | {std_ret:.2f} | "
-                       f"{frames:,} | {wall_time:.2f} | {commit} |\n")
+                f.write(
+                    f"| {run_id} | {seed} | {mean_ret:.2f} | {std_ret:.2f} | "
+                    f"{frames:,} | {wall_time:.2f} | {commit} |\n"
+                )
 
             f.write("\n")
 
@@ -189,7 +202,7 @@ def upload_to_wandb(
     csv_path: Path,
     markdown_path: Path,
     wandb_project: str,
-    wandb_entity: Optional[str] = None
+    wandb_entity: Optional[str] = None,
 ):
     """
     Upload results tables to W&B as artifacts.
@@ -212,14 +225,14 @@ def upload_to_wandb(
             project=wandb_project,
             entity=wandb_entity,
             job_type="results_summary",
-            name=f"results_table_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            name=f"results_table_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
         )
 
         # Create artifact
         artifact = wandb.Artifact(
             name="results_summary",
             type="results_table",
-            description="Training results summary table"
+            description="Training results summary table",
         )
 
         # Add files
@@ -255,36 +268,27 @@ Examples:
     --output results/summary \\
     --upload-wandb \\
     --wandb-project dqn-atari
-        """
+        """,
     )
 
     parser.add_argument(
-        '--runs-dir',
+        "--runs-dir",
         type=Path,
         required=True,
-        help='Base directory containing run subdirectories'
+        help="Base directory containing run subdirectories",
     )
     parser.add_argument(
-        '--output',
-        type=Path,
-        required=True,
-        help='Output directory for summary tables'
+        "--output", type=Path, required=True, help="Output directory for summary tables"
     )
     parser.add_argument(
-        '--upload-wandb',
-        action='store_true',
-        help='Upload tables to W&B as artifacts'
+        "--upload-wandb", action="store_true", help="Upload tables to W&B as artifacts"
     )
     parser.add_argument(
-        '--wandb-project',
+        "--wandb-project",
         type=str,
-        help='W&B project name (required with --upload-wandb)'
+        help="W&B project name (required with --upload-wandb)",
     )
-    parser.add_argument(
-        '--wandb-entity',
-        type=str,
-        help='W&B entity (optional)'
-    )
+    parser.add_argument("--wandb-entity", type=str, help="W&B entity (optional)")
 
     args = parser.parse_args()
 
@@ -317,24 +321,19 @@ Examples:
     args.output.mkdir(parents=True, exist_ok=True)
 
     # Export to CSV
-    csv_path = args.output / 'results_summary.csv'
+    csv_path = args.output / "results_summary.csv"
     export_to_csv(runs, csv_path)
 
     # Export to Markdown
-    markdown_path = args.output / 'results_summary.md'
+    markdown_path = args.output / "results_summary.md"
     export_to_markdown(runs, markdown_path)
 
     # Upload to W&B if requested
     if args.upload_wandb:
-        upload_to_wandb(
-            csv_path,
-            markdown_path,
-            args.wandb_project,
-            args.wandb_entity
-        )
+        upload_to_wandb(csv_path, markdown_path, args.wandb_project, args.wandb_entity)
 
     print("\nDone!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

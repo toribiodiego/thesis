@@ -19,27 +19,28 @@ Verifies:
 Note: Evaluation harness tests are in test_evaluation.py and test_video_recorder.py
 """
 
-import torch
-import pytest
 import numpy as np
+import pytest
+import torch
+
 from src.models import DQN
 from src.replay import ReplayBuffer
 from src.training import (
-    hard_update_target,
-    init_target_network,
-    compute_td_targets,
-    select_q_values,
-    compute_td_loss_components,
-    compute_dqn_loss,
-    configure_optimizer,
-    clip_gradients,
     TargetNetworkUpdater,
     TrainingScheduler,
+    UpdateMetrics,
+    clip_gradients,
+    compute_dqn_loss,
+    compute_td_loss_components,
+    compute_td_targets,
+    configure_optimizer,
     detect_nan_inf,
+    hard_update_target,
+    init_target_network,
+    perform_update_step,
+    select_q_values,
     validate_loss_decrease,
     verify_target_sync_schedule,
-    UpdateMetrics,
-    perform_update_step
 )
 
 
@@ -79,8 +80,9 @@ def test_hard_update_target_all_layers():
 
     # Verify all target parameters are 1.0
     for param in target_net.parameters():
-        assert torch.allclose(param, torch.ones_like(param)), \
-            "Not all parameters were copied"
+        assert torch.allclose(
+            param, torch.ones_like(param)
+        ), "Not all parameters were copied"
 
 
 def test_hard_update_target_multiple_updates():
@@ -102,8 +104,9 @@ def test_hard_update_target_multiple_updates():
     second_target_param = list(target_net.parameters())[0].clone()
 
     # Target should have changed
-    assert not torch.allclose(first_target_param, second_target_param), \
-        "Target didn't update on second hard_update"
+    assert not torch.allclose(
+        first_target_param, second_target_param
+    ), "Target didn't update on second hard_update"
 
     # Target should match online
     for p_online, p_target in zip(online_net.parameters(), target_net.parameters()):
@@ -121,8 +124,7 @@ def test_init_target_network_creates_copy():
 
     # Should have same parameters
     for p_online, p_target in zip(online_net.parameters(), target_net.parameters()):
-        assert torch.allclose(p_online, p_target), \
-            "Initial parameters don't match"
+        assert torch.allclose(p_online, p_target), "Initial parameters don't match"
 
 
 def test_init_target_network_freezes_gradients():
@@ -132,13 +134,11 @@ def test_init_target_network_freezes_gradients():
 
     # Target parameters should have requires_grad=False
     for param in target_net.parameters():
-        assert param.requires_grad == False, \
-            "Target network gradients not frozen"
+        assert not param.requires_grad, "Target network gradients not frozen"
 
     # Online parameters should still require gradients
     for param in online_net.parameters():
-        assert param.requires_grad == True, \
-            "Online network gradients incorrectly frozen"
+        assert param.requires_grad, "Online network gradients incorrectly frozen"
 
 
 def test_init_target_network_in_eval_mode():
@@ -164,13 +164,14 @@ def test_target_network_no_gradient_computation():
     target_output = target_net(x)
 
     # Output should not require gradients
-    loss = target_output['q_values'].mean()
+    loss = target_output["q_values"].mean()
     assert not loss.requires_grad, "Target network output should not require gradients"
 
     # Target network should have no gradients
     for param in target_net.parameters():
-        assert param.grad is None, \
-            "Target network accumulated gradients (should be frozen)"
+        assert (
+            param.grad is None
+        ), "Target network accumulated gradients (should be frozen)"
 
 
 def test_hard_update_after_online_training():
@@ -181,7 +182,7 @@ def test_hard_update_after_online_training():
     # "Train" online network (simulate gradient update)
     x = torch.randn(2, 4, 84, 84)
     output = online_net(x)
-    loss = output['q_values'].mean()
+    loss = output["q_values"].mean()
     loss.backward()
 
     # Manually update online parameters
@@ -193,16 +194,18 @@ def test_hard_update_after_online_training():
     # Networks should now differ
     online_param = list(online_net.parameters())[0]
     target_param = list(target_net.parameters())[0]
-    assert not torch.allclose(online_param, target_param), \
-        "Networks should differ after online update"
+    assert not torch.allclose(
+        online_param, target_param
+    ), "Networks should differ after online update"
 
     # Hard update
     hard_update_target(online_net, target_net)
 
     # Now they should match again
     for p_online, p_target in zip(online_net.parameters(), target_net.parameters()):
-        assert torch.allclose(p_online, p_target), \
-            "Parameters don't match after hard update"
+        assert torch.allclose(
+            p_online, p_target
+        ), "Parameters don't match after hard update"
 
 
 def test_hard_update_preserves_frozen_gradients():
@@ -212,15 +215,14 @@ def test_hard_update_preserves_frozen_gradients():
 
     # Verify target is frozen
     for param in target_net.parameters():
-        assert param.requires_grad == False
+        assert not param.requires_grad
 
     # Hard update
     hard_update_target(online_net, target_net)
 
     # Target should still be frozen
     for param in target_net.parameters():
-        assert param.requires_grad == False, \
-            "Hard update unfroze target network gradients"
+        assert not param.requires_grad, "Hard update unfroze target network gradients"
 
 
 def test_target_network_different_devices():
@@ -260,6 +262,7 @@ def test_init_target_network_num_actions():
 # TD Target Computation Tests
 # ============================================================================
 
+
 def test_compute_td_targets_basic():
     """Test basic TD target computation."""
     online_net = DQN(num_actions=6)
@@ -275,7 +278,9 @@ def test_compute_td_targets_basic():
     td_targets = compute_td_targets(rewards, next_states, dones, target_net, gamma=0.99)
 
     # Should have correct shape
-    assert td_targets.shape == (batch_size,), f"Expected shape (4,), got {td_targets.shape}"
+    assert td_targets.shape == (
+        batch_size,
+    ), f"Expected shape (4,), got {td_targets.shape}"
 
     # Should be float32
     assert td_targets.dtype == torch.float32
@@ -300,8 +305,9 @@ def test_compute_td_targets_terminal_states():
 
     # For terminal states (done=True), TD target should be just the reward
     # td_target[1] = reward[1] + 0.99 * (1 - 1.0) * max_q = -1.0 + 0 = -1.0
-    assert torch.allclose(td_targets[1], rewards[1], atol=1e-6), \
-        f"Terminal state TD target should equal reward, got {td_targets[1]} vs {rewards[1]}"
+    assert torch.allclose(
+        td_targets[1], rewards[1], atol=1e-6
+    ), f"Terminal state TD target should equal reward, got {td_targets[1]} vs {rewards[1]}"
 
 
 def test_compute_td_targets_gamma():
@@ -316,14 +322,17 @@ def test_compute_td_targets_gamma():
     dones = torch.tensor([False, False])
 
     # Compute with gamma=1.0 (no discounting)
-    td_targets_gamma1 = compute_td_targets(rewards, next_states, dones, target_net, gamma=1.0)
+    compute_td_targets(rewards, next_states, dones, target_net, gamma=1.0)
 
     # Compute with gamma=0.0 (only immediate reward)
-    td_targets_gamma0 = compute_td_targets(rewards, next_states, dones, target_net, gamma=0.0)
+    td_targets_gamma0 = compute_td_targets(
+        rewards, next_states, dones, target_net, gamma=0.0
+    )
 
     # With gamma=0.0 and zero rewards, targets should be zero
-    assert torch.allclose(td_targets_gamma0, torch.zeros(batch_size), atol=1e-6), \
-        "With gamma=0 and zero rewards, targets should be zero"
+    assert torch.allclose(
+        td_targets_gamma0, torch.zeros(batch_size), atol=1e-6
+    ), "With gamma=0 and zero rewards, targets should be zero"
 
     # With gamma=1.0, targets should include full future value
     # td_targets_gamma1 should be larger (unless max_q is negative)
@@ -337,7 +346,9 @@ def test_compute_td_targets_no_grad():
     # Create batch
     batch_size = 2
     rewards = torch.tensor([1.0, -1.0])
-    next_states = torch.randn(batch_size, 4, 84, 84, requires_grad=True)  # Try to leak gradients
+    next_states = torch.randn(
+        batch_size, 4, 84, 84, requires_grad=True
+    )  # Try to leak gradients
     dones = torch.tensor([False, False])
 
     # Compute TD targets
@@ -347,7 +358,7 @@ def test_compute_td_targets_no_grad():
     assert not td_targets.requires_grad, "TD targets should be detached"
 
     # Try to backward (should fail or not affect target network)
-    loss = td_targets.sum()
+    td_targets.sum()
     # This should work because td_targets is detached
     # But it won't create gradients for target_net
 
@@ -365,7 +376,9 @@ def test_select_q_values_basic():
     q_selected = select_q_values(online_net, states, actions)
 
     # Should have correct shape
-    assert q_selected.shape == (batch_size,), f"Expected shape (4,), got {q_selected.shape}"
+    assert q_selected.shape == (
+        batch_size,
+    ), f"Expected shape (4,), got {q_selected.shape}"
 
     # Should be float32
     assert q_selected.dtype == torch.float32
@@ -386,7 +399,7 @@ def test_select_q_values_gather_correctness():
     # Get full Q-values and selected Q-values
     with torch.no_grad():
         full_output = online_net(states)
-        full_q_values = full_output['q_values']  # (3, 6)
+        full_q_values = full_output["q_values"]  # (3, 6)
 
     q_selected = select_q_values(online_net, states, actions)
 
@@ -396,12 +409,15 @@ def test_select_q_values_gather_correctness():
         expected_1 = full_q_values[1, 2]
         expected_2 = full_q_values[2, 5]
 
-        assert torch.allclose(q_selected[0], expected_0, atol=1e-5), \
-            "Q-value for action 0 not selected correctly"
-        assert torch.allclose(q_selected[1], expected_1, atol=1e-5), \
-            "Q-value for action 2 not selected correctly"
-        assert torch.allclose(q_selected[2], expected_2, atol=1e-5), \
-            "Q-value for action 5 not selected correctly"
+        assert torch.allclose(
+            q_selected[0], expected_0, atol=1e-5
+        ), "Q-value for action 0 not selected correctly"
+        assert torch.allclose(
+            q_selected[1], expected_1, atol=1e-5
+        ), "Q-value for action 2 not selected correctly"
+        assert torch.allclose(
+            q_selected[2], expected_2, atol=1e-5
+        ), "Q-value for action 5 not selected correctly"
 
 
 def test_select_q_values_gradient_flow():
@@ -445,8 +461,7 @@ def test_compute_td_loss_components_basic():
 
     # Compute components
     q_selected, td_targets = compute_td_loss_components(
-        states, actions, rewards, next_states, dones,
-        online_net, target_net, gamma=0.99
+        states, actions, rewards, next_states, dones, online_net, target_net, gamma=0.99
     )
 
     # Both should have shape (B,)
@@ -475,13 +490,13 @@ def test_compute_td_loss_components_terminal_handling():
 
     # Compute components
     q_selected, td_targets = compute_td_loss_components(
-        states, actions, rewards, next_states, dones,
-        online_net, target_net, gamma=0.99
+        states, actions, rewards, next_states, dones, online_net, target_net, gamma=0.99
     )
 
     # For terminal states, td_targets should equal rewards
-    assert torch.allclose(td_targets, rewards, atol=1e-6), \
-        "Terminal state targets should equal rewards"
+    assert torch.allclose(
+        td_targets, rewards, atol=1e-6
+    ), "Terminal state targets should equal rewards"
 
 
 def test_compute_td_loss_components_mse_loss():
@@ -499,12 +514,12 @@ def test_compute_td_loss_components_mse_loss():
 
     # Compute components
     q_selected, td_targets = compute_td_loss_components(
-        states, actions, rewards, next_states, dones,
-        online_net, target_net, gamma=0.99
+        states, actions, rewards, next_states, dones, online_net, target_net, gamma=0.99
     )
 
     # Compute MSE loss
     import torch.nn.functional as F
+
     loss = F.mse_loss(q_selected, td_targets)
 
     # Should be a scalar
@@ -536,10 +551,13 @@ def test_td_targets_shape_consistency():
         next_states = torch.randn(batch_size, 4, 84, 84)
         dones = torch.randint(0, 2, (batch_size,)).bool()
 
-        td_targets = compute_td_targets(rewards, next_states, dones, target_net, gamma=0.99)
+        td_targets = compute_td_targets(
+            rewards, next_states, dones, target_net, gamma=0.99
+        )
 
-        assert td_targets.shape == (batch_size,), \
-            f"Batch size {batch_size}: expected shape ({batch_size},), got {td_targets.shape}"
+        assert td_targets.shape == (
+            batch_size,
+        ), f"Batch size {batch_size}: expected shape ({batch_size},), got {td_targets.shape}"
 
 
 def test_q_selection_shape_consistency():
@@ -552,67 +570,71 @@ def test_q_selection_shape_consistency():
 
         q_selected = select_q_values(online_net, states, actions)
 
-        assert q_selected.shape == (batch_size,), \
-            f"Batch size {batch_size}: expected shape ({batch_size},), got {q_selected.shape}"
+        assert q_selected.shape == (
+            batch_size,
+        ), f"Batch size {batch_size}: expected shape ({batch_size},), got {q_selected.shape}"
 
 
 # ============================================================================
 # Loss Computation Tests
 # ============================================================================
 
+
 def test_compute_dqn_loss_mse_basic():
     """Test basic MSE loss computation."""
     # Create simple tensors
-    batch_size = 4
     q_selected = torch.tensor([1.0, 2.0, 3.0, 4.0], requires_grad=True)
     td_targets = torch.tensor([1.5, 2.5, 2.5, 3.5])
 
     # Compute loss
-    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type="mse")
 
     # Check keys
-    assert 'loss' in loss_dict
-    assert 'td_error' in loss_dict
-    assert 'td_error_std' in loss_dict
+    assert "loss" in loss_dict
+    assert "td_error" in loss_dict
+    assert "td_error_std" in loss_dict
 
     # Loss should be a scalar
-    assert loss_dict['loss'].shape == torch.Size([])
+    assert loss_dict["loss"].shape == torch.Size([])
 
     # Loss should have gradients
-    assert loss_dict['loss'].requires_grad
+    assert loss_dict["loss"].requires_grad
 
     # TD error should be detached
-    assert not loss_dict['td_error'].requires_grad
-    assert not loss_dict['td_error_std'].requires_grad
+    assert not loss_dict["td_error"].requires_grad
+    assert not loss_dict["td_error_std"].requires_grad
 
     # Expected MSE: mean([(1-1.5)^2, (2-2.5)^2, (3-2.5)^2, (4-3.5)^2])
     # = mean([0.25, 0.25, 0.25, 0.25]) = 0.25
     expected_loss = 0.25
-    assert torch.allclose(loss_dict['loss'], torch.tensor(expected_loss), atol=1e-6)
+    assert torch.allclose(loss_dict["loss"], torch.tensor(expected_loss), atol=1e-6)
 
     # Expected TD error: mean([0.5, 0.5, 0.5, 0.5]) = 0.5
     expected_td_error = 0.5
-    assert torch.allclose(loss_dict['td_error'], torch.tensor(expected_td_error), atol=1e-6)
+    assert torch.allclose(
+        loss_dict["td_error"], torch.tensor(expected_td_error), atol=1e-6
+    )
 
 
 def test_compute_dqn_loss_huber_basic():
     """Test basic Huber loss computation."""
-    batch_size = 4
     q_selected = torch.tensor([1.0, 2.0, 3.0, 4.0], requires_grad=True)
     td_targets = torch.tensor([1.5, 2.5, 2.5, 3.5])
 
     # Compute Huber loss
-    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type='huber', huber_delta=1.0)
+    loss_dict = compute_dqn_loss(
+        q_selected, td_targets, loss_type="huber", huber_delta=1.0
+    )
 
     # Loss should be a scalar with gradients
-    assert loss_dict['loss'].shape == torch.Size([])
-    assert loss_dict['loss'].requires_grad
+    assert loss_dict["loss"].shape == torch.Size([])
+    assert loss_dict["loss"].requires_grad
 
     # Huber loss should be <= MSE for small errors (all errors are 0.5 < delta=1.0)
     # For errors smaller than delta, Huber is quadratic: 0.5 * error^2
     # For our case: 0.5 * mean([0.25, 0.25, 0.25, 0.25]) = 0.125
     expected_huber = 0.125
-    assert torch.allclose(loss_dict['loss'], torch.tensor(expected_huber), atol=1e-6)
+    assert torch.allclose(loss_dict["loss"], torch.tensor(expected_huber), atol=1e-6)
 
 
 def test_compute_dqn_loss_gradient_flow():
@@ -630,15 +652,14 @@ def test_compute_dqn_loss_gradient_flow():
 
     # Compute loss components
     q_selected, td_targets = compute_td_loss_components(
-        states, actions, rewards, next_states, dones,
-        online_net, target_net, gamma=0.99
+        states, actions, rewards, next_states, dones, online_net, target_net, gamma=0.99
     )
 
     # Compute loss
-    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type="mse")
 
     # Backward
-    loss_dict['loss'].backward()
+    loss_dict["loss"].backward()
 
     # Online network should have gradients
     has_gradients = False
@@ -657,15 +678,17 @@ def test_compute_dqn_loss_td_error_stats():
     td_targets = torch.tensor([2.0, 3.0, 3.0, 5.0])  # Errors: [1.0, 1.0, 0.0, 1.0]
 
     # Compute loss
-    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type="mse")
 
     # Expected mean TD error: mean([1.0, 1.0, 0.0, 1.0]) = 0.75
     expected_mean = 0.75
-    assert torch.allclose(loss_dict['td_error'], torch.tensor(expected_mean), atol=1e-6)
+    assert torch.allclose(loss_dict["td_error"], torch.tensor(expected_mean), atol=1e-6)
 
     # Expected std: std([1.0, 1.0, 0.0, 1.0]) = 0.5
     expected_std = 0.5
-    assert torch.allclose(loss_dict['td_error_std'], torch.tensor(expected_std), atol=1e-6)
+    assert torch.allclose(
+        loss_dict["td_error_std"], torch.tensor(expected_std), atol=1e-6
+    )
 
 
 def test_compute_dqn_loss_invalid_type():
@@ -674,7 +697,7 @@ def test_compute_dqn_loss_invalid_type():
     td_targets = torch.tensor([1.5, 2.5])
 
     with pytest.raises(ValueError, match="Unknown loss_type"):
-        compute_dqn_loss(q_selected, td_targets, loss_type='invalid')
+        compute_dqn_loss(q_selected, td_targets, loss_type="invalid")
 
 
 def test_compute_dqn_loss_shape_mismatch():
@@ -683,7 +706,7 @@ def test_compute_dqn_loss_shape_mismatch():
     td_targets = torch.tensor([1.5, 2.5])  # Different size
 
     with pytest.raises(AssertionError, match="Shape mismatch"):
-        compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+        compute_dqn_loss(q_selected, td_targets, loss_type="mse")
 
 
 def test_compute_dqn_loss_gradient_assertions():
@@ -693,14 +716,14 @@ def test_compute_dqn_loss_gradient_assertions():
     td_targets = torch.tensor([1.5, 2.5])
 
     with pytest.raises(AssertionError, match="should have gradients"):
-        compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+        compute_dqn_loss(q_selected, td_targets, loss_type="mse")
 
     # td_targets with gradients (should fail)
     q_selected = torch.tensor([1.0, 2.0], requires_grad=True)
     td_targets = torch.tensor([1.5, 2.5], requires_grad=True)
 
     with pytest.raises(AssertionError, match="should be detached"):
-        compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+        compute_dqn_loss(q_selected, td_targets, loss_type="mse")
 
 
 def test_compute_dqn_loss_huber_delta():
@@ -710,17 +733,21 @@ def test_compute_dqn_loss_huber_delta():
     td_targets = torch.tensor([1.0, 1.0, 1.0])  # Errors: [1.0, 4.0, 9.0]
 
     # Small delta (more linear for large errors)
-    loss_dict_small = compute_dqn_loss(q_selected, td_targets, loss_type='huber', huber_delta=0.5)
+    loss_dict_small = compute_dqn_loss(
+        q_selected, td_targets, loss_type="huber", huber_delta=0.5
+    )
 
     # Large delta (more quadratic, closer to MSE)
-    loss_dict_large = compute_dqn_loss(q_selected, td_targets, loss_type='huber', huber_delta=10.0)
+    loss_dict_large = compute_dqn_loss(
+        q_selected, td_targets, loss_type="huber", huber_delta=10.0
+    )
 
     # Both should be valid scalars
-    assert loss_dict_small['loss'].shape == torch.Size([])
-    assert loss_dict_large['loss'].shape == torch.Size([])
+    assert loss_dict_small["loss"].shape == torch.Size([])
+    assert loss_dict_large["loss"].shape == torch.Size([])
 
     # TD errors should be the same regardless of loss type
-    assert torch.allclose(loss_dict_small['td_error'], loss_dict_large['td_error'])
+    assert torch.allclose(loss_dict_small["td_error"], loss_dict_large["td_error"])
 
 
 def test_compute_dqn_loss_zero_td_error():
@@ -729,13 +756,13 @@ def test_compute_dqn_loss_zero_td_error():
     td_targets = torch.tensor([1.0, 2.0, 3.0])  # Perfect match
 
     # MSE loss
-    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type="mse")
 
     # Loss should be zero
-    assert torch.allclose(loss_dict['loss'], torch.tensor(0.0), atol=1e-6)
+    assert torch.allclose(loss_dict["loss"], torch.tensor(0.0), atol=1e-6)
 
     # TD error should be zero
-    assert torch.allclose(loss_dict['td_error'], torch.tensor(0.0), atol=1e-6)
+    assert torch.allclose(loss_dict["td_error"], torch.tensor(0.0), atol=1e-6)
 
 
 def test_compute_dqn_loss_batch_sizes():
@@ -745,12 +772,12 @@ def test_compute_dqn_loss_batch_sizes():
         td_targets = torch.randn(batch_size)
 
         # MSE
-        loss_dict_mse = compute_dqn_loss(q_selected, td_targets, loss_type='mse')
-        assert loss_dict_mse['loss'].shape == torch.Size([])
+        loss_dict_mse = compute_dqn_loss(q_selected, td_targets, loss_type="mse")
+        assert loss_dict_mse["loss"].shape == torch.Size([])
 
         # Huber
-        loss_dict_huber = compute_dqn_loss(q_selected, td_targets, loss_type='huber')
-        assert loss_dict_huber['loss'].shape == torch.Size([])
+        loss_dict_huber = compute_dqn_loss(q_selected, td_targets, loss_type="huber")
+        assert loss_dict_huber["loss"].shape == torch.Size([])
 
 
 def test_compute_dqn_loss_mse_vs_huber():
@@ -759,47 +786,56 @@ def test_compute_dqn_loss_mse_vs_huber():
     q_selected_small = torch.tensor([1.0, 1.1, 0.9], requires_grad=True)
     td_targets_small = torch.tensor([1.0, 1.0, 1.0])
 
-    mse_small = compute_dqn_loss(q_selected_small, td_targets_small, loss_type='mse')
-    huber_small = compute_dqn_loss(q_selected_small.clone().detach().requires_grad_(True),
-                                   td_targets_small, loss_type='huber', huber_delta=1.0)
+    mse_small = compute_dqn_loss(q_selected_small, td_targets_small, loss_type="mse")
+    huber_small = compute_dqn_loss(
+        q_selected_small.clone().detach().requires_grad_(True),
+        td_targets_small,
+        loss_type="huber",
+        huber_delta=1.0,
+    )
 
     # For small errors, Huber and MSE should be close
     # Note: Huber is 0.5*error^2 for |error| < delta, so it's 0.5 * MSE
-    assert huber_small['loss'] < mse_small['loss']
+    assert huber_small["loss"] < mse_small["loss"]
 
     # Large errors (Huber should be smaller than MSE due to linear region)
     q_selected_large = torch.tensor([0.0, 10.0, 20.0], requires_grad=True)
     td_targets_large = torch.tensor([1.0, 1.0, 1.0])
 
-    mse_large = compute_dqn_loss(q_selected_large, td_targets_large, loss_type='mse')
-    huber_large = compute_dqn_loss(q_selected_large.clone().detach().requires_grad_(True),
-                                   td_targets_large, loss_type='huber', huber_delta=1.0)
+    mse_large = compute_dqn_loss(q_selected_large, td_targets_large, loss_type="mse")
+    huber_large = compute_dqn_loss(
+        q_selected_large.clone().detach().requires_grad_(True),
+        td_targets_large,
+        loss_type="huber",
+        huber_delta=1.0,
+    )
 
     # For large errors, Huber should be much smaller than MSE
-    assert huber_large['loss'] < mse_large['loss']
+    assert huber_large["loss"] < mse_large["loss"]
 
 
 # ============================================================================
 # Optimizer Configuration Tests
 # ============================================================================
 
+
 def test_configure_optimizer_rmsprop_defaults():
     """Test RMSProp optimizer with default parameters."""
     online_net = DQN(num_actions=6)
 
     # Configure with defaults
-    optimizer = configure_optimizer(online_net, optimizer_type='rmsprop')
+    optimizer = configure_optimizer(online_net, optimizer_type="rmsprop")
 
     # Should be RMSProp
     assert isinstance(optimizer, torch.optim.RMSprop)
 
     # Check default hyperparameters
     param_groups = optimizer.param_groups[0]
-    assert param_groups['lr'] == 2.5e-4, "Default LR should be 2.5e-4"
-    assert param_groups['alpha'] == 0.95, "Default alpha (ρ) should be 0.95"
-    assert param_groups['eps'] == 1e-2, "Default eps should be 0.01"
-    assert param_groups['momentum'] == 0.0, "Default momentum should be 0.0"
-    assert param_groups['weight_decay'] == 0.0, "Default weight_decay should be 0.0"
+    assert param_groups["lr"] == 2.5e-4, "Default LR should be 2.5e-4"
+    assert param_groups["alpha"] == 0.95, "Default alpha (ρ) should be 0.95"
+    assert param_groups["eps"] == 1e-2, "Default eps should be 0.01"
+    assert param_groups["momentum"] == 0.0, "Default momentum should be 0.0"
+    assert param_groups["weight_decay"] == 0.0, "Default weight_decay should be 0.0"
 
 
 def test_configure_optimizer_rmsprop_custom():
@@ -809,21 +845,21 @@ def test_configure_optimizer_rmsprop_custom():
     # Configure with custom params
     optimizer = configure_optimizer(
         online_net,
-        optimizer_type='rmsprop',
+        optimizer_type="rmsprop",
         learning_rate=1e-3,
         alpha=0.99,
         eps=1e-8,
         momentum=0.9,
-        weight_decay=1e-5
+        weight_decay=1e-5,
     )
 
     # Check custom hyperparameters
     param_groups = optimizer.param_groups[0]
-    assert param_groups['lr'] == 1e-3
-    assert param_groups['alpha'] == 0.99
-    assert param_groups['eps'] == 1e-8
-    assert param_groups['momentum'] == 0.9
-    assert param_groups['weight_decay'] == 1e-5
+    assert param_groups["lr"] == 1e-3
+    assert param_groups["alpha"] == 0.99
+    assert param_groups["eps"] == 1e-8
+    assert param_groups["momentum"] == 0.9
+    assert param_groups["weight_decay"] == 1e-5
 
 
 def test_configure_optimizer_adam_defaults():
@@ -831,17 +867,17 @@ def test_configure_optimizer_adam_defaults():
     online_net = DQN(num_actions=6)
 
     # Configure Adam
-    optimizer = configure_optimizer(online_net, optimizer_type='adam')
+    optimizer = configure_optimizer(online_net, optimizer_type="adam")
 
     # Should be Adam
     assert isinstance(optimizer, torch.optim.Adam)
 
     # Check default hyperparameters
     param_groups = optimizer.param_groups[0]
-    assert param_groups['lr'] == 2.5e-4
-    assert param_groups['betas'] == (0.9, 0.999)
-    assert param_groups['eps'] == 1e-8
-    assert param_groups['weight_decay'] == 0.0
+    assert param_groups["lr"] == 2.5e-4
+    assert param_groups["betas"] == (0.9, 0.999)
+    assert param_groups["eps"] == 1e-8
+    assert param_groups["weight_decay"] == 0.0
 
 
 def test_configure_optimizer_adam_custom():
@@ -851,20 +887,20 @@ def test_configure_optimizer_adam_custom():
     # Configure with custom params
     optimizer = configure_optimizer(
         online_net,
-        optimizer_type='adam',
+        optimizer_type="adam",
         learning_rate=3e-4,
         beta1=0.95,
         beta2=0.9999,
         adam_eps=1e-7,
-        weight_decay=1e-4
+        weight_decay=1e-4,
     )
 
     # Check custom hyperparameters
     param_groups = optimizer.param_groups[0]
-    assert param_groups['lr'] == 3e-4
-    assert param_groups['betas'] == (0.95, 0.9999)
-    assert param_groups['eps'] == 1e-7
-    assert param_groups['weight_decay'] == 1e-4
+    assert param_groups["lr"] == 3e-4
+    assert param_groups["betas"] == (0.95, 0.9999)
+    assert param_groups["eps"] == 1e-7
+    assert param_groups["weight_decay"] == 1e-4
 
 
 def test_configure_optimizer_invalid_type():
@@ -872,21 +908,21 @@ def test_configure_optimizer_invalid_type():
     online_net = DQN(num_actions=6)
 
     with pytest.raises(ValueError, match="Unknown optimizer_type"):
-        configure_optimizer(online_net, optimizer_type='sgd')
+        configure_optimizer(online_net, optimizer_type="sgd")
 
 
 def test_configure_optimizer_parameters_linked():
     """Test that optimizer is linked to network parameters."""
     online_net = DQN(num_actions=6)
 
-    optimizer = configure_optimizer(online_net, optimizer_type='rmsprop')
+    optimizer = configure_optimizer(online_net, optimizer_type="rmsprop")
 
     # Verify optimizer has parameters
-    assert len(list(optimizer.param_groups[0]['params'])) > 0
+    assert len(list(optimizer.param_groups[0]["params"])) > 0
 
     # Verify parameters are from the network
     net_params = set(online_net.parameters())
-    opt_params = set(optimizer.param_groups[0]['params'])
+    opt_params = set(optimizer.param_groups[0]["params"])
     assert net_params == opt_params
 
 
@@ -894,7 +930,9 @@ def test_optimizer_step_updates_parameters():
     """Test that optimizer step updates network parameters."""
     online_net = DQN(num_actions=6)
     target_net = init_target_network(online_net, num_actions=6)
-    optimizer = configure_optimizer(online_net, optimizer_type='rmsprop', learning_rate=0.1)
+    optimizer = configure_optimizer(
+        online_net, optimizer_type="rmsprop", learning_rate=0.1
+    )
 
     # Get initial parameters
     initial_param = list(online_net.parameters())[0].clone()
@@ -908,26 +946,27 @@ def test_optimizer_step_updates_parameters():
     dones = torch.tensor([False, False, True, False])
 
     q_selected, td_targets = compute_td_loss_components(
-        states, actions, rewards, next_states, dones,
-        online_net, target_net, gamma=0.99
+        states, actions, rewards, next_states, dones, online_net, target_net, gamma=0.99
     )
 
-    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type='mse')
+    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type="mse")
 
     # Optimization step
     optimizer.zero_grad()
-    loss_dict['loss'].backward()
+    loss_dict["loss"].backward()
     optimizer.step()
 
     # Parameters should have changed
     updated_param = list(online_net.parameters())[0]
-    assert not torch.allclose(initial_param, updated_param), \
-        "Parameters should change after optimizer step"
+    assert not torch.allclose(
+        initial_param, updated_param
+    ), "Parameters should change after optimizer step"
 
 
 # ============================================================================
 # Gradient Clipping Tests
 # ============================================================================
+
 
 def test_clip_gradients_basic():
     """Test basic gradient clipping."""
@@ -943,12 +982,11 @@ def test_clip_gradients_basic():
     dones = torch.tensor([False, False, True, False])
 
     q_selected, td_targets = compute_td_loss_components(
-        states, actions, rewards, next_states, dones,
-        online_net, target_net, gamma=0.99
+        states, actions, rewards, next_states, dones, online_net, target_net, gamma=0.99
     )
 
-    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type='mse')
-    loss_dict['loss'].backward()
+    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type="mse")
+    loss_dict["loss"].backward()
 
     # Clip gradients
     grad_norm = clip_gradients(online_net, max_norm=10.0)
@@ -965,7 +1003,7 @@ def test_clip_gradients_returns_norm():
     # Create dummy loss
     x = torch.randn(2, 4, 84, 84)
     output = online_net(x)
-    loss = output['q_values'].mean()
+    loss = output["q_values"].mean()
     loss.backward()
 
     # Get gradient norm
@@ -982,12 +1020,12 @@ def test_clip_gradients_actually_clips():
     # Create large gradients by using large loss
     x = torch.randn(2, 4, 84, 84)
     output = online_net(x)
-    loss = output['q_values'].sum() * 1000.0  # Large multiplier
+    loss = output["q_values"].sum() * 1000.0  # Large multiplier
     loss.backward()
 
     # Clip with small max_norm
     max_norm = 1.0
-    grad_norm_before = clip_gradients(online_net, max_norm=max_norm)
+    clip_gradients(online_net, max_norm=max_norm)
 
     # Compute actual norm after clipping
     total_norm_after = 0.0
@@ -995,11 +1033,12 @@ def test_clip_gradients_actually_clips():
         if p.grad is not None:
             param_norm = p.grad.data.norm(2)
             total_norm_after += param_norm.item() ** 2
-    total_norm_after = total_norm_after ** 0.5
+    total_norm_after = total_norm_after**0.5
 
     # After clipping, norm should be <= max_norm (with small tolerance for numerical errors)
-    assert total_norm_after <= max_norm + 1e-5, \
-        f"Gradient norm {total_norm_after} exceeds max_norm {max_norm}"
+    assert (
+        total_norm_after <= max_norm + 1e-5
+    ), f"Gradient norm {total_norm_after} exceeds max_norm {max_norm}"
 
 
 def test_clip_gradients_no_effect_when_small():
@@ -1009,21 +1048,24 @@ def test_clip_gradients_no_effect_when_small():
     # Create small gradients
     x = torch.randn(2, 4, 84, 84)
     output = online_net(x)
-    loss = output['q_values'].mean() * 0.001  # Small multiplier
+    loss = output["q_values"].mean() * 0.001  # Small multiplier
     loss.backward()
 
     # Save gradients before clipping
-    grads_before = [p.grad.clone() for p in online_net.parameters() if p.grad is not None]
+    grads_before = [
+        p.grad.clone() for p in online_net.parameters() if p.grad is not None
+    ]
 
     # Clip with large max_norm (shouldn't affect small gradients)
-    grad_norm = clip_gradients(online_net, max_norm=100.0)
+    clip_gradients(online_net, max_norm=100.0)
 
     # Gradients should be unchanged
     grads_after = [p.grad for p in online_net.parameters() if p.grad is not None]
 
     for g_before, g_after in zip(grads_before, grads_after):
-        assert torch.allclose(g_before, g_after, atol=1e-6), \
-            "Small gradients should not be affected by large max_norm"
+        assert torch.allclose(
+            g_before, g_after, atol=1e-6
+        ), "Small gradients should not be affected by large max_norm"
 
 
 def test_clip_gradients_different_norms():
@@ -1033,7 +1075,7 @@ def test_clip_gradients_different_norms():
     # Create gradients
     x = torch.randn(2, 4, 84, 84)
     output = online_net(x)
-    loss = output['q_values'].mean()
+    loss = output["q_values"].mean()
     loss.backward()
 
     # Clip with L2 norm (default)
@@ -1043,7 +1085,7 @@ def test_clip_gradients_different_norms():
     # Reset gradients and recompute with new forward pass
     online_net.zero_grad()
     output = online_net(x)
-    loss = output['q_values'].mean()
+    loss = output["q_values"].mean()
     loss.backward()
 
     # Clip with L1 norm
@@ -1058,7 +1100,7 @@ def test_clip_gradients_integration_with_optimizer():
     """Test gradient clipping in full training step."""
     online_net = DQN(num_actions=6)
     target_net = init_target_network(online_net, num_actions=6)
-    optimizer = configure_optimizer(online_net, optimizer_type='rmsprop')
+    optimizer = configure_optimizer(online_net, optimizer_type="rmsprop")
 
     # Create batch
     batch_size = 4
@@ -1075,12 +1117,11 @@ def test_clip_gradients_integration_with_optimizer():
     optimizer.zero_grad()
 
     q_selected, td_targets = compute_td_loss_components(
-        states, actions, rewards, next_states, dones,
-        online_net, target_net, gamma=0.99
+        states, actions, rewards, next_states, dones, online_net, target_net, gamma=0.99
     )
 
-    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type='mse')
-    loss_dict['loss'].backward()
+    loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type="mse")
+    loss_dict["loss"].backward()
 
     grad_norm = clip_gradients(online_net, max_norm=10.0)
     optimizer.step()
@@ -1104,7 +1145,7 @@ def test_clip_gradients_monitoring():
         # Create random loss
         x = torch.randn(2, 4, 84, 84)
         output = online_net(x)
-        loss = output['q_values'].mean()
+        loss = output["q_values"].mean()
 
         online_net.zero_grad()
         loss.backward()
@@ -1123,6 +1164,7 @@ def test_clip_gradients_monitoring():
 # ============================================================================
 # Target Network Update Scheduler Tests
 # ============================================================================
+
 
 def test_target_network_updater_initialization():
     """Test TargetNetworkUpdater initialization."""
@@ -1187,9 +1229,9 @@ def test_target_network_updater_update():
         assert torch.allclose(p_online, p_target)
 
     # Check info dict
-    assert info['step'] == 10000
-    assert info['total_updates'] == 1
-    assert info['steps_since_last'] == 10000
+    assert info["step"] == 10000
+    assert info["total_updates"] == 1
+    assert info["steps_since_last"] == 10000
 
     # Check internal state
     assert updater.step_count == 10000
@@ -1210,7 +1252,7 @@ def test_target_network_updater_multiple_updates():
 
             # Verify update occurred at correct step
             assert step % 1000 == 0
-            assert info['step'] == step
+            assert info["step"] == step
 
     # Should have updated 5 times (at 1000, 2000, 3000, 4000, 5000)
     assert updater.total_updates == 5
@@ -1230,8 +1272,8 @@ def test_target_network_updater_step_method():
     # Should return info dict when update occurs
     result = updater.step(online_net, target_net, current_step=100)
     assert result is not None
-    assert result['step'] == 100
-    assert result['total_updates'] == 1
+    assert result["step"] == 100
+    assert result["total_updates"] == 1
 
 
 def test_target_network_updater_no_duplicate_updates():
@@ -1284,10 +1326,10 @@ def test_target_network_updater_state_dict():
     # Get state dict
     state = updater.state_dict()
 
-    assert state['update_interval'] == 5000
-    assert state['step_count'] == 10000
-    assert state['last_update_step'] == 10000
-    assert state['total_updates'] == 2
+    assert state["update_interval"] == 5000
+    assert state["step_count"] == 10000
+    assert state["last_update_step"] == 10000
+    assert state["total_updates"] == 2
 
 
 def test_target_network_updater_load_state_dict():
@@ -1367,8 +1409,8 @@ def test_target_network_updater_integration():
     # Verify each update
     for i, info in enumerate(update_log):
         expected_step = (i + 1) * 1000
-        assert info['step'] == expected_step
-        assert info['total_updates'] == i + 1
+        assert info["step"] == expected_step
+        assert info["total_updates"] == i + 1
 
 
 def test_target_network_updater_parameters_actually_copied():
@@ -1401,6 +1443,7 @@ def test_target_network_updater_parameters_actually_copied():
 # ============================================================================
 # Training Scheduler Tests
 # ============================================================================
+
 
 def test_training_scheduler_initialization():
     """Test TrainingScheduler initialization."""
@@ -1565,10 +1608,10 @@ def test_training_scheduler_state_dict():
 
     state = scheduler.state_dict()
 
-    assert state['train_every'] == 4
-    assert state['env_step_count'] == 16
-    assert state['training_step_count'] == 2
-    assert state['last_train_step'] == 16
+    assert state["train_every"] == 4
+    assert state["env_step_count"] == 16
+    assert state["training_step_count"] == 2
+    assert state["last_train_step"] == 16
 
 
 def test_training_scheduler_load_state_dict():
@@ -1657,19 +1700,19 @@ def test_detect_nan_inf_no_issues():
 
 def test_detect_nan_inf_detects_nan():
     """Test detect_nan_inf detects NaN values."""
-    tensor = torch.tensor([1.0, 2.0, float('nan'), 4.0])
+    tensor = torch.tensor([1.0, 2.0, float("nan"), 4.0])
     assert detect_nan_inf(tensor, "nan_tensor")
 
 
 def test_detect_nan_inf_detects_inf():
     """Test detect_nan_inf detects Inf values."""
-    tensor = torch.tensor([1.0, 2.0, float('inf'), 4.0])
+    tensor = torch.tensor([1.0, 2.0, float("inf"), 4.0])
     assert detect_nan_inf(tensor, "inf_tensor")
 
 
 def test_detect_nan_inf_detects_neg_inf():
     """Test detect_nan_inf detects negative Inf values."""
-    tensor = torch.tensor([1.0, 2.0, float('-inf'), 4.0])
+    tensor = torch.tensor([1.0, 2.0, float("-inf"), 4.0])
     assert detect_nan_inf(tensor, "neg_inf_tensor")
 
 
@@ -1680,7 +1723,7 @@ def test_detect_nan_inf_multidimensional():
     assert not detect_nan_inf(tensor, "normal_3d")
 
     # With NaN
-    tensor[2, 3, 5] = float('nan')
+    tensor[2, 3, 5] = float("nan")
     assert detect_nan_inf(tensor, "nan_3d")
 
 
@@ -1707,16 +1750,23 @@ def test_validate_loss_decrease_basic():
 
     # Validate loss decreases
     success, info = validate_loss_decrease(
-        compute_dqn_loss, online_net, optimizer,
-        states, actions, rewards, next_states, dones, target_net,
-        num_updates=10
+        compute_dqn_loss,
+        online_net,
+        optimizer,
+        states,
+        actions,
+        rewards,
+        next_states,
+        dones,
+        target_net,
+        num_updates=10,
     )
 
     assert success, f"Loss did not decrease: {info}"
-    assert info['loss_decreased']
-    assert not info['nan_inf_detected']
-    assert info['final_loss'] < info['initial_loss']
-    assert len(info['loss_history']) == 10
+    assert info["loss_decreased"]
+    assert not info["nan_inf_detected"]
+    assert info["final_loss"] < info["initial_loss"]
+    assert len(info["loss_history"]) == 10
 
 
 def test_validate_loss_decrease_huber():
@@ -1736,14 +1786,22 @@ def test_validate_loss_decrease_huber():
 
     # Validate with Huber loss
     success, info = validate_loss_decrease(
-        compute_dqn_loss, online_net, optimizer,
-        states, actions, rewards, next_states, dones, target_net,
-        num_updates=10, loss_type='huber'
+        compute_dqn_loss,
+        online_net,
+        optimizer,
+        states,
+        actions,
+        rewards,
+        next_states,
+        dones,
+        target_net,
+        num_updates=10,
+        loss_type="huber",
     )
 
     assert success, f"Loss did not decrease with Huber: {info}"
-    assert info['loss_decreased']
-    assert not info['nan_inf_detected']
+    assert info["loss_decreased"]
+    assert not info["nan_inf_detected"]
 
 
 def test_validate_loss_decrease_fewer_updates():
@@ -1760,14 +1818,21 @@ def test_validate_loss_decrease_fewer_updates():
     dones = torch.zeros(batch_size)
 
     success, info = validate_loss_decrease(
-        compute_dqn_loss, online_net, optimizer,
-        states, actions, rewards, next_states, dones, target_net,
-        num_updates=5
+        compute_dqn_loss,
+        online_net,
+        optimizer,
+        states,
+        actions,
+        rewards,
+        next_states,
+        dones,
+        target_net,
+        num_updates=5,
     )
 
-    assert len(info['loss_history']) == 5
+    assert len(info["loss_history"]) == 5
     # Loss should still decrease with fewer updates
-    assert info['initial_loss'] > 0
+    assert info["initial_loss"] > 0
 
 
 def test_validate_loss_decrease_terminal_states():
@@ -1784,14 +1849,21 @@ def test_validate_loss_decrease_terminal_states():
     dones = torch.ones(batch_size)  # All terminal
 
     success, info = validate_loss_decrease(
-        compute_dqn_loss, online_net, optimizer,
-        states, actions, rewards, next_states, dones, target_net,
-        num_updates=10
+        compute_dqn_loss,
+        online_net,
+        optimizer,
+        states,
+        actions,
+        rewards,
+        next_states,
+        dones,
+        target_net,
+        num_updates=10,
     )
 
     # Should still work with terminal states
-    assert not info['nan_inf_detected']
-    assert len(info['loss_history']) == 10
+    assert not info["nan_inf_detected"]
+    assert len(info["loss_history"]) == 10
 
 
 def test_validate_loss_decrease_different_gamma():
@@ -1809,13 +1881,21 @@ def test_validate_loss_decrease_different_gamma():
 
     # Test with gamma=0.95
     success, info = validate_loss_decrease(
-        compute_dqn_loss, online_net, optimizer,
-        states, actions, rewards, next_states, dones, target_net,
-        num_updates=10, gamma=0.95
+        compute_dqn_loss,
+        online_net,
+        optimizer,
+        states,
+        actions,
+        rewards,
+        next_states,
+        dones,
+        target_net,
+        num_updates=10,
+        gamma=0.95,
     )
 
-    assert not info['nan_inf_detected']
-    assert len(info['loss_history']) == 10
+    assert not info["nan_inf_detected"]
+    assert len(info["loss_history"]) == 10
 
 
 def test_validate_loss_decrease_larger_batch():
@@ -1833,13 +1913,20 @@ def test_validate_loss_decrease_larger_batch():
     dones = torch.zeros(batch_size)
 
     success, info = validate_loss_decrease(
-        compute_dqn_loss, online_net, optimizer,
-        states, actions, rewards, next_states, dones, target_net,
-        num_updates=10
+        compute_dqn_loss,
+        online_net,
+        optimizer,
+        states,
+        actions,
+        rewards,
+        next_states,
+        dones,
+        target_net,
+        num_updates=10,
     )
 
     assert success, f"Loss did not decrease with batch_size=32: {info}"
-    assert info['loss_decreased']
+    assert info["loss_decreased"]
 
 
 def test_validate_loss_decrease_info_keys():
@@ -1856,14 +1943,26 @@ def test_validate_loss_decrease_info_keys():
     dones = torch.zeros(batch_size)
 
     success, info = validate_loss_decrease(
-        compute_dqn_loss, online_net, optimizer,
-        states, actions, rewards, next_states, dones, target_net,
-        num_updates=5
+        compute_dqn_loss,
+        online_net,
+        optimizer,
+        states,
+        actions,
+        rewards,
+        next_states,
+        dones,
+        target_net,
+        num_updates=5,
     )
 
     # Verify all expected keys are present
-    expected_keys = {'initial_loss', 'final_loss', 'loss_history',
-                     'loss_decreased', 'nan_inf_detected'}
+    expected_keys = {
+        "initial_loss",
+        "final_loss",
+        "loss_history",
+        "loss_decreased",
+        "nan_inf_detected",
+    }
     assert set(info.keys()) == expected_keys
 
 
@@ -1878,10 +1977,10 @@ def test_verify_target_sync_schedule_basic():
     )
 
     assert success, f"Target sync schedule incorrect: {info}"
-    assert info['schedule_correct']
-    assert info['count_correct']
-    assert info['update_steps'] == [1000, 2000, 3000, 4000, 5000]
-    assert info['expected_steps'] == [1000, 2000, 3000, 4000, 5000]
+    assert info["schedule_correct"]
+    assert info["count_correct"]
+    assert info["update_steps"] == [1000, 2000, 3000, 4000, 5000]
+    assert info["expected_steps"] == [1000, 2000, 3000, 4000, 5000]
 
 
 def test_verify_target_sync_schedule_10k_interval():
@@ -1895,7 +1994,7 @@ def test_verify_target_sync_schedule_10k_interval():
     )
 
     assert success, f"Target sync schedule incorrect: {info}"
-    assert info['update_steps'] == [10000, 20000, 30000, 40000, 50000]
+    assert info["update_steps"] == [10000, 20000, 30000, 40000, 50000]
 
 
 def test_verify_target_sync_schedule_small_interval():
@@ -1909,8 +2008,8 @@ def test_verify_target_sync_schedule_small_interval():
     )
 
     assert success
-    assert len(info['update_steps']) == 5
-    assert info['update_steps'] == [100, 200, 300, 400, 500]
+    assert len(info["update_steps"]) == 5
+    assert info["update_steps"] == [100, 200, 300, 400, 500]
 
 
 def test_verify_target_sync_schedule_partial_interval():
@@ -1925,8 +2024,8 @@ def test_verify_target_sync_schedule_partial_interval():
     )
 
     assert success
-    assert info['update_steps'] == [1000, 2000, 3000, 4000]
-    assert len(info['update_steps']) == 4
+    assert info["update_steps"] == [1000, 2000, 3000, 4000]
+    assert len(info["update_steps"]) == 4
 
 
 def test_verify_target_sync_schedule_no_duplicates():
@@ -1940,7 +2039,7 @@ def test_verify_target_sync_schedule_no_duplicates():
     )
 
     # Check no duplicates
-    assert len(info['update_steps']) == len(set(info['update_steps']))
+    assert len(info["update_steps"]) == len(set(info["update_steps"]))
     assert success
 
 
@@ -1954,9 +2053,9 @@ def test_verify_target_sync_schedule_count():
         updater, online_net, target_net, max_steps=10000, expected_interval=1000
     )
 
-    assert info['count_correct']
-    assert len(info['update_steps']) == 10
-    assert len(info['expected_steps']) == 10
+    assert info["count_correct"]
+    assert len(info["update_steps"]) == 10
+    assert len(info["expected_steps"]) == 10
 
 
 def test_verify_target_sync_schedule_info_keys():
@@ -1969,7 +2068,12 @@ def test_verify_target_sync_schedule_info_keys():
         updater, online_net, target_net, max_steps=3000, expected_interval=1000
     )
 
-    expected_keys = {'update_steps', 'expected_steps', 'schedule_correct', 'count_correct'}
+    expected_keys = {
+        "update_steps",
+        "expected_steps",
+        "schedule_correct",
+        "count_correct",
+    }
     assert set(info.keys()) == expected_keys
 
 
@@ -1984,12 +2088,15 @@ def test_verify_target_sync_schedule_different_intervals():
         max_steps = interval * 5
 
         success, info = verify_target_sync_schedule(
-            updater, online_net, target_net, max_steps=max_steps,
-            expected_interval=interval
+            updater,
+            online_net,
+            target_net,
+            max_steps=max_steps,
+            expected_interval=interval,
         )
 
         assert success, f"Failed for interval={interval}: {info}"
-        assert len(info['update_steps']) == 5
+        assert len(info["update_steps"]) == 5
 
 
 # ============================================================================
@@ -2005,7 +2112,7 @@ def test_update_metrics_initialization():
         td_error_std=0.2,
         grad_norm=2.5,
         learning_rate=0.00025,
-        update_count=1000
+        update_count=1000,
     )
 
     assert metrics.loss == 0.5
@@ -2024,18 +2131,18 @@ def test_update_metrics_to_dict():
         td_error_std=0.2,
         grad_norm=2.5,
         learning_rate=0.00025,
-        update_count=1000
+        update_count=1000,
     )
 
     metrics_dict = metrics.to_dict()
 
     assert isinstance(metrics_dict, dict)
-    assert metrics_dict['loss'] == 0.5
-    assert metrics_dict['td_error'] == 0.3
-    assert metrics_dict['td_error_std'] == 0.2
-    assert metrics_dict['grad_norm'] == 2.5
-    assert metrics_dict['learning_rate'] == 0.00025
-    assert metrics_dict['update_count'] == 1000
+    assert metrics_dict["loss"] == 0.5
+    assert metrics_dict["td_error"] == 0.3
+    assert metrics_dict["td_error_std"] == 0.2
+    assert metrics_dict["grad_norm"] == 2.5
+    assert metrics_dict["learning_rate"] == 0.00025
+    assert metrics_dict["update_count"] == 1000
 
 
 def test_update_metrics_to_dict_keys():
@@ -2043,7 +2150,14 @@ def test_update_metrics_to_dict_keys():
     metrics = UpdateMetrics(0.5, 0.3, 0.2, 2.5, 0.00025, 1000)
     metrics_dict = metrics.to_dict()
 
-    expected_keys = {'loss', 'td_error', 'td_error_std', 'grad_norm', 'learning_rate', 'update_count'}
+    expected_keys = {
+        "loss",
+        "td_error",
+        "td_error_std",
+        "grad_norm",
+        "learning_rate",
+        "update_count",
+    }
     assert set(metrics_dict.keys()) == expected_keys
 
 
@@ -2070,17 +2184,16 @@ def test_perform_update_step_basic():
     # Create synthetic batch
     batch_size = 8
     batch = {
-        'states': torch.randn(batch_size, 4, 84, 84),
-        'actions': torch.randint(0, 6, (batch_size,)),
-        'rewards': torch.randn(batch_size),
-        'next_states': torch.randn(batch_size, 4, 84, 84),
-        'dones': torch.zeros(batch_size)
+        "states": torch.randn(batch_size, 4, 84, 84),
+        "actions": torch.randint(0, 6, (batch_size,)),
+        "rewards": torch.randn(batch_size),
+        "next_states": torch.randn(batch_size, 4, 84, 84),
+        "dones": torch.zeros(batch_size),
     }
 
     # Perform update
     metrics = perform_update_step(
-        online_net, target_net, optimizer, batch,
-        update_count=1
+        online_net, target_net, optimizer, batch, update_count=1
     )
 
     # Verify metrics exist and have reasonable values
@@ -2104,23 +2217,21 @@ def test_perform_update_step_updates_network():
 
     batch_size = 8
     batch = {
-        'states': torch.randn(batch_size, 4, 84, 84),
-        'actions': torch.randint(0, 6, (batch_size,)),
-        'rewards': torch.randn(batch_size),
-        'next_states': torch.randn(batch_size, 4, 84, 84),
-        'dones': torch.zeros(batch_size)
+        "states": torch.randn(batch_size, 4, 84, 84),
+        "actions": torch.randint(0, 6, (batch_size,)),
+        "rewards": torch.randn(batch_size),
+        "next_states": torch.randn(batch_size, 4, 84, 84),
+        "dones": torch.zeros(batch_size),
     }
 
     # Perform update
-    metrics = perform_update_step(
-        online_net, target_net, optimizer, batch,
-        update_count=1
-    )
+    perform_update_step(online_net, target_net, optimizer, batch, update_count=1)
 
     # Verify parameters changed
     for initial_p, current_p in zip(initial_params, online_net.parameters()):
-        assert not torch.allclose(initial_p, current_p), \
-            "Parameters should change after update"
+        assert not torch.allclose(
+            initial_p, current_p
+        ), "Parameters should change after update"
 
 
 def test_perform_update_step_mse_loss():
@@ -2130,16 +2241,15 @@ def test_perform_update_step_mse_loss():
     optimizer = configure_optimizer(online_net)
 
     batch = {
-        'states': torch.randn(8, 4, 84, 84),
-        'actions': torch.randint(0, 6, (8,)),
-        'rewards': torch.randn(8),
-        'next_states': torch.randn(8, 4, 84, 84),
-        'dones': torch.zeros(8)
+        "states": torch.randn(8, 4, 84, 84),
+        "actions": torch.randint(0, 6, (8,)),
+        "rewards": torch.randn(8),
+        "next_states": torch.randn(8, 4, 84, 84),
+        "dones": torch.zeros(8),
     }
 
     metrics = perform_update_step(
-        online_net, target_net, optimizer, batch,
-        loss_type='mse', update_count=1
+        online_net, target_net, optimizer, batch, loss_type="mse", update_count=1
     )
 
     assert isinstance(metrics, UpdateMetrics)
@@ -2153,16 +2263,15 @@ def test_perform_update_step_huber_loss():
     optimizer = configure_optimizer(online_net)
 
     batch = {
-        'states': torch.randn(8, 4, 84, 84),
-        'actions': torch.randint(0, 6, (8,)),
-        'rewards': torch.randn(8),
-        'next_states': torch.randn(8, 4, 84, 84),
-        'dones': torch.zeros(8)
+        "states": torch.randn(8, 4, 84, 84),
+        "actions": torch.randint(0, 6, (8,)),
+        "rewards": torch.randn(8),
+        "next_states": torch.randn(8, 4, 84, 84),
+        "dones": torch.zeros(8),
     }
 
     metrics = perform_update_step(
-        online_net, target_net, optimizer, batch,
-        loss_type='huber', update_count=1
+        online_net, target_net, optimizer, batch, loss_type="huber", update_count=1
     )
 
     assert isinstance(metrics, UpdateMetrics)
@@ -2176,17 +2285,16 @@ def test_perform_update_step_different_gamma():
     optimizer = configure_optimizer(online_net)
 
     batch = {
-        'states': torch.randn(8, 4, 84, 84),
-        'actions': torch.randint(0, 6, (8,)),
-        'rewards': torch.randn(8),
-        'next_states': torch.randn(8, 4, 84, 84),
-        'dones': torch.zeros(8)
+        "states": torch.randn(8, 4, 84, 84),
+        "actions": torch.randint(0, 6, (8,)),
+        "rewards": torch.randn(8),
+        "next_states": torch.randn(8, 4, 84, 84),
+        "dones": torch.zeros(8),
     }
 
     # Test with gamma=0.95
     metrics = perform_update_step(
-        online_net, target_net, optimizer, batch,
-        gamma=0.95, update_count=1
+        online_net, target_net, optimizer, batch, gamma=0.95, update_count=1
     )
 
     assert isinstance(metrics, UpdateMetrics)
@@ -2197,20 +2305,21 @@ def test_perform_update_step_gradient_clipping():
     """Test perform_update_step applies gradient clipping."""
     online_net = DQN(num_actions=6)
     target_net = init_target_network(online_net, num_actions=6)
-    optimizer = configure_optimizer(online_net, learning_rate=10.0)  # Large LR to create large gradients
+    optimizer = configure_optimizer(
+        online_net, learning_rate=10.0
+    )  # Large LR to create large gradients
 
     batch = {
-        'states': torch.randn(8, 4, 84, 84),
-        'actions': torch.randint(0, 6, (8,)),
-        'rewards': torch.randn(8),
-        'next_states': torch.randn(8, 4, 84, 84),
-        'dones': torch.zeros(8)
+        "states": torch.randn(8, 4, 84, 84),
+        "actions": torch.randint(0, 6, (8,)),
+        "rewards": torch.randn(8),
+        "next_states": torch.randn(8, 4, 84, 84),
+        "dones": torch.zeros(8),
     }
 
     # Perform update with small max_grad_norm
     metrics = perform_update_step(
-        online_net, target_net, optimizer, batch,
-        max_grad_norm=1.0, update_count=1
+        online_net, target_net, optimizer, batch, max_grad_norm=1.0, update_count=1
     )
 
     # Gradient norm should be reported (before clipping)
@@ -2224,19 +2333,18 @@ def test_perform_update_step_multiple_updates():
     optimizer = configure_optimizer(online_net, learning_rate=0.01)
 
     batch = {
-        'states': torch.randn(8, 4, 84, 84),
-        'actions': torch.randint(0, 6, (8,)),
-        'rewards': torch.randn(8),
-        'next_states': torch.randn(8, 4, 84, 84),
-        'dones': torch.zeros(8)
+        "states": torch.randn(8, 4, 84, 84),
+        "actions": torch.randint(0, 6, (8,)),
+        "rewards": torch.randn(8),
+        "next_states": torch.randn(8, 4, 84, 84),
+        "dones": torch.zeros(8),
     }
 
     # Perform multiple updates
     losses = []
     for i in range(10):
         metrics = perform_update_step(
-            online_net, target_net, optimizer, batch,
-            update_count=i+1
+            online_net, target_net, optimizer, batch, update_count=i + 1
         )
         losses.append(metrics.loss)
         assert metrics.update_count == i + 1
@@ -2254,16 +2362,15 @@ def test_perform_update_step_batch_size_32():
 
     # Standard DQN batch size
     batch = {
-        'states': torch.randn(32, 4, 84, 84),
-        'actions': torch.randint(0, 6, (32,)),
-        'rewards': torch.randn(32),
-        'next_states': torch.randn(32, 4, 84, 84),
-        'dones': torch.zeros(32)
+        "states": torch.randn(32, 4, 84, 84),
+        "actions": torch.randint(0, 6, (32,)),
+        "rewards": torch.randn(32),
+        "next_states": torch.randn(32, 4, 84, 84),
+        "dones": torch.zeros(32),
     }
 
     metrics = perform_update_step(
-        online_net, target_net, optimizer, batch,
-        update_count=1
+        online_net, target_net, optimizer, batch, update_count=1
     )
 
     assert isinstance(metrics, UpdateMetrics)
@@ -2277,16 +2384,15 @@ def test_perform_update_step_terminal_states():
     optimizer = configure_optimizer(online_net)
 
     batch = {
-        'states': torch.randn(8, 4, 84, 84),
-        'actions': torch.randint(0, 6, (8,)),
-        'rewards': torch.randn(8),
-        'next_states': torch.randn(8, 4, 84, 84),
-        'dones': torch.ones(8)  # All terminal
+        "states": torch.randn(8, 4, 84, 84),
+        "actions": torch.randint(0, 6, (8,)),
+        "rewards": torch.randn(8),
+        "next_states": torch.randn(8, 4, 84, 84),
+        "dones": torch.ones(8),  # All terminal
     }
 
     metrics = perform_update_step(
-        online_net, target_net, optimizer, batch,
-        update_count=1
+        online_net, target_net, optimizer, batch, update_count=1
     )
 
     assert isinstance(metrics, UpdateMetrics)
@@ -2303,16 +2409,15 @@ def test_perform_update_step_learning_rate_tracking():
     optimizer = configure_optimizer(online_net, learning_rate=custom_lr)
 
     batch = {
-        'states': torch.randn(8, 4, 84, 84),
-        'actions': torch.randint(0, 6, (8,)),
-        'rewards': torch.randn(8),
-        'next_states': torch.randn(8, 4, 84, 84),
-        'dones': torch.zeros(8)
+        "states": torch.randn(8, 4, 84, 84),
+        "actions": torch.randint(0, 6, (8,)),
+        "rewards": torch.randn(8),
+        "next_states": torch.randn(8, 4, 84, 84),
+        "dones": torch.zeros(8),
     }
 
     metrics = perform_update_step(
-        online_net, target_net, optimizer, batch,
-        update_count=1
+        online_net, target_net, optimizer, batch, update_count=1
     )
 
     assert metrics.learning_rate == custom_lr
@@ -2329,16 +2434,15 @@ def test_perform_update_step_sets_train_mode():
     assert not online_net.training
 
     batch = {
-        'states': torch.randn(8, 4, 84, 84),
-        'actions': torch.randint(0, 6, (8,)),
-        'rewards': torch.randn(8),
-        'next_states': torch.randn(8, 4, 84, 84),
-        'dones': torch.zeros(8)
+        "states": torch.randn(8, 4, 84, 84),
+        "actions": torch.randint(0, 6, (8,)),
+        "rewards": torch.randn(8),
+        "next_states": torch.randn(8, 4, 84, 84),
+        "dones": torch.zeros(8),
     }
 
     metrics = perform_update_step(
-        online_net, target_net, optimizer, batch,
-        update_count=1
+        online_net, target_net, optimizer, batch, update_count=1
     )
 
     # Network should be in training mode during update
@@ -2349,6 +2453,7 @@ def test_perform_update_step_sets_train_mode():
 # ============================================================================
 # Epsilon-Greedy Exploration Tests
 # ============================================================================
+
 
 def test_epsilon_scheduler_initialization():
     """Test EpsilonScheduler initializes with correct defaults."""
@@ -2366,10 +2471,7 @@ def test_epsilon_scheduler_custom_params():
     from src.training import EpsilonScheduler
 
     scheduler = EpsilonScheduler(
-        epsilon_start=0.8,
-        epsilon_end=0.05,
-        decay_frames=500_000,
-        eval_epsilon=0.01
+        epsilon_start=0.8, epsilon_end=0.05, decay_frames=500_000, eval_epsilon=0.01
     )
     assert scheduler.epsilon_start == 0.8
     assert scheduler.epsilon_end == 0.05
@@ -2381,7 +2483,9 @@ def test_epsilon_scheduler_linear_decay():
     """Test epsilon decays linearly from start to end."""
     from src.training import EpsilonScheduler
 
-    scheduler = EpsilonScheduler(epsilon_start=1.0, epsilon_end=0.1, decay_frames=1_000_000)
+    scheduler = EpsilonScheduler(
+        epsilon_start=1.0, epsilon_end=0.1, decay_frames=1_000_000
+    )
 
     # Test key points on decay schedule
     assert scheduler.get_epsilon(0) == 1.0
@@ -2395,7 +2499,9 @@ def test_epsilon_scheduler_clamps_after_decay():
     """Test epsilon stays at epsilon_end after decay period."""
     from src.training import EpsilonScheduler
 
-    scheduler = EpsilonScheduler(epsilon_start=1.0, epsilon_end=0.1, decay_frames=1_000_000)
+    scheduler = EpsilonScheduler(
+        epsilon_start=1.0, epsilon_end=0.1, decay_frames=1_000_000
+    )
 
     # After decay period, should clamp to epsilon_end
     assert scheduler.get_epsilon(1_000_000) == 0.1
@@ -2420,23 +2526,21 @@ def test_epsilon_scheduler_to_dict():
     from src.training import EpsilonScheduler
 
     scheduler = EpsilonScheduler(
-        epsilon_start=0.9,
-        epsilon_end=0.05,
-        decay_frames=800_000,
-        eval_epsilon=0.01
+        epsilon_start=0.9, epsilon_end=0.05, decay_frames=800_000, eval_epsilon=0.01
     )
 
     config = scheduler.to_dict()
-    assert config['epsilon_start'] == 0.9
-    assert config['epsilon_end'] == 0.05
-    assert config['decay_frames'] == 800_000
-    assert config['eval_epsilon'] == 0.01
+    assert config["epsilon_start"] == 0.9
+    assert config["epsilon_end"] == 0.05
+    assert config["decay_frames"] == 800_000
+    assert config["eval_epsilon"] == 0.01
 
 
 def test_epsilon_scheduler_invalid_params():
     """Test scheduler raises on invalid parameters."""
-    from src.training import EpsilonScheduler
     import pytest
+
+    from src.training import EpsilonScheduler
 
     # epsilon_start > 1.0
     with pytest.raises(AssertionError):
@@ -2461,14 +2565,17 @@ def test_epsilon_scheduler_invalid_params():
 
 def test_select_epsilon_greedy_action_random():
     """Test epsilon-greedy selects random actions with high epsilon."""
-    from src.training import select_epsilon_greedy_action
     from src.models import DQN
+    from src.training import select_epsilon_greedy_action
 
     network = DQN(num_actions=6)
     state = torch.rand(4, 84, 84)
 
     # With epsilon=1.0, should always explore (random actions)
-    actions = [select_epsilon_greedy_action(network, state, epsilon=1.0, num_actions=6) for _ in range(100)]
+    actions = [
+        select_epsilon_greedy_action(network, state, epsilon=1.0, num_actions=6)
+        for _ in range(100)
+    ]
 
     # Should get variety of actions (not all the same)
     unique_actions = set(actions)
@@ -2480,14 +2587,17 @@ def test_select_epsilon_greedy_action_random():
 
 def test_select_epsilon_greedy_action_greedy():
     """Test epsilon-greedy selects greedy actions with epsilon=0."""
-    from src.training import select_epsilon_greedy_action
     from src.models import DQN
+    from src.training import select_epsilon_greedy_action
 
     network = DQN(num_actions=6)
     state = torch.rand(4, 84, 84)
 
     # With epsilon=0.0, should always exploit (greedy)
-    actions = [select_epsilon_greedy_action(network, state, epsilon=0.0, num_actions=6) for _ in range(100)]
+    actions = [
+        select_epsilon_greedy_action(network, state, epsilon=0.0, num_actions=6)
+        for _ in range(100)
+    ]
 
     # All actions should be the same (greedy choice)
     assert len(set(actions)) == 1
@@ -2498,9 +2608,10 @@ def test_select_epsilon_greedy_action_greedy():
 
 def test_select_epsilon_greedy_action_mixed():
     """Test epsilon-greedy mixes random and greedy actions."""
-    from src.training import select_epsilon_greedy_action
-    from src.models import DQN
     import torch
+
+    from src.models import DQN
+    from src.training import select_epsilon_greedy_action
 
     network = DQN(num_actions=6)
     state = torch.rand(4, 84, 84)
@@ -2509,7 +2620,10 @@ def test_select_epsilon_greedy_action_mixed():
     torch.manual_seed(42)
 
     # With epsilon=0.5, should get mix of random and greedy
-    actions = [select_epsilon_greedy_action(network, state, epsilon=0.5, num_actions=6) for _ in range(1000)]
+    actions = [
+        select_epsilon_greedy_action(network, state, epsilon=0.5, num_actions=6)
+        for _ in range(1000)
+    ]
 
     # Should have some variety (not all greedy)
     unique_actions = set(actions)
@@ -2521,26 +2635,30 @@ def test_select_epsilon_greedy_action_mixed():
 
 def test_select_epsilon_greedy_action_batch_dim():
     """Test epsilon-greedy handles states with and without batch dim."""
-    from src.training import select_epsilon_greedy_action
     from src.models import DQN
+    from src.training import select_epsilon_greedy_action
 
     network = DQN(num_actions=6)
 
     # State without batch dimension
     state_3d = torch.rand(4, 84, 84)
-    action_3d = select_epsilon_greedy_action(network, state_3d, epsilon=0.0, num_actions=6)
+    action_3d = select_epsilon_greedy_action(
+        network, state_3d, epsilon=0.0, num_actions=6
+    )
     assert 0 <= action_3d < 6
 
     # State with batch dimension
     state_4d = torch.rand(1, 4, 84, 84)
-    action_4d = select_epsilon_greedy_action(network, state_4d, epsilon=0.0, num_actions=6)
+    action_4d = select_epsilon_greedy_action(
+        network, state_4d, epsilon=0.0, num_actions=6
+    )
     assert 0 <= action_4d < 6
 
 
 def test_select_epsilon_greedy_action_network_mode():
     """Test epsilon-greedy preserves network training mode."""
-    from src.training import select_epsilon_greedy_action
     from src.models import DQN
+    from src.training import select_epsilon_greedy_action
 
     network = DQN(num_actions=6)
     state = torch.rand(4, 84, 84)
@@ -2550,7 +2668,7 @@ def test_select_epsilon_greedy_action_network_mode():
     assert network.training
 
     # Select action
-    action = select_epsilon_greedy_action(network, state, epsilon=0.0, num_actions=6)
+    select_epsilon_greedy_action(network, state, epsilon=0.0, num_actions=6)
 
     # Should still be in training mode
     assert network.training
@@ -2560,7 +2678,9 @@ def test_epsilon_scheduler_monotonic_decrease():
     """Test epsilon decreases monotonically during decay period."""
     from src.training import EpsilonScheduler
 
-    scheduler = EpsilonScheduler(epsilon_start=1.0, epsilon_end=0.1, decay_frames=1_000_000)
+    scheduler = EpsilonScheduler(
+        epsilon_start=1.0, epsilon_end=0.1, decay_frames=1_000_000
+    )
 
     prev_epsilon = 1.0
     for frame in range(0, 1_000_001, 10_000):
@@ -2574,13 +2694,17 @@ def test_epsilon_scheduler_edge_cases():
     from src.training import EpsilonScheduler
 
     # Same start and end (no decay)
-    scheduler = EpsilonScheduler(epsilon_start=0.5, epsilon_end=0.5, decay_frames=1_000_000)
+    scheduler = EpsilonScheduler(
+        epsilon_start=0.5, epsilon_end=0.5, decay_frames=1_000_000
+    )
     assert scheduler.get_epsilon(0) == 0.5
     assert scheduler.get_epsilon(500_000) == 0.5
     assert scheduler.get_epsilon(1_000_000) == 0.5
 
     # Very short decay period
-    scheduler_short = EpsilonScheduler(epsilon_start=1.0, epsilon_end=0.1, decay_frames=10)
+    scheduler_short = EpsilonScheduler(
+        epsilon_start=1.0, epsilon_end=0.1, decay_frames=10
+    )
     assert scheduler_short.get_epsilon(0) == 1.0
     assert scheduler_short.get_epsilon(5) == 0.55
     assert scheduler_short.get_epsilon(10) == 0.1
@@ -2589,6 +2713,7 @@ def test_epsilon_scheduler_edge_cases():
 # ============================================================================
 # Frame Counter Tests
 # ============================================================================
+
 
 def test_frame_counter_initialization():
     """Test FrameCounter initializes correctly."""
@@ -2685,15 +2810,16 @@ def test_frame_counter_to_dict():
     counter.step(num_steps=25)
 
     state = counter.to_dict()
-    assert state['steps'] == 25
-    assert state['frames'] == 100
-    assert state['frameskip'] == 4
+    assert state["steps"] == 25
+    assert state["frames"] == 100
+    assert state["frameskip"] == 4
 
 
 def test_frame_counter_invalid_frameskip():
     """Test counter raises on invalid frameskip."""
-    from src.training import FrameCounter
     import pytest
+
+    from src.training import FrameCounter
 
     with pytest.raises(AssertionError):
         FrameCounter(frameskip=0)
@@ -2721,15 +2847,22 @@ def test_frame_counter_different_frameskips():
 # Training Step Integration Tests
 # ============================================================================
 
+
 def test_training_step_basic_execution():
     """Test training_step executes without errors."""
-    from src.training import (
-        training_step, EpsilonScheduler, TargetNetworkUpdater,
-        TrainingScheduler, FrameCounter, configure_optimizer, init_target_network
-    )
+    from unittest.mock import Mock
+
     from src.models import DQN
     from src.replay import ReplayBuffer
-    from unittest.mock import Mock
+    from src.training import (
+        EpsilonScheduler,
+        FrameCounter,
+        TargetNetworkUpdater,
+        TrainingScheduler,
+        configure_optimizer,
+        init_target_network,
+        training_step,
+    )
 
     # Mock environment with Atari-like observations
     env = Mock()
@@ -2772,25 +2905,25 @@ def test_training_step_basic_execution():
         frame_counter=frame_counter,
         state=state,
         num_actions=num_actions,
-        device='cpu'
+        device="cpu",
     )
 
     # Check result structure
-    assert 'next_state' in result
-    assert 'reward' in result
-    assert 'terminated' in result
-    assert 'truncated' in result
-    assert 'epsilon' in result
-    assert 'metrics' in result
-    assert 'target_updated' in result
-    assert 'trained' in result
-    assert 'action' in result
+    assert "next_state" in result
+    assert "reward" in result
+    assert "terminated" in result
+    assert "truncated" in result
+    assert "epsilon" in result
+    assert "metrics" in result
+    assert "target_updated" in result
+    assert "trained" in result
+    assert "action" in result
 
     # Check epsilon is valid
-    assert 0.0 <= result['epsilon'] <= 1.0
+    assert 0.0 <= result["epsilon"] <= 1.0
 
     # Check action is valid
-    assert 0 <= result['action'] < num_actions
+    assert 0 <= result["action"] < num_actions
 
     # Verify env.step was called
     assert env.step.called
@@ -2798,13 +2931,19 @@ def test_training_step_basic_execution():
 
 def test_training_step_triggers_training_after_warmup():
     """Test training_step triggers optimization after replay warmup."""
-    from src.training import (
-        training_step, EpsilonScheduler, TargetNetworkUpdater,
-        TrainingScheduler, FrameCounter, configure_optimizer, init_target_network
-    )
+    from unittest.mock import Mock
+
     from src.models import DQN
     from src.replay import ReplayBuffer
-    from unittest.mock import Mock
+    from src.training import (
+        EpsilonScheduler,
+        FrameCounter,
+        TargetNetworkUpdater,
+        TrainingScheduler,
+        configure_optimizer,
+        init_target_network,
+        training_step,
+    )
 
     # Mock environment
     env = Mock()
@@ -2847,11 +2986,11 @@ def test_training_step_triggers_training_after_warmup():
         frame_counter=frame_counter,
         state=dummy_state,
         num_actions=num_actions,
-        device='cpu'
+        device="cpu",
     )
 
     # First step should not train (step goes 0→1, train_every=4)
-    assert result['trained'] == False
+    assert not result["trained"]
     assert frame_counter.steps == 1
 
     # Execute 3 more training steps to reach step 4
@@ -2868,25 +3007,27 @@ def test_training_step_triggers_training_after_warmup():
             frame_counter=frame_counter,
             state=dummy_state,
             num_actions=num_actions,
-            device='cpu'
+            device="cpu",
         )
 
     # Should have trained at step 4
     assert frame_counter.steps == 4
-    assert result['trained'] == True
-    assert result['metrics'] is not None
+    assert result["trained"]
+    assert result["metrics"] is not None
 
 
 # ============================================================================
 # Logging and Checkpoint Tests
 # ============================================================================
 
+
 def test_step_logger_basic():
     """Test StepLogger creates CSV and logs metrics."""
-    from src.training import StepLogger, UpdateMetrics
-    import tempfile
-    import os
     import csv
+    import os
+    import tempfile
+
+    from src.training import StepLogger, UpdateMetrics
 
     with tempfile.TemporaryDirectory() as tmpdir:
         logger = StepLogger(log_dir=tmpdir, log_interval=1000)
@@ -2898,32 +3039,35 @@ def test_step_logger_basic():
             td_error_std=0.1,
             grad_norm=2.5,
             learning_rate=0.00025,
-            update_count=1
+            update_count=1,
         )
-        logger.log_step(step=1000, epsilon=0.95, metrics=metrics, replay_size=50000, fps=120.0)
+        logger.log_step(
+            step=1000, epsilon=0.95, metrics=metrics, replay_size=50000, fps=120.0
+        )
 
         # Check CSV exists
-        csv_path = os.path.join(tmpdir, 'training_steps.csv')
+        csv_path = os.path.join(tmpdir, "training_steps.csv")
         assert os.path.exists(csv_path)
 
         # Read CSV
-        with open(csv_path, 'r') as f:
+        with open(csv_path, "r") as f:
             reader = csv.DictReader(f)
             rows = list(reader)
 
         assert len(rows) == 1
         row = rows[0]
-        assert int(row['step']) == 1000
-        assert float(row['epsilon']) == 0.95
-        assert float(row['loss']) == 0.5
-        assert int(row['replay_size']) == 50000
+        assert int(row["step"]) == 1000
+        assert float(row["epsilon"]) == 0.95
+        assert float(row["loss"]) == 0.5
+        assert int(row["replay_size"]) == 50000
 
 
 def test_step_logger_interval():
     """Test StepLogger only logs at intervals."""
-    from src.training import StepLogger
-    import tempfile
     import os
+    import tempfile
+
+    from src.training import StepLogger
 
     with tempfile.TemporaryDirectory() as tmpdir:
         logger = StepLogger(log_dir=tmpdir, log_interval=1000)
@@ -2931,7 +3075,7 @@ def test_step_logger_interval():
         # Log at step 500 (should not write)
         logger.log_step(step=500, epsilon=0.95)
 
-        csv_path = os.path.join(tmpdir, 'training_steps.csv')
+        csv_path = os.path.join(tmpdir, "training_steps.csv")
         assert not os.path.exists(csv_path)
 
         # Log at step 1000 (should write)
@@ -2941,9 +3085,10 @@ def test_step_logger_interval():
 
 def test_step_logger_moving_average():
     """Test StepLogger computes loss moving average."""
-    from src.training import StepLogger, UpdateMetrics
-    import tempfile
     import csv
+    import tempfile
+
+    from src.training import StepLogger, UpdateMetrics
 
     with tempfile.TemporaryDirectory() as tmpdir:
         logger = StepLogger(log_dir=tmpdir, log_interval=1000, moving_avg_window=3)
@@ -2951,56 +3096,64 @@ def test_step_logger_moving_average():
         # Log 3 steps with different losses
         for i, loss in enumerate([1.0, 2.0, 3.0], start=1):
             metrics = UpdateMetrics(
-                loss=loss, td_error=0.1, td_error_std=0.05,
-                grad_norm=1.0, learning_rate=0.00025, update_count=i
+                loss=loss,
+                td_error=0.1,
+                td_error_std=0.05,
+                grad_norm=1.0,
+                learning_rate=0.00025,
+                update_count=i,
             )
             logger.log_step(step=i * 1000, epsilon=0.9, metrics=metrics)
 
         # Read last entry
         csv_path = f"{tmpdir}/training_steps.csv"
-        with open(csv_path, 'r') as f:
+        with open(csv_path, "r") as f:
             reader = csv.DictReader(f)
             rows = list(reader)
 
         # Moving average of [1.0, 2.0, 3.0] = 2.0
-        assert float(rows[-1]['loss_ma']) == 2.0
+        assert float(rows[-1]["loss_ma"]) == 2.0
 
 
 def test_episode_logger_basic():
     """Test EpisodeLogger creates CSV and logs episodes."""
-    from src.training import EpisodeLogger
-    import tempfile
-    import os
     import csv
+    import os
+    import tempfile
+
+    from src.training import EpisodeLogger
 
     with tempfile.TemporaryDirectory() as tmpdir:
         logger = EpisodeLogger(log_dir=tmpdir, rolling_window=100)
 
         # Log first episode
-        logger.log_episode(step=5000, episode_return=21.0, episode_length=1200, fps=120.0, epsilon=0.95)
+        logger.log_episode(
+            step=5000, episode_return=21.0, episode_length=1200, fps=120.0, epsilon=0.95
+        )
 
         # Check CSV exists
-        csv_path = os.path.join(tmpdir, 'episodes.csv')
+        csv_path = os.path.join(tmpdir, "episodes.csv")
         assert os.path.exists(csv_path)
 
         # Read CSV
-        with open(csv_path, 'r') as f:
+        with open(csv_path, "r") as f:
             reader = csv.DictReader(f)
             rows = list(reader)
 
         assert len(rows) == 1
         row = rows[0]
-        assert int(row['episode']) == 1
-        assert int(row['step']) == 5000
-        assert float(row['return']) == 21.0
-        assert int(row['length']) == 1200
+        assert int(row["episode"]) == 1
+        assert int(row["step"]) == 5000
+        assert float(row["return"]) == 21.0
+        assert int(row["length"]) == 1200
 
 
 def test_episode_logger_rolling_stats():
     """Test EpisodeLogger computes rolling statistics."""
-    from src.training import EpisodeLogger
-    import tempfile
     import csv
+    import tempfile
+
+    from src.training import EpisodeLogger
 
     with tempfile.TemporaryDirectory() as tmpdir:
         logger = EpisodeLogger(log_dir=tmpdir, rolling_window=3)
@@ -3012,44 +3165,50 @@ def test_episode_logger_rolling_stats():
 
         # Read last entry
         csv_path = f"{tmpdir}/episodes.csv"
-        with open(csv_path, 'r') as f:
+        with open(csv_path, "r") as f:
             reader = csv.DictReader(f)
             rows = list(reader)
 
         # Rolling mean of [10, 20, 30] = 20.0
-        assert float(rows[-1]['rolling_mean_return']) == 20.0
+        assert float(rows[-1]["rolling_mean_return"]) == 20.0
 
 
 def test_episode_logger_get_recent_stats():
     """Test EpisodeLogger get_recent_stats method."""
-    from src.training import EpisodeLogger
     import tempfile
+
+    from src.training import EpisodeLogger
 
     with tempfile.TemporaryDirectory() as tmpdir:
         logger = EpisodeLogger(log_dir=tmpdir, rolling_window=100)
 
         # Log 5 episodes
         for i in range(1, 6):
-            logger.log_episode(step=i * 1000, episode_return=float(i * 10), episode_length=1000)
+            logger.log_episode(
+                step=i * 1000, episode_return=float(i * 10), episode_length=1000
+            )
 
         # Get stats for last 3 episodes
         stats = logger.get_recent_stats(n=3)
 
-        assert stats['num_episodes'] == 3
-        assert stats['mean_return'] == 40.0  # (30 + 40 + 50) / 3
-        assert stats['min_return'] == 30.0
-        assert stats['max_return'] == 50.0
+        assert stats["num_episodes"] == 3
+        assert stats["mean_return"] == 40.0  # (30 + 40 + 50) / 3
+        assert stats["min_return"] == 30.0
+        assert stats["max_return"] == 50.0
 
 
 def test_checkpoint_manager_periodic_save():
     """Test CheckpointManager saves periodic checkpoints."""
-    from src.training import CheckpointManager
-    from src.models import DQN
-    import tempfile
     import os
+    import tempfile
+
+    from src.models import DQN
+    from src.training import CheckpointManager
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        manager = CheckpointManager(checkpoint_dir=tmpdir, save_interval=1000000, keep_last_n=2)
+        manager = CheckpointManager(
+            checkpoint_dir=tmpdir, save_interval=1000000, keep_last_n=2
+        )
 
         # Create model and optimizer
         online_model = DQN(num_actions=6)
@@ -3058,23 +3217,31 @@ def test_checkpoint_manager_periodic_save():
 
         # Should save at 1M steps
         assert manager.should_save(1000000)
-        path = manager.save_checkpoint(step=1000000, episode=100, epsilon=0.5,
-                                       online_model=online_model, target_model=target_model,
-                                       optimizer=optimizer)
+        path = manager.save_checkpoint(
+            step=1000000,
+            episode=100,
+            epsilon=0.5,
+            online_model=online_model,
+            target_model=target_model,
+            optimizer=optimizer,
+        )
 
         assert os.path.exists(path)
-        assert '1000000' in path
+        assert "1000000" in path
 
 
 def test_checkpoint_manager_keep_last_n():
     """Test CheckpointManager keeps only last N checkpoints."""
-    from src.training import CheckpointManager
-    from src.models import DQN
-    import tempfile
     import os
+    import tempfile
+
+    from src.models import DQN
+    from src.training import CheckpointManager
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        manager = CheckpointManager(checkpoint_dir=tmpdir, save_interval=1000000, keep_last_n=2)
+        manager = CheckpointManager(
+            checkpoint_dir=tmpdir, save_interval=1000000, keep_last_n=2
+        )
 
         online_model = DQN(num_actions=6)
         target_model = DQN(num_actions=6)
@@ -3082,21 +3249,27 @@ def test_checkpoint_manager_keep_last_n():
 
         # Save 3 checkpoints
         for i in range(1, 4):
-            manager.save_checkpoint(step=i * 1000000, episode=i*100, epsilon=0.5,
-                                   online_model=online_model, target_model=target_model,
-                                   optimizer=optimizer)
+            manager.save_checkpoint(
+                step=i * 1000000,
+                episode=i * 100,
+                epsilon=0.5,
+                online_model=online_model,
+                target_model=target_model,
+                optimizer=optimizer,
+            )
 
         # Should only have 2 checkpoints (last 2)
-        checkpoints = [f for f in os.listdir(tmpdir) if f.startswith('checkpoint_')]
+        checkpoints = [f for f in os.listdir(tmpdir) if f.startswith("checkpoint_")]
         assert len(checkpoints) == 2
 
 
 def test_checkpoint_manager_best_model():
     """Test CheckpointManager saves best model."""
-    from src.training import CheckpointManager
-    from src.models import DQN
-    import tempfile
     import os
+    import tempfile
+
+    from src.models import DQN
+    from src.training import CheckpointManager
 
     with tempfile.TemporaryDirectory() as tmpdir:
         manager = CheckpointManager(checkpoint_dir=tmpdir, save_best=True)
@@ -3106,32 +3279,52 @@ def test_checkpoint_manager_best_model():
         optimizer = configure_optimizer(online_model)
 
         # First eval (return=20) - should save
-        saved = manager.save_best(step=1000000, episode=100, epsilon=0.5, eval_return=20.0,
-                                 online_model=online_model, target_model=target_model,
-                                 optimizer=optimizer)
+        saved = manager.save_best(
+            step=1000000,
+            episode=100,
+            epsilon=0.5,
+            eval_return=20.0,
+            online_model=online_model,
+            target_model=target_model,
+            optimizer=optimizer,
+        )
         assert saved
-        assert os.path.exists(os.path.join(tmpdir, 'best_model.pt'))
+        assert os.path.exists(os.path.join(tmpdir, "best_model.pt"))
 
         # Second eval (return=15) - should NOT save
-        saved = manager.save_best(step=2000000, episode=200, epsilon=0.4, eval_return=15.0,
-                                 online_model=online_model, target_model=target_model,
-                                 optimizer=optimizer)
+        saved = manager.save_best(
+            step=2000000,
+            episode=200,
+            epsilon=0.4,
+            eval_return=15.0,
+            online_model=online_model,
+            target_model=target_model,
+            optimizer=optimizer,
+        )
         assert not saved
 
         # Third eval (return=25) - should save
-        saved = manager.save_best(step=3000000, episode=300, epsilon=0.3, eval_return=25.0,
-                                 online_model=online_model, target_model=target_model,
-                                 optimizer=optimizer)
+        saved = manager.save_best(
+            step=3000000,
+            episode=300,
+            epsilon=0.3,
+            eval_return=25.0,
+            online_model=online_model,
+            target_model=target_model,
+            optimizer=optimizer,
+        )
         assert saved
         assert manager.best_eval_return == 25.0
 
 
 def test_checkpoint_manager_load():
     """Test CheckpointManager loads checkpoints correctly."""
-    from src.training import CheckpointManager
-    from src.models import DQN
     import tempfile
+
     import torch
+
+    from src.models import DQN
+    from src.training import CheckpointManager
 
     with tempfile.TemporaryDirectory() as tmpdir:
         manager = CheckpointManager(checkpoint_dir=tmpdir)
@@ -3148,17 +3341,24 @@ def test_checkpoint_manager_load():
             for param in target_model1.parameters():
                 param.fill_(1.0)
 
-        path = manager.save_checkpoint(step=1000000, episode=100, epsilon=0.5,
-                                       online_model=online_model1, target_model=target_model1,
-                                       optimizer=optimizer1,
-                                       extra_metadata={'test_key': 'test_value'})
+        path = manager.save_checkpoint(
+            step=1000000,
+            episode=100,
+            epsilon=0.5,
+            online_model=online_model1,
+            target_model=target_model1,
+            optimizer=optimizer1,
+            extra_metadata={"test_key": "test_value"},
+        )
 
         # Create new model and load checkpoint
         online_model2 = DQN(num_actions=6)
         target_model2 = DQN(num_actions=6)
         optimizer2 = configure_optimizer(online_model2)
 
-        metadata = manager.load_checkpoint(path, online_model2, target_model2, optimizer2)
+        metadata = manager.load_checkpoint(
+            path, online_model2, target_model2, optimizer2
+        )
 
         # Check weights were loaded
         for p1, p2 in zip(online_model1.parameters(), online_model2.parameters()):
@@ -3167,20 +3367,21 @@ def test_checkpoint_manager_load():
             assert torch.allclose(p1, p2)
 
         # Check metadata
-        assert metadata['step'] == 1000000
-        assert metadata['episode'] == 100
-        assert metadata['epsilon'] == 0.5
-        assert metadata['metadata']['test_key'] == 'test_value'
+        assert metadata["step"] == 1000000
+        assert metadata["episode"] == 100
+        assert metadata["epsilon"] == 0.5
+        assert metadata["metadata"]["test_key"] == "test_value"
 
 
 # ============================================================================
 # Reference-State Q Tracking Tests
 # ============================================================================
 
+
 def test_reference_q_tracker_basic():
     """Test ReferenceStateQTracker computes Q-values."""
-    from src.training import ReferenceStateQTracker
     from src.models import DQN
+    from src.training import ReferenceStateQTracker
 
     # Create reference states
     ref_states = np.random.randint(0, 255, (10, 4, 84, 84), dtype=np.uint8)
@@ -3195,9 +3396,9 @@ def test_reference_q_tracker_basic():
     q_stats = tracker.compute_q_values(model)
 
     # Check statistics
-    assert 'avg_max_q' in q_stats
-    assert 'max_q' in q_stats
-    assert 'min_q' in q_stats
+    assert "avg_max_q" in q_stats
+    assert "max_q" in q_stats
+    assert "min_q" in q_stats
 
 
 def test_reference_q_tracker_logging_interval():
@@ -3218,6 +3419,7 @@ def test_reference_q_tracker_logging_interval():
 
     # Should not log twice at same step
     from src.models import DQN
+
     model = DQN(num_actions=6)
     tracker.log_q_values(step=10000, model=model)
     assert not tracker.should_log(10000)
@@ -3228,8 +3430,8 @@ def test_reference_q_tracker_logging_interval():
 
 def test_reference_q_tracker_history():
     """Test ReferenceStateQTracker maintains history."""
-    from src.training import ReferenceStateQTracker
     from src.models import DQN
+    from src.training import ReferenceStateQTracker
 
     ref_states = np.random.randint(0, 255, (5, 4, 84, 84), dtype=np.uint8)
     tracker = ReferenceStateQTracker(reference_states=ref_states, log_interval=10000)
@@ -3243,15 +3445,15 @@ def test_reference_q_tracker_history():
 
     # Check history
     history = tracker.get_history()
-    assert len(history['steps']) == 3
-    assert len(history['avg_max_q']) == 3
-    assert history['steps'] == [10000, 20000, 30000]
+    assert len(history["steps"]) == 3
+    assert len(history["avg_max_q"]) == 3
+    assert history["steps"] == [10000, 20000, 30000]
 
 
 def test_reference_q_tracker_set_states():
     """Test ReferenceStateQTracker can set states after initialization."""
-    from src.training import ReferenceStateQTracker
     from src.models import DQN
+    from src.training import ReferenceStateQTracker
 
     # Create tracker without states
     tracker = ReferenceStateQTracker(log_interval=10000)
@@ -3268,13 +3470,12 @@ def test_reference_q_tracker_set_states():
 
     model = DQN(num_actions=6)
     q_stats = tracker.compute_q_values(model)
-    assert 'avg_max_q' in q_stats
+    assert "avg_max_q" in q_stats
 
 
 def test_reference_q_tracker_normalization():
     """Test ReferenceStateQTracker normalizes uint8 inputs."""
     from src.training import ReferenceStateQTracker
-    from src.models import DQN
 
     # Create uint8 states (0-255)
     ref_states = np.random.randint(0, 255, (5, 4, 84, 84), dtype=np.uint8)
@@ -3287,8 +3488,8 @@ def test_reference_q_tracker_normalization():
 
 def test_reference_q_tracker_to_dict():
     """Test ReferenceStateQTracker serialization."""
-    from src.training import ReferenceStateQTracker
     from src.models import DQN
+    from src.training import ReferenceStateQTracker
 
     ref_states = np.random.randint(0, 255, (5, 4, 84, 84), dtype=np.uint8)
     tracker = ReferenceStateQTracker(reference_states=ref_states, log_interval=5000)
@@ -3299,53 +3500,59 @@ def test_reference_q_tracker_to_dict():
     # Serialize
     state_dict = tracker.to_dict()
 
-    assert state_dict['log_interval'] == 5000
-    assert state_dict['last_log_step'] == 5000
-    assert len(state_dict['log_steps']) == 1
-    assert len(state_dict['avg_max_q']) == 1
+    assert state_dict["log_interval"] == 5000
+    assert state_dict["last_log_step"] == 5000
+    assert len(state_dict["log_steps"]) == 1
+    assert len(state_dict["avg_max_q"]) == 1
 
 
 def test_reference_q_logger_csv():
     """Test ReferenceQLogger writes CSV correctly."""
-    from src.training import ReferenceQLogger
-    import tempfile
-    import os
     import csv
+    import os
+    import tempfile
+
+    from src.training import ReferenceQLogger
 
     with tempfile.TemporaryDirectory() as tmpdir:
         logger = ReferenceQLogger(log_dir=tmpdir)
 
         # Log Q-values
-        q_stats = {'avg_max_q': 5.5, 'max_q': 10.0, 'min_q': 2.0}
+        q_stats = {"avg_max_q": 5.5, "max_q": 10.0, "min_q": 2.0}
         logger.log(step=10000, q_stats=q_stats)
 
         # Check CSV exists
-        csv_path = os.path.join(tmpdir, 'reference_q_values.csv')
+        csv_path = os.path.join(tmpdir, "reference_q_values.csv")
         assert os.path.exists(csv_path)
 
         # Read CSV
-        with open(csv_path, 'r') as f:
+        with open(csv_path, "r") as f:
             reader = csv.DictReader(f)
             rows = list(reader)
 
         assert len(rows) == 1
-        assert int(rows[0]['step']) == 10000
-        assert float(rows[0]['avg_max_q']) == 5.5
-        assert float(rows[0]['max_q']) == 10.0
-        assert float(rows[0]['min_q']) == 2.0
+        assert int(rows[0]["step"]) == 10000
+        assert float(rows[0]["avg_max_q"]) == 5.5
+        assert float(rows[0]["max_q"]) == 10.0
+        assert float(rows[0]["min_q"]) == 2.0
 
 
 def test_reference_q_logger_multiple_logs():
     """Test ReferenceQLogger handles multiple log entries."""
-    from src.training import ReferenceQLogger
     import tempfile
+
+    from src.training import ReferenceQLogger
 
     with tempfile.TemporaryDirectory() as tmpdir:
         logger = ReferenceQLogger(log_dir=tmpdir)
 
         # Log multiple Q-values
         for step in [10000, 20000, 30000]:
-            q_stats = {'avg_max_q': step / 1000, 'max_q': step / 500, 'min_q': step / 2000}
+            q_stats = {
+                "avg_max_q": step / 1000,
+                "max_q": step / 500,
+                "min_q": step / 2000,
+            }
             logger.log(step=step, q_stats=q_stats)
 
         # Retrieve all logs
@@ -3355,14 +3562,17 @@ def test_reference_q_logger_multiple_logs():
 
 def test_reference_q_tracker_integration():
     """Test ReferenceStateQTracker and ReferenceQLogger integration."""
-    from src.training import ReferenceStateQTracker, ReferenceQLogger
-    from src.models import DQN
     import tempfile
+
+    from src.models import DQN
+    from src.training import ReferenceQLogger, ReferenceStateQTracker
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # Create tracker
         ref_states = np.random.randint(0, 255, (10, 4, 84, 84), dtype=np.uint8)
-        tracker = ReferenceStateQTracker(reference_states=ref_states, log_interval=10000)
+        tracker = ReferenceStateQTracker(
+            reference_states=ref_states, log_interval=10000
+        )
 
         # Create logger
         logger = ReferenceQLogger(log_dir=tmpdir)
@@ -3374,9 +3584,11 @@ def test_reference_q_tracker_integration():
         for step in [10000, 20000, 30000]:
             if tracker.should_log(step):
                 tracker.log_q_values(step=step, model=model)
-                q_stats = {'avg_max_q': tracker.avg_max_q[-1],
-                          'max_q': tracker.max_q[-1],
-                          'min_q': tracker.min_q[-1]}
+                q_stats = {
+                    "avg_max_q": tracker.avg_max_q[-1],
+                    "max_q": tracker.max_q[-1],
+                    "min_q": tracker.min_q[-1],
+                }
                 logger.log(step=step, q_stats=q_stats)
 
         # Check both have 3 entries
@@ -3748,12 +3960,13 @@ if __name__ == "__main__":
 # Metadata and Reproducibility Tests
 # ============================================================================
 
+
 def test_get_git_commit_hash():
     """Test get_git_commit_hash returns a hash or 'unknown'."""
     from src.training import get_git_commit_hash
 
     commit_hash = get_git_commit_hash()
-    
+
     # Should be either a hash or 'unknown'
     assert isinstance(commit_hash, str)
     assert len(commit_hash) > 0
@@ -3766,151 +3979,157 @@ def test_get_git_status():
     status = get_git_status()
 
     # Check all required fields
-    assert 'commit_hash' in status
-    assert 'commit_hash_full' in status
-    assert 'branch' in status
-    assert 'dirty' in status
+    assert "commit_hash" in status
+    assert "commit_hash_full" in status
+    assert "branch" in status
+    assert "dirty" in status
 
     # Types should be correct
-    assert isinstance(status['commit_hash'], str)
-    assert isinstance(status['commit_hash_full'], str)
-    assert isinstance(status['branch'], str)
-    assert isinstance(status['dirty'], bool)
+    assert isinstance(status["commit_hash"], str)
+    assert isinstance(status["commit_hash_full"], str)
+    assert isinstance(status["branch"], str)
+    assert isinstance(status["dirty"], bool)
 
 
 def test_metadata_writer_json():
     """Test MetadataWriter writes JSON metadata."""
-    from src.training import MetadataWriter
-    import tempfile
-    import os
     import json
+    import os
+    import tempfile
+
+    from src.training import MetadataWriter
 
     with tempfile.TemporaryDirectory() as tmpdir:
         writer = MetadataWriter(run_dir=tmpdir)
 
-        config = {'learning_rate': 0.00025, 'batch_size': 32}
-        writer.write_metadata(config=config, seed=123, format='json')
+        config = {"learning_rate": 0.00025, "batch_size": 32}
+        writer.write_metadata(config=config, seed=123, format="json")
 
         # Check metadata.json exists
-        metadata_path = os.path.join(tmpdir, 'metadata.json')
+        metadata_path = os.path.join(tmpdir, "metadata.json")
         assert os.path.exists(metadata_path)
 
         # Load and verify
-        with open(metadata_path, 'r') as f:
+        with open(metadata_path, "r") as f:
             metadata = json.load(f)
 
-        assert metadata['seed'] == 123
-        assert metadata['config']['learning_rate'] == 0.00025
-        assert 'git' in metadata
-        assert 'timestamp' in metadata
-        assert 'python_version' in metadata
-        assert 'pytorch_version' in metadata
+        assert metadata["seed"] == 123
+        assert metadata["config"]["learning_rate"] == 0.00025
+        assert "git" in metadata
+        assert "timestamp" in metadata
+        assert "python_version" in metadata
+        assert "pytorch_version" in metadata
 
 
 def test_metadata_writer_git_info():
     """Test MetadataWriter creates git_info.txt."""
-    from src.training import MetadataWriter
-    import tempfile
     import os
+    import tempfile
+
+    from src.training import MetadataWriter
 
     with tempfile.TemporaryDirectory() as tmpdir:
         writer = MetadataWriter(run_dir=tmpdir)
         writer.write_metadata(seed=42)
 
         # Check git_info.txt exists
-        git_info_path = os.path.join(tmpdir, 'git_info.txt')
+        git_info_path = os.path.join(tmpdir, "git_info.txt")
         assert os.path.exists(git_info_path)
 
         # Read content
-        with open(git_info_path, 'r') as f:
+        with open(git_info_path, "r") as f:
             content = f.read()
 
-        assert 'Commit:' in content
-        assert 'Branch:' in content
-        assert 'Dirty:' in content
+        assert "Commit:" in content
+        assert "Branch:" in content
+        assert "Dirty:" in content
 
 
 def test_metadata_writer_config_separate():
     """Test MetadataWriter can write config to separate file."""
-    from src.training import MetadataWriter
-    import tempfile
-    import os
     import json
+    import os
+    import tempfile
+
+    from src.training import MetadataWriter
 
     with tempfile.TemporaryDirectory() as tmpdir:
         writer = MetadataWriter(run_dir=tmpdir)
 
-        config = {'env': 'Pong', 'total_frames': 10000000}
-        writer.write_config(config=config, format='json')
+        config = {"env": "Pong", "total_frames": 10000000}
+        writer.write_config(config=config, format="json")
 
         # Check config.json exists
-        config_path = os.path.join(tmpdir, 'config.json')
+        config_path = os.path.join(tmpdir, "config.json")
         assert os.path.exists(config_path)
 
         # Load and verify
-        with open(config_path, 'r') as f:
+        with open(config_path, "r") as f:
             loaded_config = json.load(f)
 
-        assert loaded_config['env'] == 'Pong'
-        assert loaded_config['total_frames'] == 10000000
+        assert loaded_config["env"] == "Pong"
+        assert loaded_config["total_frames"] == 10000000
 
 
 def test_metadata_writer_load_metadata():
     """Test MetadataWriter can load written metadata."""
-    from src.training import MetadataWriter
     import tempfile
+
+    from src.training import MetadataWriter
 
     with tempfile.TemporaryDirectory() as tmpdir:
         writer = MetadataWriter(run_dir=tmpdir)
 
-        config = {'gamma': 0.99}
-        writer.write_metadata(config=config, seed=456, format='json')
+        config = {"gamma": 0.99}
+        writer.write_metadata(config=config, seed=456, format="json")
 
         # Load metadata
-        loaded = writer.load_metadata(format='json')
+        loaded = writer.load_metadata(format="json")
 
-        assert loaded['seed'] == 456
-        assert loaded['config']['gamma'] == 0.99
-        assert 'git' in loaded
+        assert loaded["seed"] == 456
+        assert loaded["config"]["gamma"] == 0.99
+        assert "git" in loaded
 
 
 def test_metadata_writer_extra_fields():
     """Test MetadataWriter can include extra metadata."""
-    from src.training import MetadataWriter
-    import tempfile
     import json
     import os
+    import tempfile
+
+    from src.training import MetadataWriter
 
     with tempfile.TemporaryDirectory() as tmpdir:
         writer = MetadataWriter(run_dir=tmpdir)
 
-        extra = {'device': 'cuda', 'gpu_count': 2, 'hostname': 'server01'}
-        writer.write_metadata(seed=789, extra=extra, format='json')
+        extra = {"device": "cuda", "gpu_count": 2, "hostname": "server01"}
+        writer.write_metadata(seed=789, extra=extra, format="json")
 
         # Load and verify extra fields
-        metadata_path = os.path.join(tmpdir, 'metadata.json')
-        with open(metadata_path, 'r') as f:
+        metadata_path = os.path.join(tmpdir, "metadata.json")
+        with open(metadata_path, "r") as f:
             metadata = json.load(f)
 
-        assert metadata['device'] == 'cuda'
-        assert metadata['gpu_count'] == 2
-        assert metadata['hostname'] == 'server01'
+        assert metadata["device"] == "cuda"
+        assert metadata["gpu_count"] == 2
+        assert metadata["hostname"] == "server01"
 
 
 def test_metadata_writer_creates_directory():
     """Test MetadataWriter creates run directory if it doesn't exist."""
-    from src.training import MetadataWriter
-    import tempfile
     import os
+    import tempfile
+
+    from src.training import MetadataWriter
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        run_dir = os.path.join(tmpdir, 'runs', 'pong_123')
-        
+        run_dir = os.path.join(tmpdir, "runs", "pong_123")
+
         # Directory doesn't exist yet
         assert not os.path.exists(run_dir)
 
         # Create writer
-        writer = MetadataWriter(run_dir=run_dir)
+        MetadataWriter(run_dir=run_dir)
 
         # Directory should now exist
         assert os.path.exists(run_dir)

@@ -280,17 +280,11 @@ class AtariPreprocessing(gym.ObservationWrapper):
         # Update observation space
         if grayscale:
             self.observation_space = gym.spaces.Box(
-                low=0,
-                high=255,
-                shape=(frame_size, frame_size),
-                dtype=np.uint8
+                low=0, high=255, shape=(frame_size, frame_size), dtype=np.uint8
             )
         else:
             self.observation_space = gym.spaces.Box(
-                low=0,
-                high=255,
-                shape=(frame_size, frame_size, 3),
-                dtype=np.uint8
+                low=0, high=255, shape=(frame_size, frame_size, 3), dtype=np.uint8
             )
 
     def observation(self, frame: np.ndarray) -> np.ndarray:
@@ -310,9 +304,7 @@ class AtariPreprocessing(gym.ObservationWrapper):
 
         # Resize to target size using bilinear interpolation
         frame = cv2.resize(
-            frame,
-            (self.frame_size, self.frame_size),
-            interpolation=cv2.INTER_LINEAR
+            frame, (self.frame_size, self.frame_size), interpolation=cv2.INTER_LINEAR
         )
 
         return frame
@@ -342,7 +334,7 @@ class FrameStack(gym.Wrapper):
         num_stack: int = 4,
         save_samples: bool = False,
         sample_dir: Optional[Path] = None,
-        max_samples: int = 5
+        max_samples: int = 5,
     ):
         super().__init__(env)
         self.num_stack = num_stack
@@ -360,13 +352,11 @@ class FrameStack(gym.Wrapper):
 
         # Update observation space to channels-first (K, H, W)
         low = np.repeat(self.observation_space.low[np.newaxis, ...], num_stack, axis=0)
-        high = np.repeat(self.observation_space.high[np.newaxis, ...], num_stack, axis=0)
-
-        self.observation_space = gym.spaces.Box(
-            low=low,
-            high=high,
-            dtype=np.uint8
+        high = np.repeat(
+            self.observation_space.high[np.newaxis, ...], num_stack, axis=0
         )
+
+        self.observation_space = gym.spaces.Box(low=low, high=high, dtype=np.uint8)
 
     def reset(self, **kwargs) -> Tuple[np.ndarray, dict]:
         """Reset environment and initialize frame stack."""
@@ -451,7 +441,7 @@ def make_atari_env(
     noop_max: int = 30,
     save_samples: bool = False,
     sample_dir: Optional[Path] = None,
-    **env_kwargs
+    **env_kwargs,
 ) -> gym.Env:
     """
     Create Atari environment with preprocessing and frame stacking.
@@ -496,6 +486,7 @@ def make_atari_env(
     # Register ALE environments if not already registered
     try:
         import ale_py
+
         gym.register_envs(ale_py)
     except Exception:
         pass  # Already registered or ale_py not available
@@ -521,10 +512,7 @@ def make_atari_env(
 
     # Apply frame stacking wrapper
     env = FrameStack(
-        env,
-        num_stack=num_stack,
-        save_samples=save_samples,
-        sample_dir=sample_dir
+        env, num_stack=num_stack, save_samples=save_samples, sample_dir=sample_dir
     )
 
     return env

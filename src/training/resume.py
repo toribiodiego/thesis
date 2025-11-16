@@ -2,8 +2,8 @@
 
 import os
 import warnings
-from typing import Dict, Any, Optional, Tuple
 from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -24,7 +24,7 @@ def _get_nested_value(config: Dict[str, Any], path: str) -> Any:
         Value at path, or None if path doesn't exist
     """
     value = config
-    for key in path.split('.'):
+    for key in path.split("."):
         if isinstance(value, dict):
             value = value.get(key, None)
         else:
@@ -35,7 +35,7 @@ def _get_nested_value(config: Dict[str, Any], path: str) -> Any:
 def validate_config_compatibility(
     checkpoint_config: Dict[str, Any],
     current_config: Dict[str, Any],
-    strict: bool = False
+    strict: bool = False,
 ) -> Tuple[bool, list]:
     """
     Validate that checkpoint config is compatible with current config.
@@ -58,9 +58,9 @@ def validate_config_compatibility(
 
     # Critical parameters that MUST match
     critical_params = {
-        'env.id': 'Environment ID',
-        'preprocess.frame_size': 'Frame size',
-        'preprocess.stack_size': 'Frame stack size',
+        "env.id": "Environment ID",
+        "preprocess.frame_size": "Frame size",
+        "preprocess.stack_size": "Frame stack size",
     }
 
     for param_path, param_name in critical_params.items():
@@ -76,18 +76,22 @@ def validate_config_compatibility(
 
     # Important parameters that should match (warnings only)
     important_params = {
-        'training.gamma': 'Discount factor',
-        'training.learning_rate': 'Learning rate',
-        'replay.capacity': 'Replay buffer capacity',
-        'training.batch_size': 'Batch size',
-        'training.target_update_interval': 'Target update interval',
+        "training.gamma": "Discount factor",
+        "training.learning_rate": "Learning rate",
+        "replay.capacity": "Replay buffer capacity",
+        "training.batch_size": "Batch size",
+        "training.target_update_interval": "Target update interval",
     }
 
     for param_path, param_name in important_params.items():
         checkpoint_val = _get_nested_value(checkpoint_config, param_path)
         current_val = _get_nested_value(current_config, param_path)
 
-        if checkpoint_val != current_val and checkpoint_val is not None and current_val is not None:
+        if (
+            checkpoint_val != current_val
+            and checkpoint_val is not None
+            and current_val is not None
+        ):
             warnings_list.append(
                 f"WARNING: {param_name} differs - "
                 f"checkpoint: {checkpoint_val}, current: {current_val}"
@@ -96,10 +100,7 @@ def validate_config_compatibility(
     return is_compatible, warnings_list
 
 
-def check_git_hash_mismatch(
-    checkpoint_hash: str,
-    current_hash: str
-) -> Optional[str]:
+def check_git_hash_mismatch(checkpoint_hash: str, current_hash: str) -> Optional[str]:
     """
     Check if git commit hashes match.
 
@@ -110,7 +111,7 @@ def check_git_hash_mismatch(
     Returns:
         Warning message if mismatch, None if match
     """
-    if checkpoint_hash == 'unknown' or current_hash == 'unknown':
+    if checkpoint_hash == "unknown" or current_hash == "unknown":
         return "WARNING: Unable to verify git commit hash (not in git repo)"
 
     if checkpoint_hash != current_hash:
@@ -133,8 +134,8 @@ def resume_from_checkpoint(
     replay_buffer: Any = None,
     env: Any = None,
     config: Dict[str, Any] = None,
-    device: str = 'cpu',
-    strict_config: bool = False
+    device: str = "cpu",
+    strict_config: bool = False,
 ) -> Dict[str, Any]:
     """
     Resume training from checkpoint with full validation.
@@ -189,7 +190,7 @@ def resume_from_checkpoint(
         raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
 
     print(f"\n{'='*80}")
-    print(f"RESUMING FROM CHECKPOINT")
+    print("RESUMING FROM CHECKPOINT")
     print(f"{'='*80}")
     print(f"Checkpoint: {checkpoint_path}")
 
@@ -204,21 +205,21 @@ def resume_from_checkpoint(
             optimizer=optimizer,
             replay_buffer=replay_buffer,
             device=device,
-            strict=True
+            strict=True,
         )
     except Exception as e:
         raise RuntimeError(f"Failed to load checkpoint: {e}")
 
     # Extract state
-    step = loaded_state['step']
-    episode = loaded_state['episode']
-    epsilon_value = loaded_state['epsilon']
-    rng_states = loaded_state['rng_states']
-    commit_hash = loaded_state['commit_hash']
-    timestamp = loaded_state['timestamp']
-    checkpoint_metadata = loaded_state.get('metadata', {})
+    step = loaded_state["step"]
+    episode = loaded_state["episode"]
+    epsilon_value = loaded_state["epsilon"]
+    rng_states = loaded_state["rng_states"]
+    commit_hash = loaded_state["commit_hash"]
+    timestamp = loaded_state["timestamp"]
+    checkpoint_metadata = loaded_state.get("metadata", {})
 
-    print(f"\nCheckpoint Info:")
+    print("\nCheckpoint Info:")
     print(f"  Step: {step:,}")
     print(f"  Episode: {episode:,}")
     print(f"  Epsilon: {epsilon_value:.4f}")
@@ -226,13 +227,13 @@ def resume_from_checkpoint(
     print(f"  Commit: {commit_hash}")
 
     # Validate config compatibility if provided
-    if config is not None and checkpoint_metadata.get('config') is not None:
-        print(f"\nValidating config compatibility...")
+    if config is not None and checkpoint_metadata.get("config") is not None:
+        print("\nValidating config compatibility...")
 
         is_compatible, warnings_list = validate_config_compatibility(
-            checkpoint_config=checkpoint_metadata['config'],
+            checkpoint_config=checkpoint_metadata["config"],
             current_config=config,
-            strict=strict_config
+            strict=strict_config,
         )
 
         if warnings_list:
@@ -247,10 +248,13 @@ def resume_from_checkpoint(
                 raise ValueError(error_msg)
             else:
                 print(f"\n{error_msg}")
-                print("Continuing anyway (use --strict-resume to enforce compatibility)")
+                print(
+                    "Continuing anyway (use --strict-resume to enforce compatibility)"
+                )
 
     # Check git hash mismatch
     from ..training.metadata import get_git_commit_hash
+
     current_hash = get_git_commit_hash()
     git_warning = check_git_hash_mismatch(commit_hash, current_hash)
 
@@ -258,7 +262,7 @@ def resume_from_checkpoint(
         print(f"\n{git_warning}")
 
     # Restore epsilon scheduler state
-    print(f"\nRestoring epsilon scheduler...")
+    print("\nRestoring epsilon scheduler...")
     print(f"  Setting epsilon to: {epsilon_value:.4f}")
     print(f"  Setting frame counter to: {step}")
 
@@ -277,39 +281,47 @@ def resume_from_checkpoint(
 
     # Restore RNG states for reproducibility
     if rng_states:
-        print(f"\nRestoring RNG states for reproducibility...")
+        print("\nRestoring RNG states for reproducibility...")
         try:
             set_rng_states(rng_states, env)
-            print(f"  DONE Python random state restored")
-            print(f"  DONE NumPy random state restored")
-            print(f"  DONE PyTorch random state restored")
-            if 'torch_cuda' in rng_states and torch.cuda.is_available():
-                print(f"  DONE CUDA random state restored")
-            if 'env' in rng_states:
-                print(f"  DONE Environment random state restored")
+            print("  DONE Python random state restored")
+            print("  DONE NumPy random state restored")
+            print("  DONE PyTorch random state restored")
+            if "torch_cuda" in rng_states and torch.cuda.is_available():
+                print("  DONE CUDA random state restored")
+            if "env" in rng_states:
+                print("  DONE Environment random state restored")
         except Exception as e:
             warnings.warn(f"Failed to restore RNG states: {e}")
-            print(f"  ⚠ RNG state restoration failed - training may not be fully deterministic")
+            print(
+                "  ⚠ RNG state restoration failed - training may not be fully deterministic"
+            )
 
     # Replay buffer info
     if replay_buffer is not None:
-        print(f"\nReplay buffer state:")
+        print("\nReplay buffer state:")
         print(f"  Size: {replay_buffer.size:,} / {replay_buffer.capacity:,}")
         print(f"  Write index: {replay_buffer.index}")
         if replay_buffer.size < replay_buffer.min_size:
-            print(f"  ⚠ Buffer below min_size ({replay_buffer.min_size:,}) - will warm up before training")
+            print(
+                f"  ⚠ Buffer below min_size ({replay_buffer.min_size:,}) - will warm up before training"
+            )
 
     # Optimizer info
-    print(f"\nOptimizer state restored:")
+    print("\nOptimizer state restored:")
     print(f"  Type: {type(optimizer).__name__}")
     param_groups = optimizer.param_groups
     if param_groups:
         print(f"  Learning rate: {param_groups[0]['lr']}")
 
     # Model info
-    print(f"\nModel weights restored:")
-    print(f"  Online model parameters: {sum(p.numel() for p in online_model.parameters()):,}")
-    print(f"  Target model parameters: {sum(p.numel() for p in target_model.parameters()):,}")
+    print("\nModel weights restored:")
+    print(
+        f"  Online model parameters: {sum(p.numel() for p in online_model.parameters()):,}"
+    )
+    print(
+        f"  Target model parameters: {sum(p.numel() for p in target_model.parameters()):,}"
+    )
     print(f"  Device: {device}")
 
     print(f"\n{'='*80}")
@@ -317,12 +329,12 @@ def resume_from_checkpoint(
     print(f"{'='*80}\n")
 
     return {
-        'step': step,
-        'episode': episode,
-        'epsilon': epsilon_value,
-        'loaded_metadata': loaded_state,
-        'next_step': step + 1,  # Resume from next step
-        'warnings': warnings_list if config is not None else [],
+        "step": step,
+        "episode": episode,
+        "epsilon": epsilon_value,
+        "loaded_metadata": loaded_state,
+        "next_step": step + 1,  # Resume from next step
+        "warnings": warnings_list if config is not None else [],
     }
 
 
@@ -338,26 +350,26 @@ def add_resume_args(parser):
         >>> add_resume_args(parser)
         >>> args = parser.parse_args()
     """
-    resume_group = parser.add_argument_group('Resume Options')
+    resume_group = parser.add_argument_group("Resume Options")
 
     resume_group.add_argument(
-        '--resume',
+        "--resume",
         type=str,
         default=None,
-        metavar='PATH',
-        help='Path to checkpoint file to resume from (e.g., checkpoints/checkpoint_1000000.pt)'
+        metavar="PATH",
+        help="Path to checkpoint file to resume from (e.g., checkpoints/checkpoint_1000000.pt)",
     )
 
     resume_group.add_argument(
-        '--strict-resume',
-        action='store_true',
-        help='Enforce strict config compatibility when resuming (error on mismatch)'
+        "--strict-resume",
+        action="store_true",
+        help="Enforce strict config compatibility when resuming (error on mismatch)",
     )
 
     resume_group.add_argument(
-        '--no-restore-rng',
-        action='store_true',
-        help='Skip RNG state restoration (training will not be deterministic)'
+        "--no-restore-rng",
+        action="store_true",
+        help="Skip RNG state restoration (training will not be deterministic)",
     )
 
     return parser

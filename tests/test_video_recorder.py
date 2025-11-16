@@ -9,15 +9,16 @@ Verifies:
 - Integration with evaluate() function
 """
 
-import torch
-import pytest
 import numpy as np
+import pytest
+
 from src.models import DQN
 from src.training import VideoRecorder, evaluate
 
 # Check if cv2 is available
 try:
     import cv2
+
     CV2_AVAILABLE = True
 except ImportError:
     CV2_AVAILABLE = False
@@ -27,14 +28,15 @@ except ImportError:
 # VideoRecorder Tests
 # ============================================================================
 
+
 @pytest.mark.skipif(not CV2_AVAILABLE, reason="cv2 not installed")
 def test_video_recorder_basic():
     """Test VideoRecorder captures and saves frames."""
-    import tempfile
     import os
+    import tempfile
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        video_path = os.path.join(tmpdir, 'test_video.mp4')
+        video_path = os.path.join(tmpdir, "test_video.mp4")
         recorder = VideoRecorder(video_path, fps=30, export_gif=False)
 
         # Capture some test frames
@@ -47,20 +49,20 @@ def test_video_recorder_basic():
 
         # Check video was created
         assert info is not None
-        assert info['video_path'] == video_path
-        assert info['num_frames'] == 10
-        assert info['fps'] == 30
+        assert info["video_path"] == video_path
+        assert info["num_frames"] == 10
+        assert info["fps"] == 30
         assert os.path.exists(video_path)
 
 
 @pytest.mark.skipif(not CV2_AVAILABLE, reason="cv2 not installed")
 def test_video_recorder_grayscale():
     """Test VideoRecorder handles grayscale frames."""
-    import tempfile
     import os
+    import tempfile
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        video_path = os.path.join(tmpdir, 'test_gray.mp4')
+        video_path = os.path.join(tmpdir, "test_gray.mp4")
         recorder = VideoRecorder(video_path, fps=15)
 
         # Capture grayscale frames
@@ -76,11 +78,11 @@ def test_video_recorder_grayscale():
 @pytest.mark.skipif(not CV2_AVAILABLE, reason="cv2 not installed")
 def test_video_recorder_float_frames():
     """Test VideoRecorder handles float32 frames."""
-    import tempfile
     import os
+    import tempfile
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        video_path = os.path.join(tmpdir, 'test_float.mp4')
+        video_path = os.path.join(tmpdir, "test_float.mp4")
         recorder = VideoRecorder(video_path, fps=30)
 
         # Capture float32 frames (normalized to [0, 1])
@@ -90,18 +92,18 @@ def test_video_recorder_float_frames():
 
         info = recorder.save()
         assert info is not None
-        assert info['num_frames'] == 5
+        assert info["num_frames"] == 5
         assert os.path.exists(video_path)
 
 
 @pytest.mark.skipif(not CV2_AVAILABLE, reason="cv2 not installed")
 def test_video_recorder_empty():
     """Test VideoRecorder handles empty frame list gracefully."""
-    import tempfile
     import os
+    import tempfile
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        video_path = os.path.join(tmpdir, 'test_empty.mp4')
+        video_path = os.path.join(tmpdir, "test_empty.mp4")
         recorder = VideoRecorder(video_path, fps=30)
 
         # Save without capturing frames
@@ -114,12 +116,12 @@ def test_video_recorder_empty():
 @pytest.mark.skipif(not CV2_AVAILABLE, reason="cv2 not installed")
 def test_video_recorder_directory_creation():
     """Test VideoRecorder creates output directory if needed."""
-    import tempfile
     import os
+    import tempfile
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # Create path with nested directories
-        video_path = os.path.join(tmpdir, 'nested', 'dir', 'test_video.mp4')
+        video_path = os.path.join(tmpdir, "nested", "dir", "test_video.mp4")
         recorder = VideoRecorder(video_path, fps=30)
 
         # Capture frame
@@ -127,7 +129,7 @@ def test_video_recorder_directory_creation():
         recorder.capture_frame(frame)
 
         # Save video
-        info = recorder.save()
+        recorder.save()
 
         # Check directory was created
         assert os.path.exists(os.path.dirname(video_path))
@@ -137,14 +139,14 @@ def test_video_recorder_directory_creation():
 @pytest.mark.skipif(not CV2_AVAILABLE, reason="cv2 not installed")
 def test_video_recorder_different_fps():
     """Test VideoRecorder with different frame rates."""
-    import tempfile
     import os
+    import tempfile
 
     fps_values = [15, 30, 60]
 
     for fps in fps_values:
         with tempfile.TemporaryDirectory() as tmpdir:
-            video_path = os.path.join(tmpdir, f'test_fps_{fps}.mp4')
+            video_path = os.path.join(tmpdir, f"test_fps_{fps}.mp4")
             recorder = VideoRecorder(video_path, fps=fps)
 
             # Capture frames
@@ -153,21 +155,21 @@ def test_video_recorder_different_fps():
                 recorder.capture_frame(frame)
 
             info = recorder.save()
-            assert info['fps'] == fps
+            assert info["fps"] == fps
             assert os.path.exists(video_path)
 
 
 @pytest.mark.skipif(not CV2_AVAILABLE, reason="cv2 not installed")
 def test_video_recorder_different_resolutions():
     """Test VideoRecorder with different frame sizes."""
-    import tempfile
     import os
+    import tempfile
 
     resolutions = [(84, 84), (210, 160), (128, 128)]
 
     for height, width in resolutions:
         with tempfile.TemporaryDirectory() as tmpdir:
-            video_path = os.path.join(tmpdir, f'test_{width}x{height}.mp4')
+            video_path = os.path.join(tmpdir, f"test_{width}x{height}.mp4")
             recorder = VideoRecorder(video_path, fps=30)
 
             # Capture frames with this resolution
@@ -184,19 +186,20 @@ def test_video_recorder_different_resolutions():
 # Integration with evaluate() Tests
 # ============================================================================
 
+
 @pytest.mark.skipif(not CV2_AVAILABLE, reason="cv2 not installed")
 def test_evaluate_with_video_recording():
     """Test evaluate records video when requested."""
-    from unittest.mock import Mock
-    import tempfile
     import os
+    import tempfile
+    from unittest.mock import Mock
 
     with tempfile.TemporaryDirectory() as tmpdir:
         env = Mock()
         env.action_space.n = 6
         env.unwrapped = Mock()
         env.unwrapped.spec = Mock()
-        env.unwrapped.spec.id = 'TestEnv-v0'
+        env.unwrapped.spec.id = "TestEnv-v0"
 
         dummy_state = np.random.randint(0, 255, (4, 84, 84), dtype=np.uint8)
         dummy_frame = np.random.randint(0, 255, (210, 160, 3), dtype=np.uint8)
@@ -204,6 +207,7 @@ def test_evaluate_with_video_recording():
         env.render.return_value = dummy_frame
 
         step_count = [0]
+
         def mock_step(action):
             step_count[0] += 1
             done = step_count[0] >= 5
@@ -216,25 +220,26 @@ def test_evaluate_with_video_recording():
 
         # Evaluate with video recording
         results = evaluate(
-            env, model,
+            env,
+            model,
             num_episodes=2,
             eval_epsilon=0.05,
-            device='cpu',
+            device="cpu",
             record_video=True,
             video_dir=tmpdir,
-            step=250000
+            step=250000,
         )
 
         # Check video info is included
-        assert 'video_info' in results
-        assert results['video_info'] is not None
-        assert 'video_path' in results['video_info']
-        assert 'num_frames' in results['video_info']
+        assert "video_info" in results
+        assert results["video_info"] is not None
+        assert "video_path" in results["video_info"]
+        assert "num_frames" in results["video_info"]
 
         # Check video file exists
-        video_path = results['video_info']['video_path']
+        video_path = results["video_info"]["video_path"]
         assert os.path.exists(video_path)
-        assert video_path.endswith('.mp4')
+        assert video_path.endswith(".mp4")
 
 
 def test_evaluate_without_video():
@@ -247,6 +252,7 @@ def test_evaluate_without_video():
     env.reset.return_value = (dummy_state, {})
 
     step_count = [0]
+
     def mock_step(action):
         step_count[0] += 1
         done = step_count[0] >= 5
@@ -258,25 +264,26 @@ def test_evaluate_without_video():
     model = DQN(num_actions=6)
 
     # Evaluate without video
-    results = evaluate(env, model, num_episodes=1, eval_epsilon=0.05,
-                      device='cpu', record_video=False)
+    results = evaluate(
+        env, model, num_episodes=1, eval_epsilon=0.05, device="cpu", record_video=False
+    )
 
     # Check video info is NOT included
-    assert 'video_info' not in results
+    assert "video_info" not in results
 
 
 @pytest.mark.skipif(not CV2_AVAILABLE, reason="cv2 not installed")
 def test_evaluate_video_only_first_episode():
     """Test evaluate records video only for first episode."""
-    from unittest.mock import Mock
     import tempfile
+    from unittest.mock import Mock
 
     with tempfile.TemporaryDirectory() as tmpdir:
         env = Mock()
         env.action_space.n = 6
         env.unwrapped = Mock()
         env.unwrapped.spec = Mock()
-        env.unwrapped.spec.id = 'TestEnv-v0'
+        env.unwrapped.spec.id = "TestEnv-v0"
 
         dummy_state = np.random.randint(0, 255, (4, 84, 84), dtype=np.uint8)
         dummy_frame = np.random.randint(0, 255, (210, 160, 3), dtype=np.uint8)
@@ -303,20 +310,21 @@ def test_evaluate_video_only_first_episode():
 
         # Evaluate multiple episodes with video
         results = evaluate(
-            env, model,
+            env,
+            model,
             num_episodes=3,  # 3 episodes
             eval_epsilon=0.05,
-            device='cpu',
+            device="cpu",
             record_video=True,
             video_dir=tmpdir,
-            step=250000
+            step=250000,
         )
 
         # Video should only be from first episode
         # (5 steps per episode × 1 episode = 5 render calls)
         # Plus possible reset renders
         # Check that video exists and has reasonable frame count
-        assert 'video_info' in results
-        assert results['video_info']['num_frames'] > 0
+        assert "video_info" in results
+        assert results["video_info"]["num_frames"] > 0
         # Should be less than would be from all 3 episodes
-        assert results['video_info']['num_frames'] < 15
+        assert results["video_info"]["num_frames"] < 15

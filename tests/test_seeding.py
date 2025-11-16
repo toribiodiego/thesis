@@ -11,13 +11,14 @@ Tests that set_seed() properly seeds:
 - Multiprocessing worker isolation
 """
 
-import pytest
 import random
-import numpy as np
-import torch
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
-from src.utils import set_seed, seed_env
+import numpy as np
+import pytest
+import torch
+
+from src.utils import seed_env, set_seed
 
 
 class TestSetSeed:
@@ -67,11 +68,11 @@ class TestSetSeed:
         """Test that PyTorch CUDA random is properly seeded."""
         # Seed with value 42
         set_seed(42)
-        values1 = torch.rand(10, device='cuda')
+        values1 = torch.rand(10, device="cuda")
 
         # Seed again with same value
         set_seed(42)
-        values2 = torch.rand(10, device='cuda')
+        values2 = torch.rand(10, device="cuda")
 
         # Should generate identical sequence
         assert torch.allclose(values1, values2)
@@ -170,10 +171,9 @@ class TestSeedEnv:
     def test_seed_env_multiple_episodes(self):
         """Test seeding environment across multiple episodes."""
         mock_env = Mock()
-        mock_env.reset = Mock(side_effect=[
-            (f"obs_{i}", {"episode": i})
-            for i in range(5)
-        ])
+        mock_env.reset = Mock(
+            side_effect=[(f"obs_{i}", {"episode": i}) for i in range(5)]
+        )
 
         base_seed = 100
         results = []
@@ -182,11 +182,11 @@ class TestSeedEnv:
             results.append((obs, info))
 
         # Verify correct seeds were used
-        expected_calls = [((100 + i,),) for i in range(5)]
+        [((100 + i,),) for i in range(5)]
         actual_calls = [call[1] for call in mock_env.reset.call_args_list]
 
         # Extract just the keyword arguments (seed=...)
-        actual_seeds = [call['seed'] for call in actual_calls]
+        actual_seeds = [call["seed"] for call in actual_calls]
         expected_seeds = [100 + i for i in range(5)]
 
         assert actual_seeds == expected_seeds
@@ -229,10 +229,10 @@ class TestEndToEndSeeding:
 
             # Generate episode data
             episode_data = {
-                'episode': episode,
-                'random_val': random.random(),
-                'np_val': np.random.rand(),
-                'torch_val': torch.rand(1).item()
+                "episode": episode,
+                "random_val": random.random(),
+                "np_val": np.random.rand(),
+                "torch_val": torch.rand(1).item(),
             }
             episodes.append(episode_data)
 
@@ -243,9 +243,9 @@ class TestEndToEndSeeding:
         repro_torch = torch.rand(1).item()
 
         # Should match episode 1 exactly
-        assert repro_random == episodes[1]['random_val']
-        assert repro_np == episodes[1]['np_val']
-        assert repro_torch == episodes[1]['torch_val']
+        assert repro_random == episodes[1]["random_val"]
+        assert repro_np == episodes[1]["np_val"]
+        assert repro_torch == episodes[1]["torch_val"]
 
     def test_resume_from_checkpoint_seeding(self):
         """Test that seeding works correctly when resuming from checkpoint."""
@@ -253,7 +253,7 @@ class TestEndToEndSeeding:
         set_seed(42, deterministic=True)
 
         # Generate some values
-        pre_values = [random.random() for _ in range(5)]
+        [random.random() for _ in range(5)]
 
         # Capture current RNG state (simulating checkpoint save)
         python_state = random.getstate()
@@ -276,10 +276,11 @@ class TestEndToEndSeeding:
 
     def test_seed_propagation_metadata(self):
         """Test that seed is properly recorded in metadata."""
-        from src.utils import save_run_metadata
-        import tempfile
-        import shutil
         import json
+        import shutil
+        import tempfile
+
+        from src.utils import save_run_metadata
 
         # Create temp directory
         temp_dir = tempfile.mkdtemp()
@@ -287,18 +288,16 @@ class TestEndToEndSeeding:
         try:
             # Save metadata with seed
             save_run_metadata(
-                output_dir=temp_dir,
-                config={'agent': {'gamma': 0.99}},
-                seed=42
+                output_dir=temp_dir, config={"agent": {"gamma": 0.99}}, seed=42
             )
 
             # Load and verify
             meta_path = f"{temp_dir}/meta.json"
-            with open(meta_path, 'r') as f:
+            with open(meta_path, "r") as f:
                 metadata = json.load(f)
 
-            assert 'seed' in metadata
-            assert metadata['seed'] == 42
+            assert "seed" in metadata
+            assert metadata["seed"] == 42
 
         finally:
             # Clean up
@@ -315,19 +314,19 @@ class TestDeterministicBehavior:
 
         # First run with deterministic mode
         set_seed(42, deterministic=True)
-        x = torch.randn(10, 10, device='cuda')
-        y = torch.randn(10, 10, device='cuda')
+        x = torch.randn(10, 10, device="cuda")
+        y = torch.randn(10, 10, device="cuda")
         result1 = torch.matmul(x, y)
 
         # Second run with same seed
         set_seed(42, deterministic=True)
-        x = torch.randn(10, 10, device='cuda')
-        y = torch.randn(10, 10, device='cuda')
+        x = torch.randn(10, 10, device="cuda")
+        y = torch.randn(10, 10, device="cuda")
         result2 = torch.matmul(x, y)
 
         # Should be identical
         assert torch.allclose(result1, result2, rtol=1e-6, atol=1e-8)
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

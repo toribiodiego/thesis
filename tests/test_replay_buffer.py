@@ -11,6 +11,7 @@ Verifies:
 
 import numpy as np
 import pytest
+
 from src.replay import ReplayBuffer
 
 
@@ -55,7 +56,7 @@ def test_replay_buffer_append_single():
     assert buffer.dones[0] == done
 
     # First transition is always an episode start
-    assert buffer.episode_starts[0] == True
+    assert buffer.episode_starts[0]
 
 
 def test_replay_buffer_append_multiple():
@@ -86,20 +87,20 @@ def test_replay_buffer_episode_boundary_tracking():
 
     # Episode 1: 5 transitions
     for i in range(5):
-        done = (i == 4)  # Last transition ends episode
+        done = i == 4  # Last transition ends episode
         buffer.append(state, i, 1.0, state, done)
 
     # Episode 2: 3 transitions
     for i in range(3):
-        done = (i == 2)
+        done = i == 2
         buffer.append(state, i, 1.0, state, done)
 
     # Check episode starts
-    assert buffer.episode_starts[0] == True   # First transition
-    assert buffer.episode_starts[1] == False  # Episode 1 continues
-    assert buffer.episode_starts[4] == False  # Last of episode 1
-    assert buffer.episode_starts[5] == True   # Episode 2 starts (after done)
-    assert buffer.episode_starts[6] == False  # Episode 2 continues
+    assert buffer.episode_starts[0]  # First transition
+    assert not buffer.episode_starts[1]  # Episode 1 continues
+    assert not buffer.episode_starts[4]  # Last of episode 1
+    assert buffer.episode_starts[5]  # Episode 2 starts (after done)
+    assert not buffer.episode_starts[6]  # Episode 2 continues
 
 
 def test_replay_buffer_circular_wrap():
@@ -165,30 +166,30 @@ def test_replay_buffer_valid_index_detection():
 
     # Add episode 1: 5 transitions
     for i in range(5):
-        done = (i == 4)
+        done = i == 4
         buffer.append(state, i, 1.0, state, done)
 
     # Add episode 2: 3 transitions
     for i in range(3):
-        done = (i == 2)
+        done = i == 2
         buffer.append(state, i, 1.0, state, done)
 
     # Index 0 is episode start - not valid
-    assert buffer._is_valid_index(0) == False
+    assert not buffer._is_valid_index(0)
 
     # Index 1-4 should be valid (episode 1, not starts)
     for i in range(1, 5):
-        assert buffer._is_valid_index(i) == True
+        assert buffer._is_valid_index(i)
 
     # Index 5 is episode start - not valid
-    assert buffer._is_valid_index(5) == False
+    assert not buffer._is_valid_index(5)
 
     # Index 6-7 should be valid (episode 2, not starts)
     for i in range(6, 8):
-        assert buffer._is_valid_index(i) == True
+        assert buffer._is_valid_index(i)
 
     # Index 8+ don't exist yet - not valid
-    assert buffer._is_valid_index(8) == False
+    assert not buffer._is_valid_index(8)
 
 
 def test_replay_buffer_get_valid_indices():
@@ -199,12 +200,12 @@ def test_replay_buffer_get_valid_indices():
 
     # Add episode 1: 5 transitions
     for i in range(5):
-        done = (i == 4)
+        done = i == 4
         buffer.append(state, i, 1.0, state, done)
 
     # Add episode 2: 5 transitions
     for i in range(5):
-        done = (i == 4)
+        done = i == 4
         buffer.append(state, i, 1.0, state, done)
 
     valid_indices = buffer._get_valid_indices()
@@ -236,13 +237,13 @@ def test_replay_buffer_wrap_around_boundary():
     buffer.append(state, 999, 1.0, state, True)
 
     assert buffer.index == 1
-    assert buffer.dones[0] == True  # Overwrote with done=True
+    assert buffer.dones[0]  # Overwrote with done=True
 
     # Next append should be marked as episode start
     buffer.append(state, 888, 1.0, state, False)
 
     assert buffer.index == 2
-    assert buffer.episode_starts[1] == True  # New episode after done
+    assert buffer.episode_starts[1]  # New episode after done
 
 
 def test_replay_buffer_empty_valid_indices():
@@ -295,7 +296,7 @@ def test_replay_buffer_dones_dtype():
     buffer.append(state, 0, 1.0, state, True)
 
     assert buffer.dones.dtype == bool
-    assert buffer.dones[0] == True
+    assert buffer.dones[0]
 
 
 def test_replay_buffer_sample_basic():
@@ -307,12 +308,12 @@ def test_replay_buffer_sample_basic():
 
     # Episode 1: 10 transitions
     for i in range(10):
-        done = (i == 9)
+        done = i == 9
         buffer.append(state, i, float(i), state, done)
 
     # Episode 2: 10 transitions
     for i in range(10):
-        done = (i == 9)
+        done = i == 9
         buffer.append(state, i + 10, float(i + 10), state, done)
 
     # Sample a batch
@@ -320,31 +321,31 @@ def test_replay_buffer_sample_basic():
     batch = buffer.sample(batch_size)
 
     # Check batch structure
-    assert 'states' in batch
-    assert 'actions' in batch
-    assert 'rewards' in batch
-    assert 'next_states' in batch
-    assert 'dones' in batch
+    assert "states" in batch
+    assert "actions" in batch
+    assert "rewards" in batch
+    assert "next_states" in batch
+    assert "dones" in batch
 
     # Check shapes
-    assert batch['states'].shape == (batch_size, 4, 84, 84)
-    assert batch['actions'].shape == (batch_size,)
-    assert batch['rewards'].shape == (batch_size,)
-    assert batch['next_states'].shape == (batch_size, 4, 84, 84)
-    assert batch['dones'].shape == (batch_size,)
+    assert batch["states"].shape == (batch_size, 4, 84, 84)
+    assert batch["actions"].shape == (batch_size,)
+    assert batch["rewards"].shape == (batch_size,)
+    assert batch["next_states"].shape == (batch_size, 4, 84, 84)
+    assert batch["dones"].shape == (batch_size,)
 
     # Check dtypes (observations converted to float32)
-    assert batch['states'].dtype == np.float32
-    assert batch['actions'].dtype == np.int64
-    assert batch['rewards'].dtype == np.float32
-    assert batch['next_states'].dtype == np.float32
-    assert batch['dones'].dtype == bool
+    assert batch["states"].dtype == np.float32
+    assert batch["actions"].dtype == np.int64
+    assert batch["rewards"].dtype == np.float32
+    assert batch["next_states"].dtype == np.float32
+    assert batch["dones"].dtype == bool
 
     # Check normalization (default normalize=True)
-    assert batch['states'].min() >= 0.0
-    assert batch['states'].max() <= 1.0
-    assert batch['next_states'].min() >= 0.0
-    assert batch['next_states'].max() <= 1.0
+    assert batch["states"].min() >= 0.0
+    assert batch["states"].max() <= 1.0
+    assert batch["next_states"].min() >= 0.0
+    assert batch["next_states"].max() <= 1.0
 
 
 def test_replay_buffer_sample_insufficient_samples():
@@ -377,7 +378,7 @@ def test_replay_buffer_sample_without_replacement():
     # Add transitions with unique actions
     state = np.random.randint(0, 255, size=(4, 84, 84), dtype=np.uint8)
     for i in range(20):
-        done = (i == 9 or i == 19)  # Two episodes
+        done = i == 9 or i == 19  # Two episodes
         buffer.append(state, i, float(i), state, done)
 
     # Sample a batch
@@ -385,7 +386,7 @@ def test_replay_buffer_sample_without_replacement():
     batch = buffer.sample(batch_size)
 
     # Check no duplicate actions (since we made them unique)
-    actions = batch['actions']
+    actions = batch["actions"]
     assert len(np.unique(actions)) == len(actions), "Found duplicate samples"
 
 
@@ -394,19 +395,16 @@ def test_replay_buffer_sample_respects_boundaries():
     buffer = ReplayBuffer(capacity=100, obs_shape=(4, 84, 84))
 
     # Create distinct states for each transition
-    states = [
-        np.full((4, 84, 84), i, dtype=np.uint8)
-        for i in range(20)
-    ]
+    states = [np.full((4, 84, 84), i, dtype=np.uint8) for i in range(20)]
 
     # Episode 1: indices 0-9
     for i in range(10):
-        done = (i == 9)
+        done = i == 9
         buffer.append(states[i], i, float(i), states[i], done)
 
     # Episode 2: indices 10-19
     for i in range(10, 20):
-        done = (i == 19)
+        done = i == 19
         buffer.append(states[i], i, float(i), states[i], done)
 
     # Sample many batches
@@ -414,10 +412,10 @@ def test_replay_buffer_sample_respects_boundaries():
         batch = buffer.sample(batch_size=5)
 
         # For each sampled transition, verify next_state is consistent
-        for j in range(len(batch['states'])):
-            state = batch['states'][j]
-            next_state = batch['next_states'][j]
-            action = batch['actions'][j]
+        for j in range(len(batch["states"])):
+            state = batch["states"][j]
+            next_state = batch["next_states"][j]
+            batch["actions"][j]
 
             # Find which index this is
             state_val = state[0, 0, 0]  # Unique identifier
@@ -426,12 +424,13 @@ def test_replay_buffer_sample_respects_boundaries():
             next_val = next_state[0, 0, 0]
 
             # If not done, next state should be consecutive
-            if not batch['dones'][j]:
+            if not batch["dones"][j]:
                 # For our setup, consecutive states differ by 1
                 # But we can't guarantee this at episode boundaries
                 # Just check that we didn't jump episodes
-                assert abs(int(next_val) - int(state_val)) <= 1, \
-                    "Crossed episode boundary in sampling"
+                assert (
+                    abs(int(next_val) - int(state_val)) <= 1
+                ), "Crossed episode boundary in sampling"
 
 
 def test_replay_buffer_sample_correct_next_states():
@@ -451,17 +450,18 @@ def test_replay_buffer_sample_correct_next_states():
     # Sample and verify
     batch = buffer.sample(batch_size=5)
 
-    for i in range(len(batch['states'])):
-        state_val = batch['states'][i][0, 0, 0]
-        next_val = batch['next_states'][i][0, 0, 0]
-        action = batch['actions'][i]
+    for i in range(len(batch["states"])):
+        state_val = batch["states"][i][0, 0, 0]
+        next_val = batch["next_states"][i][0, 0, 0]
+        batch["actions"][i]
 
         # next_state should have value state_val + 10/255
         # (because we increment by 10 each time in uint8, then normalize by /255)
         # Account for normalization: values are divided by 255
         expected_next = state_val + 10.0 / 255.0
-        assert abs(next_val - expected_next) < 1e-5, \
-            f"Next state mismatch: expected {expected_next}, got {next_val}"
+        assert (
+            abs(next_val - expected_next) < 1e-5
+        ), f"Next state mismatch: expected {expected_next}, got {next_val}"
 
 
 def test_replay_buffer_sample_after_wrap():
@@ -473,14 +473,14 @@ def test_replay_buffer_sample_after_wrap():
 
     # Fill buffer past capacity
     for i in range(20):
-        done = (i % 10 == 9)  # Episode ends every 10 transitions
+        done = i % 10 == 9  # Episode ends every 10 transitions
         buffer.append(state, i, float(i), state, done)
 
     # Should be able to sample
     batch = buffer.sample(batch_size=3)
 
-    assert batch['states'].shape == (3, 4, 84, 84)
-    assert batch['actions'].shape == (3,)
+    assert batch["states"].shape == (3, 4, 84, 84)
+    assert batch["actions"].shape == (3,)
 
 
 def test_replay_buffer_sample_deterministic_with_seed():
@@ -491,7 +491,7 @@ def test_replay_buffer_sample_deterministic_with_seed():
 
     # Add transitions
     for i in range(20):
-        done = (i == 19)
+        done = i == 19
         buffer.append(state, i, float(i), state, done)
 
     # Sample with fixed seed
@@ -503,8 +503,8 @@ def test_replay_buffer_sample_deterministic_with_seed():
     batch2 = buffer.sample(batch_size=5)
 
     # Should get identical samples
-    assert np.array_equal(batch1['actions'], batch2['actions'])
-    assert np.array_equal(batch1['rewards'], batch2['rewards'])
+    assert np.array_equal(batch1["actions"], batch2["actions"])
+    assert np.array_equal(batch1["rewards"], batch2["rewards"])
 
 
 def test_replay_buffer_sample_full_capacity():
@@ -522,7 +522,7 @@ def test_replay_buffer_sample_full_capacity():
     # (minus 2 for episode start and write index position)
     batch = buffer.sample(batch_size=capacity - 2)
 
-    assert len(batch['actions']) == capacity - 2
+    assert len(batch["actions"]) == capacity - 2
 
 
 def test_replay_buffer_normalize_true():
@@ -545,13 +545,13 @@ def test_replay_buffer_normalize_true():
     batch = buffer.sample(batch_size=4)
 
     # Check dtype
-    assert batch['states'].dtype == np.float32
-    assert batch['next_states'].dtype == np.float32
+    assert batch["states"].dtype == np.float32
+    assert batch["next_states"].dtype == np.float32
 
     # Check normalization: state values should be normalized to [0, 1]
     # We have alternating 255 and 0, so normalized values are 1.0 and 0.0
-    assert batch['states'].min() == 0.0 or batch['states'].max() == 1.0
-    assert batch['next_states'].min() == 0.0 or batch['next_states'].max() == 1.0
+    assert batch["states"].min() == 0.0 or batch["states"].max() == 1.0
+    assert batch["next_states"].min() == 0.0 or batch["next_states"].max() == 1.0
 
 
 def test_replay_buffer_normalize_false():
@@ -574,13 +574,13 @@ def test_replay_buffer_normalize_false():
     batch = buffer.sample(batch_size=4)
 
     # Check dtype (still float32)
-    assert batch['states'].dtype == np.float32
-    assert batch['next_states'].dtype == np.float32
+    assert batch["states"].dtype == np.float32
+    assert batch["next_states"].dtype == np.float32
 
     # Check no normalization - values stay in [0, 255]
     # We have alternating 255 and 128
-    assert batch['states'].max() == 255.0 or batch['states'].min() == 128.0
-    assert batch['next_states'].max() == 255.0 or batch['next_states'].min() == 128.0
+    assert batch["states"].max() == 255.0 or batch["states"].min() == 128.0
+    assert batch["next_states"].max() == 255.0 or batch["next_states"].min() == 128.0
 
 
 def test_replay_buffer_uint8_storage_memory_efficiency():
@@ -598,8 +598,8 @@ def test_replay_buffer_uint8_storage_memory_efficiency():
 
     # But sampled data should be float32
     batch = buffer.sample(batch_size=3)
-    assert batch['states'].dtype == np.float32
-    assert batch['next_states'].dtype == np.float32
+    assert batch["states"].dtype == np.float32
+    assert batch["next_states"].dtype == np.float32
 
 
 def test_replay_buffer_conversion_accuracy():
@@ -635,8 +635,8 @@ def test_replay_buffer_conversion_accuracy():
 
     # Check conversion accuracy
     # 0 → 0.0, 127 → 0.498, 255 → 1.0, 128 → 0.502
-    expected = np.array([[[0.0, 127/255.0, 1.0, 128/255.0]]], dtype=np.float32)
-    assert np.allclose(batch['states'], expected, atol=1e-6)
+    expected = np.array([[[0.0, 127 / 255.0, 1.0, 128 / 255.0]]], dtype=np.float32)
+    assert np.allclose(batch["states"], expected, atol=1e-6)
 
 
 def test_replay_buffer_can_sample_basic():
@@ -646,20 +646,20 @@ def test_replay_buffer_can_sample_basic():
     state = np.random.randint(0, 255, size=(4, 84, 84), dtype=np.uint8)
 
     # Initially can't sample
-    assert buffer.can_sample() == False
+    assert not buffer.can_sample()
 
     # Add transitions up to min_size - 1
     for i in range(99):
         buffer.append(state, i, float(i), state, False)
 
     # Still can't sample (99 < 100)
-    assert buffer.can_sample() == False
+    assert not buffer.can_sample()
 
     # Add one more to reach min_size
     buffer.append(state, 99, 99.0, state, False)
 
     # Now can sample
-    assert buffer.can_sample() == True
+    assert buffer.can_sample()
 
 
 def test_replay_buffer_can_sample_with_batch_size():
@@ -673,17 +673,17 @@ def test_replay_buffer_can_sample_with_batch_size():
         buffer.append(state, i, float(i), state, False)
 
     # Buffer has min_size, but check batch_size
-    assert buffer.can_sample() == True
+    assert buffer.can_sample()
 
     # Check if we have enough valid samples for batch_size=10
     # Note: first transition is episode start, last can't sample (write position)
     # Valid count = size - 1 (episode start) - 1 (write position) = 13
-    assert buffer.can_sample(batch_size=10) == True
+    assert buffer.can_sample(batch_size=10)
 
     # Check if we have enough for larger batch
     # We have 13 valid samples (15 total - 1 episode start - 1 write position)
-    assert buffer.can_sample(batch_size=13) == True
-    assert buffer.can_sample(batch_size=14) == False  # Not enough valid
+    assert buffer.can_sample(batch_size=13)
+    assert not buffer.can_sample(batch_size=14)  # Not enough valid
 
 
 def test_replay_buffer_can_sample_default_min_size():
@@ -693,7 +693,7 @@ def test_replay_buffer_can_sample_default_min_size():
     assert buffer.min_size == 50_000
 
     # Empty buffer can't sample
-    assert buffer.can_sample() == False
+    assert not buffer.can_sample()
 
 
 def test_replay_buffer_can_sample_custom_min_size():
@@ -708,12 +708,12 @@ def test_replay_buffer_can_sample_custom_min_size():
     for i in range(499):
         buffer.append(state, i, float(i), state, False)
 
-    assert buffer.can_sample() == False
+    assert not buffer.can_sample()
 
     # Add one more
     buffer.append(state, 499, 499.0, state, False)
 
-    assert buffer.can_sample() == True
+    assert buffer.can_sample()
 
 
 def test_replay_buffer_warm_up_prevents_early_sampling():
@@ -727,10 +727,10 @@ def test_replay_buffer_warm_up_prevents_early_sampling():
         buffer.append(state, i, float(i), state, False)
 
     # can_sample should return False
-    assert buffer.can_sample() == False
+    assert not buffer.can_sample()
 
     # Even though we have enough for a small batch
-    assert buffer.can_sample(batch_size=5) == False
+    assert not buffer.can_sample(batch_size=5)
 
 
 def test_replay_buffer_can_sample_with_episodes():
@@ -742,18 +742,18 @@ def test_replay_buffer_can_sample_with_episodes():
     # Add 3 short episodes of 10 transitions each
     for ep in range(3):
         for i in range(10):
-            done = (i == 9)
+            done = i == 9
             buffer.append(state, ep * 10 + i, float(i), state, done)
 
     # Buffer has 30 transitions, min_size is 20
     assert len(buffer) == 30
-    assert buffer.can_sample() == True
+    assert buffer.can_sample()
 
     # Check valid indices count
     # Each episode: first is episode start (not valid), rest are valid
     # Episode 1: 9 valid, Episode 2: 9 valid, Episode 3: 9 valid = 27 valid
-    assert buffer.can_sample(batch_size=27) == True
-    assert buffer.can_sample(batch_size=28) == False
+    assert buffer.can_sample(batch_size=27)
+    assert not buffer.can_sample(batch_size=28)
 
 
 def test_replay_buffer_uniform_sampling_without_replacement():
@@ -764,7 +764,7 @@ def test_replay_buffer_uniform_sampling_without_replacement():
 
     # Add transitions
     for i in range(100):
-        done = (i % 20 == 19)  # Episode every 20 steps
+        done = i % 20 == 19  # Episode every 20 steps
         buffer.append(state, i, float(i), state, done)
 
     # Sample batch
@@ -772,16 +772,27 @@ def test_replay_buffer_uniform_sampling_without_replacement():
     batch = buffer.sample(batch_size)
 
     # Verify shapes as specified in requirements
-    assert batch['states'].shape == (batch_size, 4, 84, 84), \
-        f"Expected states shape (B,4,84,84), got {batch['states'].shape}"
-    assert batch['actions'].shape == (batch_size,), \
-        f"Expected actions shape (B,), got {batch['actions'].shape}"
-    assert batch['rewards'].shape == (batch_size,), \
-        f"Expected rewards shape (B,), got {batch['rewards'].shape}"
-    assert batch['next_states'].shape == (batch_size, 4, 84, 84), \
-        f"Expected next_states shape (B,4,84,84), got {batch['next_states'].shape}"
-    assert batch['dones'].shape == (batch_size,), \
-        f"Expected dones shape (B,), got {batch['dones'].shape}"
+    assert batch["states"].shape == (
+        batch_size,
+        4,
+        84,
+        84,
+    ), f"Expected states shape (B,4,84,84), got {batch['states'].shape}"
+    assert batch["actions"].shape == (
+        batch_size,
+    ), f"Expected actions shape (B,), got {batch['actions'].shape}"
+    assert batch["rewards"].shape == (
+        batch_size,
+    ), f"Expected rewards shape (B,), got {batch['rewards'].shape}"
+    assert batch["next_states"].shape == (
+        batch_size,
+        4,
+        84,
+        84,
+    ), f"Expected next_states shape (B,4,84,84), got {batch['next_states'].shape}"
+    assert batch["dones"].shape == (
+        batch_size,
+    ), f"Expected dones shape (B,), got {batch['dones'].shape}"
 
 
 def test_replay_buffer_boundary_safe_sampling():
@@ -792,12 +803,12 @@ def test_replay_buffer_boundary_safe_sampling():
 
     # Episode 1: 5 transitions (indices 0-4)
     for i in range(5):
-        done = (i == 4)
+        done = i == 4
         buffer.append(state, i, float(i), state, done)
 
     # Episode 2: 5 transitions (indices 5-9)
     for i in range(5, 10):
-        done = (i == 9)
+        done = i == 9
         buffer.append(state, i, float(i), state, done)
 
     # Check that episode starts are not in valid indices
@@ -827,7 +838,7 @@ def test_replay_buffer_no_cross_episode_sampling():
         for i in range(10):
             # Each episode has distinct state values
             state = np.full((4, 84, 84), ep * 10 + i, dtype=np.uint8)
-            done = (i == 9)
+            done = i == 9
             buffer.append(state, ep * 10 + i, float(i), state, done)
 
     # Sample many batches
@@ -835,12 +846,11 @@ def test_replay_buffer_no_cross_episode_sampling():
         batch = buffer.sample(batch_size=10)
 
         # For each transition, verify it's not from an episode start
-        for i in range(len(batch['states'])):
-            action = batch['actions'][i]
+        for i in range(len(batch["states"])):
+            action = batch["actions"][i]
 
             # Action should not be at episode start positions (0, 10, 20, 30, 40)
-            assert action % 10 != 0, \
-                f"Sampled action {action} is at episode start"
+            assert action % 10 != 0, f"Sampled action {action} is at episode start"
 
 
 def test_replay_buffer_wrap_around_boundary_safety():
@@ -852,7 +862,7 @@ def test_replay_buffer_wrap_around_boundary_safety():
 
     # Fill buffer past capacity with episodes
     for i in range(30):
-        done = (i % 5 == 4)  # Episode every 5 steps
+        done = i % 5 == 4  # Episode every 5 steps
         buffer.append(state, i, float(i), state, done)
 
     # Buffer has wrapped around
@@ -863,10 +873,10 @@ def test_replay_buffer_wrap_around_boundary_safety():
     batch = buffer.sample(batch_size=5)
 
     # Verify we got valid samples
-    assert batch['states'].shape == (5, 4, 84, 84)
+    assert batch["states"].shape == (5, 4, 84, 84)
 
     # Check that no sampled actions are at episode starts
-    for action in batch['actions']:
+    for action in batch["actions"]:
         # Episode starts would be at i % 5 == 0 after first episode
         # But we can't verify this perfectly without more tracking
         # Just ensure we got samples
@@ -892,16 +902,18 @@ def test_replay_buffer_sampling_deterministic():
     batch2 = buffer.sample(batch_size=8)
 
     # Should be identical
-    assert np.array_equal(batch1['actions'], batch2['actions'])
-    assert np.allclose(batch1['states'], batch2['states'])
-    assert np.allclose(batch1['next_states'], batch2['next_states'])
+    assert np.array_equal(batch1["actions"], batch2["actions"])
+    assert np.allclose(batch1["states"], batch2["states"])
+    assert np.allclose(batch1["next_states"], batch2["next_states"])
 
 
 def test_replay_buffer_device_cpu():
     """Test device transfer to CPU returns PyTorch tensors."""
     import torch
 
-    buffer = ReplayBuffer(capacity=100, obs_shape=(4, 84, 84), min_size=10, device='cpu')
+    buffer = ReplayBuffer(
+        capacity=100, obs_shape=(4, 84, 84), min_size=10, device="cpu"
+    )
 
     state = np.random.randint(0, 255, size=(4, 84, 84), dtype=np.uint8)
 
@@ -913,19 +925,19 @@ def test_replay_buffer_device_cpu():
     batch = buffer.sample(batch_size=5)
 
     # Check returns PyTorch tensors
-    assert isinstance(batch['states'], torch.Tensor)
-    assert isinstance(batch['actions'], torch.Tensor)
-    assert isinstance(batch['rewards'], torch.Tensor)
-    assert isinstance(batch['next_states'], torch.Tensor)
-    assert isinstance(batch['dones'], torch.Tensor)
+    assert isinstance(batch["states"], torch.Tensor)
+    assert isinstance(batch["actions"], torch.Tensor)
+    assert isinstance(batch["rewards"], torch.Tensor)
+    assert isinstance(batch["next_states"], torch.Tensor)
+    assert isinstance(batch["dones"], torch.Tensor)
 
     # Check device
-    assert batch['states'].device.type == 'cpu'
-    assert batch['actions'].device.type == 'cpu'
+    assert batch["states"].device.type == "cpu"
+    assert batch["actions"].device.type == "cpu"
 
     # Check shapes
-    assert batch['states'].shape == (5, 4, 84, 84)
-    assert batch['actions'].shape == (5,)
+    assert batch["states"].shape == (5, 4, 84, 84)
+    assert batch["actions"].shape == (5,)
 
 
 def test_replay_buffer_device_cuda():
@@ -935,7 +947,9 @@ def test_replay_buffer_device_cuda():
     if not torch.cuda.is_available():
         pytest.skip("CUDA not available")
 
-    buffer = ReplayBuffer(capacity=100, obs_shape=(4, 84, 84), min_size=10, device='cuda')
+    buffer = ReplayBuffer(
+        capacity=100, obs_shape=(4, 84, 84), min_size=10, device="cuda"
+    )
 
     state = np.random.randint(0, 255, size=(4, 84, 84), dtype=np.uint8)
 
@@ -947,11 +961,11 @@ def test_replay_buffer_device_cuda():
     batch = buffer.sample(batch_size=5)
 
     # Check device
-    assert batch['states'].device.type == 'cuda'
-    assert batch['actions'].device.type == 'cuda'
-    assert batch['rewards'].device.type == 'cuda'
-    assert batch['next_states'].device.type == 'cuda'
-    assert batch['dones'].device.type == 'cuda'
+    assert batch["states"].device.type == "cuda"
+    assert batch["actions"].device.type == "cuda"
+    assert batch["rewards"].device.type == "cuda"
+    assert batch["next_states"].device.type == "cuda"
+    assert batch["dones"].device.type == "cuda"
 
 
 def test_replay_buffer_pinned_memory():
@@ -962,11 +976,7 @@ def test_replay_buffer_pinned_memory():
         pytest.skip("CUDA not available")
 
     buffer = ReplayBuffer(
-        capacity=100,
-        obs_shape=(4, 84, 84),
-        min_size=10,
-        device='cuda',
-        pin_memory=True
+        capacity=100, obs_shape=(4, 84, 84), min_size=10, device="cuda", pin_memory=True
     )
 
     state = np.random.randint(0, 255, size=(4, 84, 84), dtype=np.uint8)
@@ -979,13 +989,12 @@ def test_replay_buffer_pinned_memory():
     batch = buffer.sample(batch_size=5)
 
     # Check data is on CUDA
-    assert batch['states'].device.type == 'cuda'
-    assert batch['actions'].device.type == 'cuda'
+    assert batch["states"].device.type == "cuda"
+    assert batch["actions"].device.type == "cuda"
 
 
 def test_replay_buffer_no_device_returns_numpy():
     """Test that without device, returns NumPy arrays."""
-    import torch
 
     buffer = ReplayBuffer(capacity=100, obs_shape=(4, 84, 84), min_size=10)
 
@@ -999,18 +1008,20 @@ def test_replay_buffer_no_device_returns_numpy():
     batch = buffer.sample(batch_size=5)
 
     # Check returns NumPy arrays
-    assert isinstance(batch['states'], np.ndarray)
-    assert isinstance(batch['actions'], np.ndarray)
-    assert isinstance(batch['rewards'], np.ndarray)
-    assert isinstance(batch['next_states'], np.ndarray)
-    assert isinstance(batch['dones'], np.ndarray)
+    assert isinstance(batch["states"], np.ndarray)
+    assert isinstance(batch["actions"], np.ndarray)
+    assert isinstance(batch["rewards"], np.ndarray)
+    assert isinstance(batch["next_states"], np.ndarray)
+    assert isinstance(batch["dones"], np.ndarray)
 
 
 def test_replay_buffer_device_dtype_preservation():
     """Test dtype is preserved when moving to device."""
     import torch
 
-    buffer = ReplayBuffer(capacity=100, obs_shape=(4, 84, 84), min_size=10, device='cpu')
+    buffer = ReplayBuffer(
+        capacity=100, obs_shape=(4, 84, 84), min_size=10, device="cpu"
+    )
 
     state = np.random.randint(0, 255, size=(4, 84, 84), dtype=np.uint8)
 
@@ -1022,11 +1033,11 @@ def test_replay_buffer_device_dtype_preservation():
     batch = buffer.sample(batch_size=5)
 
     # Check dtypes
-    assert batch['states'].dtype == torch.float32
-    assert batch['actions'].dtype == torch.int64
-    assert batch['rewards'].dtype == torch.float32
-    assert batch['next_states'].dtype == torch.float32
-    assert batch['dones'].dtype == torch.bool
+    assert batch["states"].dtype == torch.float32
+    assert batch["actions"].dtype == torch.int64
+    assert batch["rewards"].dtype == torch.float32
+    assert batch["next_states"].dtype == torch.float32
+    assert batch["dones"].dtype == torch.bool
 
 
 def test_replay_buffer_device_with_normalization():
@@ -1034,11 +1045,7 @@ def test_replay_buffer_device_with_normalization():
     import torch
 
     buffer = ReplayBuffer(
-        capacity=100,
-        obs_shape=(4, 84, 84),
-        min_size=10,
-        device='cpu',
-        normalize=True
+        capacity=100, obs_shape=(4, 84, 84), min_size=10, device="cpu", normalize=True
     )
 
     state = np.full((4, 84, 84), 255, dtype=np.uint8)
@@ -1051,11 +1058,11 @@ def test_replay_buffer_device_with_normalization():
     batch = buffer.sample(batch_size=5)
 
     # Check normalization applied
-    assert batch['states'].max().item() == 1.0
-    assert batch['states'].min().item() == 1.0  # All 255 → 1.0
+    assert batch["states"].max().item() == 1.0
+    assert batch["states"].min().item() == 1.0  # All 255 → 1.0
 
     # Check is tensor
-    assert isinstance(batch['states'], torch.Tensor)
+    assert isinstance(batch["states"], torch.Tensor)
 
 
 def test_replay_buffer_comprehensive_integration():
@@ -1079,7 +1086,7 @@ def test_replay_buffer_comprehensive_integration():
 
     # Add transitions with multiple episodes
     for i in range(100):  # More than capacity
-        done = (i % 20 == 19)  # Episode every 20 transitions
+        done = i % 20 == 19  # Episode every 20 transitions
         buffer.append(state, i, float(i), state, done)
 
     # Buffer should have wrapped around
@@ -1090,23 +1097,28 @@ def test_replay_buffer_comprehensive_integration():
     batch = buffer.sample(batch_size=batch_size)
 
     # 3. Verify exact shapes and dtypes
-    assert batch['states'].shape == (batch_size, 4, 84, 84), "States shape incorrect"
-    assert batch['actions'].shape == (batch_size,), "Actions shape incorrect"
-    assert batch['rewards'].shape == (batch_size,), "Rewards shape incorrect"
-    assert batch['next_states'].shape == (batch_size, 4, 84, 84), "Next states shape incorrect"
-    assert batch['dones'].shape == (batch_size,), "Dones shape incorrect"
+    assert batch["states"].shape == (batch_size, 4, 84, 84), "States shape incorrect"
+    assert batch["actions"].shape == (batch_size,), "Actions shape incorrect"
+    assert batch["rewards"].shape == (batch_size,), "Rewards shape incorrect"
+    assert batch["next_states"].shape == (
+        batch_size,
+        4,
+        84,
+        84,
+    ), "Next states shape incorrect"
+    assert batch["dones"].shape == (batch_size,), "Dones shape incorrect"
 
-    assert batch['states'].dtype == np.float32, "States dtype incorrect"
-    assert batch['actions'].dtype == np.int64, "Actions dtype incorrect"
-    assert batch['rewards'].dtype == np.float32, "Rewards dtype incorrect"
-    assert batch['next_states'].dtype == np.float32, "Next states dtype incorrect"
-    assert batch['dones'].dtype == bool, "Dones dtype incorrect"
+    assert batch["states"].dtype == np.float32, "States dtype incorrect"
+    assert batch["actions"].dtype == np.int64, "Actions dtype incorrect"
+    assert batch["rewards"].dtype == np.float32, "Rewards dtype incorrect"
+    assert batch["next_states"].dtype == np.float32, "Next states dtype incorrect"
+    assert batch["dones"].dtype == bool, "Dones dtype incorrect"
 
     # 4. Ensure no cross-episode indices
     # Sample multiple times and verify no episode starts
     for _ in range(10):
         batch = buffer.sample(batch_size=10)
-        for action in batch['actions']:
+        for action in batch["actions"]:
             # Actions at episode starts would be multiples of 20 for the first transition
             # But we can't guarantee exact values after wrap-around
             # The key is that _get_valid_indices excludes episode starts
@@ -1120,7 +1132,7 @@ def test_replay_buffer_comprehensive_integration():
     # Sample near capacity
     if len(valid_indices) >= batch_size:
         batch = buffer.sample(batch_size=batch_size)
-        assert batch['states'].shape[0] == batch_size
+        assert batch["states"].shape[0] == batch_size
 
     # 6. Assert reproducibility with fixed RNG seed
     np.random.seed(42)
@@ -1130,9 +1142,11 @@ def test_replay_buffer_comprehensive_integration():
     batch2 = buffer.sample(batch_size=10)
 
     # Should be identical
-    assert np.array_equal(batch1['actions'], batch2['actions']), "Sampling not reproducible"
-    assert np.allclose(batch1['states'], batch2['states']), "States not reproducible"
-    assert np.allclose(batch1['rewards'], batch2['rewards']), "Rewards not reproducible"
+    assert np.array_equal(
+        batch1["actions"], batch2["actions"]
+    ), "Sampling not reproducible"
+    assert np.allclose(batch1["states"], batch2["states"]), "States not reproducible"
+    assert np.allclose(batch1["rewards"], batch2["rewards"]), "Rewards not reproducible"
 
 
 if __name__ == "__main__":

@@ -8,15 +8,15 @@ Supports simultaneous logging to:
 All backends use standardized metric names for consistency.
 """
 
-import os
 import csv
-from typing import Dict, Optional, Any, List
+import os
 from pathlib import Path
-
+from typing import Any, Dict, List, Optional
 
 # ============================================================================
 # Standardized Metric Keys
 # ============================================================================
+
 
 class MetricKeys:
     """Standardized metric names for consistent logging across backends."""
@@ -62,6 +62,7 @@ class MetricKeys:
 # Backend Implementations
 # ============================================================================
 
+
 class TensorBoardBackend:
     """TensorBoard logging backend using torch.utils.tensorboard."""
 
@@ -74,11 +75,14 @@ class TensorBoardBackend:
         """
         try:
             from torch.utils.tensorboard import SummaryWriter
+
             self.writer = SummaryWriter(log_dir=log_dir)
             self.enabled = True
         except ImportError:
-            print("Warning: torch.utils.tensorboard not available. "
-                  "TensorBoard logging disabled.")
+            print(
+                "Warning: torch.utils.tensorboard not available. "
+                "TensorBoard logging disabled."
+            )
             self.writer = None
             self.enabled = False
 
@@ -115,7 +119,7 @@ class WandBBackend:
         config: Optional[Dict] = None,
         tags: Optional[List[str]] = None,
         resume: Optional[str] = None,
-        id: Optional[str] = None
+        id: Optional[str] = None,
     ):
         """
         Initialize W&B run.
@@ -130,6 +134,7 @@ class WandBBackend:
         """
         try:
             import wandb
+
             self.wandb = wandb
 
             # Initialize run
@@ -139,14 +144,16 @@ class WandBBackend:
                 config=config,
                 tags=tags,
                 resume=resume,
-                id=id
+                id=id,
             )
             self.enabled = True
 
         except ImportError:
-            print("Warning: wandb not installed. "
-                  "Weights & Biases logging disabled. "
-                  "Install with: pip install wandb")
+            print(
+                "Warning: wandb not installed. "
+                "Weights & Biases logging disabled. "
+                "Install with: pip install wandb"
+            )
             self.wandb = None
             self.run = None
             self.enabled = False
@@ -161,7 +168,7 @@ class WandBBackend:
         artifact_name: str,
         artifact_type: str,
         file_paths: List[str],
-        metadata: Optional[Dict] = None
+        metadata: Optional[Dict] = None,
     ):
         """
         Upload files as a W&B artifact.
@@ -177,9 +184,7 @@ class WandBBackend:
 
         try:
             artifact = self.wandb.Artifact(
-                name=artifact_name,
-                type=artifact_type,
-                metadata=metadata
+                name=artifact_name, type=artifact_type, metadata=metadata
             )
 
             # Add files to artifact
@@ -202,6 +207,7 @@ class WandBBackend:
         except Exception as e:
             print(f"Warning: Failed to upload W&B artifact: {e}")
             import traceback
+
             traceback.print_exc()
 
     def log_scalar(self, key: str, value: float, step: int):
@@ -241,8 +247,8 @@ class CSVBackend:
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
         # CSV file paths
-        self.step_csv_path = self.log_dir / 'training_steps.csv'
-        self.episode_csv_path = self.log_dir / 'episodes.csv'
+        self.step_csv_path = self.log_dir / "training_steps.csv"
+        self.episode_csv_path = self.log_dir / "episodes.csv"
 
         # Track initialization
         self._step_csv_initialized = False
@@ -266,25 +272,33 @@ class CSVBackend:
             return
 
         # Add step to metrics
-        log_entry = {'step': step}
+        log_entry = {"step": step}
         log_entry.update(metrics)
 
         # Initialize CSV if first write
         if not self._step_csv_initialized:
             # Define all expected fields upfront to avoid dynamic schema issues
             self._step_fieldnames = [
-                'step', 'epsilon', 'replay_size', 'fps',
-                'loss', 'td_error', 'grad_norm', 'learning_rate',
-                'loss_ma'  # moving average
+                "step",
+                "epsilon",
+                "replay_size",
+                "fps",
+                "loss",
+                "td_error",
+                "grad_norm",
+                "learning_rate",
+                "loss_ma",  # moving average
             ]
-            with open(self.step_csv_path, 'w', newline='') as f:
+            with open(self.step_csv_path, "w", newline="") as f:
                 writer = csv.DictWriter(f, fieldnames=self._step_fieldnames)
                 writer.writeheader()
             self._step_csv_initialized = True
 
         # Append to CSV (only write fields that are in fieldnames)
-        filtered_entry = {k: v for k, v in log_entry.items() if k in self._step_fieldnames}
-        with open(self.step_csv_path, 'a', newline='') as f:
+        filtered_entry = {
+            k: v for k, v in log_entry.items() if k in self._step_fieldnames
+        }
+        with open(self.step_csv_path, "a", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=self._step_fieldnames)
             writer.writerow(filtered_entry)
 
@@ -301,19 +315,19 @@ class CSVBackend:
             return
 
         # Add step and episode to metrics
-        log_entry = {'episode': episode, 'step': step}
+        log_entry = {"episode": episode, "step": step}
         log_entry.update(metrics)
 
         # Initialize CSV if first write
         if not self._episode_csv_initialized:
             self._episode_fieldnames = list(log_entry.keys())
-            with open(self.episode_csv_path, 'w', newline='') as f:
+            with open(self.episode_csv_path, "w", newline="") as f:
                 writer = csv.DictWriter(f, fieldnames=self._episode_fieldnames)
                 writer.writeheader()
             self._episode_csv_initialized = True
 
         # Append to CSV
-        with open(self.episode_csv_path, 'a', newline='') as f:
+        with open(self.episode_csv_path, "a", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=self._episode_fieldnames)
             writer.writerow(log_entry)
 
@@ -329,6 +343,7 @@ class CSVBackend:
 # ============================================================================
 # Unified Metrics Logger
 # ============================================================================
+
 
 class MetricsLogger:
     """
@@ -411,7 +426,7 @@ class MetricsLogger:
         wandb_id: Optional[str] = None,
         moving_avg_window: int = 100,
         flush_interval: int = 1000,
-        upload_artifacts: bool = False
+        upload_artifacts: bool = False,
     ):
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
@@ -424,7 +439,7 @@ class MetricsLogger:
         self.backends = []
 
         if enable_tensorboard:
-            tb_dir = self.log_dir / 'tensorboard'
+            tb_dir = self.log_dir / "tensorboard"
             tb_dir.mkdir(exist_ok=True)
             self.tensorboard = TensorBoardBackend(str(tb_dir))
             if self.tensorboard.enabled:
@@ -443,7 +458,7 @@ class MetricsLogger:
                     config=wandb_config,
                     tags=wandb_tags,
                     resume=wandb_resume,
-                    id=wandb_id
+                    id=wandb_id,
                 )
                 if self.wandb.enabled:
                     self.backends.append(self.wandb)
@@ -451,7 +466,7 @@ class MetricsLogger:
             self.wandb = None
 
         if enable_csv:
-            csv_dir = self.log_dir / 'csv'
+            csv_dir = self.log_dir / "csv"
             csv_dir.mkdir(exist_ok=True)
             self.csv = CSVBackend(str(csv_dir))
             self.backends.append(self.csv)
@@ -482,7 +497,7 @@ class MetricsLogger:
         epsilon: Optional[float] = None,
         replay_size: Optional[int] = None,
         fps: Optional[float] = None,
-        extra_metrics: Optional[Dict[str, float]] = None
+        extra_metrics: Optional[Dict[str, float]] = None,
     ):
         """
         Log per-step training metrics to all enabled backends.
@@ -545,16 +560,16 @@ class MetricsLogger:
         if self.csv is not None:
             # Convert standardized keys to simple names for CSV
             csv_metrics = {
-                'loss': loss,
-                'td_error': td_error,
-                'td_error_std': td_error_std,
-                'grad_norm': grad_norm,
-                'learning_rate': learning_rate,
-                'update_count': update_count,
-                'epsilon': epsilon,
-                'replay_size': replay_size,
-                'fps': fps,
-                'loss_ma': metrics.get(MetricKeys.LOSS_MA)
+                "loss": loss,
+                "td_error": td_error,
+                "td_error_std": td_error_std,
+                "grad_norm": grad_norm,
+                "learning_rate": learning_rate,
+                "update_count": update_count,
+                "epsilon": epsilon,
+                "replay_size": replay_size,
+                "fps": fps,
+                "loss_ma": metrics.get(MetricKeys.LOSS_MA),
             }
             # Remove None values
             csv_metrics = {k: v for k, v in csv_metrics.items() if v is not None}
@@ -570,7 +585,7 @@ class MetricsLogger:
         episode_length: int,
         epsilon: Optional[float] = None,
         fps: Optional[float] = None,
-        extra_metrics: Optional[Dict[str, float]] = None
+        extra_metrics: Optional[Dict[str, float]] = None,
     ):
         """
         Log per-episode metrics to all enabled backends.
@@ -593,8 +608,8 @@ class MetricsLogger:
         self.episode_length_history.append(episode_length)
 
         # Compute rolling statistics
-        recent_returns = self.episode_return_history[-self.moving_avg_window:]
-        recent_lengths = self.episode_length_history[-self.moving_avg_window:]
+        recent_returns = self.episode_return_history[-self.moving_avg_window :]
+        recent_lengths = self.episode_length_history[-self.moving_avg_window :]
 
         # Build standardized metrics dict
         metrics = {
@@ -623,16 +638,16 @@ class MetricsLogger:
         # Log to CSV (uses different format)
         if self.csv is not None:
             csv_metrics = {
-                'return': episode_return,
-                'length': episode_length,
-                'return_ma': metrics[MetricKeys.EPISODE_RETURN_MA],
-                'return_std': metrics[MetricKeys.EPISODE_RETURN_STD],
-                'length_ma': metrics[MetricKeys.EPISODE_LENGTH_MA],
+                "return": episode_return,
+                "length": episode_length,
+                "return_ma": metrics[MetricKeys.EPISODE_RETURN_MA],
+                "return_std": metrics[MetricKeys.EPISODE_RETURN_STD],
+                "length_ma": metrics[MetricKeys.EPISODE_LENGTH_MA],
             }
             if epsilon is not None:
-                csv_metrics['epsilon'] = epsilon
+                csv_metrics["epsilon"] = epsilon
             if fps is not None:
-                csv_metrics['fps'] = fps
+                csv_metrics["fps"] = fps
             if extra_metrics:
                 csv_metrics.update(extra_metrics)
 
@@ -648,7 +663,7 @@ class MetricsLogger:
         max_return: float,
         mean_length: float,
         num_episodes: int,
-        extra_metrics: Optional[Dict[str, float]] = None
+        extra_metrics: Optional[Dict[str, float]] = None,
     ):
         """
         Log evaluation metrics to all enabled backends.
@@ -690,7 +705,7 @@ class MetricsLogger:
         q_std: float,
         q_min: float,
         q_max: float,
-        extra_metrics: Optional[Dict[str, float]] = None
+        extra_metrics: Optional[Dict[str, float]] = None,
     ):
         """
         Log Q-value statistics to all enabled backends.
@@ -727,7 +742,10 @@ class MetricsLogger:
         """Check if artifact upload is needed."""
         # Upload artifacts at checkpoint intervals (default: 1M steps)
         upload_interval = 1_000_000
-        return self.upload_artifacts and (step - self.last_artifact_upload_step) >= upload_interval
+        return (
+            self.upload_artifacts
+            and (step - self.last_artifact_upload_step) >= upload_interval
+        )
 
     def flush(self, step: Optional[int] = None):
         """
@@ -775,7 +793,7 @@ class MetricsLogger:
                 print(f"  + {self.csv.episode_csv_path.name} ({size_mb:.3f} MB)")
 
         # Add config and meta files from run directory
-        config_path = self.log_dir / 'config.yaml'
+        config_path = self.log_dir / "config.yaml"
         if config_path.exists():
             artifact_files.append(str(config_path))
             size_mb = config_path.stat().st_size / (1024 * 1024)
@@ -784,7 +802,7 @@ class MetricsLogger:
         else:
             print(f"  ! config.yaml not found at {config_path}")
 
-        meta_path = self.log_dir / 'meta.json'
+        meta_path = self.log_dir / "meta.json"
         if meta_path.exists():
             artifact_files.append(str(meta_path))
             size_mb = meta_path.stat().st_size / (1024 * 1024)
@@ -794,14 +812,14 @@ class MetricsLogger:
             print(f"  ! meta.json not found at {meta_path}")
 
         # Add evaluation results
-        eval_csv = self.log_dir / 'eval' / 'evaluations.csv'
+        eval_csv = self.log_dir / "eval" / "evaluations.csv"
         if eval_csv.exists():
             artifact_files.append(str(eval_csv))
             size_mb = eval_csv.stat().st_size / (1024 * 1024)
             total_size_mb += size_mb
             print(f"  + eval/evaluations.csv ({size_mb:.3f} MB)")
 
-        eval_jsonl = self.log_dir / 'eval' / 'evaluations.jsonl'
+        eval_jsonl = self.log_dir / "eval" / "evaluations.jsonl"
         if eval_jsonl.exists():
             artifact_files.append(str(eval_jsonl))
             size_mb = eval_jsonl.stat().st_size / (1024 * 1024)
@@ -809,9 +827,9 @@ class MetricsLogger:
             print(f"  + eval/evaluations.jsonl ({size_mb:.3f} MB)")
 
         # Add video files
-        videos_dir = self.log_dir / 'videos'
+        videos_dir = self.log_dir / "videos"
         if videos_dir.exists():
-            for video_file in videos_dir.glob('*.mp4'):
+            for video_file in videos_dir.glob("*.mp4"):
                 artifact_files.append(str(video_file))
                 size_mb = video_file.stat().st_size / (1024 * 1024)
                 total_size_mb += size_mb
@@ -823,8 +841,10 @@ class MetricsLogger:
 
         # Warn if uploading large files
         if total_size_mb > 100.0:
-            print(f"Warning: Uploading large artifact ({total_size_mb:.1f} MB). "
-                  f"This may take some time.")
+            print(
+                f"Warning: Uploading large artifact ({total_size_mb:.1f} MB). "
+                f"This may take some time."
+            )
 
         # Create artifact name with step
         artifact_name = f"training_logs_step_{step}"
@@ -834,17 +854,19 @@ class MetricsLogger:
         if metadata:
             artifact_metadata.update(metadata)
 
-        print(f"Uploading {len(artifact_files)} files ({total_size_mb:.3f} MB total) as artifact '{artifact_name}'...")
+        print(
+            f"Uploading {len(artifact_files)} files ({total_size_mb:.3f} MB total) as artifact '{artifact_name}'..."
+        )
 
         # Upload artifact
         self.wandb.upload_artifact(
             artifact_name=artifact_name,
             artifact_type="logs",
             file_paths=artifact_files,
-            metadata=artifact_metadata
+            metadata=artifact_metadata,
         )
 
-        print(f"Artifact upload complete.")
+        print("Artifact upload complete.")
         self.last_artifact_upload_step = step
 
     def maybe_flush_and_upload(self, step: int, force: bool = False):

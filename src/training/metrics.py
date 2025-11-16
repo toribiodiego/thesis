@@ -1,15 +1,12 @@
-"""Training metrics collection and logging utilities.
-"""
+"""Training metrics collection and logging utilities."""
+
+from typing import Dict
 
 import torch
 import torch.nn as nn
-from dataclasses import dataclass
-from typing import Optional, Dict
 
-from .loss import compute_td_loss_components, compute_dqn_loss, compute_td_targets, select_q_values
+from .loss import compute_dqn_loss, compute_td_targets, select_q_values
 from .optimization import clip_gradients
-from .stability import detect_nan_inf
-from .target_network import hard_update_target
 
 
 class UpdateMetrics:
@@ -52,7 +49,7 @@ class UpdateMetrics:
         td_error_std: float,
         grad_norm: float,
         learning_rate: float,
-        update_count: int
+        update_count: int,
     ):
         """
         Initialize update metrics.
@@ -86,12 +83,12 @@ class UpdateMetrics:
             >>> assert 'td_error' in metrics_dict
         """
         return {
-            'loss': self.loss,
-            'td_error': self.td_error,
-            'td_error_std': self.td_error_std,
-            'grad_norm': self.grad_norm,
-            'learning_rate': self.learning_rate,
-            'update_count': self.update_count
+            "loss": self.loss,
+            "td_error": self.td_error,
+            "td_error_std": self.td_error_std,
+            "grad_norm": self.grad_norm,
+            "learning_rate": self.learning_rate,
+            "update_count": self.update_count,
         }
 
     def __repr__(self) -> str:
@@ -109,9 +106,9 @@ def perform_update_step(
     optimizer: torch.optim.Optimizer,
     batch: Dict[str, torch.Tensor],
     gamma: float = 0.99,
-    loss_type: str = 'mse',
+    loss_type: str = "mse",
     max_grad_norm: float = 10.0,
-    update_count: int = 0
+    update_count: int = 0,
 ) -> UpdateMetrics:
     """
     Perform a single training update and return metrics.
@@ -156,11 +153,11 @@ def perform_update_step(
     online_net.train()
 
     # Extract batch data
-    states = batch['states']
-    actions = batch['actions']
-    rewards = batch['rewards']
-    next_states = batch['next_states']
-    dones = batch['dones']
+    states = batch["states"]
+    actions = batch["actions"]
+    rewards = batch["rewards"]
+    next_states = batch["next_states"]
+    dones = batch["dones"]
 
     # Compute TD targets (no gradient)
     td_targets = compute_td_targets(rewards, next_states, dones, target_net, gamma)
@@ -170,9 +167,9 @@ def perform_update_step(
 
     # Compute loss and TD error stats
     loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type=loss_type)
-    loss = loss_dict['loss']
-    td_error = loss_dict['td_error'].item()
-    td_error_std = loss_dict['td_error_std'].item()
+    loss = loss_dict["loss"]
+    td_error = loss_dict["td_error"].item()
+    td_error_std = loss_dict["td_error_std"].item()
 
     # Backward pass
     optimizer.zero_grad()
@@ -185,7 +182,7 @@ def perform_update_step(
     optimizer.step()
 
     # Get current learning rate
-    learning_rate = optimizer.param_groups[0]['lr']
+    learning_rate = optimizer.param_groups[0]["lr"]
 
     # Create and return metrics
     metrics = UpdateMetrics(
@@ -194,7 +191,7 @@ def perform_update_step(
         td_error_std=td_error_std,
         grad_norm=grad_norm,
         learning_rate=learning_rate,
-        update_count=update_count
+        update_count=update_count,
     )
 
     return metrics
@@ -203,6 +200,7 @@ def perform_update_step(
 # ============================================================================
 # Epsilon-Greedy Exploration
 # ============================================================================
+
 
 class EpsilonScheduler:
     """
@@ -234,13 +232,19 @@ class EpsilonScheduler:
         epsilon_start: float = 1.0,
         epsilon_end: float = 0.1,
         decay_frames: int = 1_000_000,
-        eval_epsilon: float = 0.05
+        eval_epsilon: float = 0.05,
     ):
-        assert 0.0 <= epsilon_start <= 1.0, f"epsilon_start must be in [0,1], got {epsilon_start}"
-        assert 0.0 <= epsilon_end <= 1.0, f"epsilon_end must be in [0,1], got {epsilon_end}"
-        assert epsilon_start >= epsilon_end, f"epsilon_start must be >= epsilon_end"
+        assert (
+            0.0 <= epsilon_start <= 1.0
+        ), f"epsilon_start must be in [0,1], got {epsilon_start}"
+        assert (
+            0.0 <= epsilon_end <= 1.0
+        ), f"epsilon_end must be in [0,1], got {epsilon_end}"
+        assert epsilon_start >= epsilon_end, "epsilon_start must be >= epsilon_end"
         assert decay_frames > 0, f"decay_frames must be positive, got {decay_frames}"
-        assert 0.0 <= eval_epsilon <= 1.0, f"eval_epsilon must be in [0,1], got {eval_epsilon}"
+        assert (
+            0.0 <= eval_epsilon <= 1.0
+        ), f"eval_epsilon must be in [0,1], got {eval_epsilon}"
 
         self.epsilon_start = epsilon_start
         self.epsilon_end = epsilon_end
@@ -303,10 +307,8 @@ class EpsilonScheduler:
     def to_dict(self) -> dict:
         """Export scheduler configuration as dictionary."""
         return {
-            'epsilon_start': self.epsilon_start,
-            'epsilon_end': self.epsilon_end,
-            'decay_frames': self.decay_frames,
-            'eval_epsilon': self.eval_epsilon
+            "epsilon_start": self.epsilon_start,
+            "epsilon_end": self.epsilon_end,
+            "decay_frames": self.decay_frames,
+            "eval_epsilon": self.eval_epsilon,
         }
-
-

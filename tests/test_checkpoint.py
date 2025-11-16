@@ -12,23 +12,23 @@ Tests complete checkpoint structure including:
 - Atomic writes
 """
 
-import pytest
-import torch
-import torch.nn as nn
-import numpy as np
-import tempfile
 import os
 import shutil
+import tempfile
 from pathlib import Path
+
+import numpy as np
+import pytest
+import torch
 
 from src.models.dqn import DQN
 from src.replay.replay_buffer import ReplayBuffer
 from src.training import (
     CheckpointManager,
+    configure_optimizer,
     get_rng_states,
     set_rng_states,
     verify_checkpoint_integrity,
-    configure_optimizer
 )
 
 
@@ -59,11 +59,7 @@ def optimizer(models):
 @pytest.fixture
 def replay_buffer():
     """Create small replay buffer."""
-    return ReplayBuffer(
-        capacity=1000,
-        obs_shape=(4, 84, 84),
-        min_size=100
-    )
+    return ReplayBuffer(capacity=1000, obs_shape=(4, 84, 84), min_size=100)
 
 
 @pytest.fixture
@@ -91,7 +87,7 @@ class TestCheckpointManager:
             checkpoint_dir=temp_checkpoint_dir,
             save_interval=1_000_000,
             keep_last_n=3,
-            save_best=True
+            save_best=True,
         )
 
         assert manager.checkpoint_dir == temp_checkpoint_dir
@@ -103,8 +99,7 @@ class TestCheckpointManager:
     def test_should_save(self, temp_checkpoint_dir):
         """Test should_save logic."""
         manager = CheckpointManager(
-            checkpoint_dir=temp_checkpoint_dir,
-            save_interval=1_000_000
+            checkpoint_dir=temp_checkpoint_dir, save_interval=1_000_000
         )
 
         assert not manager.should_save(0)
@@ -125,30 +120,30 @@ class TestCheckpointManager:
             epsilon=0.95,
             online_model=online_model,
             target_model=target_model,
-            optimizer=optimizer
+            optimizer=optimizer,
         )
 
         # Verify file exists
         assert os.path.exists(checkpoint_path)
-        assert checkpoint_path.endswith('checkpoint_1000.pt')
+        assert checkpoint_path.endswith("checkpoint_1000.pt")
 
         # Verify checkpoint can be loaded
         checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
 
         # Check schema and metadata
-        assert checkpoint['schema_version'] == CheckpointManager.SCHEMA_VERSION
-        assert 'timestamp' in checkpoint
-        assert 'commit_hash' in checkpoint
+        assert checkpoint["schema_version"] == CheckpointManager.SCHEMA_VERSION
+        assert "timestamp" in checkpoint
+        assert "commit_hash" in checkpoint
 
         # Check training state
-        assert checkpoint['step'] == 1000
-        assert checkpoint['episode'] == 50
-        assert checkpoint['epsilon'] == 0.95
+        assert checkpoint["step"] == 1000
+        assert checkpoint["episode"] == 50
+        assert checkpoint["epsilon"] == 0.95
 
         # Check model and optimizer states
-        assert 'online_model_state_dict' in checkpoint
-        assert 'target_model_state_dict' in checkpoint
-        assert 'optimizer_state_dict' in checkpoint
+        assert "online_model_state_dict" in checkpoint
+        assert "target_model_state_dict" in checkpoint
+        assert "optimizer_state_dict" in checkpoint
 
     def test_save_checkpoint_with_rng_states(
         self, temp_checkpoint_dir, models, optimizer
@@ -168,15 +163,15 @@ class TestCheckpointManager:
             online_model=online_model,
             target_model=target_model,
             optimizer=optimizer,
-            rng_states=rng_states
+            rng_states=rng_states,
         )
 
         # Load and verify
         checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
-        assert 'rng_states' in checkpoint
-        assert 'python_random' in checkpoint['rng_states']
-        assert 'numpy_random' in checkpoint['rng_states']
-        assert 'torch_cpu' in checkpoint['rng_states']
+        assert "rng_states" in checkpoint
+        assert "python_random" in checkpoint["rng_states"]
+        assert "numpy_random" in checkpoint["rng_states"]
+        assert "torch_cpu" in checkpoint["rng_states"]
 
     def test_save_checkpoint_with_replay_buffer(
         self, temp_checkpoint_dir, models, optimizer, filled_replay_buffer
@@ -184,7 +179,7 @@ class TestCheckpointManager:
         """Test checkpoint saving with replay buffer state."""
         manager = CheckpointManager(
             checkpoint_dir=temp_checkpoint_dir,
-            save_replay_buffer=False  # Save only index/size
+            save_replay_buffer=False,  # Save only index/size
         )
         online_model, target_model = models
 
@@ -195,21 +190,21 @@ class TestCheckpointManager:
             online_model=online_model,
             target_model=target_model,
             optimizer=optimizer,
-            replay_buffer=filled_replay_buffer
+            replay_buffer=filled_replay_buffer,
         )
 
         # Load and verify
         checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
-        assert 'replay_buffer_state' in checkpoint
+        assert "replay_buffer_state" in checkpoint
 
-        buffer_state = checkpoint['replay_buffer_state']
-        assert buffer_state['index'] == filled_replay_buffer.index
-        assert buffer_state['size'] == filled_replay_buffer.size
-        assert buffer_state['capacity'] == filled_replay_buffer.capacity
-        assert buffer_state['obs_shape'] == filled_replay_buffer.obs_shape
+        buffer_state = checkpoint["replay_buffer_state"]
+        assert buffer_state["index"] == filled_replay_buffer.index
+        assert buffer_state["size"] == filled_replay_buffer.size
+        assert buffer_state["capacity"] == filled_replay_buffer.capacity
+        assert buffer_state["obs_shape"] == filled_replay_buffer.obs_shape
 
         # Should not have full data (save_replay_buffer=False)
-        assert 'data' not in buffer_state
+        assert "data" not in buffer_state
 
     def test_save_checkpoint_with_full_replay_buffer(
         self, temp_checkpoint_dir, models, optimizer, filled_replay_buffer
@@ -217,7 +212,7 @@ class TestCheckpointManager:
         """Test checkpoint saving with full replay buffer data."""
         manager = CheckpointManager(
             checkpoint_dir=temp_checkpoint_dir,
-            save_replay_buffer=True  # Save full buffer
+            save_replay_buffer=True,  # Save full buffer
         )
         online_model, target_model = models
 
@@ -228,20 +223,20 @@ class TestCheckpointManager:
             online_model=online_model,
             target_model=target_model,
             optimizer=optimizer,
-            replay_buffer=filled_replay_buffer
+            replay_buffer=filled_replay_buffer,
         )
 
         # Load and verify
         checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
-        buffer_state = checkpoint['replay_buffer_state']
+        buffer_state = checkpoint["replay_buffer_state"]
 
         # Should have full data
-        assert 'data' in buffer_state
-        assert 'observations' in buffer_state['data']
-        assert 'actions' in buffer_state['data']
-        assert 'rewards' in buffer_state['data']
-        assert 'dones' in buffer_state['data']
-        assert 'episode_starts' in buffer_state['data']
+        assert "data" in buffer_state
+        assert "observations" in buffer_state["data"]
+        assert "actions" in buffer_state["data"]
+        assert "rewards" in buffer_state["data"]
+        assert "dones" in buffer_state["data"]
+        assert "episode_starts" in buffer_state["data"]
 
     def test_atomic_write(self, temp_checkpoint_dir, models, optimizer):
         """Test that checkpoint uses atomic write (no .tmp files left)."""
@@ -254,11 +249,11 @@ class TestCheckpointManager:
             epsilon=0.75,
             online_model=online_model,
             target_model=target_model,
-            optimizer=optimizer
+            optimizer=optimizer,
         )
 
         # Check no temporary files remain
-        temp_files = list(Path(temp_checkpoint_dir).glob('*.tmp'))
+        temp_files = list(Path(temp_checkpoint_dir).glob("*.tmp"))
         assert len(temp_files) == 0
 
         # Final checkpoint should exist
@@ -281,7 +276,7 @@ class TestCheckpointManager:
             online_model=online_model,
             target_model=target_model,
             optimizer=optimizer,
-            rng_states=get_rng_states()
+            rng_states=get_rng_states(),
         )
 
         # Create new models and optimizer
@@ -294,16 +289,16 @@ class TestCheckpointManager:
             checkpoint_path=checkpoint_path,
             online_model=new_online,
             target_model=new_target,
-            optimizer=new_optimizer
+            optimizer=new_optimizer,
         )
 
         # Verify loaded state
-        assert loaded_state['step'] == original_step
-        assert loaded_state['episode'] == original_episode
-        assert loaded_state['epsilon'] == original_epsilon
-        assert 'rng_states' in loaded_state
-        assert 'commit_hash' in loaded_state
-        assert 'timestamp' in loaded_state
+        assert loaded_state["step"] == original_step
+        assert loaded_state["episode"] == original_episode
+        assert loaded_state["epsilon"] == original_epsilon
+        assert "rng_states" in loaded_state
+        assert "commit_hash" in loaded_state
+        assert "timestamp" in loaded_state
 
         # Verify model weights match
         for p1, p2 in zip(online_model.parameters(), new_online.parameters()):
@@ -317,8 +312,7 @@ class TestCheckpointManager:
     ):
         """Test loading checkpoint with replay buffer restoration."""
         manager = CheckpointManager(
-            checkpoint_dir=temp_checkpoint_dir,
-            save_replay_buffer=True
+            checkpoint_dir=temp_checkpoint_dir, save_replay_buffer=True
         )
         online_model, target_model = models
 
@@ -330,7 +324,7 @@ class TestCheckpointManager:
             online_model=online_model,
             target_model=target_model,
             optimizer=optimizer,
-            replay_buffer=filled_replay_buffer
+            replay_buffer=filled_replay_buffer,
         )
 
         # Create new models and empty buffer
@@ -340,12 +334,12 @@ class TestCheckpointManager:
         new_buffer = ReplayBuffer(capacity=1000, obs_shape=(4, 84, 84))
 
         # Load checkpoint with buffer restoration
-        loaded_state = manager.load_checkpoint(
+        manager.load_checkpoint(
             checkpoint_path=checkpoint_path,
             online_model=new_online,
             target_model=new_target,
             optimizer=new_optimizer,
-            replay_buffer=new_buffer
+            replay_buffer=new_buffer,
         )
 
         # Verify buffer state restored
@@ -353,17 +347,16 @@ class TestCheckpointManager:
         assert new_buffer.size == filled_replay_buffer.size
 
         # Verify buffer data restored
-        assert np.array_equal(new_buffer.observations, filled_replay_buffer.observations)
+        assert np.array_equal(
+            new_buffer.observations, filled_replay_buffer.observations
+        )
         assert np.array_equal(new_buffer.actions, filled_replay_buffer.actions)
         assert np.array_equal(new_buffer.rewards, filled_replay_buffer.rewards)
         assert np.array_equal(new_buffer.dones, filled_replay_buffer.dones)
 
     def test_keep_last_n_checkpoints(self, temp_checkpoint_dir, models, optimizer):
         """Test that old checkpoints are cleaned up."""
-        manager = CheckpointManager(
-            checkpoint_dir=temp_checkpoint_dir,
-            keep_last_n=3
-        )
+        manager = CheckpointManager(checkpoint_dir=temp_checkpoint_dir, keep_last_n=3)
         online_model, target_model = models
 
         # Save 5 checkpoints
@@ -374,26 +367,27 @@ class TestCheckpointManager:
                 epsilon=1.0 - i * 0.1,
                 online_model=online_model,
                 target_model=target_model,
-                optimizer=optimizer
+                optimizer=optimizer,
             )
 
         # Should only have 3 most recent checkpoints
-        checkpoints = list(Path(temp_checkpoint_dir).glob('checkpoint_*.pt'))
+        checkpoints = list(Path(temp_checkpoint_dir).glob("checkpoint_*.pt"))
         assert len(checkpoints) == 3
 
         # Verify it's the last 3
-        assert Path(os.path.join(temp_checkpoint_dir, 'checkpoint_3000.pt')).exists()
-        assert Path(os.path.join(temp_checkpoint_dir, 'checkpoint_4000.pt')).exists()
-        assert Path(os.path.join(temp_checkpoint_dir, 'checkpoint_5000.pt')).exists()
-        assert not Path(os.path.join(temp_checkpoint_dir, 'checkpoint_1000.pt')).exists()
-        assert not Path(os.path.join(temp_checkpoint_dir, 'checkpoint_2000.pt')).exists()
+        assert Path(os.path.join(temp_checkpoint_dir, "checkpoint_3000.pt")).exists()
+        assert Path(os.path.join(temp_checkpoint_dir, "checkpoint_4000.pt")).exists()
+        assert Path(os.path.join(temp_checkpoint_dir, "checkpoint_5000.pt")).exists()
+        assert not Path(
+            os.path.join(temp_checkpoint_dir, "checkpoint_1000.pt")
+        ).exists()
+        assert not Path(
+            os.path.join(temp_checkpoint_dir, "checkpoint_2000.pt")
+        ).exists()
 
     def test_save_best_model(self, temp_checkpoint_dir, models, optimizer):
         """Test best model tracking and saving."""
-        manager = CheckpointManager(
-            checkpoint_dir=temp_checkpoint_dir,
-            save_best=True
-        )
+        manager = CheckpointManager(checkpoint_dir=temp_checkpoint_dir, save_best=True)
         online_model, target_model = models
 
         # Save first best model
@@ -404,12 +398,12 @@ class TestCheckpointManager:
             eval_return=10.0,
             online_model=online_model,
             target_model=target_model,
-            optimizer=optimizer
+            optimizer=optimizer,
         )
 
         assert saved is True
         assert manager.best_eval_return == 10.0
-        assert os.path.exists(os.path.join(temp_checkpoint_dir, 'best_model.pt'))
+        assert os.path.exists(os.path.join(temp_checkpoint_dir, "best_model.pt"))
 
         # Try to save worse model
         saved = manager.save_best(
@@ -419,7 +413,7 @@ class TestCheckpointManager:
             eval_return=5.0,
             online_model=online_model,
             target_model=target_model,
-            optimizer=optimizer
+            optimizer=optimizer,
         )
 
         assert saved is False
@@ -433,7 +427,7 @@ class TestCheckpointManager:
             eval_return=15.0,
             online_model=online_model,
             target_model=target_model,
-            optimizer=optimizer
+            optimizer=optimizer,
         )
 
         assert saved is True
@@ -441,10 +435,9 @@ class TestCheckpointManager:
 
         # Verify best model checkpoint has eval_return
         checkpoint = torch.load(
-            os.path.join(temp_checkpoint_dir, 'best_model.pt'),
-            map_location='cpu'
+            os.path.join(temp_checkpoint_dir, "best_model.pt"), map_location="cpu"
         )
-        assert checkpoint['eval_return'] == 15.0
+        assert checkpoint["eval_return"] == 15.0
 
 
 class TestRNGStates:
@@ -454,13 +447,13 @@ class TestRNGStates:
         """Test capturing RNG states."""
         rng_states = get_rng_states()
 
-        assert 'python_random' in rng_states
-        assert 'numpy_random' in rng_states
-        assert 'torch_cpu' in rng_states
+        assert "python_random" in rng_states
+        assert "numpy_random" in rng_states
+        assert "torch_cpu" in rng_states
 
         # CUDA states only if available
         if torch.cuda.is_available():
-            assert 'torch_cuda' in rng_states
+            assert "torch_cuda" in rng_states
 
     def test_set_rng_states_reproducibility(self):
         """Test that setting RNG states gives reproducible results."""
@@ -500,7 +493,7 @@ class TestCheckpointIntegrity:
             epsilon=0.95,
             online_model=online_model,
             target_model=target_model,
-            optimizer=optimizer
+            optimizer=optimizer,
         )
 
         # Should verify successfully
@@ -509,8 +502,8 @@ class TestCheckpointIntegrity:
     def test_verify_invalid_checkpoint(self, temp_checkpoint_dir):
         """Test verification of corrupted checkpoint."""
         # Create invalid checkpoint file
-        invalid_path = os.path.join(temp_checkpoint_dir, 'invalid.pt')
-        with open(invalid_path, 'w') as f:
+        invalid_path = os.path.join(temp_checkpoint_dir, "invalid.pt")
+        with open(invalid_path, "w") as f:
             f.write("not a valid checkpoint")
 
         # Should fail verification
@@ -518,12 +511,12 @@ class TestCheckpointIntegrity:
 
     def test_verify_incomplete_checkpoint(self, temp_checkpoint_dir):
         """Test verification of incomplete checkpoint (missing fields)."""
-        incomplete_path = os.path.join(temp_checkpoint_dir, 'incomplete.pt')
+        incomplete_path = os.path.join(temp_checkpoint_dir, "incomplete.pt")
 
         # Save checkpoint with missing required fields
         incomplete_data = {
-            'step': 1000,
-            'epsilon': 0.95,
+            "step": 1000,
+            "epsilon": 0.95,
             # Missing: episode, model states, optimizer state, etc.
         }
 
@@ -533,5 +526,5 @@ class TestCheckpointIntegrity:
         assert verify_checkpoint_integrity(incomplete_path) is False
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

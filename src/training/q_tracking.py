@@ -1,11 +1,9 @@
-"""Reference state Q-value tracking for monitoring learning progress.
-"""
+"""Reference state Q-value tracking for monitoring learning progress."""
 
-import os
 import csv
+import os
+
 import torch
-import torch.nn as nn
-from typing import Optional, List
 
 
 class ReferenceStateQTracker:
@@ -40,7 +38,7 @@ class ReferenceStateQTracker:
         self,
         reference_states: torch.Tensor = None,
         log_interval: int = 10_000,
-        device: str = 'cpu'
+        device: str = "cpu",
     ):
         self.log_interval = log_interval
         self.device = device
@@ -109,20 +107,22 @@ class ReferenceStateQTracker:
             dict: Q-value statistics (avg_max_q, max_q, min_q)
         """
         if self.reference_states is None:
-            raise ValueError("Reference states not set. Call set_reference_states() first.")
+            raise ValueError(
+                "Reference states not set. Call set_reference_states() first."
+            )
 
         model.eval()
         with torch.no_grad():
             output = model(self.reference_states)
-            q_values = output['q_values']  # (B, num_actions)
+            q_values = output["q_values"]  # (B, num_actions)
 
             # Compute max Q-value per state
             max_q_per_state = q_values.max(dim=1)[0]  # (B,)
 
             stats = {
-                'avg_max_q': max_q_per_state.mean().item(),
-                'max_q': max_q_per_state.max().item(),
-                'min_q': max_q_per_state.min().item()
+                "avg_max_q": max_q_per_state.mean().item(),
+                "max_q": max_q_per_state.max().item(),
+                "min_q": max_q_per_state.min().item(),
             }
 
         model.train()
@@ -140,9 +140,9 @@ class ReferenceStateQTracker:
 
         self.last_log_step = step
         self.log_steps.append(step)
-        self.avg_max_q.append(stats['avg_max_q'])
-        self.max_q.append(stats['max_q'])
-        self.min_q.append(stats['min_q'])
+        self.avg_max_q.append(stats["avg_max_q"])
+        self.max_q.append(stats["max_q"])
+        self.min_q.append(stats["min_q"])
 
     def get_history(self) -> dict:
         """
@@ -152,22 +152,22 @@ class ReferenceStateQTracker:
             dict: History of steps and Q-values
         """
         return {
-            'steps': self.log_steps.copy(),
-            'avg_max_q': self.avg_max_q.copy(),
-            'max_q': self.max_q.copy(),
-            'min_q': self.min_q.copy()
+            "steps": self.log_steps.copy(),
+            "avg_max_q": self.avg_max_q.copy(),
+            "max_q": self.max_q.copy(),
+            "min_q": self.min_q.copy(),
         }
 
     def to_dict(self) -> dict:
         """Serialize tracker state to dictionary."""
         return {
-            'log_interval': self.log_interval,
-            'device': self.device,
-            'last_log_step': self.last_log_step,
-            'log_steps': self.log_steps.copy(),
-            'avg_max_q': self.avg_max_q.copy(),
-            'max_q': self.max_q.copy(),
-            'min_q': self.min_q.copy()
+            "log_interval": self.log_interval,
+            "device": self.device,
+            "last_log_step": self.last_log_step,
+            "log_steps": self.log_steps.copy(),
+            "avg_max_q": self.avg_max_q.copy(),
+            "max_q": self.max_q.copy(),
+            "min_q": self.min_q.copy(),
         }
 
 
@@ -190,14 +190,14 @@ class ReferenceQLogger:
     """
 
     def __init__(self, log_dir: str):
-        import os
+
         self.log_dir = log_dir
 
         # Create log directory
         os.makedirs(log_dir, exist_ok=True)
 
         # CSV file
-        self.csv_path = os.path.join(log_dir, 'reference_q_values.csv')
+        self.csv_path = os.path.join(log_dir, "reference_q_values.csv")
         self._csv_initialized = False
 
     def log(self, step: int, q_stats: dict):
@@ -208,23 +208,22 @@ class ReferenceQLogger:
             step: Current environment step
             q_stats: Dictionary with avg_max_q, max_q, min_q
         """
-        import csv
 
         log_entry = {
-            'step': step,
-            'avg_max_q': q_stats['avg_max_q'],
-            'max_q': q_stats['max_q'],
-            'min_q': q_stats['min_q']
+            "step": step,
+            "avg_max_q": q_stats["avg_max_q"],
+            "max_q": q_stats["max_q"],
+            "min_q": q_stats["min_q"],
         }
 
         # Write CSV
         if not self._csv_initialized:
-            with open(self.csv_path, 'w', newline='') as f:
+            with open(self.csv_path, "w", newline="") as f:
                 writer = csv.DictWriter(f, fieldnames=log_entry.keys())
                 writer.writeheader()
             self._csv_initialized = True
 
-        with open(self.csv_path, 'a', newline='') as f:
+        with open(self.csv_path, "a", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=log_entry.keys())
             writer.writerow(log_entry)
 
@@ -235,13 +234,12 @@ class ReferenceQLogger:
         Returns:
             List of dictionaries with Q-value statistics
         """
-        import csv
         import os
 
         if not os.path.exists(self.csv_path):
             return []
 
-        with open(self.csv_path, 'r') as f:
+        with open(self.csv_path, "r") as f:
             reader = csv.DictReader(f)
             return list(reader)
 

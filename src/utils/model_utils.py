@@ -5,15 +5,14 @@ Provides tools for summarizing model architecture, counting parameters,
 and validating tensor shapes.
 """
 
+from typing import Tuple
+
 import torch
 import torch.nn as nn
-from typing import Tuple, Optional
 
 
 def model_summary(
-    model: nn.Module,
-    input_shape: Tuple[int, ...],
-    device: str = 'cpu'
+    model: nn.Module, input_shape: Tuple[int, ...], device: str = "cpu"
 ) -> dict:
     """
     Generate a summary of model architecture and parameters.
@@ -50,11 +49,13 @@ def model_summary(
         if len(list(module.children())) == 0:  # Leaf modules only
             num_params = sum(p.numel() for p in module.parameters())
             if num_params > 0:
-                layer_info.append({
-                    'name': name,
-                    'type': module.__class__.__name__,
-                    'params': num_params
-                })
+                layer_info.append(
+                    {
+                        "name": name,
+                        "type": module.__class__.__name__,
+                        "params": num_params,
+                    }
+                )
 
     # Run forward pass to get output shape
     with torch.no_grad():
@@ -68,18 +69,16 @@ def model_summary(
             output_shape = tuple(output.shape)
 
     return {
-        'total_params': total_params,
-        'trainable_params': trainable_params,
-        'input_shape': input_shape,
-        'output_shape': output_shape,
-        'layer_info': layer_info
+        "total_params": total_params,
+        "trainable_params": trainable_params,
+        "input_shape": input_shape,
+        "output_shape": output_shape,
+        "layer_info": layer_info,
     }
 
 
 def print_model_summary(
-    model: nn.Module,
-    input_shape: Tuple[int, ...],
-    device: str = 'cpu'
+    model: nn.Module, input_shape: Tuple[int, ...], device: str = "cpu"
 ):
     """
     Print a formatted model summary.
@@ -100,7 +99,7 @@ def print_model_summary(
 
     print(f"{'Layer':<30} {'Type':<20} {'Params':>15}")
     print("-" * 70)
-    for layer in summary['layer_info']:
+    for layer in summary["layer_info"]:
         print(f"{layer['name']:<30} {layer['type']:<20} {layer['params']:>15,}")
 
     print("=" * 70)
@@ -113,7 +112,7 @@ def assert_output_shape(
     model: nn.Module,
     input_shape: Tuple[int, ...],
     expected_output_shape: Tuple[int, ...],
-    batch_size: int = 2
+    batch_size: int = 2,
 ):
     """
     Assert that model produces expected output shape.
@@ -138,12 +137,13 @@ def assert_output_shape(
 
         # Handle dict output
         if isinstance(output, dict):
-            if 'q_values' in output:
-                actual_shape = output['q_values'].shape[1:]
+            if "q_values" in output:
+                actual_shape = output["q_values"].shape[1:]
             else:
                 raise ValueError("Dict output must contain 'q_values' key")
         else:
             actual_shape = output.shape[1:]
 
-        assert actual_shape == expected_output_shape, \
-            f"Expected output shape {expected_output_shape}, got {actual_shape}"
+        assert (
+            actual_shape == expected_output_shape
+        ), f"Expected output shape {expected_output_shape}, got {actual_shape}"

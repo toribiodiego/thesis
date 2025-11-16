@@ -91,9 +91,7 @@ def seed_env(env: Any, seed: int) -> tuple:
 
 
 def configure_determinism(
-    enabled: bool = True,
-    strict: bool = False,
-    warn_only: bool = True
+    enabled: bool = True, strict: bool = False, warn_only: bool = True
 ) -> Dict[str, bool]:
     """
     Configure PyTorch deterministic behavior for reproducibility.
@@ -157,30 +155,30 @@ def configure_determinism(
         # Enable cuDNN deterministic mode
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-        applied_settings['cudnn_deterministic'] = True
-        applied_settings['cudnn_benchmark'] = False
+        applied_settings["cudnn_deterministic"] = True
+        applied_settings["cudnn_benchmark"] = False
     else:
         # Disable deterministic mode (faster training)
         torch.backends.cudnn.deterministic = False
         torch.backends.cudnn.benchmark = True
-        applied_settings['cudnn_deterministic'] = False
-        applied_settings['cudnn_benchmark'] = True
+        applied_settings["cudnn_deterministic"] = False
+        applied_settings["cudnn_benchmark"] = True
 
     # Configure strict deterministic algorithms
     if strict:
         try:
             # PyTorch >= 1.11 supports warn_only parameter
-            if hasattr(torch, 'use_deterministic_algorithms'):
+            if hasattr(torch, "use_deterministic_algorithms"):
                 # Try new API with warn_only parameter
                 try:
                     torch.use_deterministic_algorithms(True, warn_only=warn_only)
-                    applied_settings['strict_algorithms'] = True
-                    applied_settings['warn_only'] = warn_only
+                    applied_settings["strict_algorithms"] = True
+                    applied_settings["warn_only"] = warn_only
                 except TypeError:
                     # Older PyTorch doesn't support warn_only
                     torch.use_deterministic_algorithms(True)
-                    applied_settings['strict_algorithms'] = True
-                    applied_settings['warn_only'] = False
+                    applied_settings["strict_algorithms"] = True
+                    applied_settings["warn_only"] = False
                     if warn_only:
                         warnings.warn(
                             "warn_only parameter not supported in this PyTorch version. "
@@ -191,18 +189,18 @@ def configure_determinism(
                     "torch.use_deterministic_algorithms not available in this PyTorch version. "
                     "Strict determinism not enabled. Consider upgrading to PyTorch >= 1.8."
                 )
-                applied_settings['strict_algorithms'] = False
-                applied_settings['warn_only'] = warn_only
+                applied_settings["strict_algorithms"] = False
+                applied_settings["warn_only"] = warn_only
         except Exception as e:
             warnings.warn(f"Failed to enable strict deterministic algorithms: {e}")
-            applied_settings['strict_algorithms'] = False
-            applied_settings['warn_only'] = warn_only
+            applied_settings["strict_algorithms"] = False
+            applied_settings["warn_only"] = warn_only
     else:
         # Disable strict algorithms if enabled
-        if hasattr(torch, 'use_deterministic_algorithms'):
+        if hasattr(torch, "use_deterministic_algorithms"):
             torch.use_deterministic_algorithms(False)
-        applied_settings['strict_algorithms'] = False
-        applied_settings['warn_only'] = warn_only
+        applied_settings["strict_algorithms"] = False
+        applied_settings["warn_only"] = warn_only
 
     return applied_settings
 
@@ -223,18 +221,18 @@ def get_determinism_status() -> Dict[str, Any]:
         >>> print(f"Benchmark: {status['cudnn_benchmark']}")
     """
     status = {
-        'cudnn_deterministic': torch.backends.cudnn.deterministic,
-        'cudnn_benchmark': torch.backends.cudnn.benchmark,
+        "cudnn_deterministic": torch.backends.cudnn.deterministic,
+        "cudnn_benchmark": torch.backends.cudnn.benchmark,
     }
 
     # Check if strict algorithms are enabled (PyTorch >= 1.8)
-    if hasattr(torch, 'are_deterministic_algorithms_enabled'):
-        status['strict_algorithms'] = torch.are_deterministic_algorithms_enabled()
-    elif hasattr(torch, 'is_deterministic'):
+    if hasattr(torch, "are_deterministic_algorithms_enabled"):
+        status["strict_algorithms"] = torch.are_deterministic_algorithms_enabled()
+    elif hasattr(torch, "is_deterministic"):
         # Older PyTorch versions
-        status['strict_algorithms'] = torch.is_deterministic()
+        status["strict_algorithms"] = torch.is_deterministic()
     else:
-        status['strict_algorithms'] = False
+        status["strict_algorithms"] = False
 
     return status
 
@@ -247,31 +245,35 @@ def get_git_info() -> Dict[str, str]:
         Dictionary with 'commit', 'branch', and 'dirty' keys
     """
     try:
-        commit = subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL
-        ).decode("utf-8").strip()
+        commit = (
+            subprocess.check_output(
+                ["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL
+            )
+            .decode("utf-8")
+            .strip()
+        )
 
-        branch = subprocess.check_output(
-            ["git", "rev-parse", "--abbrev-ref", "HEAD"], stderr=subprocess.DEVNULL
-        ).decode("utf-8").strip()
+        branch = (
+            subprocess.check_output(
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"], stderr=subprocess.DEVNULL
+            )
+            .decode("utf-8")
+            .strip()
+        )
 
         # Check if there are uncommitted changes
-        status = subprocess.check_output(
-            ["git", "status", "--porcelain"], stderr=subprocess.DEVNULL
-        ).decode("utf-8").strip()
+        status = (
+            subprocess.check_output(
+                ["git", "status", "--porcelain"], stderr=subprocess.DEVNULL
+            )
+            .decode("utf-8")
+            .strip()
+        )
         dirty = len(status) > 0
 
-        return {
-            "commit": commit,
-            "branch": branch,
-            "dirty": dirty
-        }
+        return {"commit": commit, "branch": branch, "dirty": dirty}
     except (subprocess.CalledProcessError, FileNotFoundError):
-        return {
-            "commit": "unknown",
-            "branch": "unknown",
-            "dirty": False
-        }
+        return {"commit": "unknown", "branch": "unknown", "dirty": False}
 
 
 def save_run_metadata(
@@ -279,7 +281,7 @@ def save_run_metadata(
     config: Dict[str, Any],
     seed: int,
     ale_settings: Optional[Dict[str, Any]] = None,
-    extra_info: Optional[Dict[str, Any]] = None
+    extra_info: Optional[Dict[str, Any]] = None,
 ) -> None:
     """
     Save run metadata including git info, config, seed, and ALE settings to meta.json.
@@ -325,4 +327,6 @@ def save_run_metadata(
 
     # Warn if git repo is dirty
     if git_info["dirty"]:
-        print("WARNING: Git repository has uncommitted changes. Run may not be fully reproducible.")
+        print(
+            "WARNING: Git repository has uncommitted changes. Run may not be fully reproducible."
+        )

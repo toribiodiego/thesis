@@ -1,20 +1,18 @@
-"""Optimizer configuration and gradient clipping utilities.
-"""
+"""Optimizer configuration and gradient clipping utilities."""
 
 import torch
 import torch.nn as nn
-from typing import Optional
 
 
 def configure_optimizer(
     network: nn.Module,
-    optimizer_type: str = 'rmsprop',
+    optimizer_type: str = "rmsprop",
     learning_rate: float = 2.5e-4,
     alpha: float = 0.95,
     eps: float = 1e-2,
     momentum: float = 0.0,
     weight_decay: float = 0.0,
-    **kwargs
+    **kwargs,
 ) -> torch.optim.Optimizer:
     """
     Configure optimizer for DQN training.
@@ -52,7 +50,7 @@ def configure_optimizer(
     # Get network parameters
     params = network.parameters()
 
-    if optimizer_type.lower() == 'rmsprop':
+    if optimizer_type.lower() == "rmsprop":
         # DQN paper defaults: alpha (ρ) = 0.95, eps = 0.01
         optimizer = torch.optim.RMSprop(
             params,
@@ -61,14 +59,14 @@ def configure_optimizer(
             eps=eps,
             momentum=momentum,
             weight_decay=weight_decay,
-            **kwargs
+            **kwargs,
         )
-    elif optimizer_type.lower() == 'adam':
+    elif optimizer_type.lower() == "adam":
         # Adam defaults: beta1=0.9, beta2=0.999, eps=1e-8
         # Override eps if specified
-        adam_eps = kwargs.pop('adam_eps', 1e-8)
-        beta1 = kwargs.pop('beta1', 0.9)
-        beta2 = kwargs.pop('beta2', 0.999)
+        adam_eps = kwargs.pop("adam_eps", 1e-8)
+        beta1 = kwargs.pop("beta1", 0.9)
+        beta2 = kwargs.pop("beta2", 0.999)
 
         optimizer = torch.optim.Adam(
             params,
@@ -76,7 +74,7 @@ def configure_optimizer(
             betas=(beta1, beta2),
             eps=adam_eps,
             weight_decay=weight_decay,
-            **kwargs
+            **kwargs,
         )
     else:
         raise ValueError(
@@ -87,9 +85,7 @@ def configure_optimizer(
 
 
 def clip_gradients(
-    network: nn.Module,
-    max_norm: float = 10.0,
-    norm_type: float = 2.0
+    network: nn.Module, max_norm: float = 10.0, norm_type: float = 2.0
 ) -> float:
     """
     Clip gradients by global norm.
@@ -120,10 +116,7 @@ def clip_gradients(
     """
     # Compute and clip gradient norm
     total_norm = torch.nn.utils.clip_grad_norm_(
-        network.parameters(),
-        max_norm=max_norm,
-        norm_type=norm_type
+        network.parameters(), max_norm=max_norm, norm_type=norm_type
     )
 
     return total_norm.item()
-

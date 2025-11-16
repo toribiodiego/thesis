@@ -7,12 +7,11 @@ Verifies:
 - assert_output_shape validates correctly
 """
 
-import torch
 from src.models.dqn import DQN
 from src.utils.model_utils import (
+    assert_output_shape,
     model_summary,
     print_model_summary,
-    assert_output_shape
 )
 
 
@@ -22,32 +21,32 @@ def test_model_summary():
     summary = model_summary(model, (4, 84, 84))
 
     # Check summary contains required keys
-    assert 'total_params' in summary
-    assert 'trainable_params' in summary
-    assert 'input_shape' in summary
-    assert 'output_shape' in summary
-    assert 'layer_info' in summary
+    assert "total_params" in summary
+    assert "trainable_params" in summary
+    assert "input_shape" in summary
+    assert "output_shape" in summary
+    assert "layer_info" in summary
 
     # Check parameter counts are reasonable
-    assert summary['total_params'] > 0
-    assert summary['trainable_params'] == summary['total_params']
+    assert summary["total_params"] > 0
+    assert summary["trainable_params"] == summary["total_params"]
 
     # Check input shape
-    assert summary['input_shape'] == (4, 84, 84)
+    assert summary["input_shape"] == (4, 84, 84)
 
     # Check output shape (dict with q_values and features)
-    assert isinstance(summary['output_shape'], dict)
-    assert 'q_values' in summary['output_shape']
-    assert 'features' in summary['output_shape']
-    assert summary['output_shape']['q_values'] == (1, 6)
-    assert summary['output_shape']['features'] == (1, 256)
+    assert isinstance(summary["output_shape"], dict)
+    assert "q_values" in summary["output_shape"]
+    assert "features" in summary["output_shape"]
+    assert summary["output_shape"]["q_values"] == (1, 6)
+    assert summary["output_shape"]["features"] == (1, 256)
 
     # Check layer info
-    assert len(summary['layer_info']) > 0
-    for layer in summary['layer_info']:
-        assert 'name' in layer
-        assert 'type' in layer
-        assert 'params' in layer
+    assert len(summary["layer_info"]) > 0
+    for layer in summary["layer_info"]:
+        assert "name" in layer
+        assert "type" in layer
+        assert "params" in layer
 
 
 def test_print_model_summary():
@@ -98,7 +97,7 @@ def test_model_summary_different_action_sizes():
         summary = model_summary(model, (4, 84, 84))
 
         # Output shape should match action size
-        assert summary['output_shape']['q_values'] == (1, num_actions)
+        assert summary["output_shape"]["q_values"] == (1, num_actions)
 
 
 if __name__ == "__main__":

@@ -1,9 +1,9 @@
-"""Stability checks for detecting NaN/Inf and validating training behavior.
-"""
+"""Stability checks for detecting NaN/Inf and validating training behavior."""
+
+from typing import Dict, Tuple
 
 import torch
 import torch.nn as nn
-from typing import List, Tuple, Dict
 
 from .loss import compute_td_targets, select_q_values
 
@@ -44,7 +44,7 @@ def validate_loss_decrease(
     target_net: nn.Module,
     num_updates: int = 10,
     gamma: float = 0.99,
-    loss_type: str = 'mse'
+    loss_type: str = "mse",
 ) -> Tuple[bool, Dict[str, any]]:
     """
     Validate that loss decreases over several updates on a synthetic batch.
@@ -107,12 +107,12 @@ def validate_loss_decrease(
 
         # Compute loss
         loss_dict = loss_fn(q_selected, td_targets, loss_type=loss_type)
-        loss = loss_dict['loss']
+        loss = loss_dict["loss"]
 
         # Check for NaN/Inf
         if detect_nan_inf(loss, "loss"):
             nan_inf_detected = True
-            loss_history.append(float('nan'))
+            loss_history.append(float("nan"))
             break
 
         loss_history.append(loss.item())
@@ -122,29 +122,29 @@ def validate_loss_decrease(
         loss.backward()
         optimizer.step()
 
-    initial_loss = loss_history[0] if loss_history else float('nan')
-    final_loss = loss_history[-1] if loss_history else float('nan')
+    initial_loss = loss_history[0] if loss_history else float("nan")
+    final_loss = loss_history[-1] if loss_history else float("nan")
     loss_decreased = final_loss < initial_loss
 
     success = loss_decreased and not nan_inf_detected
 
     info = {
-        'initial_loss': initial_loss,
-        'final_loss': final_loss,
-        'loss_history': loss_history,
-        'loss_decreased': loss_decreased,
-        'nan_inf_detected': nan_inf_detected
+        "initial_loss": initial_loss,
+        "final_loss": final_loss,
+        "loss_history": loss_history,
+        "loss_decreased": loss_decreased,
+        "nan_inf_detected": nan_inf_detected,
     }
 
     return success, info
 
 
 def verify_target_sync_schedule(
-    updater: 'TargetNetworkUpdater',
+    updater: "TargetNetworkUpdater",
     online_net: nn.Module,
     target_net: nn.Module,
     max_steps: int,
-    expected_interval: int
+    expected_interval: int,
 ) -> Tuple[bool, Dict[str, any]]:
     """
     Verify that target network updates occur at exact multiples of update_interval.
@@ -198,11 +198,10 @@ def verify_target_sync_schedule(
     success = schedule_correct and count_correct
 
     info = {
-        'update_steps': update_steps,
-        'expected_steps': expected_steps,
-        'schedule_correct': schedule_correct,
-        'count_correct': count_correct
+        "update_steps": update_steps,
+        "expected_steps": expected_steps,
+        "schedule_correct": schedule_correct,
+        "count_correct": count_correct,
     }
 
     return success, info
-

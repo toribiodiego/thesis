@@ -7,10 +7,11 @@ Provides functions for:
 - TD error statistics for monitoring
 """
 
+from typing import Dict, Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, Tuple
 
 
 def compute_td_targets(
@@ -18,7 +19,7 @@ def compute_td_targets(
     next_states: torch.Tensor,
     dones: torch.Tensor,
     target_net: nn.Module,
-    gamma: float = 0.99
+    gamma: float = 0.99,
 ) -> torch.Tensor:
     """
     Compute TD targets using the target network.
@@ -54,7 +55,7 @@ def compute_td_targets(
     with torch.no_grad():
         # Forward pass through target network
         target_output = target_net(next_states)
-        target_q_values = target_output['q_values']  # (B, num_actions)
+        target_q_values = target_output["q_values"]  # (B, num_actions)
 
         # Get max Q-value over actions
         max_target_q, _ = target_q_values.max(dim=1)  # (B,)
@@ -70,9 +71,7 @@ def compute_td_targets(
 
 
 def select_q_values(
-    online_net: nn.Module,
-    states: torch.Tensor,
-    actions: torch.Tensor
+    online_net: nn.Module, states: torch.Tensor, actions: torch.Tensor
 ) -> torch.Tensor:
     """
     Select Q-values for specific actions from online network.
@@ -101,7 +100,7 @@ def select_q_values(
     """
     # Forward pass through online network
     online_output = online_net(states)
-    q_values = online_output['q_values']  # (B, num_actions)
+    q_values = online_output["q_values"]  # (B, num_actions)
 
     # Gather Q-values for the actions that were taken
     # actions shape: (B,) -> (B, 1) for gather
@@ -122,7 +121,7 @@ def compute_td_loss_components(
     dones: torch.Tensor,
     online_net: nn.Module,
     target_net: nn.Module,
-    gamma: float = 0.99
+    gamma: float = 0.99,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """
     Compute Q-values and TD targets for loss computation.
@@ -166,8 +165,8 @@ def compute_td_loss_components(
 def compute_dqn_loss(
     q_selected: torch.Tensor,
     td_targets: torch.Tensor,
-    loss_type: str = 'mse',
-    huber_delta: float = 1.0
+    loss_type: str = "mse",
+    huber_delta: float = 1.0,
 ) -> Dict[str, torch.Tensor]:
     """
     Compute DQN loss with configurable loss function.
@@ -202,20 +201,21 @@ def compute_dqn_loss(
         >>> print(f"Mean TD error: {loss_dict['td_error'].item():.4f}")
     """
     # Validate inputs
-    assert q_selected.shape == td_targets.shape, \
-        f"Shape mismatch: q_selected {q_selected.shape} vs td_targets {td_targets.shape}"
+    assert (
+        q_selected.shape == td_targets.shape
+    ), f"Shape mismatch: q_selected {q_selected.shape} vs td_targets {td_targets.shape}"
     assert q_selected.requires_grad, "q_selected should have gradients"
     assert not td_targets.requires_grad, "td_targets should be detached"
 
     # Compute loss based on type
-    if loss_type == 'mse':
+    if loss_type == "mse":
         # Mean Squared Error loss
-        loss = F.mse_loss(q_selected, td_targets, reduction='mean')
-    elif loss_type == 'huber':
+        loss = F.mse_loss(q_selected, td_targets, reduction="mean")
+    elif loss_type == "huber":
         # Huber loss (smooth L1)
         # PyTorch's smooth_l1_loss uses delta=1.0 by default
         # For custom delta, we use huber_loss with specified delta
-        loss = F.huber_loss(q_selected, td_targets, reduction='mean', delta=huber_delta)
+        loss = F.huber_loss(q_selected, td_targets, reduction="mean", delta=huber_delta)
     else:
         raise ValueError(f"Unknown loss_type: {loss_type}. Use 'mse' or 'huber'.")
 
@@ -225,8 +225,4 @@ def compute_dqn_loss(
         mean_td_error = td_errors.mean()
         std_td_error = td_errors.std()
 
-    return {
-        'loss': loss,
-        'td_error': mean_td_error,
-        'td_error_std': std_td_error
-    }
+    return {"loss": loss, "td_error": mean_td_error, "td_error_std": std_td_error}

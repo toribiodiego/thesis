@@ -10,25 +10,23 @@ Tests checkpoint resume with:
 - Git hash mismatch warnings
 """
 
+import shutil
+import tempfile
+
+import numpy as np
 import pytest
 import torch
-import torch.nn as nn
-import numpy as np
-import tempfile
-import shutil
-import os
-from pathlib import Path
 
 from src.models.dqn import DQN
 from src.replay.replay_buffer import ReplayBuffer
 from src.training import (
     CheckpointManager,
     EpsilonScheduler,
+    check_git_hash_mismatch,
     configure_optimizer,
     get_rng_states,
     resume_from_checkpoint,
     validate_config_compatibility,
-    check_git_hash_mismatch,
 )
 
 
@@ -46,19 +44,16 @@ def models_and_state():
     online_model = DQN(num_actions=6)
     target_model = DQN(num_actions=6)
     target_model.load_state_dict(online_model.state_dict())
-    optimizer = configure_optimizer(online_model, optimizer_type='rmsprop')
+    optimizer = configure_optimizer(online_model, optimizer_type="rmsprop")
     epsilon_scheduler = EpsilonScheduler(
-        epsilon_start=1.0,
-        epsilon_end=0.1,
-        decay_frames=1_000_000,
-        eval_epsilon=0.05
+        epsilon_start=1.0, epsilon_end=0.1, decay_frames=1_000_000, eval_epsilon=0.05
     )
 
     return {
-        'online_model': online_model,
-        'target_model': target_model,
-        'optimizer': optimizer,
-        'epsilon_scheduler': epsilon_scheduler
+        "online_model": online_model,
+        "target_model": target_model,
+        "optimizer": optimizer,
+        "epsilon_scheduler": epsilon_scheduler,
     }
 
 
@@ -66,22 +61,15 @@ def models_and_state():
 def sample_config():
     """Create sample configuration."""
     return {
-        'env': {
-            'id': 'ALE/Pong-v5'
+        "env": {"id": "ALE/Pong-v5"},
+        "preprocess": {"frame_size": 84, "stack_size": 4},
+        "training": {
+            "gamma": 0.99,
+            "learning_rate": 2.5e-4,
+            "batch_size": 32,
+            "target_update_interval": 10000,
         },
-        'preprocess': {
-            'frame_size': 84,
-            'stack_size': 4
-        },
-        'training': {
-            'gamma': 0.99,
-            'learning_rate': 2.5e-4,
-            'batch_size': 32,
-            'target_update_interval': 10000
-        },
-        'replay': {
-            'capacity': 1_000_000
-        }
+        "replay": {"capacity": 1_000_000},
     }
 
 
@@ -101,41 +89,44 @@ class TestConfigValidation:
     def test_critical_mismatch_env_id(self, sample_config):
         """Test that env ID mismatch is detected as critical."""
         import copy
+
         config1 = copy.deepcopy(sample_config)
         config2 = copy.deepcopy(sample_config)
-        config2['env']['id'] = 'ALE/Breakout-v5'
+        config2["env"]["id"] = "ALE/Breakout-v5"
 
         is_compatible, warnings = validate_config_compatibility(config1, config2)
 
         assert is_compatible is False
-        assert any('Environment ID' in w for w in warnings)
-        assert any('CRITICAL' in w for w in warnings)
+        assert any("Environment ID" in w for w in warnings)
+        assert any("CRITICAL" in w for w in warnings)
 
     def test_critical_mismatch_frame_size(self, sample_config):
         """Test that frame size mismatch is detected as critical."""
         import copy
+
         config1 = copy.deepcopy(sample_config)
         config2 = copy.deepcopy(sample_config)
-        config2['preprocess']['frame_size'] = 64
+        config2["preprocess"]["frame_size"] = 64
 
         is_compatible, warnings = validate_config_compatibility(config1, config2)
 
         assert is_compatible is False
-        assert any('Frame size' in w for w in warnings)
+        assert any("Frame size" in w for w in warnings)
 
     def test_warning_on_hyperparameter_change(self, sample_config):
         """Test that hyperparameter changes generate warnings."""
         import copy
+
         config1 = copy.deepcopy(sample_config)
         config2 = copy.deepcopy(sample_config)
-        config2['training']['learning_rate'] = 1e-4
+        config2["training"]["learning_rate"] = 1e-4
 
         is_compatible, warnings = validate_config_compatibility(config1, config2)
 
         # Should be compatible but with warnings
         assert is_compatible is True
-        assert any('Learning rate' in w for w in warnings)
-        assert any('WARNING' in w for w in warnings)
+        assert any("Learning rate" in w for w in warnings)
+        assert any("WARNING" in w for w in warnings)
 
 
 class TestGitHashCheck:
@@ -143,24 +134,24 @@ class TestGitHashCheck:
 
     def test_matching_hashes(self):
         """Test that matching hashes return None."""
-        warning = check_git_hash_mismatch('abc123', 'abc123')
+        warning = check_git_hash_mismatch("abc123", "abc123")
         assert warning is None
 
     def test_mismatching_hashes(self):
         """Test that mismatching hashes return warning."""
-        warning = check_git_hash_mismatch('abc123', 'def456')
+        warning = check_git_hash_mismatch("abc123", "def456")
 
         assert warning is not None
-        assert 'WARNING' in warning
-        assert 'abc123' in warning
-        assert 'def456' in warning
+        assert "WARNING" in warning
+        assert "abc123" in warning
+        assert "def456" in warning
 
     def test_unknown_hash(self):
         """Test handling of unknown git hash."""
-        warning = check_git_hash_mismatch('unknown', 'abc123')
+        warning = check_git_hash_mismatch("unknown", "abc123")
 
         assert warning is not None
-        assert 'Unable to verify' in warning
+        assert "Unable to verify" in warning
 
 
 class TestResumeFromCheckpoint:
@@ -181,21 +172,19 @@ class TestResumeFromCheckpoint:
             step=save_step,
             episode=save_episode,
             epsilon=save_epsilon,
-            online_model=state['online_model'],
-            target_model=state['target_model'],
-            optimizer=state['optimizer'],
+            online_model=state["online_model"],
+            target_model=state["target_model"],
+            optimizer=state["optimizer"],
             rng_states=get_rng_states(),
-            extra_metadata={'config': sample_config}
+            extra_metadata={"config": sample_config},
         )
 
         # Create fresh models for resume
         new_online = DQN(num_actions=6)
         new_target = DQN(num_actions=6)
-        new_optimizer = configure_optimizer(new_online, optimizer_type='rmsprop')
+        new_optimizer = configure_optimizer(new_online, optimizer_type="rmsprop")
         new_scheduler = EpsilonScheduler(
-            epsilon_start=1.0,
-            epsilon_end=0.1,
-            decay_frames=1_000_000
+            epsilon_start=1.0, epsilon_end=0.1, decay_frames=1_000_000
         )
 
         # Resume
@@ -206,29 +195,28 @@ class TestResumeFromCheckpoint:
             optimizer=new_optimizer,
             epsilon_scheduler=new_scheduler,
             config=sample_config,
-            device='cpu'
+            device="cpu",
         )
 
         # Verify
-        assert resumed['step'] == save_step
-        assert resumed['episode'] == save_episode
-        assert abs(resumed['epsilon'] - save_epsilon) < 1e-6
-        assert resumed['next_step'] == save_step + 1
+        assert resumed["step"] == save_step
+        assert resumed["episode"] == save_episode
+        assert abs(resumed["epsilon"] - save_epsilon) < 1e-6
+        assert resumed["next_step"] == save_step + 1
 
         # Verify epsilon scheduler was restored
         assert abs(new_scheduler.current_epsilon - save_epsilon) < 1e-6
         assert new_scheduler.frame_counter == save_step
 
         # Verify model weights match
-        for p1, p2 in zip(state['online_model'].parameters(), new_online.parameters()):
+        for p1, p2 in zip(state["online_model"].parameters(), new_online.parameters()):
             assert torch.allclose(p1, p2)
 
     def test_resume_with_replay_buffer(self, temp_checkpoint_dir, models_and_state):
         """Test resume with replay buffer restoration."""
         state = models_and_state
         manager = CheckpointManager(
-            checkpoint_dir=temp_checkpoint_dir,
-            save_replay_buffer=True
+            checkpoint_dir=temp_checkpoint_dir, save_replay_buffer=True
         )
 
         # Create and fill replay buffer
@@ -248,29 +236,29 @@ class TestResumeFromCheckpoint:
             step=10000,
             episode=500,
             epsilon=0.9,
-            online_model=state['online_model'],
-            target_model=state['target_model'],
-            optimizer=state['optimizer'],
+            online_model=state["online_model"],
+            target_model=state["target_model"],
+            optimizer=state["optimizer"],
             replay_buffer=replay_buffer,
-            rng_states=get_rng_states()
+            rng_states=get_rng_states(),
         )
 
         # Create fresh models and empty buffer
         new_online = DQN(num_actions=6)
         new_target = DQN(num_actions=6)
-        new_optimizer = configure_optimizer(new_online, optimizer_type='rmsprop')
+        new_optimizer = configure_optimizer(new_online, optimizer_type="rmsprop")
         new_scheduler = EpsilonScheduler()
         new_buffer = ReplayBuffer(capacity=1000, obs_shape=(4, 84, 84))
 
         # Resume
-        resumed = resume_from_checkpoint(
+        resume_from_checkpoint(
             checkpoint_path=checkpoint_path,
             online_model=new_online,
             target_model=new_target,
             optimizer=new_optimizer,
             epsilon_scheduler=new_scheduler,
             replay_buffer=new_buffer,
-            device='cpu'
+            device="cpu",
         )
 
         # Verify buffer state was restored
@@ -279,7 +267,9 @@ class TestResumeFromCheckpoint:
         assert np.array_equal(new_buffer.observations, replay_buffer.observations)
         assert np.array_equal(new_buffer.actions, replay_buffer.actions)
 
-    def test_resume_with_rng_state_restoration(self, temp_checkpoint_dir, models_and_state):
+    def test_resume_with_rng_state_restoration(
+        self, temp_checkpoint_dir, models_and_state
+    ):
         """Test that RNG states are properly restored."""
         state = models_and_state
         manager = CheckpointManager(checkpoint_dir=temp_checkpoint_dir)
@@ -294,10 +284,10 @@ class TestResumeFromCheckpoint:
             step=1000,
             episode=50,
             epsilon=0.99,
-            online_model=state['online_model'],
-            target_model=state['target_model'],
-            optimizer=state['optimizer'],
-            rng_states=rng_states
+            online_model=state["online_model"],
+            target_model=state["target_model"],
+            optimizer=state["optimizer"],
+            rng_states=rng_states,
         )
 
         # Change RNG state
@@ -307,7 +297,7 @@ class TestResumeFromCheckpoint:
         # Create fresh models
         new_online = DQN(num_actions=6)
         new_target = DQN(num_actions=6)
-        new_optimizer = configure_optimizer(new_online, optimizer_type='rmsprop')
+        new_optimizer = configure_optimizer(new_online, optimizer_type="rmsprop")
         new_scheduler = EpsilonScheduler()
 
         # Generate random numbers before resume
@@ -315,13 +305,13 @@ class TestResumeFromCheckpoint:
         numpy_before = np.random.rand(10)
 
         # Resume (which should restore RNG states)
-        resumed = resume_from_checkpoint(
+        resume_from_checkpoint(
             checkpoint_path=checkpoint_path,
             online_model=new_online,
             target_model=new_target,
             optimizer=new_optimizer,
             epsilon_scheduler=new_scheduler,
-            device='cpu'
+            device="cpu",
         )
 
         # Reset to the same state manually for comparison
@@ -345,35 +335,37 @@ class TestResumeFromCheckpoint:
             step=1000,
             episode=50,
             epsilon=0.99,
-            online_model=state['online_model'],
-            target_model=state['target_model'],
-            optimizer=state['optimizer']
+            online_model=state["online_model"],
+            target_model=state["target_model"],
+            optimizer=state["optimizer"],
         )
 
         # Create fresh models
         new_online = DQN(num_actions=6)
         new_target = DQN(num_actions=6)
-        new_optimizer = configure_optimizer(new_online, optimizer_type='rmsprop')
+        new_optimizer = configure_optimizer(new_online, optimizer_type="rmsprop")
         new_scheduler = EpsilonScheduler()
 
         # Resume to CPU
-        resumed = resume_from_checkpoint(
+        resume_from_checkpoint(
             checkpoint_path=checkpoint_path,
             online_model=new_online,
             target_model=new_target,
             optimizer=new_optimizer,
             epsilon_scheduler=new_scheduler,
-            device='cpu'
+            device="cpu",
         )
 
         # Verify all parameters are on CPU
         for param in new_online.parameters():
-            assert param.device.type == 'cpu'
+            assert param.device.type == "cpu"
 
         for param in new_target.parameters():
-            assert param.device.type == 'cpu'
+            assert param.device.type == "cpu"
 
-    def test_resume_config_validation_error(self, temp_checkpoint_dir, models_and_state, sample_config):
+    def test_resume_config_validation_error(
+        self, temp_checkpoint_dir, models_and_state, sample_config
+    ):
         """Test that strict config validation raises error on mismatch."""
         state = models_and_state
         manager = CheckpointManager(checkpoint_dir=temp_checkpoint_dir)
@@ -383,19 +375,19 @@ class TestResumeFromCheckpoint:
             step=1000,
             episode=50,
             epsilon=0.99,
-            online_model=state['online_model'],
-            target_model=state['target_model'],
-            optimizer=state['optimizer'],
-            extra_metadata={'config': sample_config}
+            online_model=state["online_model"],
+            target_model=state["target_model"],
+            optimizer=state["optimizer"],
+            extra_metadata={"config": sample_config},
         )
 
         # Try to resume with incompatible config
         incompatible_config = sample_config.copy()
-        incompatible_config['env']['id'] = 'ALE/Breakout-v5'  # Different game
+        incompatible_config["env"]["id"] = "ALE/Breakout-v5"  # Different game
 
         new_online = DQN(num_actions=6)
         new_target = DQN(num_actions=6)
-        new_optimizer = configure_optimizer(new_online, optimizer_type='rmsprop')
+        new_optimizer = configure_optimizer(new_online, optimizer_type="rmsprop")
         new_scheduler = EpsilonScheduler()
 
         # Should raise error with strict_config=True
@@ -408,10 +400,12 @@ class TestResumeFromCheckpoint:
                 epsilon_scheduler=new_scheduler,
                 config=incompatible_config,
                 strict_config=True,
-                device='cpu'
+                device="cpu",
             )
 
-    def test_resume_config_validation_warning(self, temp_checkpoint_dir, models_and_state, sample_config):
+    def test_resume_config_validation_warning(
+        self, temp_checkpoint_dir, models_and_state, sample_config
+    ):
         """Test that non-strict config validation only warns."""
         state = models_and_state
         manager = CheckpointManager(checkpoint_dir=temp_checkpoint_dir)
@@ -421,19 +415,19 @@ class TestResumeFromCheckpoint:
             step=1000,
             episode=50,
             epsilon=0.99,
-            online_model=state['online_model'],
-            target_model=state['target_model'],
-            optimizer=state['optimizer'],
-            extra_metadata={'config': sample_config}
+            online_model=state["online_model"],
+            target_model=state["target_model"],
+            optimizer=state["optimizer"],
+            extra_metadata={"config": sample_config},
         )
 
         # Resume with incompatible config but strict=False
         incompatible_config = sample_config.copy()
-        incompatible_config['env']['id'] = 'ALE/Breakout-v5'
+        incompatible_config["env"]["id"] = "ALE/Breakout-v5"
 
         new_online = DQN(num_actions=6)
         new_target = DQN(num_actions=6)
-        new_optimizer = configure_optimizer(new_online, optimizer_type='rmsprop')
+        new_optimizer = configure_optimizer(new_online, optimizer_type="rmsprop")
         new_scheduler = EpsilonScheduler()
 
         # Should succeed with warnings
@@ -445,11 +439,11 @@ class TestResumeFromCheckpoint:
             epsilon_scheduler=new_scheduler,
             config=incompatible_config,
             strict_config=False,
-            device='cpu'
+            device="cpu",
         )
 
         # Should have warnings
-        assert len(resumed['warnings']) > 0
+        assert len(resumed["warnings"]) > 0
 
     def test_resume_nonexistent_checkpoint(self, models_and_state):
         """Test that resuming from nonexistent checkpoint raises error."""
@@ -457,12 +451,12 @@ class TestResumeFromCheckpoint:
 
         with pytest.raises(FileNotFoundError):
             resume_from_checkpoint(
-                checkpoint_path='/nonexistent/checkpoint.pt',
-                online_model=state['online_model'],
-                target_model=state['target_model'],
-                optimizer=state['optimizer'],
-                epsilon_scheduler=state['epsilon_scheduler'],
-                device='cpu'
+                checkpoint_path="/nonexistent/checkpoint.pt",
+                online_model=state["online_model"],
+                target_model=state["target_model"],
+                optimizer=state["optimizer"],
+                epsilon_scheduler=state["epsilon_scheduler"],
+                device="cpu",
             )
 
     def test_epsilon_schedule_restoration(self, temp_checkpoint_dir, models_and_state):
@@ -479,16 +473,14 @@ class TestResumeFromCheckpoint:
             step=test_step,
             episode=2500,
             epsilon=expected_epsilon,
-            online_model=state['online_model'],
-            target_model=state['target_model'],
-            optimizer=state['optimizer']
+            online_model=state["online_model"],
+            target_model=state["target_model"],
+            optimizer=state["optimizer"],
         )
 
         # Create fresh scheduler
         new_scheduler = EpsilonScheduler(
-            epsilon_start=1.0,
-            epsilon_end=0.1,
-            decay_frames=1_000_000
+            epsilon_start=1.0, epsilon_end=0.1, decay_frames=1_000_000
         )
 
         # Before resume, epsilon should be at start
@@ -498,15 +490,15 @@ class TestResumeFromCheckpoint:
         # Resume
         new_online = DQN(num_actions=6)
         new_target = DQN(num_actions=6)
-        new_optimizer = configure_optimizer(new_online, optimizer_type='rmsprop')
+        new_optimizer = configure_optimizer(new_online, optimizer_type="rmsprop")
 
-        resumed = resume_from_checkpoint(
+        resume_from_checkpoint(
             checkpoint_path=checkpoint_path,
             online_model=new_online,
             target_model=new_target,
             optimizer=new_optimizer,
             epsilon_scheduler=new_scheduler,
-            device='cpu'
+            device="cpu",
         )
 
         # After resume, epsilon should match checkpoint
@@ -518,5 +510,5 @@ class TestResumeFromCheckpoint:
         assert abs(computed_epsilon - expected_epsilon) < 1e-6
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

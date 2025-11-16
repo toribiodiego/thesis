@@ -9,8 +9,9 @@ Features:
 - Configurable capacity (default ~1M transitions)
 """
 
+from typing import Dict, Optional, Tuple, Union
+
 import numpy as np
-from typing import Dict, Tuple, Optional, Union
 import torch
 
 
@@ -49,7 +50,7 @@ class ReplayBuffer:
         normalize: bool = True,
         min_size: int = 50_000,
         device: Optional[Union[str, torch.device]] = None,
-        pin_memory: bool = False
+        pin_memory: bool = False,
     ):
         self.capacity = capacity
         self.obs_shape = obs_shape
@@ -65,10 +66,7 @@ class ReplayBuffer:
 
         # Storage arrays
         # Store observations (states) - we store both s_t and s_{t+1}
-        self.observations = np.zeros(
-            (capacity, *obs_shape),
-            dtype=dtype
-        )
+        self.observations = np.zeros((capacity, *obs_shape), dtype=dtype)
 
         # Store actions, rewards, dones
         self.actions = np.zeros(capacity, dtype=np.int64)
@@ -85,7 +83,7 @@ class ReplayBuffer:
         action: int,
         reward: float,
         next_state: np.ndarray,
-        done: bool
+        done: bool,
     ):
         """
         Add a transition to the buffer.
@@ -103,10 +101,12 @@ class ReplayBuffer:
             - Buffer wraps around when full (circular buffer)
         """
         # Validate shapes
-        assert state.shape == self.obs_shape, \
-            f"State shape {state.shape} doesn't match expected {self.obs_shape}"
-        assert next_state.shape == self.obs_shape, \
-            f"Next state shape {next_state.shape} doesn't match expected {self.obs_shape}"
+        assert (
+            state.shape == self.obs_shape
+        ), f"State shape {state.shape} doesn't match expected {self.obs_shape}"
+        assert (
+            next_state.shape == self.obs_shape
+        ), f"Next state shape {next_state.shape} doesn't match expected {self.obs_shape}"
 
         # Convert to uint8 if needed
         if state.dtype != self.dtype:
@@ -185,16 +185,15 @@ class ReplayBuffer:
         """
         if self.size < self.capacity:
             # Buffer not full yet, check indices [0, size)
-            valid = np.array([
-                i for i in range(self.size)
-                if self._is_valid_index(i)
-            ], dtype=np.int64)
+            valid = np.array(
+                [i for i in range(self.size) if self._is_valid_index(i)], dtype=np.int64
+            )
         else:
             # Buffer is full, check all indices
-            valid = np.array([
-                i for i in range(self.capacity)
-                if self._is_valid_index(i)
-            ], dtype=np.int64)
+            valid = np.array(
+                [i for i in range(self.capacity) if self._is_valid_index(i)],
+                dtype=np.int64,
+            )
 
         return valid
 
@@ -243,9 +242,7 @@ class ReplayBuffer:
 
         # Sample without replacement
         sampled_indices = np.random.choice(
-            valid_indices,
-            size=batch_size,
-            replace=False
+            valid_indices, size=batch_size, replace=False
         )
 
         # Gather transitions (still in uint8)
@@ -270,7 +267,7 @@ class ReplayBuffer:
         # If device specified, convert to PyTorch tensors and move to device
         if self.device is not None:
             # Convert to tensors (on CPU first, potentially with pinned memory)
-            if self.pin_memory and self.device.type == 'cuda':
+            if self.pin_memory and self.device.type == "cuda":
                 # Use pinned memory for faster H2D transfer
                 states_tensor = torch.from_numpy(states).pin_memory()
                 next_states_tensor = torch.from_numpy(next_states).pin_memory()
@@ -293,11 +290,11 @@ class ReplayBuffer:
             dones = dones_tensor.to(self.device, non_blocking=True)
 
         return {
-            'states': states,
-            'actions': actions,
-            'rewards': rewards,
-            'next_states': next_states,
-            'dones': dones
+            "states": states,
+            "actions": actions,
+            "rewards": rewards,
+            "next_states": next_states,
+            "dones": dones,
         }
 
     def can_sample(self, batch_size: int = None) -> bool:

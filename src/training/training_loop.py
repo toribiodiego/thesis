@@ -1,21 +1,14 @@
-"""Main training loop components including action selection and training step orchestration.
-"""
+"""Main training loop components including action selection and training step orchestration."""
 
 import numpy as np
 import torch
-import torch.nn as nn
-from typing import Dict, Any, Optional
 
-from .metrics import perform_update_step
+from .metrics import EpsilonScheduler, perform_update_step
 from .schedulers import TargetNetworkUpdater, TrainingScheduler
-from .metrics import EpsilonScheduler
 
 
 def select_epsilon_greedy_action(
-    network: torch.nn.Module,
-    state: torch.Tensor,
-    epsilon: float,
-    num_actions: int
+    network: torch.nn.Module, state: torch.Tensor, epsilon: float, num_actions: int
 ) -> int:
     """
     Select action using epsilon-greedy policy.
@@ -58,7 +51,7 @@ def select_epsilon_greedy_action(
                 state = state.unsqueeze(0)  # (C,H,W) -> (1,C,H,W)
 
             output = network(state)
-            q_values = output['q_values']  # (1, num_actions)
+            q_values = output["q_values"]  # (1, num_actions)
             action = q_values.argmax(dim=1).item()
         network.train()
         return action
@@ -67,6 +60,7 @@ def select_epsilon_greedy_action(
 # ============================================================================
 # Training Loop Utilities
 # ============================================================================
+
 
 class FrameCounter:
     """
@@ -133,11 +127,7 @@ class FrameCounter:
 
     def to_dict(self) -> dict:
         """Export counter state as dictionary."""
-        return {
-            'steps': self.steps,
-            'frames': self.frames,
-            'frameskip': self.frameskip
-        }
+        return {"steps": self.steps, "frames": self.frames, "frameskip": self.frameskip}
 
 
 def training_step(
@@ -153,10 +143,10 @@ def training_step(
     state: torch.Tensor,
     num_actions: int,
     gamma: float = 0.99,
-    loss_type: str = 'mse',
+    loss_type: str = "mse",
     max_grad_norm: float = 10.0,
     batch_size: int = 32,
-    device: str = 'cpu'
+    device: str = "cpu",
 ):
     """
     Execute one step of the DQN training loop.
@@ -261,11 +251,11 @@ def training_step(
                 return x.to(device)
 
         batch_device = {
-            'states': to_tensor(batch['states']),
-            'actions': to_tensor(batch['actions']),
-            'rewards': to_tensor(batch['rewards']),
-            'next_states': to_tensor(batch['next_states']),
-            'dones': to_tensor(batch['dones'])
+            "states": to_tensor(batch["states"]),
+            "actions": to_tensor(batch["actions"]),
+            "rewards": to_tensor(batch["rewards"]),
+            "next_states": to_tensor(batch["next_states"]),
+            "dones": to_tensor(batch["dones"]),
         }
 
         # Perform optimization step
@@ -277,7 +267,7 @@ def training_step(
             gamma=gamma,
             loss_type=loss_type,
             max_grad_norm=max_grad_norm,
-            update_count=training_scheduler.training_step_count
+            update_count=training_scheduler.training_step_count,
         )
 
         training_scheduler.mark_trained(frame_counter.steps)
@@ -290,15 +280,15 @@ def training_step(
         target_updated = True
 
     return {
-        'next_state': next_state,
-        'reward': reward,
-        'terminated': terminated,
-        'truncated': truncated,
-        'epsilon': epsilon,
-        'metrics': metrics,
-        'target_updated': target_updated,
-        'trained': trained,
-        'action': action
+        "next_state": next_state,
+        "reward": reward,
+        "terminated": terminated,
+        "truncated": truncated,
+        "epsilon": epsilon,
+        "metrics": metrics,
+        "target_updated": target_updated,
+        "trained": trained,
+        "action": action,
     }
 
 

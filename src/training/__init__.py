@@ -1,160 +1,126 @@
 """Training utilities for DQN."""
 
 # Target network management
-from .target_network import (
-    hard_update_target,
-    init_target_network
+# Checkpoint utilities
+from .checkpoint_utils import (
+    get_rng_states,
+    set_rng_states,
+    verify_checkpoint_integrity,
 )
+
+# Evaluation
+from .evaluation import EvaluationLogger, EvaluationScheduler, VideoRecorder, evaluate
+
+# Logging
+from .logging import CheckpointManager, EpisodeLogger, StepLogger
 
 # Loss computation
 from .loss import (
+    compute_dqn_loss,
+    compute_td_loss_components,
     compute_td_targets,
     select_q_values,
-    compute_td_loss_components,
-    compute_dqn_loss
+)
+
+# Metadata
+from .metadata import MetadataWriter, get_git_commit_hash, get_git_status
+
+# Metrics
+from .metrics import EpsilonScheduler, UpdateMetrics, perform_update_step
+
+# Multi-backend metrics logging
+from .metrics_logger import (
+    CSVBackend,
+    MetricKeys,
+    MetricsLogger,
+    TensorBoardBackend,
+    WandBBackend,
 )
 
 # Optimization
-from .optimization import (
-    configure_optimizer,
-    clip_gradients
+from .optimization import clip_gradients, configure_optimizer
+
+# Q-value tracking
+from .q_tracking import ReferenceQLogger, ReferenceStateQTracker
+
+# Resume functionality
+from .resume import (
+    add_resume_args,
+    check_git_hash_mismatch,
+    resume_from_checkpoint,
+    validate_config_compatibility,
 )
 
 # Schedulers
-from .schedulers import (
-    TargetNetworkUpdater,
-    TrainingScheduler
-)
+from .schedulers import TargetNetworkUpdater, TrainingScheduler
 
 # Stability checks
 from .stability import (
     detect_nan_inf,
     validate_loss_decrease,
-    verify_target_sync_schedule
+    verify_target_sync_schedule,
 )
-
-# Metrics
-from .metrics import (
-    UpdateMetrics,
-    perform_update_step,
-    EpsilonScheduler
-)
+from .target_network import hard_update_target, init_target_network
 
 # Training loop
-from .training_loop import (
-    select_epsilon_greedy_action,
-    FrameCounter,
-    training_step
-)
-
-# Logging
-from .logging import (
-    StepLogger,
-    EpisodeLogger,
-    CheckpointManager
-)
-
-# Multi-backend metrics logging
-from .metrics_logger import (
-    MetricsLogger,
-    MetricKeys,
-    TensorBoardBackend,
-    WandBBackend,
-    CSVBackend
-)
-
-# Evaluation
-from .evaluation import (
-    evaluate,
-    EvaluationScheduler,
-    EvaluationLogger,
-    VideoRecorder
-)
-
-# Q-value tracking
-from .q_tracking import (
-    ReferenceStateQTracker,
-    ReferenceQLogger
-)
-
-# Metadata
-from .metadata import (
-    get_git_commit_hash,
-    get_git_status,
-    MetadataWriter
-)
-
-# Checkpoint utilities
-from .checkpoint_utils import (
-    get_rng_states,
-    set_rng_states,
-    verify_checkpoint_integrity
-)
-
-# Resume functionality
-from .resume import (
-    resume_from_checkpoint,
-    validate_config_compatibility,
-    check_git_hash_mismatch,
-    add_resume_args
-)
+from .training_loop import FrameCounter, select_epsilon_greedy_action, training_step
 
 __all__ = [
     # Target network
-    'hard_update_target',
-    'init_target_network',
+    "hard_update_target",
+    "init_target_network",
     # Loss
-    'compute_td_targets',
-    'select_q_values',
-    'compute_td_loss_components',
-    'compute_dqn_loss',
+    "compute_td_targets",
+    "select_q_values",
+    "compute_td_loss_components",
+    "compute_dqn_loss",
     # Optimization
-    'configure_optimizer',
-    'clip_gradients',
+    "configure_optimizer",
+    "clip_gradients",
     # Schedulers
-    'TargetNetworkUpdater',
-    'TrainingScheduler',
-    'EpsilonScheduler',
+    "TargetNetworkUpdater",
+    "TrainingScheduler",
+    "EpsilonScheduler",
     # Stability
-    'detect_nan_inf',
-    'validate_loss_decrease',
-    'verify_target_sync_schedule',
+    "detect_nan_inf",
+    "validate_loss_decrease",
+    "verify_target_sync_schedule",
     # Metrics
-    'UpdateMetrics',
-    'perform_update_step',
+    "UpdateMetrics",
+    "perform_update_step",
     # Training loop
-    'select_epsilon_greedy_action',
-    'FrameCounter',
-    'training_step',
+    "select_epsilon_greedy_action",
+    "FrameCounter",
+    "training_step",
     # Logging
-    'StepLogger',
-    'EpisodeLogger',
-    'CheckpointManager',
+    "StepLogger",
+    "EpisodeLogger",
+    "CheckpointManager",
     # Multi-backend metrics logging
-    'MetricsLogger',
-    'MetricKeys',
-    'TensorBoardBackend',
-    'WandBBackend',
-    'CSVBackend',
+    "MetricsLogger",
+    "MetricKeys",
+    "TensorBoardBackend",
+    "WandBBackend",
+    "CSVBackend",
     # Evaluation
-    'evaluate',
-    'EvaluationScheduler',
-    'EvaluationLogger',
-    'VideoRecorder',
+    "evaluate",
+    "EvaluationScheduler",
+    "EvaluationLogger",
+    "VideoRecorder",
     # Q-tracking
-    'ReferenceStateQTracker',
-    'ReferenceQLogger',
+    "ReferenceStateQTracker",
+    "ReferenceQLogger",
     # Metadata
-    'get_git_commit_hash',
-    'get_git_status',
-    'MetadataWriter',
+    "get_git_commit_hash",
+    "get_git_status",
+    "MetadataWriter",
     # Checkpoint utilities
-    'get_rng_states',
-    'set_rng_states',
-    'verify_checkpoint_integrity',
+    "get_rng_states",
+    "set_rng_states",
+    "verify_checkpoint_integrity",
     # Resume
-    'resume_from_checkpoint',
-    'validate_config_compatibility',
-    'check_git_hash_mismatch',
-    'add_resume_args'
+    "resume_from_checkpoint",
+    "validate_config_compatibility",
+    "check_git_hash_mismatch",
+    "add_resume_args",
 ]

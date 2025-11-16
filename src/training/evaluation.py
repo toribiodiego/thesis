@@ -1,14 +1,12 @@
-"""Evaluation system for periodic performance assessment.
-"""
+"""Evaluation system for periodic performance assessment."""
 
-import os
 import csv
 import json
+import os
+from pathlib import Path
+
 import numpy as np
 import torch
-import torch.nn as nn
-from typing import Dict, Optional, Any, List, Callable
-from pathlib import Path
 
 
 class VideoRecorder:
@@ -58,12 +56,9 @@ class VideoRecorder:
             self.frames = [cv2.cvtColor(f, cv2.COLOR_GRAY2RGB) for f in self.frames]
 
         # Create video writer
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         video_writer = cv2.VideoWriter(
-            str(self.output_path),
-            fourcc,
-            self.fps,
-            (width, height)
+            str(self.output_path), fourcc, self.fps, (width, height)
         )
 
         # Write frames
@@ -78,14 +73,14 @@ class VideoRecorder:
         # Optionally export GIF
         gif_path = None
         if self.export_gif:
-            gif_path = self.output_path.with_suffix('.gif')
+            gif_path = self.output_path.with_suffix(".gif")
             self._export_gif(gif_path)
 
         return {
-            'video_path': str(self.output_path),
-            'gif_path': str(gif_path) if gif_path else None,
-            'num_frames': len(self.frames),
-            'fps': self.fps
+            "video_path": str(self.output_path),
+            "gif_path": str(gif_path) if gif_path else None,
+            "num_frames": len(self.frames),
+            "fps": self.fps,
         }
 
     def _export_gif(self, gif_path: Path):
@@ -102,7 +97,7 @@ class VideoRecorder:
                 save_all=True,
                 append_images=pil_frames[1:],
                 duration=int(1000 / self.fps),  # Duration in milliseconds
-                loop=0
+                loop=0,
             )
         except ImportError:
             # PIL/Pillow not available, skip GIF export
@@ -115,7 +110,7 @@ def evaluate(
     num_episodes: int = 10,
     eval_epsilon: float = 0.05,
     num_actions: int = None,
-    device: str = 'cpu',
+    device: str = "cpu",
     seed: int = None,
     step: int = None,
     track_lives: bool = False,
@@ -123,7 +118,7 @@ def evaluate(
     video_dir: str = None,
     video_fps: int = 30,
     export_gif: bool = False,
-    render_mode: str = 'rgb_array'
+    render_mode: str = "rgb_array",
 ) -> dict:
     """
     Evaluate agent over multiple episodes with low/greedy epsilon.
@@ -215,14 +210,14 @@ def evaluate(
     if record_video:
         # Determine video filename
         if video_dir is None:
-            video_dir = 'results/videos'
+            video_dir = "results/videos"
 
         # Get environment name for filename
-        env_name = getattr(env.unwrapped, 'spec', None)
-        if env_name is not None and hasattr(env_name, 'id'):
-            env_name = env_name.id.replace('/', '_').replace('NoFrameskip-v4', '')
+        env_name = getattr(env.unwrapped, "spec", None)
+        if env_name is not None and hasattr(env_name, "id"):
+            env_name = env_name.id.replace("/", "_").replace("NoFrameskip-v4", "")
         else:
-            env_name = 'env'
+            env_name = "env"
 
     for ep in range(num_episodes):
         obs, info = env.reset()
@@ -233,8 +228,8 @@ def evaluate(
 
         # Track initial lives if requested
         if track_lives:
-            initial_lives = info.get('lives', None)
-            if initial_lives is None and hasattr(env.unwrapped, 'ale'):
+            initial_lives = info.get("lives", None)
+            if initial_lives is None and hasattr(env.unwrapped, "ale"):
                 initial_lives = env.unwrapped.ale.lives()
 
         while not done:
@@ -257,7 +252,7 @@ def evaluate(
                     if obs_tensor.dim() == 3:
                         obs_tensor = obs_tensor.unsqueeze(0)
                     output = model(obs_tensor)
-                    q_values = output['q_values']
+                    q_values = output["q_values"]
                     action = q_values.argmax(dim=1).item()
 
             # Step environment
@@ -286,8 +281,8 @@ def evaluate(
 
         # Track lives lost if requested
         if track_lives:
-            final_lives = info.get('lives', None)
-            if final_lives is None and hasattr(env.unwrapped, 'ale'):
+            final_lives = info.get("lives", None)
+            if final_lives is None and hasattr(env.unwrapped, "ale"):
                 final_lives = env.unwrapped.ale.lives()
 
             if initial_lives is not None and final_lives is not None:
@@ -304,7 +299,9 @@ def evaluate(
 
         # Create video filename with step and episode info
         if step is not None:
-            video_filename = f"{env_name}_step_{step}_best_ep{best_ep}_r{best_return:.0f}.mp4"
+            video_filename = (
+                f"{env_name}_step_{step}_best_ep{best_ep}_r{best_return:.0f}.mp4"
+            )
         else:
             video_filename = f"{env_name}_best_ep{best_ep}_r{best_return:.0f}.mp4"
 
@@ -316,35 +313,35 @@ def evaluate(
             video_recorder.capture_frame(frame)
 
         video_info = video_recorder.save()
-        video_info['best_episode'] = best_ep
-        video_info['best_return'] = float(best_return)
+        video_info["best_episode"] = best_ep
+        video_info["best_return"] = float(best_return)
 
     # Compute statistics
     results = {
-        'mean_return': np.mean(episode_returns),
-        'median_return': np.median(episode_returns),
-        'std_return': np.std(episode_returns),
-        'min_return': np.min(episode_returns),
-        'max_return': np.max(episode_returns),
-        'mean_length': np.mean(episode_lengths),
-        'episode_returns': episode_returns,
-        'episode_lengths': episode_lengths,
-        'num_episodes': num_episodes,
-        'eval_epsilon': eval_epsilon
+        "mean_return": np.mean(episode_returns),
+        "median_return": np.median(episode_returns),
+        "std_return": np.std(episode_returns),
+        "min_return": np.min(episode_returns),
+        "max_return": np.max(episode_returns),
+        "mean_length": np.mean(episode_lengths),
+        "episode_returns": episode_returns,
+        "episode_lengths": episode_lengths,
+        "num_episodes": num_episodes,
+        "eval_epsilon": eval_epsilon,
     }
 
     # Add optional metadata
     if seed is not None:
-        results['seed'] = seed
+        results["seed"] = seed
 
     if step is not None:
-        results['step'] = step
+        results["step"] = step
 
     if track_lives and episode_lives_lost is not None:
-        results['episode_lives_lost'] = episode_lives_lost
+        results["episode_lives_lost"] = episode_lives_lost
 
     if video_info is not None:
-        results['video_info'] = video_info
+        results["video_info"] = video_info
 
     # Set model back to train mode
     model.train()
@@ -395,7 +392,7 @@ class EvaluationScheduler:
         eval_interval: int = 250_000,
         num_episodes: int = 10,
         eval_epsilon: float = 0.05,
-        wall_clock_interval: float = None
+        wall_clock_interval: float = None,
     ):
         self.eval_interval = eval_interval
         self.num_episodes = num_episodes
@@ -411,6 +408,7 @@ class EvaluationScheduler:
 
         # Metadata tracking
         import time
+
         self.start_time = time.time()
 
     def should_evaluate(self, step: int) -> bool:
@@ -433,6 +431,7 @@ class EvaluationScheduler:
         # Wall-clock based scheduling
         if self.wall_clock_interval is not None:
             import time
+
             current_time = time.time()
 
             # First evaluation
@@ -462,19 +461,20 @@ class EvaluationScheduler:
             results: Dictionary returned by evaluate()
         """
         import time
+
         current_time = time.time()
 
         self.last_eval_step = step
         self.last_eval_time = current_time
 
         self.eval_steps.append(step)
-        self.eval_returns.append(results['mean_return'])
+        self.eval_returns.append(results["mean_return"])
         self.eval_timestamps.append(current_time)
 
     def get_best_return(self) -> float:
         """Get best mean return across all evaluations."""
         if not self.eval_returns:
-            return float('-inf')
+            return float("-inf")
         return max(self.eval_returns)
 
     def get_recent_trend(self, n: int = 3) -> str:
@@ -488,15 +488,15 @@ class EvaluationScheduler:
             'improving', 'declining', or 'stable'
         """
         if len(self.eval_returns) < n:
-            return 'insufficient_data'
+            return "insufficient_data"
 
         recent = self.eval_returns[-n:]
-        if all(recent[i] < recent[i+1] for i in range(len(recent)-1)):
-            return 'improving'
-        elif all(recent[i] > recent[i+1] for i in range(len(recent)-1)):
-            return 'declining'
+        if all(recent[i] < recent[i + 1] for i in range(len(recent) - 1)):
+            return "improving"
+        elif all(recent[i] > recent[i + 1] for i in range(len(recent) - 1)):
+            return "declining"
         else:
-            return 'stable'
+            return "stable"
 
     def get_schedule_metadata(self) -> dict:
         """
@@ -508,22 +508,24 @@ class EvaluationScheduler:
         import time
 
         metadata = {
-            'schedule_type': 'wall_clock' if self.wall_clock_interval is not None else 'frame_based',
-            'eval_interval': self.eval_interval,
-            'wall_clock_interval': self.wall_clock_interval,
-            'num_episodes': self.num_episodes,
-            'eval_epsilon': self.eval_epsilon,
-            'total_evaluations': len(self.eval_steps),
-            'eval_steps': self.eval_steps.copy(),
-            'eval_returns': self.eval_returns.copy(),
+            "schedule_type": (
+                "wall_clock" if self.wall_clock_interval is not None else "frame_based"
+            ),
+            "eval_interval": self.eval_interval,
+            "wall_clock_interval": self.wall_clock_interval,
+            "num_episodes": self.num_episodes,
+            "eval_epsilon": self.eval_epsilon,
+            "total_evaluations": len(self.eval_steps),
+            "eval_steps": self.eval_steps.copy(),
+            "eval_returns": self.eval_returns.copy(),
         }
 
         # Add timing information
         if self.eval_timestamps:
             elapsed_times = [t - self.start_time for t in self.eval_timestamps]
-            metadata['eval_timestamps'] = self.eval_timestamps.copy()
-            metadata['elapsed_times'] = elapsed_times
-            metadata['total_elapsed_time'] = time.time() - self.start_time
+            metadata["eval_timestamps"] = self.eval_timestamps.copy()
+            metadata["elapsed_times"] = elapsed_times
+            metadata["total_elapsed_time"] = time.time() - self.start_time
 
         return metadata
 
@@ -547,24 +549,25 @@ class EvaluationLogger:
 
     def __init__(self, log_dir: str):
         import os
+
         self.log_dir = log_dir
 
         # Create log directory
         os.makedirs(log_dir, exist_ok=True)
 
         # CSV file for evaluation summary
-        self.csv_path = os.path.join(log_dir, 'evaluations.csv')
+        self.csv_path = os.path.join(log_dir, "evaluations.csv")
         self._csv_initialized = False
 
         # JSONL file for evaluation summary (one JSON object per line)
-        self.jsonl_path = os.path.join(log_dir, 'evaluations.jsonl')
+        self.jsonl_path = os.path.join(log_dir, "evaluations.jsonl")
 
         # JSON directory for detailed per-eval results
-        self.json_dir = os.path.join(log_dir, 'detailed')
+        self.json_dir = os.path.join(log_dir, "detailed")
         os.makedirs(self.json_dir, exist_ok=True)
 
         # Sidecar file for per-episode returns
-        self.episodes_path = os.path.join(log_dir, 'per_episode_returns.jsonl')
+        self.episodes_path = os.path.join(log_dir, "per_episode_returns.jsonl")
 
     def log_evaluation(self, step: int, results: dict, epsilon: float = None):
         """
@@ -581,77 +584,75 @@ class EvaluationLogger:
             results: Dictionary returned by evaluate()
             epsilon: Current training epsilon (optional, for logging context)
         """
-        import csv
-        import json
         import os
 
         # Get eval_epsilon from results (preferred) or use parameter
-        eval_epsilon = results.get('eval_epsilon', epsilon)
+        eval_epsilon = results.get("eval_epsilon", epsilon)
 
         # Prepare CSV entry (summary statistics)
         csv_entry = {
-            'step': step,
-            'mean_return': results['mean_return'],
-            'median_return': results['median_return'],
-            'std_return': results['std_return'],
-            'min_return': results['min_return'],
-            'max_return': results['max_return'],
-            'episodes': results['num_episodes'],
-            'eval_epsilon': eval_epsilon if eval_epsilon is not None else 0.0
+            "step": step,
+            "mean_return": results["mean_return"],
+            "median_return": results["median_return"],
+            "std_return": results["std_return"],
+            "min_return": results["min_return"],
+            "max_return": results["max_return"],
+            "episodes": results["num_episodes"],
+            "eval_epsilon": eval_epsilon if eval_epsilon is not None else 0.0,
         }
 
         # Optionally include training epsilon for context
         if epsilon is not None:
-            csv_entry['training_epsilon'] = epsilon
+            csv_entry["training_epsilon"] = epsilon
 
         # Write CSV
         if not self._csv_initialized:
-            with open(self.csv_path, 'w', newline='') as f:
+            with open(self.csv_path, "w", newline="") as f:
                 writer = csv.DictWriter(f, fieldnames=csv_entry.keys())
                 writer.writeheader()
             self._csv_initialized = True
 
-        with open(self.csv_path, 'a', newline='') as f:
+        with open(self.csv_path, "a", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=csv_entry.keys())
             writer.writerow(csv_entry)
 
         # Write JSONL (one JSON object per line for easy streaming)
-        with open(self.jsonl_path, 'a') as f:
+        with open(self.jsonl_path, "a") as f:
             json.dump(csv_entry, f)
-            f.write('\n')
+            f.write("\n")
 
         # Save per-episode returns to sidecar file
         per_episode_entry = {
-            'step': step,
-            'episode_returns': [float(r) for r in results['episode_returns']],
-            'episode_lengths': [int(l) for l in results['episode_lengths']]
+            "step": step,
+            "episode_returns": [float(r) for r in results["episode_returns"]],
+            "episode_lengths": [int(l) for l in results["episode_lengths"]],
         }
-        with open(self.episodes_path, 'a') as f:
+        with open(self.episodes_path, "a") as f:
             json.dump(per_episode_entry, f)
-            f.write('\n')
+            f.write("\n")
 
         # Save detailed results to JSON
-        json_path = os.path.join(self.json_dir, f'eval_step_{step}.json')
+        json_path = os.path.join(self.json_dir, f"eval_step_{step}.json")
         detailed_results = {
-            'step': step,
-            'statistics': {
-                'mean_return': float(results['mean_return']),
-                'median_return': float(results['median_return']),
-                'std_return': float(results['std_return']),
-                'min_return': float(results['min_return']),
-                'max_return': float(results['max_return']),
-                'mean_length': float(results['mean_length'])
+            "step": step,
+            "statistics": {
+                "mean_return": float(results["mean_return"]),
+                "median_return": float(results["median_return"]),
+                "std_return": float(results["std_return"]),
+                "min_return": float(results["min_return"]),
+                "max_return": float(results["max_return"]),
+                "mean_length": float(results["mean_length"]),
             },
-            'episode_returns': [float(r) for r in results['episode_returns']],
-            'episode_lengths': [int(l) for l in results['episode_lengths']],
-            'num_episodes': results['num_episodes'],
-            'eval_epsilon': eval_epsilon if eval_epsilon is not None else 0.0
+            "episode_returns": [float(r) for r in results["episode_returns"]],
+            "episode_lengths": [int(l) for l in results["episode_lengths"]],
+            "num_episodes": results["num_episodes"],
+            "eval_epsilon": eval_epsilon if eval_epsilon is not None else 0.0,
         }
 
         if epsilon is not None:
-            detailed_results['training_epsilon'] = epsilon
+            detailed_results["training_epsilon"] = epsilon
 
-        with open(json_path, 'w') as f:
+        with open(json_path, "w") as f:
             json.dump(detailed_results, f, indent=2)
 
     def get_all_results(self) -> list:
@@ -661,13 +662,12 @@ class EvaluationLogger:
         Returns:
             List of dictionaries with evaluation statistics
         """
-        import csv
         import os
 
         if not os.path.exists(self.csv_path):
             return []
 
-        with open(self.csv_path, 'r') as f:
+        with open(self.csv_path, "r") as f:
             reader = csv.DictReader(f)
             return list(reader)
 

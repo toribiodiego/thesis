@@ -31,40 +31,34 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 
 # Set publication-quality defaults
-mpl.rcParams['figure.dpi'] = 100
-mpl.rcParams['savefig.dpi'] = 300
-mpl.rcParams['font.size'] = 10
-mpl.rcParams['axes.labelsize'] = 11
-mpl.rcParams['axes.titlesize'] = 12
-mpl.rcParams['xtick.labelsize'] = 9
-mpl.rcParams['ytick.labelsize'] = 9
-mpl.rcParams['legend.fontsize'] = 9
-mpl.rcParams['figure.titlesize'] = 13
+mpl.rcParams["figure.dpi"] = 100
+mpl.rcParams["savefig.dpi"] = 300
+mpl.rcParams["font.size"] = 10
+mpl.rcParams["axes.labelsize"] = 11
+mpl.rcParams["axes.titlesize"] = 12
+mpl.rcParams["xtick.labelsize"] = 9
+mpl.rcParams["ytick.labelsize"] = 9
+mpl.rcParams["legend.fontsize"] = 9
+mpl.rcParams["figure.titlesize"] = 13
 
 
 # ============================================================================
 # Utility Functions
 # ============================================================================
 
+
 def get_git_commit_hash() -> str:
     """Get current git commit hash."""
     try:
         result = subprocess.run(
-            ['git', 'rev-parse', 'HEAD'],
-            capture_output=True,
-            text=True,
-            check=True
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True
         )
         return result.stdout.strip()
     except (subprocess.CalledProcessError, FileNotFoundError):
-        return 'unknown'
+        return "unknown"
 
 
-def save_plot_metadata(
-    output_dir: Path,
-    game_name: str,
-    metadata: Dict
-) -> Path:
+def save_plot_metadata(output_dir: Path, game_name: str, metadata: Dict) -> Path:
     """
     Save plot generation metadata to JSON file.
 
@@ -78,7 +72,7 @@ def save_plot_metadata(
     """
     metadata_path = output_dir / f"{game_name}_plot_metadata.json"
 
-    with open(metadata_path, 'w') as f:
+    with open(metadata_path, "w") as f:
         json.dump(metadata, f, indent=2)
 
     return metadata_path
@@ -89,7 +83,7 @@ def upload_plots_to_wandb(
     wandb_run_id: str,
     plot_files: List[Path],
     metadata_file: Optional[Path] = None,
-    artifact_name: Optional[str] = None
+    artifact_name: Optional[str] = None,
 ):
     """
     Upload plot files and metadata to W&B as artifact.
@@ -126,7 +120,7 @@ def upload_plots_to_wandb(
     artifact = wandb.Artifact(
         name=artifact_name,
         type="plots",
-        metadata={"generated_at": datetime.now().isoformat()}
+        metadata={"generated_at": datetime.now().isoformat()},
     )
 
     # Add plot files
@@ -150,9 +144,9 @@ def upload_plots_to_wandb(
 # Data Loading
 # ============================================================================
 
+
 def downsample_data(
-    data: Dict[str, np.ndarray],
-    max_points: int = 10000
+    data: Dict[str, np.ndarray], max_points: int = 10000
 ) -> Dict[str, np.ndarray]:
     """
     Downsample data to reduce memory usage and plotting time.
@@ -184,10 +178,7 @@ def downsample_data(
     return downsampled
 
 
-def load_csv_data(
-    csv_path: Path,
-    warn_size_mb: float = 50.0
-) -> Dict[str, np.ndarray]:
+def load_csv_data(csv_path: Path, warn_size_mb: float = 50.0) -> Dict[str, np.ndarray]:
     """
     Load data from CSV file with optional size warning.
 
@@ -204,11 +195,13 @@ def load_csv_data(
     # Check file size and warn if large
     file_size_mb = csv_path.stat().st_size / (1024 * 1024)
     if file_size_mb > warn_size_mb:
-        print(f"Warning: Large CSV file ({file_size_mb:.1f} MB). "
-              f"Consider using --downsample for faster plotting.")
+        print(
+            f"Warning: Large CSV file ({file_size_mb:.1f} MB). "
+            f"Consider using --downsample for faster plotting."
+        )
 
     data = {}
-    with open(csv_path, 'r') as f:
+    with open(csv_path, "r") as f:
         reader = csv.DictReader(f)
 
         # Read all rows
@@ -223,7 +216,7 @@ def load_csv_data(
             for row in rows:
                 val = row[key]
                 # Handle None/empty values
-                if val == '' or val == 'None':
+                if val == "" or val == "None":
                     values.append(np.nan)
                 else:
                     try:
@@ -236,10 +229,7 @@ def load_csv_data(
 
 
 def download_wandb_artifact(
-    project: str,
-    run_id: str,
-    artifact_name: str,
-    output_dir: Path
+    project: str, run_id: str, artifact_name: str, output_dir: Path
 ) -> Path:
     """
     Download W&B artifact to local directory.
@@ -256,9 +246,7 @@ def download_wandb_artifact(
     try:
         import wandb
     except ImportError:
-        raise ImportError(
-            "wandb not installed. Install with: pip install wandb"
-        )
+        raise ImportError("wandb not installed. Install with: pip install wandb")
 
     # Initialize W&B API
     api = wandb.Api()
@@ -276,11 +264,9 @@ def download_wandb_artifact(
 # Smoothing Functions
 # ============================================================================
 
+
 def smooth_curve(
-    x: np.ndarray,
-    y: np.ndarray,
-    window: int = 100,
-    method: str = 'moving_average'
+    x: np.ndarray, y: np.ndarray, window: int = 100, method: str = "moving_average"
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Smooth a curve using specified method.
@@ -297,20 +283,20 @@ def smooth_curve(
     if len(y) < window:
         return x, y
 
-    if method == 'moving_average':
+    if method == "moving_average":
         # Simple moving average
-        smoothed = np.convolve(y, np.ones(window)/window, mode='valid')
+        smoothed = np.convolve(y, np.ones(window) / window, mode="valid")
         # Adjust x to match smoothed length
-        smoothed_x = x[window-1:]
+        smoothed_x = x[window - 1 :]
         return smoothed_x, smoothed
 
-    elif method == 'exponential':
+    elif method == "exponential":
         # Exponential moving average
         alpha = 2.0 / (window + 1)
         smoothed = np.zeros_like(y)
         smoothed[0] = y[0]
         for i in range(1, len(y)):
-            smoothed[i] = alpha * y[i] + (1 - alpha) * smoothed[i-1]
+            smoothed[i] = alpha * y[i] + (1 - alpha) * smoothed[i - 1]
         return x, smoothed
 
     else:
@@ -321,12 +307,13 @@ def smooth_curve(
 # Plotting Functions
 # ============================================================================
 
+
 def plot_episode_returns(
     data: Dict[str, np.ndarray],
     output_path: Path,
     smoothing_window: int = 100,
     title: str = "Episode Returns vs Training Steps",
-    formats: List[str] = ['png']
+    formats: List[str] = ["png"],
 ):
     """
     Plot episode returns over training.
@@ -340,8 +327,8 @@ def plot_episode_returns(
     """
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    x = data['step']
-    y = data['return']
+    x = data["step"]
+    y = data["return"]
 
     # Remove NaN values
     mask = ~np.isnan(y)
@@ -353,24 +340,29 @@ def plot_episode_returns(
         return
 
     # Plot raw data with transparency
-    ax.plot(x, y, alpha=0.3, linewidth=0.5, color='#1f77b4', label='Raw')
+    ax.plot(x, y, alpha=0.3, linewidth=0.5, color="#1f77b4", label="Raw")
 
     # Plot smoothed curve
     if len(y) >= smoothing_window:
         x_smooth, y_smooth = smooth_curve(x, y, window=smoothing_window)
-        ax.plot(x_smooth, y_smooth, linewidth=2, color='#1f77b4',
-                label=f'Smoothed (window={smoothing_window})')
+        ax.plot(
+            x_smooth,
+            y_smooth,
+            linewidth=2,
+            color="#1f77b4",
+            label=f"Smoothed (window={smoothing_window})",
+        )
 
-    ax.set_xlabel('Environment Steps')
-    ax.set_ylabel('Episode Return')
+    ax.set_xlabel("Environment Steps")
+    ax.set_ylabel("Episode Return")
     ax.set_title(title)
     ax.legend()
     ax.grid(True, alpha=0.3)
 
     # Save in all requested formats
     for fmt in formats:
-        save_path = output_path.with_suffix(f'.{fmt}')
-        fig.savefig(save_path, bbox_inches='tight', format=fmt)
+        save_path = output_path.with_suffix(f".{fmt}")
+        fig.savefig(save_path, bbox_inches="tight", format=fmt)
         print(f"Saved: {save_path}")
 
     plt.close(fig)
@@ -381,7 +373,7 @@ def plot_training_loss(
     output_path: Path,
     smoothing_window: int = 100,
     title: str = "Training Loss vs Steps",
-    formats: List[str] = ['png']
+    formats: List[str] = ["png"],
 ):
     """
     Plot training loss over steps.
@@ -395,8 +387,8 @@ def plot_training_loss(
     """
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    x = data['step']
-    y = data['loss']
+    x = data["step"]
+    y = data["loss"]
 
     # Remove NaN values
     mask = ~np.isnan(y)
@@ -408,24 +400,29 @@ def plot_training_loss(
         return
 
     # Plot raw data
-    ax.plot(x, y, alpha=0.3, linewidth=0.5, color='#ff7f0e', label='Raw')
+    ax.plot(x, y, alpha=0.3, linewidth=0.5, color="#ff7f0e", label="Raw")
 
     # Plot smoothed curve
     if len(y) >= smoothing_window:
         x_smooth, y_smooth = smooth_curve(x, y, window=smoothing_window)
-        ax.plot(x_smooth, y_smooth, linewidth=2, color='#ff7f0e',
-                label=f'Smoothed (window={smoothing_window})')
+        ax.plot(
+            x_smooth,
+            y_smooth,
+            linewidth=2,
+            color="#ff7f0e",
+            label=f"Smoothed (window={smoothing_window})",
+        )
 
-    ax.set_xlabel('Environment Steps')
-    ax.set_ylabel('Loss')
+    ax.set_xlabel("Environment Steps")
+    ax.set_ylabel("Loss")
     ax.set_title(title)
     ax.legend()
     ax.grid(True, alpha=0.3)
 
     # Save in all requested formats
     for fmt in formats:
-        save_path = output_path.with_suffix(f'.{fmt}')
-        fig.savefig(save_path, bbox_inches='tight', format=fmt)
+        save_path = output_path.with_suffix(f".{fmt}")
+        fig.savefig(save_path, bbox_inches="tight", format=fmt)
         print(f"Saved: {save_path}")
 
     plt.close(fig)
@@ -435,7 +432,7 @@ def plot_evaluation_scores(
     data: Dict[str, np.ndarray],
     output_path: Path,
     title: str = "Evaluation Score vs Training Steps",
-    formats: List[str] = ['png']
+    formats: List[str] = ["png"],
 ):
     """
     Plot evaluation scores over training.
@@ -448,8 +445,8 @@ def plot_evaluation_scores(
     """
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    x = data['step']
-    y = data['mean_return']
+    x = data["step"]
+    y = data["mean_return"]
 
     # Remove NaN values
     mask = ~np.isnan(y)
@@ -461,25 +458,33 @@ def plot_evaluation_scores(
         return
 
     # Plot evaluation scores with markers
-    ax.plot(x, y, marker='o', linewidth=2, markersize=5,
-            color='#2ca02c', label='Mean Eval Return')
+    ax.plot(
+        x,
+        y,
+        marker="o",
+        linewidth=2,
+        markersize=5,
+        color="#2ca02c",
+        label="Mean Eval Return",
+    )
 
     # Add error bars if std is available
-    if 'std_return' in data:
-        y_std = data['std_return'][mask]
-        ax.fill_between(x, y - y_std, y + y_std, alpha=0.2, color='#2ca02c',
-                        label='±1 Std Dev')
+    if "std_return" in data:
+        y_std = data["std_return"][mask]
+        ax.fill_between(
+            x, y - y_std, y + y_std, alpha=0.2, color="#2ca02c", label="±1 Std Dev"
+        )
 
-    ax.set_xlabel('Environment Steps')
-    ax.set_ylabel('Evaluation Return')
+    ax.set_xlabel("Environment Steps")
+    ax.set_ylabel("Evaluation Return")
     ax.set_title(title)
     ax.legend()
     ax.grid(True, alpha=0.3)
 
     # Save in all requested formats
     for fmt in formats:
-        save_path = output_path.with_suffix(f'.{fmt}')
-        fig.savefig(save_path, bbox_inches='tight', format=fmt)
+        save_path = output_path.with_suffix(f".{fmt}")
+        fig.savefig(save_path, bbox_inches="tight", format=fmt)
         print(f"Saved: {save_path}")
 
     plt.close(fig)
@@ -489,7 +494,7 @@ def plot_epsilon_schedule(
     data: Dict[str, np.ndarray],
     output_path: Path,
     title: str = "Epsilon Schedule",
-    formats: List[str] = ['png']
+    formats: List[str] = ["png"],
 ):
     """
     Plot epsilon (exploration rate) over training.
@@ -502,8 +507,8 @@ def plot_epsilon_schedule(
     """
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    x = data['step']
-    y = data['epsilon']
+    x = data["step"]
+    y = data["epsilon"]
 
     # Remove NaN values
     mask = ~np.isnan(y)
@@ -515,10 +520,10 @@ def plot_epsilon_schedule(
         return
 
     # Plot epsilon schedule
-    ax.plot(x, y, linewidth=2, color='#d62728', label='Epsilon (ε)')
+    ax.plot(x, y, linewidth=2, color="#d62728", label="Epsilon (ε)")
 
-    ax.set_xlabel('Environment Steps')
-    ax.set_ylabel('Epsilon (ε)')
+    ax.set_xlabel("Environment Steps")
+    ax.set_ylabel("Epsilon (ε)")
     ax.set_title(title)
     ax.set_ylim([0, 1.05])
     ax.legend()
@@ -526,8 +531,8 @@ def plot_epsilon_schedule(
 
     # Save in all requested formats
     for fmt in formats:
-        save_path = output_path.with_suffix(f'.{fmt}')
-        fig.savefig(save_path, bbox_inches='tight', format=fmt)
+        save_path = output_path.with_suffix(f".{fmt}")
+        fig.savefig(save_path, bbox_inches="tight", format=fmt)
         print(f"Saved: {save_path}")
 
     plt.close(fig)
@@ -540,11 +545,11 @@ def plot_all_metrics(
     output_dir: Path,
     game_name: str = "game",
     smoothing_window: int = 100,
-    formats: List[str] = ['png'],
+    formats: List[str] = ["png"],
     save_metadata: bool = True,
     upload_to_wandb: bool = False,
     wandb_project: Optional[str] = None,
-    wandb_run_id: Optional[str] = None
+    wandb_run_id: Optional[str] = None,
 ) -> Tuple[List[Path], Optional[Path]]:
     """
     Generate all available plots from training data.
@@ -570,47 +575,47 @@ def plot_all_metrics(
     plot_files = []
 
     # Plot episode returns
-    if episodes_data is not None and 'return' in episodes_data:
+    if episodes_data is not None and "return" in episodes_data:
         plot_episode_returns(
             episodes_data,
             output_dir / f"{game_name}_episode_returns",
             smoothing_window=smoothing_window,
             title=f"{game_name.title()} - Episode Returns",
-            formats=formats
+            formats=formats,
         )
         for fmt in formats:
             plot_files.append(output_dir / f"{game_name}_episode_returns.{fmt}")
 
     # Plot training loss
-    if steps_data is not None and 'loss' in steps_data:
+    if steps_data is not None and "loss" in steps_data:
         plot_training_loss(
             steps_data,
             output_dir / f"{game_name}_training_loss",
             smoothing_window=smoothing_window,
             title=f"{game_name.title()} - Training Loss",
-            formats=formats
+            formats=formats,
         )
         for fmt in formats:
             plot_files.append(output_dir / f"{game_name}_training_loss.{fmt}")
 
     # Plot evaluation scores
-    if eval_data is not None and 'mean_return' in eval_data:
+    if eval_data is not None and "mean_return" in eval_data:
         plot_evaluation_scores(
             eval_data,
             output_dir / f"{game_name}_evaluation_scores",
             title=f"{game_name.title()} - Evaluation Scores",
-            formats=formats
+            formats=formats,
         )
         for fmt in formats:
             plot_files.append(output_dir / f"{game_name}_evaluation_scores.{fmt}")
 
     # Plot epsilon schedule
-    if steps_data is not None and 'epsilon' in steps_data:
+    if steps_data is not None and "epsilon" in steps_data:
         plot_epsilon_schedule(
             steps_data,
             output_dir / f"{game_name}_epsilon_schedule",
             title=f"{game_name.title()} - Epsilon Schedule",
-            formats=formats
+            formats=formats,
         )
         for fmt in formats:
             plot_files.append(output_dir / f"{game_name}_epsilon_schedule.{fmt}")
@@ -624,7 +629,7 @@ def plot_all_metrics(
             "commit_hash": get_git_commit_hash(),
             "generated_at": datetime.now().isoformat(),
             "formats": formats,
-            "plots_generated": [p.name for p in plot_files if p.exists()]
+            "plots_generated": [p.name for p in plot_files if p.exists()],
         }
         metadata_file = save_plot_metadata(output_dir, game_name, metadata)
         print(f"Saved metadata: {metadata_file}")
@@ -637,7 +642,7 @@ def plot_all_metrics(
                 wandb_run_id,
                 plot_files,
                 metadata_file,
-                artifact_name=f"{game_name}_plots"
+                artifact_name=f"{game_name}_plots",
             )
         else:
             print("Warning: W&B upload requested but project/run ID not provided")
@@ -649,9 +654,9 @@ def plot_all_metrics(
 # Multi-Seed Aggregation
 # ============================================================================
 
+
 def aggregate_multi_seed_data(
-    csv_files: List[Path],
-    align_column: str = 'step'
+    csv_files: List[Path], align_column: str = "step"
 ) -> Dict[str, np.ndarray]:
     """
     Aggregate data from multiple seed runs.
@@ -706,7 +711,7 @@ def aggregate_multi_seed_data(
                         data[align_column][mask],
                         data[col][mask],
                         left=np.nan,
-                        right=np.nan
+                        right=np.nan,
                     )
                     interpolated_runs.append(interp_values)
 
@@ -715,19 +720,19 @@ def aggregate_multi_seed_data(
             runs_array = np.stack(interpolated_runs, axis=0)
 
             # Compute statistics
-            aggregated[f'{col}_mean'] = np.nanmean(runs_array, axis=0)
-            aggregated[f'{col}_std'] = np.nanstd(runs_array, axis=0)
-            aggregated[f'{col}_min'] = np.nanmin(runs_array, axis=0)
-            aggregated[f'{col}_max'] = np.nanmax(runs_array, axis=0)
+            aggregated[f"{col}_mean"] = np.nanmean(runs_array, axis=0)
+            aggregated[f"{col}_std"] = np.nanstd(runs_array, axis=0)
+            aggregated[f"{col}_min"] = np.nanmin(runs_array, axis=0)
+            aggregated[f"{col}_max"] = np.nanmax(runs_array, axis=0)
 
             # 95% confidence interval (assumes normal distribution)
             n_runs = runs_array.shape[0]
-            sem = aggregated[f'{col}_std'] / np.sqrt(n_runs)
-            aggregated[f'{col}_ci95'] = 1.96 * sem
+            sem = aggregated[f"{col}_std"] / np.sqrt(n_runs)
+            aggregated[f"{col}_ci95"] = 1.96 * sem
 
             # Store individual runs for plotting
             for i, run in enumerate(interpolated_runs):
-                aggregated[f'{col}_run{i}'] = run
+                aggregated[f"{col}_run{i}"] = run
 
     return aggregated
 
@@ -737,8 +742,8 @@ def plot_multi_seed_aggregation(
     output_path: Path,
     metric_name: str,
     title: str = "Multi-Seed Aggregation",
-    formats: List[str] = ['png'],
-    plot_individual_runs: bool = False
+    formats: List[str] = ["png"],
+    plot_individual_runs: bool = False,
 ):
     """
     Plot multi-seed aggregated data with confidence intervals.
@@ -753,42 +758,37 @@ def plot_multi_seed_aggregation(
     """
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    x = aggregated_data['step']
-    y_mean = aggregated_data[f'{metric_name}_mean']
-    y_std = aggregated_data[f'{metric_name}_std']
-    y_ci95 = aggregated_data[f'{metric_name}_ci95']
+    x = aggregated_data["step"]
+    y_mean = aggregated_data[f"{metric_name}_mean"]
+    y_std = aggregated_data[f"{metric_name}_std"]
+    y_ci95 = aggregated_data[f"{metric_name}_ci95"]
 
     # Plot individual runs if requested
     if plot_individual_runs:
         run_idx = 0
-        while f'{metric_name}_run{run_idx}' in aggregated_data:
-            y_run = aggregated_data[f'{metric_name}_run{run_idx}']
-            ax.plot(x, y_run, alpha=0.2, linewidth=0.5, color='gray')
+        while f"{metric_name}_run{run_idx}" in aggregated_data:
+            y_run = aggregated_data[f"{metric_name}_run{run_idx}"]
+            ax.plot(x, y_run, alpha=0.2, linewidth=0.5, color="gray")
             run_idx += 1
 
     # Plot mean
-    ax.plot(x, y_mean, linewidth=2, color='#1f77b4', label='Mean')
+    ax.plot(x, y_mean, linewidth=2, color="#1f77b4", label="Mean")
 
     # Plot 95% CI shading
     ax.fill_between(
-        x,
-        y_mean - y_ci95,
-        y_mean + y_ci95,
-        alpha=0.3,
-        color='#1f77b4',
-        label='95% CI'
+        x, y_mean - y_ci95, y_mean + y_ci95, alpha=0.3, color="#1f77b4", label="95% CI"
     )
 
-    ax.set_xlabel('Environment Steps')
-    ax.set_ylabel(metric_name.replace('_', ' ').title())
+    ax.set_xlabel("Environment Steps")
+    ax.set_ylabel(metric_name.replace("_", " ").title())
     ax.set_title(title)
     ax.legend()
     ax.grid(True, alpha=0.3)
 
     # Save in all requested formats
     for fmt in formats:
-        save_path = output_path.with_suffix(f'.{fmt}')
-        fig.savefig(save_path, bbox_inches='tight', format=fmt)
+        save_path = output_path.with_suffix(f".{fmt}")
+        fig.savefig(save_path, bbox_inches="tight", format=fmt)
         print(f"Saved: {save_path}")
 
     plt.close(fig)
@@ -797,6 +797,7 @@ def plot_multi_seed_aggregation(
 # ============================================================================
 # CLI
 # ============================================================================
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -823,112 +824,87 @@ Examples:
     --wandb-run abc123 \\
     --wandb-artifact training_logs_step_1000000:latest \\
     --output plots/pong
-        """
+        """,
     )
 
     # Input sources
-    input_group = parser.add_argument_group('Input Sources')
+    input_group = parser.add_argument_group("Input Sources")
+    input_group.add_argument("--episodes", type=Path, help="Path to episodes CSV file")
     input_group.add_argument(
-        '--episodes',
-        type=Path,
-        help='Path to episodes CSV file'
+        "--steps", type=Path, help="Path to training steps CSV file"
     )
+    input_group.add_argument("--eval", type=Path, help="Path to evaluation CSV file")
     input_group.add_argument(
-        '--steps',
+        "--multi-seed",
+        nargs="+",
         type=Path,
-        help='Path to training steps CSV file'
+        help="Paths to episode CSV files from multiple seeds for aggregation",
     )
+    input_group.add_argument("--wandb-project", type=str, help="W&B project name")
+    input_group.add_argument("--wandb-run", type=str, help="W&B run ID")
     input_group.add_argument(
-        '--eval',
-        type=Path,
-        help='Path to evaluation CSV file'
-    )
-    input_group.add_argument(
-        '--multi-seed',
-        nargs='+',
-        type=Path,
-        help='Paths to episode CSV files from multiple seeds for aggregation'
-    )
-    input_group.add_argument(
-        '--wandb-project',
+        "--wandb-artifact",
         type=str,
-        help='W&B project name'
-    )
-    input_group.add_argument(
-        '--wandb-run',
-        type=str,
-        help='W&B run ID'
-    )
-    input_group.add_argument(
-        '--wandb-artifact',
-        type=str,
-        help='W&B artifact name (e.g., training_logs_step_1000000:latest)'
+        help="W&B artifact name (e.g., training_logs_step_1000000:latest)",
     )
 
     # Output options
-    output_group = parser.add_argument_group('Output Options')
+    output_group = parser.add_argument_group("Output Options")
     output_group.add_argument(
-        '--output',
-        type=Path,
-        required=True,
-        help='Output directory for plots'
+        "--output", type=Path, required=True, help="Output directory for plots"
     )
     output_group.add_argument(
-        '--formats',
-        nargs='+',
-        choices=['png', 'pdf', 'svg'],
-        default=['png'],
-        help='Output formats (default: png)'
+        "--formats",
+        nargs="+",
+        choices=["png", "pdf", "svg"],
+        default=["png"],
+        help="Output formats (default: png)",
     )
     output_group.add_argument(
-        '--game-name',
+        "--game-name",
         type=str,
-        default='game',
-        help='Game name for plot titles (default: game)'
+        default="game",
+        help="Game name for plot titles (default: game)",
     )
     output_group.add_argument(
-        '--no-metadata',
-        action='store_true',
-        help='Disable saving plot metadata JSON'
+        "--no-metadata", action="store_true", help="Disable saving plot metadata JSON"
     )
     output_group.add_argument(
-        '--upload-wandb',
-        action='store_true',
-        help='Upload plots to W&B as artifacts'
+        "--upload-wandb", action="store_true", help="Upload plots to W&B as artifacts"
     )
     output_group.add_argument(
-        '--wandb-upload-run',
+        "--wandb-upload-run",
         type=str,
-        help='W&B run ID to upload plots to (required with --upload-wandb)'
+        help="W&B run ID to upload plots to (required with --upload-wandb)",
     )
 
     # Plot options
-    plot_group = parser.add_argument_group('Plot Options')
+    plot_group = parser.add_argument_group("Plot Options")
     plot_group.add_argument(
-        '--smoothing',
+        "--smoothing",
         type=int,
         default=100,
-        help='Smoothing window size (default: 100)'
+        help="Smoothing window size (default: 100)",
     )
     plot_group.add_argument(
-        '--no-smoothing',
-        action='store_true',
-        help='Disable smoothing (plot raw data only)'
+        "--no-smoothing",
+        action="store_true",
+        help="Disable smoothing (plot raw data only)",
     )
 
     # Performance options
-    perf_group = parser.add_argument_group('Performance Options')
+    perf_group = parser.add_argument_group("Performance Options")
     perf_group.add_argument(
-        '--downsample',
+        "--downsample",
         type=int,
-        metavar='MAX_POINTS',
-        help='Downsample data to MAX_POINTS for faster plotting (e.g., 10000)'
+        metavar="MAX_POINTS",
+        help="Downsample data to MAX_POINTS for faster plotting (e.g., 10000)",
     )
     perf_group.add_argument(
-        '--warn-size-mb',
+        "--warn-size-mb",
         type=float,
         default=50.0,
-        help='Warn if CSV file exceeds this size in MB (default: 50.0)'
+        help="Warn if CSV file exceeds this size in MB (default: 50.0)",
     )
 
     args = parser.parse_args()
@@ -956,12 +932,12 @@ Examples:
             args.wandb_project,
             args.wandb_run,
             args.wandb_artifact,
-            args.output / 'wandb_artifacts'
+            args.output / "wandb_artifacts",
         )
 
         # Try to load CSV files from artifact
-        episodes_csv = artifact_dir / 'episodes.csv'
-        steps_csv = artifact_dir / 'training_steps.csv'
+        episodes_csv = artifact_dir / "episodes.csv"
+        steps_csv = artifact_dir / "training_steps.csv"
 
         if episodes_csv.exists():
             episodes_data = load_csv_data(episodes_csv, warn_size_mb=args.warn_size_mb)
@@ -1000,30 +976,30 @@ Examples:
     # Handle multi-seed aggregation
     if use_multi_seed:
         print(f"\nAggregating {len(args.multi_seed)} seed runs...")
-        aggregated = aggregate_multi_seed_data(args.multi_seed, align_column='step')
+        aggregated = aggregate_multi_seed_data(args.multi_seed, align_column="step")
 
         # Save aggregated data to CSV
         agg_csv_path = args.output / f"{args.game_name}_aggregated.csv"
         args.output.mkdir(parents=True, exist_ok=True)
 
-        with open(agg_csv_path, 'w', newline='') as f:
+        with open(agg_csv_path, "w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=aggregated.keys())
             writer.writeheader()
-            for i in range(len(aggregated['step'])):
+            for i in range(len(aggregated["step"])):
                 row = {k: v[i] if i < len(v) else np.nan for k, v in aggregated.items()}
                 writer.writerow(row)
         print(f"Saved aggregated data: {agg_csv_path}")
 
         # Plot multi-seed aggregation for episode returns
-        if 'return_mean' in aggregated:
+        if "return_mean" in aggregated:
             print("Plotting multi-seed episode returns...")
             plot_multi_seed_aggregation(
                 aggregated,
                 args.output / f"{args.game_name}_multi_seed_returns",
-                metric_name='return',
+                metric_name="return",
                 title=f"{args.game_name.title()} - Multi-Seed Episode Returns (n={len(args.multi_seed)})",
                 formats=args.formats,
-                plot_individual_runs=True
+                plot_individual_runs=True,
             )
 
         print(f"\nDone! Multi-seed aggregation complete")
@@ -1043,12 +1019,12 @@ Examples:
         save_metadata=not args.no_metadata,
         upload_to_wandb=args.upload_wandb,
         wandb_project=args.wandb_project if args.upload_wandb else None,
-        wandb_run_id=args.wandb_upload_run if args.upload_wandb else None
+        wandb_run_id=args.wandb_upload_run if args.upload_wandb else None,
     )
 
     print(f"\nDone! Generated {len([p for p in plot_files if p.exists()])} plots")
     print(f"Plots saved to: {args.output}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
