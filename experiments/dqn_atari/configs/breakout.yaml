@@ -9,7 +9,7 @@
 #
 # Expected results (DQN 2013 paper):
 #   - Training: ~10M frames to see improvement, 50M for convergence
-#   - Score: Average reward ~300-400 (paper reports 401.2 ± 26.9)
+#   - Score: Average reward ~168 (paper reports 168, human baseline 31)
 #   - Note: Breakout benefits from longer training (full 50M frames recommended)
 
 # Inherit base configuration

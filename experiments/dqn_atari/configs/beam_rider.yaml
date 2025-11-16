@@ -9,7 +9,7 @@
 #
 # Expected results (DQN 2013 paper):
 #   - Training: ~50M frames for convergence
-#   - Score: Average reward ~5000-8000 (paper reports 6846 ± 1619)
+#   - Score: Average reward ~4092 (paper reports 4092, human baseline 7456)
 #   - Note: Beam Rider is more challenging and has higher variance
 
 # Inherit base configuration
