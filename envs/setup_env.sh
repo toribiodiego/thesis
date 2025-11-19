@@ -54,9 +54,11 @@ fi
 source "${VENV_DIR}/bin/activate"
 
 # Ensure pip is available
-if ! command -v pip &> /dev/null; then
+if ! python -m pip --version &> /dev/null; then
   echo "[env] Installing pip..."
-  curl -sS https://bootstrap.pypa.io/get-pip.py | python
+  curl -sS https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
+  python /tmp/get-pip.py
+  rm /tmp/get-pip.py
 fi
 
 python -m pip install --upgrade pip wheel
