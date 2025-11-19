@@ -3,7 +3,17 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VENV_DIR="${ROOT_DIR}/.venv"
-PYTHON_BIN="python3.11"  # Use Python 3.11 for compatibility with Colab and stable packages
+
+# Auto-detect Python version (prefer 3.11, fall back to available python3)
+if command -v python3.11 &> /dev/null; then
+  PYTHON_BIN="python3.11"
+elif command -v python3 &> /dev/null; then
+  PYTHON_BIN="python3"
+else
+  echo "Error: No Python 3 installation found"
+  exit 1
+fi
+
 USE_GPU=false
 
 # Parse arguments
@@ -45,7 +55,9 @@ pip install -r "${REQUIREMENTS_FILE}"
 echo "[env] Installing Atari ROMs via AutoROM"
 AutoROM --accept-license || echo "ROM installation failed or already complete"
 echo "[env] Importing ROMs into ale-py"
-ale-import-roms "${VENV_DIR}/lib/python3.11/site-packages/AutoROM/roms" || echo "ROM import failed or already complete"
+# Dynamically find the Python site-packages directory
+PYTHON_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+ale-import-roms "${VENV_DIR}/lib/python${PYTHON_VERSION}/site-packages/AutoROM/roms" || echo "ROM import failed or already complete"
 
 # Display completion message
 cat <<MSG
