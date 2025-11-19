@@ -1,8 +1,9 @@
-# Base environment (CPU-only by default)
-# For GPU support, use: bash envs/setup_env.sh --gpu
+# GPU environment (CUDA 12.1+)
+# Use this for Google Colab, cloud instances with NVIDIA GPUs
 # Python 3.11 recommended (compatible with Google Colab)
 
-# Deep Learning (CPU-only)
+# Deep Learning (CUDA 12.1)
+--index-url https://download.pytorch.org/whl/cu121
 torch==2.4.1
 torchvision==0.19.1
 
