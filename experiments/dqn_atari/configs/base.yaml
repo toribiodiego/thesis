@@ -216,12 +216,6 @@ evaluation:
   # Only the best episode is saved to disk to minimize storage while maximizing quality.
   video_format: "mp4"  # Video format: 'mp4' or 'gif'
 
-  # Background evaluation (experimental)
-  background: false  # Run evaluation in background process (allows training to continue)
-  # Warning: Background evaluation is experimental and may have synchronization issues.
-  # When enabled, evaluation runs in a separate process while training continues.
-  # Results are logged asynchronously. Use with caution.
-
   # Metric collection
   metrics:
     - "episode_return"  # Total episode reward
