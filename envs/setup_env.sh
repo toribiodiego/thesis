@@ -43,11 +43,22 @@ fi
 # Create venv if needed
 if [[ ! -d "${VENV_DIR}" ]]; then
   echo "[env] Creating virtual environment at ${VENV_DIR}"
-  "${PYTHON_BIN}" -m venv "${VENV_DIR}"
+  # Try with pip first, fallback to without-pip for environments like Colab
+  if ! "${PYTHON_BIN}" -m venv "${VENV_DIR}" 2>/dev/null; then
+    echo "[env] Standard venv failed, trying without pip..."
+    "${PYTHON_BIN}" -m venv --without-pip "${VENV_DIR}"
+  fi
 fi
 
 # Activate and install
 source "${VENV_DIR}/bin/activate"
+
+# Ensure pip is available
+if ! command -v pip &> /dev/null; then
+  echo "[env] Installing pip..."
+  curl -sS https://bootstrap.pypa.io/get-pip.py | python
+fi
+
 python -m pip install --upgrade pip wheel
 pip install -r "${REQUIREMENTS_FILE}"
 
