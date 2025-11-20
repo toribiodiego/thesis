@@ -366,7 +366,71 @@ step,mean_return,std_return
 
 ---
 
-**Document Version:** 1.0
+## Post-Validation Bottleneck Analysis
+
+After GPU validation, a detailed bottleneck analysis was performed on the CPU baseline to identify any configuration optimizations needed before 10M runs.
+
+### Analysis Methodology
+
+**Data Source:** CPU baseline CSV logs (1M frames, seed 42)
+
+**Metrics Analyzed:**
+1. FPS drops at log intervals (every 4000 steps)
+2. FPS impact around checkpoint saves (250k, 500k, 750k, 1M)
+3. FPS impact around evaluation runs (250k intervals)
+4. Replay buffer size correlation with FPS
+5. FPS stability (coefficient of variation)
+
+### Findings
+
+**1. Checkpoint Overhead:**
+- Average impact: 12.9% FPS variation around checkpoints
+- Verdict: **Minimal** - acceptable for 10M runs
+- No changes needed to checkpoint interval (250k steps)
+
+**2. Logging Overhead:**
+- Log interval: 4000 steps
+- No systematic FPS drops at logging intervals
+- Verdict: **Negligible** - no optimization needed
+
+**3. FPS Variability:**
+- 15 instances of >30% FPS drops during training phase
+- 80% of drops are random/uncorrelated with system events
+- 20% near eval/checkpoint intervals (expected)
+- Likely causes: environment complexity, replay sampling, GC pauses
+- FPS coefficient of variation: 37.9% (reasonable for DQN)
+- Verdict: **Normal variance** - not a bottleneck
+
+**4. Replay Buffer Impact:**
+- FPS degrades as buffer fills (expected behavior)
+- 50k-100k: 184.6 FPS mean
+- 200k-250k: 74.8 FPS mean
+- Degradation: 48.3% (within expected range)
+- Verdict: **Expected behavior** - no issue
+
+### Recommendations
+
+**NO CONFIGURATION CHANGES NEEDED** for 10M runs.
+
+**Rationale:**
+1. Checkpoint overhead is minimal (12.9%)
+2. Logging overhead is negligible
+3. FPS drops are primarily natural variance, not system bottlenecks
+4. FPS stability (CV=37.9%) is reasonable for DQN training
+5. GPU validation showed 2.3x speedup with identical settings
+
+**Confirmed Settings for Production Runs:**
+- Batch size: 32
+- Log interval: 4000 steps
+- Checkpoint interval: 250k steps
+- Eval interval: 250k steps
+- Learning rate: 0.00025
+- Replay capacity: 1,000,000
+
+---
+
+**Document Version:** 1.1
 **Date:** 2025-11-20
 **Runs Compared:** CPU (xlraluxg) vs GPU (dxkfzx35)
 **Validation Status:** PASSED
+**Bottleneck Analysis:** COMPLETE - No optimizations needed

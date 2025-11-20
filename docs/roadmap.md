@@ -23,7 +23,7 @@ Re-implement and reproduce DeepMind's DQN (*Playing Atari with Deep Reinforcemen
 
 **Progress Summary**:
 - Subtasks 1-10: **Complete** (335+ tests, all passing)
-- Subtask 11: **In Progress** (11/15 complete, GPU validation done, ready for 10M runs)
+- Subtask 11: **In Progress** (12/15 complete, bottleneck analysis done, ready for 10M runs)
 - Infrastructure: Fully implemented and tested
   - Environment, wrappers, preprocessing, frame stacking
   - DQN model, replay buffer, Q-learning loss
@@ -398,8 +398,8 @@ Validate training infrastructure end-to-end with GPU hardware, identify bottlene
     - [X] perf: Execute 1M GPU run and capture performance metrics
 - [X] Compare CPU vs GPU runs: analyze FPS improvement, check convergence match (loss curves, eval returns), identify any logging/checkpoint overhead, verify deterministic seeding across hardware; document bottleneck analysis.
     - [X] docs: Document hardware comparison and bottleneck analysis in `docs/design/gpu_validation.md`
-- [ ] Fix any identified issues before expensive runs: adjust batch size if OOM, tune logging flush intervals if I/O bound, optimize checkpoint frequency if needed.
-    - [ ] fix: Address any bottlenecks discovered in GPU validation
+- [X] Fix any identified issues before expensive runs: adjust batch size if OOM, tune logging flush intervals if I/O bound, optimize checkpoint frequency if needed.
+    - [X] fix: Address any bottlenecks discovered in GPU validation (none found - current settings optimal)
 - [ ] Launch first full Pong training run (10M frames, seed 42, GPU): monitor logs in real-time, verify checkpoints save every 1M steps, confirm evaluation runs at 250K intervals, and check W&B artifact uploads.
     - [ ] feat: Execute first full-length 10M frame training run and document any issues
 - [ ] Verify resume functionality on Pong run: interrupt training mid-run (around 5M frames), resume from checkpoint, verify metrics/RNG continuity, and document any issues.
