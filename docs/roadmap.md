@@ -23,7 +23,7 @@ Re-implement and reproduce DeepMind's DQN (*Playing Atari with Deep Reinforcemen
 
 **Progress Summary**:
 - Subtasks 1-10: **Complete** (335+ tests, all passing)
-- Subtask 11: **In Progress** (CPU baseline complete, GPU validation next)
+- Subtask 11: **In Progress** (11/15 complete, GPU validation done, ready for 10M runs)
 - Infrastructure: Fully implemented and tested
   - Environment, wrappers, preprocessing, frame stacking
   - DQN model, replay buffer, Q-learning loss
@@ -32,9 +32,11 @@ Re-implement and reproduce DeepMind's DQN (*Playing Atari with Deep Reinforcemen
   - Checkpointing, resume, deterministic seeding
   - Evaluation harness with video capture
   - Plotting and results export scripts
-  - 1M frame CPU baseline: 24 min, 687 FPS avg (102 FPS median), loss 12->0.36
+  - 1M frame CPU baseline: 163 min, 107 FPS training mean, loss 116->0.025
+  - 1M frame GPU validation: 71 min, 233 FPS training mean, 2.3x speedup
+  - Hardware comparison documented: convergence verified, no bottlenecks
   - Google Colab Pro setup documented with GPU support
-- **Next step**: GPU validation (1M frames), bottleneck analysis, then 10M Pong multi-seed runs
+- **Next step**: Launch first full 10M frame Pong training run on GPU (seed 42)
 
 **Compute Strategy**:
 - Focus on Pong (10M frames, 3 seeds) as primary reproduction target
@@ -392,10 +394,10 @@ Validate training infrastructure end-to-end with GPU hardware, identify bottlene
     - [X] test: Validate end-to-end plotting pipeline on real training data
 - [X] Document game suite plan in `docs/design/game_suite_plan.md`: list chosen games (Pong, Breakout, Beam Rider), target scores from paper, frame budgets (10M for Pong), evaluation cadence (every 250K steps), and expected runtimes.
     - [X] docs: Create game suite plan with Pong-focused compute-efficient approach
-- [ ] Run 1M frame GPU validation on Colab A100 (seed 42, same config as CPU baseline): measure FPS, training time, memory usage; verify W&B integration works on Colab.
-    - [ ] perf: Execute 1M GPU run and capture performance metrics
-- [ ] Compare CPU vs GPU runs: analyze FPS improvement, check convergence match (loss curves, eval returns), identify any logging/checkpoint overhead, verify deterministic seeding across hardware; document bottleneck analysis.
-    - [ ] docs: Document hardware comparison and bottleneck analysis in `docs/design/gpu_validation.md`
+- [X] Run 1M frame GPU validation on Colab A100 (seed 42, same config as CPU baseline): measure FPS, training time, memory usage; verify W&B integration works on Colab.
+    - [X] perf: Execute 1M GPU run and capture performance metrics
+- [X] Compare CPU vs GPU runs: analyze FPS improvement, check convergence match (loss curves, eval returns), identify any logging/checkpoint overhead, verify deterministic seeding across hardware; document bottleneck analysis.
+    - [X] docs: Document hardware comparison and bottleneck analysis in `docs/design/gpu_validation.md`
 - [ ] Fix any identified issues before expensive runs: adjust batch size if OOM, tune logging flush intervals if I/O bound, optimize checkpoint frequency if needed.
     - [ ] fix: Address any bottlenecks discovered in GPU validation
 - [ ] Launch first full Pong training run (10M frames, seed 42, GPU): monitor logs in real-time, verify checkpoints save every 1M steps, confirm evaluation runs at 250K intervals, and check W&B artifact uploads.
