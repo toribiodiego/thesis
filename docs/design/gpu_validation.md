@@ -429,8 +429,80 @@ After GPU validation, a detailed bottleneck analysis was performed on the CPU ba
 
 ---
 
-**Document Version:** 1.1
+## Checkpoint Verification
+
+After validation, checkpoint integrity and W&B compatibility were verified to ensure reliable resume functionality for 10M runs.
+
+### Checkpoint Files
+
+**CPU Baseline Run:** `experiments/dqn_atari/runs/pong_42_20251115_230409/checkpoints/`
+
+```
+checkpoint_1000000.pt: 7.78 MB
+best_model.pt: 7.78 MB
+```
+
+### Checkpoint Structure
+
+Each checkpoint contains all components required for deterministic training resume:
+
+- `env_step`: Training step counter
+- `episode`: Episode counter
+- `epsilon`: Exploration rate
+- `online_net_state`: Online network weights (state_dict)
+- `target_net_state`: Target network weights (state_dict)
+- `optimizer_state`: Optimizer state (momentum, learning rate schedule)
+- `rng_states`: RNG states for torch, numpy, random (for determinism)
+
+Implementation: `src/utils/checkpoint.py:10-37`
+Unit tests: `tests/test_dqn_trainer.py:148-186`
+
+### Storage Analysis
+
+**10M Frame Run:**
+- Checkpoint interval: 250k steps
+- Total checkpoints: 40 (one per 250k steps)
+- Storage required: 40 × 7.78 MB = 311 MB
+
+**Multi-Seed Production Runs (3 seeds):**
+- Total checkpoints: 120 (40 per seed)
+- Full storage: 933 MB
+
+**Recommended W&B Upload Strategy:**
+- Upload frequency: Every 1M steps (instead of every 250k)
+- Checkpoints per seed: 10
+- Total W&B storage: 10 × 3 seeds × 7.78 MB = 233 MB
+
+This selective upload reduces W&B storage by 75% while maintaining recovery points every 1M steps (approximately every 50 minutes of GPU training).
+
+### W&B Compatibility
+
+**Verdict:** Checkpoints are suitable for W&B artifact uploads.
+
+**Rationale:**
+1. Size is manageable (7.78 MB per checkpoint)
+2. Format is standard PyTorch state_dict
+3. Unit tests verify save/load functionality works correctly
+4. Training completed successfully to 1M frames, demonstrating checkpoint reliability
+5. Selective upload strategy (every 1M) keeps total storage under 250 MB for 3-seed runs
+
+**Upload Configuration:**
+
+For 10M runs, enable W&B checkpoint uploads:
+```bash
+python train_dqn.py \
+  --cfg experiments/dqn_atari/configs/pong.yaml \
+  --seed 42 \
+  --set logging.wandb.upload_artifacts=true
+```
+
+The trainer will automatically upload checkpoints as W&B artifacts with naming: `checkpoint-pong-seed42-step{step}:v0`
+
+---
+
+**Document Version:** 1.2
 **Date:** 2025-11-20
 **Runs Compared:** CPU (xlraluxg) vs GPU (dxkfzx35)
 **Validation Status:** PASSED
 **Bottleneck Analysis:** COMPLETE - No optimizations needed
+**Checkpoint Verification:** COMPLETE - Ready for W&B uploads
