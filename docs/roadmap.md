@@ -23,7 +23,7 @@ Re-implement and reproduce DeepMind's DQN (*Playing Atari with Deep Reinforcemen
 
 **Progress Summary**:
 - Subtasks 1-10: **Complete** (335+ tests, all passing)
-- Subtask 11: **98% Complete** (1M frame test run successful, ready for 10M full run)
+- Subtask 11: **In Progress** (CPU baseline complete, GPU validation next)
 - Infrastructure: Fully implemented and tested
   - Environment, wrappers, preprocessing, frame stacking
   - DQN model, replay buffer, Q-learning loss
@@ -32,9 +32,15 @@ Re-implement and reproduce DeepMind's DQN (*Playing Atari with Deep Reinforcemen
   - Checkpointing, resume, deterministic seeding
   - Evaluation harness with video capture
   - Plotting and results export scripts
-  - 1M frame test run completed: 2.72 hours, 102 FPS, loss converged (12->0.36)
-  - Paper comparison table and runtime stats documented
-- **Next step**: Launch full 10M Pong training run (~27 hours estimated)
+  - 1M frame CPU baseline: 24 min, 687 FPS avg (102 FPS median), loss 12->0.36
+  - Google Colab Pro setup documented with GPU support
+- **Next step**: GPU validation (1M frames), bottleneck analysis, then 10M Pong multi-seed runs
+
+**Compute Strategy**:
+- Focus on Pong (10M frames, 3 seeds) as primary reproduction target
+- Validate infrastructure thoroughly before expensive runs
+- Additional games optional based on compute budget
+- Skip extensive ablations (can be deferred to future work)
 
 ---
 
@@ -58,49 +64,50 @@ See `docs/papers/dqn_2013_notes.md` for details.
 |-----------|----------|--------|
 | **M1** | Environment + tooling smoke test passes | **Complete** |
 | **M2** | Training infrastructure complete (Subtasks 1-10) | **Complete** |
-| **M3** | First full Pong training run (10M frames) | **Next** |
-| **M4** | Three-game suite reproduced with reports | Pending |
+| **M3** | GPU validation and bottleneck analysis (1M frames) | **Next** |
+| **M4** | Pong multi-seed reproduction (10M frames, 3 seeds) | Pending |
+| **M5** | Results analysis and thesis documentation | Pending |
 
-**Current Status**: All training infrastructure is complete. Ready to integrate MetricsLogger into training loop and launch first real training runs.
+**Current Status**: All training infrastructure is complete. 1M CPU baseline finished. Ready for GPU validation before launching expensive multi-seed runs.
 
 ---
 
 ## Next Steps (Execution Phase)
 
 ### Immediate (Complete Subtask 11 - This Week)
-1. [X] Integrate MetricsLogger into train_dqn.py (DONE)
-2. [X] Add logging config to YAML files (DONE)
-3. [X] Update schema validation (DONE)
-4. [ ] Run smoke test (200K frames, ~30 min)
-5. [ ] Launch first full Pong training (10M frames, ~8-12 hours)
-6. [ ] Verify all logging backends work (TensorBoard, CSV, W&B)
-7. [ ] Generate plots from training run
-8. [ ] Document game suite plan
+1. [X] Integrate MetricsLogger and infrastructure (DONE - all tests passing)
+2. [X] Complete 1M frame CPU baseline run (DONE - 24 min, 687 FPS avg)
+3. [ ] Run 1M frame GPU validation on Colab (validate setup, measure speedup)
+4. [ ] Compare CPU vs GPU runs (check for bottlenecks, logging overhead, convergence match)
+5. [ ] Fix any identified issues before expensive runs
+6. [ ] Launch first 10M Pong training (seed 42, GPU)
+7. [ ] Verify resume functionality mid-run
+8. [ ] Generate plots and document results
 
-### Short-term (Subtask 12 - Multi-Game Training)
-1. Launch Breakout training (50M frames, 3 seeds)
-2. Launch Beam Rider training (50M frames, 3 seeds)
-3. Monitor for stability issues (NaN/Inf, crashes)
-4. Aggregate results with `export_results_table.py`
-5. Generate multi-seed plots with `plot_results.py --multi-seed`
-6. Compare to paper baselines
-7. Document any hyperparameter adjustments
+### Short-term (Subtask 12 - Pong Multi-Seed, Compute-Efficient)
+1. Launch Pong seeds 123, 456 (10M frames each, GPU)
+2. Monitor for stability across seeds
+3. Aggregate multi-seed results with confidence intervals
+4. Generate publication-quality plots
+5. Compare against DQN 2013 paper baseline for Pong
+6. Document final Pong results in thesis
+7. OPTIONAL: Add one more game (Breakout or Beam Rider) if compute allows
 
-### Medium-term (Subtask 13 - Analysis & Reporting)
-1. Compare reproduction scores to DQN 2013 paper
-2. Analyze discrepancies (environment versions, etc.)
-3. Generate publication-quality plots and tables
-4. Write results summary (`docs/reports/dqn_results.md`)
-5. Upload final artifacts to W&B (if applicable)
+### Medium-term (Subtask 13 - Analysis & Thesis Documentation)
+1. Write results section with Pong reproduction
+2. Document infrastructure validation and reproducibility
+3. Create comparison tables (our scores vs paper)
+4. Generate final figures for thesis
+5. Document lessons learned for future data-efficient DRL work
 
-### Future Work (Optional - Subtasks 14-21)
-These provide valuable enhancements but are not critical for initial reproduction:
-- Ablation studies (reward clipping, target network, frame stack)
-- Automated report generation
-- Repository archival and organization
-- Thesis integration and write-up
+### Deferred (Low Priority for Thesis)
+These can be deferred to future work or skipped if compute-limited:
+- Subtask 14: Extensive ablation studies
+- Subtask 18: Automated report generation
+- Multi-game suite (Breakout, Beam Rider) beyond Pong
+- Full 50M frame runs
 
-**Focus**: We've completed implementation (Subtasks 1-10). Now we execute, verify, and analyze (Subtasks 11-13).
+**Compute Strategy**: Validate thoroughly with short runs, then execute Pong multi-seed (minimal viable thesis result). Additional experiments optional based on budget.
 
 ---
 
@@ -364,7 +371,7 @@ Structured logging through TensorBoard, Weights & Biases (W&B), and CSV. Plottin
 ### Subtask 11 — Integration & First Training Runs
 
 **Objective:**
-Integrate MetricsLogger into DQN training loop, launch first full-length training runs on Pong (10M frames), verify all logging/checkpointing/evaluation systems work end-to-end, and document game suite plan with target scores. Complete when Pong training finishes successfully with complete logs, plots, and artifacts.
+Validate training infrastructure end-to-end with GPU hardware, identify bottlenecks, then launch first full Pong training (10M frames). Complete when seed 42 finishes with validated logs, plots, and resume functionality.
 
 **Checklist:**
 - [X] Implement complete training script (`train_dqn.py`) with main training loop: environment setup, network initialization, training step execution, episode handling, periodic evaluation, checkpoint saving, and logging integration.
@@ -379,73 +386,85 @@ Integrate MetricsLogger into DQN training loop, launch first full-length trainin
     - [X] fix: Register ALE environments and fix API compatibility
 - [X] Test logging integration with smoke test: run 200K frame training with all backends enabled, verify CSV files exist, TensorBoard events are written, and W&B uploads work (or gracefully degrade if offline).
     - [X] test: Validate integrated logging with comprehensive unit tests (28 tests, all passing)
-- [ ] Launch first full Pong training run (10M frames, seed 42): monitor logs in real-time, verify checkpoints save every 1M steps, confirm evaluation runs at specified intervals, and check W&B artifact uploads.
-    - [ ] feat: Execute first full-length training run and document any issues
-- [X] Generate plots from completed run: use `scripts/plot_results.py` to create learning curves, loss plots, eval trends, and epsilon schedule; verify metadata bundle and W&B uploads work.
-    - [X] test: Validate end-to-end plotting pipeline on real training data (1M frame test run)
-- [X] Document game suite plan in `docs/design/game_suite_plan.md`: list chosen games (Pong, Breakout, Beam Rider), target scores from paper, frame budgets (10M for Pong, 50M for others), evaluation cadence (every 250K steps), and expected runtimes.
-    - [X] docs: Create game suite plan with targets and budgets
-- [ ] Verify resume functionality on Pong run: interrupt training mid-run, resume from checkpoint, verify metrics/RNG continuity, and document any issues.
-    - [ ] test: Exercise resume on real training run (not just unit tests)
-- [ ] Run GPU comparison test: execute same 1M frame run on GPU hardware to compare FPS, training time, and verify identical convergence behavior with CPU baseline.
-    - [ ] perf: Document CPU vs GPU performance metrics and validate consistency
+- [X] Complete 1M frame CPU baseline run (seed 42): validate end-to-end pipeline, measure performance (24 min, 687 FPS avg, 102 FPS median, loss 12->0.36).
+    - [X] perf: Complete CPU baseline run and capture metrics
+- [X] Generate plots from CPU baseline using `scripts/plot_results.py`: create learning curves, loss plots, eval trends, and epsilon schedule; verify metadata bundle and W&B uploads work.
+    - [X] test: Validate end-to-end plotting pipeline on real training data
+- [X] Document game suite plan in `docs/design/game_suite_plan.md`: list chosen games (Pong, Breakout, Beam Rider), target scores from paper, frame budgets (10M for Pong), evaluation cadence (every 250K steps), and expected runtimes.
+    - [X] docs: Create game suite plan with Pong-focused compute-efficient approach
+- [ ] Run 1M frame GPU validation on Colab A100 (seed 42, same config as CPU baseline): measure FPS, training time, memory usage; verify W&B integration works on Colab.
+    - [ ] perf: Execute 1M GPU run and capture performance metrics
+- [ ] Compare CPU vs GPU runs: analyze FPS improvement, check convergence match (loss curves, eval returns), identify any logging/checkpoint overhead, verify deterministic seeding across hardware; document bottleneck analysis.
+    - [ ] docs: Document hardware comparison and bottleneck analysis in `docs/design/gpu_validation.md`
+- [ ] Fix any identified issues before expensive runs: adjust batch size if OOM, tune logging flush intervals if I/O bound, optimize checkpoint frequency if needed.
+    - [ ] fix: Address any bottlenecks discovered in GPU validation
+- [ ] Launch first full Pong training run (10M frames, seed 42, GPU): monitor logs in real-time, verify checkpoints save every 1M steps, confirm evaluation runs at 250K intervals, and check W&B artifact uploads.
+    - [ ] feat: Execute first full-length 10M frame training run and document any issues
+- [ ] Verify resume functionality on Pong run: interrupt training mid-run (around 5M frames), resume from checkpoint, verify metrics/RNG continuity, and document any issues.
+    - [ ] test: Exercise resume on real multi-hour training run (not just unit tests)
+- [ ] Generate final plots and analysis from 10M run: create learning curves, eval trends, epsilon schedule; compare to DQN 2013 paper Pong baseline; document results.
+    - [ ] docs: Document seed 42 results and lessons learned
 
 ---
 
-### Subtask 12 — Multi-Game Training & Results Collection
+### Subtask 12 — Pong Multi-Seed Training & Results (Compute-Efficient)
 
 **Objective:**
-Execute full-length training runs for game suite (Pong, Breakout, Beam Rider) across multiple seeds, verify stability, collect results, and generate comparison tables against paper baselines. Complete when all games have finished runs with aggregated metrics and plots.
+Execute Pong training across 3 seeds (10M frames each), verify reproducibility and stability, generate multi-seed plots with confidence intervals, and compare against DQN 2013 paper baseline. Complete when Pong has statistically valid results ready for thesis. Additional games optional based on compute budget.
 
 **Checklist:**
-- [ ] Launch Breakout training (50M frames, 3 seeds): use same configs as Pong baseline, monitor for stability issues (NaN/Inf, gradient explosions), log all runs with deterministic seeds.
-    - [ ] feat: Execute Breakout training suite with stability monitoring
-- [ ] Launch Beam Rider training (50M frames, 3 seeds): use same configs as Pong baseline, monitor for stability issues, log all runs with deterministic seeds.
-    - [ ] feat: Execute Beam Rider training suite with stability monitoring
-- [ ] Verify paper-default hyperparameters work across all games: replay=1M, batch=32, LR=2.5e-4, gamma=0.99, target_update=10k, RMSProp(rho=0.95, eps=0.01); if instability occurs, run limited sweep (2-3 LR values, 2M frames) and document in `docs/design/stability_notes.md`.
-    - [ ] test: Confirm stability or document minimal tuning adjustments
-- [ ] Aggregate results using `scripts/export_results_table.py`: generate `results/summary/results_summary.csv` and `.md` with columns (game, seed, mean_return, std_return, frames, wall_time, commit_hash).
-    - [ ] feat: Export aggregated results table for all completed runs
-- [ ] Generate multi-seed plots using `scripts/plot_results.py --multi-seed`: create learning curves with 95% CI for each game, save to `results/plots/<game>/multi_seed/`.
-    - [ ] feat: Create publication-quality multi-seed aggregation plots
-- [ ] Compare against paper baselines: create comparison table with columns (Game, Our Score, Paper Score, % of Paper, Status); document in `results/summary/paper_comparison.md` with brief analysis of gaps.
-    - [ ] docs: Document results comparison with paper and note discrepancies
-- [ ] Exercise resume functionality: interrupt one run per game mid-training, resume from checkpoint, verify metrics/RNG continuity; document pass/fail in `docs/design/run_management.md`.
-    - [ ] test: Verify resume works on real multi-hour training runs
-- [ ] Upload all artifacts to W&B (if used): checkpoints at 1M intervals, final plots, aggregated tables, and metadata bundles; ensure naming follows conventions from Subtask 10.
-    - [ ] chore: Complete W&B artifact uploads with proper naming
-- [ ] Document runtime performance: record actual FPS, wall-clock time per game/seed, GPU utilization; save to `results/summary/runtime_stats.csv` for future planning.
-    - [ ] docs: Capture performance metrics for reproducibility
+- [ ] Launch Pong seed 123 training (10M frames, GPU): use same config as seed 42 baseline, monitor for stability, log to W&B with seed tag.
+    - [ ] feat: Execute Pong seed 123 training run
+- [ ] Launch Pong seed 456 training (10M frames, GPU): use same config as seed 42 baseline, monitor for stability, log to W&B with seed tag.
+    - [ ] feat: Execute Pong seed 456 training run
+- [ ] Verify stability across all 3 Pong seeds: check for NaN/Inf issues, gradient explosions, or divergent learning; confirm hyperparameters (replay=1M, batch=32, LR=2.5e-4, gamma=0.99, target_update=10k, RMSProp) work consistently.
+    - [ ] test: Confirm stability across seeds or document any tuning needed
+- [ ] Aggregate Pong results using `scripts/export_results_table.py`: generate `results/summary/pong_results.csv` and `.md` with columns (seed, mean_return, std_return, frames, wall_time, final_eval_score).
+    - [ ] feat: Export Pong multi-seed results table
+- [ ] Generate Pong multi-seed plots using `scripts/plot_results.py --multi-seed`: create learning curves with 95% confidence intervals, eval score progression, loss curves; save to `results/plots/pong/multi_seed/`.
+    - [ ] feat: Create publication-quality Pong multi-seed plots with confidence intervals
+- [ ] Compare Pong results against DQN 2013 paper baseline: create comparison table (Our Score, Paper Score, % of Paper); document in `results/summary/pong_paper_comparison.md` with analysis of any gaps (environment version differences, etc.).
+    - [ ] docs: Document Pong reproduction quality vs paper baseline
+- [ ] Document runtime performance for all Pong runs: record actual FPS per seed, wall-clock time, GPU utilization, compute cost; save to `results/summary/pong_runtime_stats.csv`.
+    - [ ] docs: Capture Pong performance metrics for thesis and future planning
+- [ ] Upload Pong artifacts to W&B: final checkpoints, multi-seed plots, aggregated tables, and metadata; ensure proper tagging for easy retrieval.
+    - [ ] chore: Complete W&B artifact uploads for Pong reproduction
+- [ ] OPTIONAL: Launch one additional game (Breakout or Beam Rider, 10M frames, 3 seeds) if compute budget allows and thesis would benefit from multi-game comparison.
+    - [ ] feat: Execute optional second game if compute available
 
 ---
 
 
-### Subtask 13 — Results Comparison & Paper Replication Tables
+### Subtask 13 — Pong Results Analysis & Thesis Documentation
 
 **Objective:**
-Compare reproduced scores against the original DQN paper. Aggregate final-eval statistics, build Markdown/CSV tables, generate comparison plots, and upload the outputs to both `results/summary/` and W&B reports. Highlight gaps with diagnoses. Completion = reproducible tables/plots exist locally and in W&B, with documented interpretation guidance.
+Analyze Pong multi-seed results, compare against DQN 2013 paper, generate thesis-quality figures/tables, and document infrastructure validation and reproducibility practices. Complete when Pong results section is ready for thesis with all supporting artifacts.
 
 **Checklist:**
-- [X] Implement `scripts/analyze_results.py` (or extend existing tooling) to ingest per-game eval CSV/JSONL, compute stats over the final evaluation window (default last 100 episodes / final 5 checkpoints), and emit both per-game JSON + combined dataframe.
+- [X] Implement `scripts/analyze_results.py` to ingest Pong eval CSV/JSONL, compute stats over final evaluation window (last 100 episodes / final 5 checkpoints), and emit machine-readable summaries.
     - [X] feat: Produce machine-readable summaries for downstream table/plot generation (493 lines)
-- [ ] Export comparison tables (`results/summary/metrics.csv` + `.md`) with columns `Game | Mean Score (Ours) | Paper Score | % of Paper | Std Dev | Frames | Seeds | Notes`, and publish the same tables to W&B (Artifacts or Tables) with commit references.
-    - [ ] feat: Keep table filenames deterministic and mirrored in W&B
-- [ ] Generate bar charts and optional learning-curve overlays (`results/summary/plots/`) comparing ours vs. paper per game; attach these plots to W&B reports/dashboards for broader sharing.
-    - [ ] feat: Script plot creation + W&B upload
-- [ ] Flag outcomes (match/exceed/lag) with short diagnoses (env/version differences, reward clipping, budget). Include this narrative in both the Markdown summary and `docs/design/results_comparison.md`.
-    - [ ] docs: Record the diagnosis rubric and update when causes change
-- [X] Document environment/toolchain differences affecting comparability (Gymnasium vs. ALE versions, hardware precision, reward preprocessing, action set choices) in `results/summary/notes.md` and reference it from the design doc.
-    - [X] docs: Keep the notes file current with each reproduction pass (199 lines)
-- [ ] Maintain `docs/design/results_comparison.md` as the authoritative “how-to regenerate” guide: list scripts, CLI args, W&B queries, and validation steps for verifying percentage-of-paper calculations.
-    - [ ] docs: Ensure the guide includes both local and W&B regeneration paths
+- [ ] Export Pong comparison table (`results/summary/pong_metrics.csv` + `.md`) with columns: Mean Score (Ours), Paper Score, % of Paper, Std Dev (across seeds), Frames, Seeds, Notes; publish to W&B with commit reference.
+    - [ ] feat: Generate Pong paper comparison table for thesis
+- [ ] Generate thesis-quality Pong figures: multi-seed learning curves with CI, eval score progression, loss convergence, comparison bar chart vs paper; save to `results/summary/pong_plots/` and upload to W&B.
+    - [ ] feat: Create publication-ready Pong figures for thesis
+- [ ] Write Pong results interpretation: analyze reproduction quality (match/exceed/lag vs paper), diagnose any gaps (environment version differences, ALE vs Gymnasium, reward clipping), document findings in `docs/reports/pong_reproduction.md`.
+    - [ ] docs: Document Pong reproduction analysis and interpretation
+- [X] Document environment/toolchain differences affecting comparability (Gymnasium vs. ALE versions, hardware precision, reward preprocessing, action set choices) in `results/summary/notes.md`.
+    - [X] docs: Environment differences documented (199 lines)
+- [ ] Write infrastructure validation section for thesis: document reproducibility practices (deterministic seeding, checkpoint/resume, multi-seed validation), hardware comparison (CPU vs GPU), logging pipeline, and lessons learned for future DRL work.
+    - [ ] docs: Document reproducibility infrastructure and validation in thesis
+- [ ] Create regeneration guide in `docs/design/pong_results_regeneration.md`: list all scripts, CLI commands, W&B queries, and validation steps needed to reproduce Pong results from checkpoints or from scratch.
+    - [ ] docs: Provide complete reproduction recipe for Pong results
 
 
 ---
 
-### Subtask 14 — Minimal Ablations & Sensitivity Analysis
+### Subtask 14 — Minimal Ablations & Sensitivity Analysis (OPTIONAL - Deferred)
 
 **Objective:**
-Quantify the effect of key design choices (reward clipping, frame stack size, target network, etc.) on a benchmark game (Pong or Breakout). Each ablation runs ~5M frames across fixed seeds, producing comparable logs/plots/tables locally and in W&B. Completion requires documented findings and reproducible configs/scripts.
+DEFERRED: Quantify the effect of key design choices (reward clipping, frame stack size, target network, etc.) on a benchmark game (Pong or Breakout). Each ablation runs ~5M frames across fixed seeds. This is NOT required for thesis completion and should only be pursued if compute budget allows after completing Subtasks 11-13.
+
+**Status:** DEFERRED - Focus on core reproduction first (Subtasks 11-13)
 
 **Checklist:**
 - [X] Define ablation configs under `experiments/dqn_atari/configs/ablations/` (e.g., `reward_clip_off.yaml`, `stack_2.yaml`, `no_target_net.yaml`) with annotated headers describing the change and rationale. Reference them in `docs/design/ablations_plan.md`.
