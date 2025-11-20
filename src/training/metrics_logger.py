@@ -835,6 +835,25 @@ class MetricsLogger:
                 total_size_mb += size_mb
                 print(f"  + videos/{video_file.name} ({size_mb:.3f} MB)")
 
+        # Add checkpoint files (from checkpoints directory next to logs)
+        checkpoints_dir = self.log_dir.parent / "checkpoints"
+        if checkpoints_dir.exists():
+            # Find checkpoint for current step
+            checkpoint_file = checkpoints_dir / f"checkpoint_{step}.pt"
+            if checkpoint_file.exists():
+                artifact_files.append(str(checkpoint_file))
+                size_mb = checkpoint_file.stat().st_size / (1024 * 1024)
+                total_size_mb += size_mb
+                print(f"  + checkpoints/{checkpoint_file.name} ({size_mb:.3f} MB)")
+
+            # Also include best_model.pt if it exists
+            best_model_file = checkpoints_dir / "best_model.pt"
+            if best_model_file.exists():
+                artifact_files.append(str(best_model_file))
+                size_mb = best_model_file.stat().st_size / (1024 * 1024)
+                total_size_mb += size_mb
+                print(f"  + checkpoints/best_model.pt ({size_mb:.3f} MB)")
+
         if not artifact_files:
             print("  No artifact files found to upload.")
             return

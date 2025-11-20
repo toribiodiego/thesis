@@ -488,7 +488,7 @@ This selective upload reduces W&B storage by 75% while maintaining recovery poin
 
 **Upload Configuration:**
 
-For 10M runs, enable W&B checkpoint uploads:
+For 10M runs, enable W&B artifact uploads:
 ```bash
 python train_dqn.py \
   --cfg experiments/dqn_atari/configs/pong.yaml \
@@ -496,7 +496,14 @@ python train_dqn.py \
   --set logging.wandb.upload_artifacts=true
 ```
 
-The trainer will automatically upload checkpoints as W&B artifacts with naming: `checkpoint-pong-seed42-step{step}:v0`
+**Artifacts Uploaded (every 1M steps):**
+- Checkpoint files: `checkpoint_{step}.pt` and `best_model.pt`
+- CSV logs: `training_steps.csv`, `episodes.csv`
+- Evaluation results: `evaluations.csv`, `evaluations.jsonl`
+- Configuration: `config.yaml`, `meta.json`
+- Videos: All `.mp4` files from evaluation episodes
+
+All artifacts are bundled together and uploaded as `training_logs_step_{step}` with type `logs`.
 
 ---
 
