@@ -23,26 +23,27 @@ Re-implement and reproduce DeepMind's DQN (*Playing Atari with Deep Reinforcemen
 
 **Progress Summary**:
 - Subtasks 1-10: **Complete** (335+ tests, all passing)
-- Subtask 11: **In Progress** (12/15 complete, bottleneck analysis done, ready for 10M runs)
+- Subtask 11: **In Progress** (12/15 complete, GPU validation and bottleneck analysis done)
 - Infrastructure: Fully implemented and tested
   - Environment, wrappers, preprocessing, frame stacking
   - DQN model, replay buffer, Q-learning loss
   - Training loop with epsilon-greedy exploration
   - Multi-backend logging (TensorBoard, W&B, CSV)
-  - Checkpointing, resume, deterministic seeding
+  - Checkpointing, resume, deterministic seeding, W&B artifact uploads
   - Evaluation harness with video capture
   - Plotting and results export scripts
   - 1M frame CPU baseline: 163 min, 107 FPS training mean, loss 116->0.025
   - 1M frame GPU validation: 71 min, 233 FPS training mean, 2.3x speedup
   - Hardware comparison documented: convergence verified, no bottlenecks
-  - Google Colab Pro setup documented with GPU support
-- **Next step**: Launch first full 10M frame Pong training run on GPU (seed 42)
+  - Checkpoint management validated: 7.78 MB per checkpoint, W&B upload ready
+- **Next step**: Complete 10M frame Pong run (seed 42), then validate multi-seed pipeline (seed 123)
 
 **Compute Strategy**:
-- Focus on Pong (10M frames, 3 seeds) as primary reproduction target
-- Validate infrastructure thoroughly before expensive runs
-- Additional games optional based on compute budget
-- Skip extensive ablations (can be deferred to future work)
+- Focus on Pong with 2 seeds (42, 123) for foundation validation
+- Each 10M run takes ~12 GPU hours on Colab A100
+- Total compute budget: 24 GPU hours for 2-seed validation
+- Goal: Validate tooling and identify gaps, not statistical significance
+- Ablations deferred to future applied research work
 
 ---
 
@@ -76,40 +77,27 @@ See `docs/papers/dqn_2013_notes.md` for details.
 
 ## Next Steps (Execution Phase)
 
-### Immediate (Complete Subtask 11 - This Week)
+### Immediate (Complete Subtask 11)
 1. [X] Integrate MetricsLogger and infrastructure (DONE - all tests passing)
-2. [X] Complete 1M frame CPU baseline run (DONE - 24 min, 687 FPS avg)
-3. [ ] Run 1M frame GPU validation on Colab (validate setup, measure speedup)
-4. [ ] Compare CPU vs GPU runs (check for bottlenecks, logging overhead, convergence match)
-5. [ ] Fix any identified issues before expensive runs
+2. [X] Complete 1M frame CPU baseline run (DONE)
+3. [X] Run 1M frame GPU validation on Colab (DONE - 2.3x speedup)
+4. [X] Compare CPU vs GPU runs (DONE - no bottlenecks found)
+5. [X] Add checkpoint uploads to W&B (DONE - 7.78 MB per checkpoint)
 6. [ ] Launch first 10M Pong training (seed 42, GPU)
 7. [ ] Verify resume functionality mid-run
 8. [ ] Generate plots and document results
 
-### Short-term (Subtask 12 - Pong Multi-Seed, Compute-Efficient)
-1. Launch Pong seeds 123, 456 (10M frames each, GPU)
-2. Monitor for stability across seeds
-3. Aggregate multi-seed results with confidence intervals
-4. Generate publication-quality plots
-5. Compare against DQN 2013 paper baseline for Pong
-6. Document final Pong results in thesis
-7. OPTIONAL: Add one more game (Breakout or Beam Rider) if compute allows
+### Short-term (Subtask 12 - Multi-Seed Validation)
+1. Launch Pong seed 123 (10M frames, GPU)
+2. Test multi-seed aggregation and plotting scripts
+3. Validate W&B artifact download and resume workflow
+4. Document gaps in reporting requirements
 
-### Medium-term (Subtask 13 - Analysis & Thesis Documentation)
-1. Write results section with Pong reproduction
-2. Document infrastructure validation and reproducibility
-3. Create comparison tables (our scores vs paper)
-4. Generate final figures for thesis
-5. Document lessons learned for future data-efficient DRL work
-
-### Deferred (Low Priority for Thesis)
-These can be deferred to future work or skipped if compute-limited:
-- Subtask 14: Extensive ablation studies
-- Subtask 18: Automated report generation
-- Multi-game suite (Breakout, Beam Rider) beyond Pong
-- Full 50M frame runs
-
-**Compute Strategy**: Validate thoroughly with short runs, then execute Pong multi-seed (minimal viable thesis result). Additional experiments optional based on budget.
+### Medium-term (Subtasks 13-15 - Analysis & Documentation)
+1. Run complete analysis pipeline on 2-seed data
+2. Practice interpreting results and identifying patterns
+3. Create applied research quickstart guide
+4. Document validation summary and lessons learned
 
 ---
 
@@ -409,104 +397,78 @@ Validate training infrastructure end-to-end with GPU hardware, identify bottlene
 
 ---
 
-### Subtask 12 — Pong Multi-Seed Training & Results (Compute-Efficient)
+### Subtask 12 — Multi-Seed Validation & Reporting Pipeline
 
 **Objective:**
-Execute Pong training across 3 seeds (10M frames each), verify reproducibility and stability, generate multi-seed plots with confidence intervals, and compare against DQN 2013 paper baseline. Complete when Pong has statistically valid results ready for thesis. Additional games optional based on compute budget.
+Run second seed to validate multi-seed tooling and identify gaps in reporting pipeline. Test aggregation, plotting, and W&B artifact workflows. Complete when you have 2-seed data and documented reporting requirements.
 
 **Checklist:**
-- [ ] Launch Pong seed 123 training (10M frames, GPU): use same config as seed 42 baseline, monitor for stability, log to W&B with seed tag.
-    - [ ] feat: Execute Pong seed 123 training run
-- [ ] Launch Pong seed 456 training (10M frames, GPU): use same config as seed 42 baseline, monitor for stability, log to W&B with seed tag.
-    - [ ] feat: Execute Pong seed 456 training run
-- [ ] Verify stability across all 3 Pong seeds: check for NaN/Inf issues, gradient explosions, or divergent learning; confirm hyperparameters (replay=1M, batch=32, LR=2.5e-4, gamma=0.99, target_update=10k, RMSProp) work consistently.
-    - [ ] test: Confirm stability across seeds or document any tuning needed
-- [ ] Aggregate Pong results using `scripts/export_results_table.py`: generate `results/summary/pong_results.csv` and `.md` with columns (seed, mean_return, std_return, frames, wall_time, final_eval_score).
-    - [ ] feat: Export Pong multi-seed results table
-- [ ] Generate Pong multi-seed plots using `scripts/plot_results.py --multi-seed`: create learning curves with 95% confidence intervals, eval score progression, loss curves; save to `results/plots/pong/multi_seed/`.
-    - [ ] feat: Create publication-quality Pong multi-seed plots with confidence intervals
-- [ ] Compare Pong results against DQN 2013 paper baseline: create comparison table (Our Score, Paper Score, % of Paper); document in `results/summary/pong_paper_comparison.md` with analysis of any gaps (environment version differences, etc.).
-    - [ ] docs: Document Pong reproduction quality vs paper baseline
-- [ ] Document runtime performance for all Pong runs: record actual FPS per seed, wall-clock time, GPU utilization, compute cost; save to `results/summary/pong_runtime_stats.csv`.
-    - [ ] docs: Capture Pong performance metrics for thesis and future planning
-- [ ] Upload Pong artifacts to W&B: final checkpoints, multi-seed plots, aggregated tables, and metadata; ensure proper tagging for easy retrieval.
-    - [ ] chore: Complete W&B artifact uploads for Pong reproduction
-- [ ] OPTIONAL: Launch one additional game (Breakout or Beam Rider, 10M frames, 3 seeds) if compute budget allows and thesis would benefit from multi-game comparison.
-    - [ ] feat: Execute optional second game if compute available
+- [ ] Launch Pong seed 123 training (10M frames, GPU) to validate multi-seed workflow, verify W&B tagging works correctly, and confirm checkpoints upload at 1M step intervals.
+    - [ ] feat: Execute second seed (123) for multi-seed validation
+- [ ] Generate aggregated results table from 2 seeds using `scripts/export_results_table.py`, verify script handles multiple run directories, and export to `results/summary/multi_seed_validation.csv`.
+    - [ ] test: Validate results aggregation script with real multi-seed data
+- [ ] Create multi-seed plots with confidence bands using `scripts/plot_results.py --multi-seed`: learning curves, evaluation score progression, loss curves; verify plotting works correctly with 2 seeds.
+    - [ ] test: Validate multi-seed plotting pipeline produces expected outputs
+- [ ] Download checkpoints from W&B using artifact API, verify they load correctly, test resume from downloaded checkpoint, and confirm artifact tagging allows filtering by seed.
+    - [ ] test: Validate W&B artifact download and resume workflow
+- [ ] Document any missing plots, metrics, or analysis features discovered during testing in `docs/reporting_requirements.md` with prioritized list for future applied research work.
+    - [ ] docs: Create reporting requirements document with lessons learned
 
 ---
 
 
-### Subtask 13 — Pong Results Analysis & Thesis Documentation
+### Subtask 13 — Results Analysis & Documentation
 
 **Objective:**
-Analyze Pong multi-seed results, compare against DQN 2013 paper, generate thesis-quality figures/tables, and document infrastructure validation and reproducibility practices. Complete when Pong results section is ready for thesis with all supporting artifacts.
+Practice analyzing results from 2-seed data and create quick-start documentation for future applied research work. Complete when analysis pipeline validated and documentation created.
 
 **Checklist:**
-- [X] Implement `scripts/analyze_results.py` to ingest Pong eval CSV/JSONL, compute stats over final evaluation window (last 100 episodes / final 5 checkpoints), and emit machine-readable summaries.
-    - [X] feat: Produce machine-readable summaries for downstream table/plot generation (493 lines)
-- [ ] Export Pong comparison table (`results/summary/pong_metrics.csv` + `.md`) with columns: Mean Score (Ours), Paper Score, % of Paper, Std Dev (across seeds), Frames, Seeds, Notes; publish to W&B with commit reference.
-    - [ ] feat: Generate Pong paper comparison table for thesis
-- [ ] Generate thesis-quality Pong figures: multi-seed learning curves with CI, eval score progression, loss convergence, comparison bar chart vs paper; save to `results/summary/pong_plots/` and upload to W&B.
-    - [ ] feat: Create publication-ready Pong figures for thesis
-- [ ] Write Pong results interpretation: analyze reproduction quality (match/exceed/lag vs paper), diagnose any gaps (environment version differences, ALE vs Gymnasium, reward clipping), document findings in `docs/reports/pong_reproduction.md`.
-    - [ ] docs: Document Pong reproduction analysis and interpretation
-- [X] Document environment/toolchain differences affecting comparability (Gymnasium vs. ALE versions, hardware precision, reward preprocessing, action set choices) in `results/summary/notes.md`.
-    - [X] docs: Environment differences documented (199 lines)
-- [ ] Write infrastructure validation section for thesis: document reproducibility practices (deterministic seeding, checkpoint/resume, multi-seed validation), hardware comparison (CPU vs GPU), logging pipeline, and lessons learned for future DRL work.
-    - [ ] docs: Document reproducibility infrastructure and validation in thesis
-- [ ] Create regeneration guide in `docs/design/pong_results_regeneration.md`: list all scripts, CLI commands, W&B queries, and validation steps needed to reproduce Pong results from checkpoints or from scratch.
-    - [ ] docs: Provide complete reproduction recipe for Pong results
+- [X] Implement `scripts/analyze_results.py` to compute statistical summaries (mean/std/median across seeds), generate machine-readable JSON summaries, and emit comparison tables.
+    - [X] feat: Add statistical analysis and summary generation (493 lines)
+- [X] Document environment and toolchain differences (ALE version, ROM hashes, gym version, hardware specs) in `results/summary/notes.md` to support reproducibility troubleshooting.
+    - [X] docs: Document environment differences and reproduction notes (199 lines)
+- [ ] Run complete analysis pipeline on 2-seed data: execute all plotting scripts, generate aggregated tables, create learning curve comparisons, and verify outputs match expected format.
+    - [ ] test: Validate end-to-end analysis pipeline with 2-seed data
+- [ ] Practice interpreting results: analyze learning curves for convergence patterns, review evaluation metrics for stability across seeds, identify training anomalies, and compare against baseline expectations.
+    - [ ] docs: Document interpretation of 2-seed results and key findings
+- [ ] Document standard workflow in `docs/applied_research_quickstart.md`: cover training launch, checkpoint management, W&B artifact retrieval, analysis script usage, plotting commands, and common troubleshooting steps.
+    - [ ] docs: Create applied research quickstart guide with validated workflows
+- [ ] Update `docs/reporting_requirements.md` with any missing metrics, plot types, or analysis features discovered during 2-seed validation; prioritize by importance for applied research.
+    - [ ] docs: Finalize reporting requirements based on validation findings
 
 
 ---
 
-### Subtask 14 — Minimal Ablations & Sensitivity Analysis (OPTIONAL - Deferred)
+### Subtask 14 — Ablations & Sensitivity Analysis
 
 **Objective:**
-DEFERRED: Quantify the effect of key design choices (reward clipping, frame stack size, target network, etc.) on a benchmark game (Pong or Breakout). Each ablation runs ~5M frames across fixed seeds. This is NOT required for thesis completion and should only be pursued if compute budget allows after completing Subtasks 11-13.
-
-**Status:** DEFERRED - Focus on core reproduction first (Subtasks 11-13)
+Infrastructure for ablation studies is complete and documented. Can be executed later for specific research questions as needed during applied research.
 
 **Checklist:**
-- [X] Define ablation configs under `experiments/dqn_atari/configs/ablations/` (e.g., `reward_clip_off.yaml`, `stack_2.yaml`, `no_target_net.yaml`) with annotated headers describing the change and rationale. Reference them in `docs/design/ablations_plan.md`.
-    - [X] feat: Add/annotate ablation configs + plan doc entries (3 configs with hypotheses)
-- [ ] Run each ablation for ≥5M frames on the chosen benchmark game with deterministic seeds (e.g., `{0,1,2}`) and store outputs under `experiments/dqn_atari/runs/<game>/ablations/<ablation>/seed_<n>/`. Tag the corresponding W&B runs for easy filtering.
-    - [ ] feat: Ensure directory + W&B naming stays consistent
-- [ ] Keep logging/eval cadence identical to baseline so comparisons are apples-to-apples (same eval episodes/cadence, epsilon schedule, reporting intervals).
-    - [ ] chore: Validate configs to ensure only the intended knob changed
-- [ ] Generate comparison plots (`results/ablations/<game>/<ablation>/plots/`) that overlay baseline vs ablation learning curves, eval trends, and stability indicators (TD-error variance, gradient norms). Upload the same plots to W&B.
-    - [ ] feat: Extend plotting script to handle baseline-vs-ablation overlays
-- [ ] Produce a summary table (`results/ablations/<game>/<ablation>/summary.csv` + Markdown) capturing deltas (final mean eval, AUC, time-to-threshold) and stability flags, and publish it to W&B.
-    - [ ] feat: Automate summary export + W&B artifact upload
-- [ ] Document findings in `docs/design/ablations_plan.md` (or `docs/papers/dqn_2013_notes.md` if more appropriate): describe hypothesis, setup, observed impacts, and recommendations; link to plots and run directories/W&B reports.
-    - [ ] docs: Capture lessons learned per ablation with links to artifacts
-- [X] Provide a convenience runner (e.g., `experiments/dqn_atari/scripts/run_ablations.sh`) that launches the configured ablation suite with consistent seeds/output paths.
-    - [X] chore: Script reproducible ablation execution (288 lines with parallel support)
-- [ ] Capture ablation design/interpretation guidance in `docs/design/ablations_plan.md`: list the experiments, hypotheses, runtime costs, artifact locations, and how to interpret deltas/stability flags.
-    - [ ] docs: Link to config files, plotting outputs, and the report section summarizing ablation findings.
+- [X] Create ablation configs (no target update, no reward clip, smaller replay, etc.) in `experiments/dqn_atari/configs/ablations/` with documented parameter changes.
+    - [X] feat: Add ablation config variants for sensitivity analysis
+- [X] Implement runner script `experiments/dqn_atari/scripts/run_ablations.sh` to launch ablation sweeps with proper tagging and output organization.
+    - [X] feat: Add ablation runner script with config sweep support
+- [X] Document ablations plan in `docs/design/ablations_plan.md`: list all planned ablations, expected impact, compute budget, and analysis approach.
+    - [X] docs: Document ablation study design and execution plan
 
 ---
 
 
-### Subtask 15 — Aggregate Report & Interpretation
+### Subtask 15 — Foundation Validation Summary
 
 **Objective:**
-Consolidate the reproduction into a polished report (`docs/reports/dqn_results.md`) plus a companion W&B report/dashboard. Include final plots/tables/videos, configs, averaged metrics, comparison to the paper, and lessons learned. Completion means the Markdown report, W&B report, and referenced artifacts remain in sync.
+Document validation results, lessons learned, and create reference documentation for applied research work. Complete when all documentation finalized and validation artifacts archived.
 
 **Checklist:**
-- [ ] Export final artifacts (per-game learning curves, aggregate bar charts, eval video links) via Subtask 10 tooling and store under `results/summary/`. Reference the same assets from W&B so readers can drill into runs.
-    - [ ] docs: Capture artifact paths/URLs in the report for reproducibility
-- [ ] Write/refresh `docs/reports/dqn_results.md` summarizing metrics (seed averages, runtime budgets, configs/checkpoints) with links to local artifacts and W&B run collections.
-    - [ ] docs: Include a brief methods recap plus pointers to config + checkpoint locations
-- [ ] Interpret outcomes relative to the original paper—highlight matches/gaps, root causes (env versions, reward clipping, precision, budgets), and quote stats from Subtask 14 tables.
-    - [ ] docs: Embed comparison tables/figures or link to them directly
-- [ ] Add a "Lessons learned & future work" section touching on reproducibility practices and next algorithmic steps (Double DQN, Prioritized Replay, etc.), referencing the roadmap for future subtasks.
-    - [ ] docs: Keep this section updated as new insights emerge
-- [ ] Publish a condensed version of the report as a W&B Report (or similar dashboard) linking to the same plots/tables/videos so collaborators can review results without cloning the repo.
-    - [ ] docs: Mention the W&B report URL inside `docs/reports/dqn_results.md`
-- [X] Maintain `docs/design/report_outline.md` to track the structure of `docs/reports/dqn_results.md`, mapping each section to source artifacts, plots, and data files for quick updates or peer review.
-    - [X] docs: Record which scripts regenerate each figure/table and any open questions/todo items for the report (291 lines).
+- [ ] Create `docs/foundation_validation_summary.md` documenting infrastructure validation results (CPU/GPU comparison, bottleneck analysis, checkpoint verification), W&B integration lessons, and known limitations discovered during testing.
+    - [ ] docs: Create foundation validation summary with key findings
+- [ ] Finalize `docs/reporting_requirements.md` with complete list of gaps identified during multi-seed testing: missing plots, metrics not logged, artifact management improvements, and reporting automation opportunities.
+    - [ ] docs: Finalize reporting requirements for applied research
+- [ ] Complete `docs/applied_research_quickstart.md` as comprehensive workflow reference: training launch (CPU/GPU), checkpoint management, W&B artifact retrieval, analysis pipeline, plotting commands, and troubleshooting guide.
+    - [ ] docs: Complete applied research quickstart guide
+- [ ] Update `docs/design/report_outline.md` to reflect streamlined reporting approach: map existing scripts to reporting tasks, document implemented vs needed features, and maintain as living reference for applied work.
+    - [ ] docs: Update report outline with validated reporting pipeline
 
 ---
 
