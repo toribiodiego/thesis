@@ -467,6 +467,6 @@ fi
 echo ""
 echo "Next steps:"
 echo "  1. Review training curves in plots/"
-echo "  2. Compare to paper scores (see docs/design/results_comparison.md)"
+echo "  2. Compare to paper scores (see docs/reports/report-results-comparison.md)"
 echo "  3. Run additional seeds for statistical significance"
 echo ""

@@ -11,7 +11,7 @@ Usage:
     python train_dqn.py --cfg experiments/dqn_atari/configs/pong.yaml \
         --resume experiments/dqn_atari/runs/pong_42/checkpoints/checkpoint_1000000.pt
 
-For full documentation, see docs/design/config_cli.md
+For full documentation, see docs/reference/config-cli.md
 """
 
 import sys
