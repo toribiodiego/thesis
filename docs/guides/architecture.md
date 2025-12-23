@@ -140,7 +140,7 @@ ALE/Pong-v5
 - `src/envs/atari_wrappers.py` - Wrapper implementations
 - `src/envs/make_env.py` - Environment factory
 
-**Docs:** [atari_env_wrapper.md](../design/atari_env_wrapper.md)
+**Docs:** [atari_env_wrapper.md](../reference/atari_env_wrapper.md)
 
 ---
 
@@ -180,7 +180,7 @@ Output: Q-values for each action
 **Key Files:**
 - `src/models/dqn.py` - DQN model implementation
 
-**Docs:** [dqn_model.md](../design/dqn_model.md)
+**Docs:** [dqn_model.md](../reference/dqn_model.md)
 
 ---
 
@@ -209,7 +209,7 @@ Total: ~27 GB
 **Key Files:**
 - `src/replay/uniform_buffer.py` - Circular replay buffer
 
-**Docs:** [replay_buffer.md](../design/replay_buffer.md)
+**Docs:** [replay_buffer.md](../reference/replay_buffer.md)
 
 ---
 
@@ -237,7 +237,7 @@ Total: ~27 GB
 - `src/training/schedulers.py` - Epsilon and update schedulers
 - `src/training/checkpoint.py` - Checkpoint/resume system
 
-**Docs:** [training_loop_runtime.md](../design/training_loop_runtime.md), [dqn_training.md](../design/dqn_training.md)
+**Docs:** [training_loop_runtime.md](../reference/training_loop_runtime.md), [dqn_training.md](../reference/dqn_training.md)
 
 ---
 
@@ -287,7 +287,7 @@ checkpoint = {
 - `src/training/checkpoint.py` - Save/load logic
 - `src/training/resume.py` - Resume validation
 
-**Docs:** [checkpointing.md](../design/checkpointing.md)
+**Docs:** [checkpointing.md](../reference/checkpointing.md)
 
 ---
 
@@ -452,7 +452,7 @@ if step % target_update_interval == 0:
     target_net.load_state_dict(online_net.state_dict())
 ```
 
-**Docs:** [dqn_training.md](../design/dqn_training.md#complete-update-pipeline)
+**Docs:** [dqn_training.md](../reference/dqn_training.md#complete-update-pipeline)
 
 ---
 
@@ -471,7 +471,7 @@ else:
         action = q_values.argmax().item()  # Exploit
 ```
 
-**Docs:** [training_loop_runtime.md](../design/training_loop_runtime.md#component-orchestration)
+**Docs:** [training_loop_runtime.md](../reference/training_loop_runtime.md#component-orchestration)
 
 ---
 

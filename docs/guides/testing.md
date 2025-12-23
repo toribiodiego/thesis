@@ -424,7 +424,7 @@ from conftest import mock_env_fixture
 
 ## Related Documentation
 
-- [Evaluation Harness Design](../design/eval_harness.md) - Complete evaluation system documentation
+- [Evaluation Harness Design](../reference/eval_harness.md) - Complete evaluation system documentation
 - [Testing Best Practices](https://docs.pytest.org/en/stable/goodpractices.html) - Pytest conventions
 - [Coverage.py](https://coverage.readthedocs.io/) - Coverage measurement tool
 
