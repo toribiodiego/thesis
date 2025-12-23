@@ -369,7 +369,7 @@ Before finalizing results:
 ## References
 
 - Mnih, V., et al. (2013). Playing Atari with Deep Reinforcement Learning. arXiv:1312.5602
-- Game Suite Plan: `docs/design/game_suite_plan.md`
+- Game Suite Plan: `../plans/game_suite_plan.md`
 - Training Configuration: `experiments/dqn_atari/configs/`
 - Plotting Scripts: `scripts/plot_results.py`
 - Export Scripts: `scripts/export_results_table.py`

@@ -16,7 +16,7 @@ This document tracks the structure and source artifacts for the main results rep
 - **Content**: Project motivation, DQN 2013 paper context
 - **References**:
   - arXiv:1312.5602 (DQN 2013 paper)
-  - `docs/design/game_suite_plan.md` - game selection rationale
+  - `game_suite_plan.md` - game selection rationale
 - **Status**: [ ] Draft | [ ] Complete
 
 ### 3. Methods
@@ -106,7 +106,7 @@ This document tracks the structure and source artifacts for the main results rep
 - **Artifacts**:
   - `experiments/dqn_atari/runs/ablation_*/`
   - `results/ablations/*/`
-  - `docs/design/ablations_plan.md` - hypotheses
+  - `ablations_plan.md` - hypotheses
 - **Ablations**:
   - Reward clipping disabled
   - Frame stack reduced to 2
@@ -150,7 +150,7 @@ This document tracks the structure and source artifacts for the main results rep
 - **Content**: Exact commands to reproduce
 - **Source**:
   - `scripts/reproduce_dqn.sh`
-  - `docs/design/reproduce_recipe.md`
+  - `reproduce_recipe.md`
 
 ---
 
@@ -284,7 +284,7 @@ Before finalizing report:
 - Main report: `docs/reports/dqn_results.md` (to be created)
 - Results comparison guide: `docs/design/results_comparison.md`
 - Environment notes: `docs/design/environment_notes.md`
-- Reproduction recipe: `docs/design/reproduce_recipe.md`
+- Reproduction recipe: `reproduce_recipe.md`
 - Training configs: `experiments/dqn_atari/configs/`
 - Plotting tools: `scripts/plot_results.py`
 - DQN 2013 paper: arXiv:1312.5602
