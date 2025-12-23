@@ -29,17 +29,19 @@ High-level task-oriented guides:
 ### reference/
 Detailed technical specifications for each component:
 
-- Environment wrappers and preprocessing
-- DQN model architecture
-- Replay buffer implementation
-- Training loop and Q-learning updates
-- Checkpointing and resume
-- Config system and CLI
-- Evaluation harness
-- Logging and plotting pipeline
-- Environment and stability notes
-
-See [reference/README.md](reference/README.md) for the full index (to be created).
+- **[dqn-setup.md](reference/dqn-setup.md)** - Environment setup, game selection, and reproducibility
+- **[atari-env-wrapper.md](reference/atari-env-wrapper.md)** - Preprocessing, frame stacking, reward clipping
+- **[dqn-model.md](reference/dqn-model.md)** - CNN architecture and weight initialization
+- **[replay-buffer.md](reference/replay-buffer.md)** - Circular buffer with uniform sampling
+- **[dqn-training.md](reference/dqn-training.md)** - TD targets, loss computation, and optimization
+- **[training-loop-runtime.md](reference/training-loop-runtime.md)** - Main training loop orchestration
+- **[episode-handling.md](reference/episode-handling.md)** - Life-loss vs full-episode termination
+- **[checkpointing.md](reference/checkpointing.md)** - Save/resume and deterministic seeding
+- **[config-cli.md](reference/config-cli.md)** - Configuration system and command-line interface
+- **[eval-harness.md](reference/eval-harness.md)** - Periodic evaluation, metrics, and video capture
+- **[logging-pipeline.md](reference/logging-pipeline.md)** - Multi-backend logging, plotting, and results analysis
+- **[environment-notes.md](reference/environment-notes.md)** - Toolchain differences and compatibility
+- **[stability-notes.md](reference/stability-notes.md)** - Hyperparameter choices and stability observations
 
 ### plans/
 Experiment and analysis plans:
