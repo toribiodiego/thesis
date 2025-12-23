@@ -2,6 +2,8 @@
 
 This document describes the test suite organization, how to run tests, and what each test module covers.
 
+> **See Also**: [Code Quality](../ops/code-quality.md) - Operational quick-start for testing + formatting + linting in day-to-day workflow
+
 ## Overview
 
 The test suite uses **pytest** and is organized into focused test modules:
@@ -424,6 +426,7 @@ from conftest import mock_env_fixture
 
 ## Related Documentation
 
+- [Code Quality](../ops/code-quality.md) - Quick-start guide for testing, formatting, and linting
 - [Evaluation Harness Design](../reference/eval-harness.md) - Complete evaluation system documentation
 - [Testing Best Practices](https://docs.pytest.org/en/stable/goodpractices.html) - Pytest conventions
 - [Coverage.py](https://coverage.readthedocs.io/) - Coverage measurement tool

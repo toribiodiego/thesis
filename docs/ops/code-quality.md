@@ -2,6 +2,8 @@
 
 This document provides a pragmatic guide for testing and maintaining code quality in the DQN reproduction thesis project.
 
+> **See Also**: [Testing Guide](../guides/testing.md) - Comprehensive test suite documentation with detailed examples and debugging tips
+
 ## Overview
 
 For this thesis project, focus on:
@@ -300,6 +302,7 @@ This is research code for a thesis, not production software. The goal is correct
 
 ## References
 
+- [Testing Guide](../guides/testing.md) - Comprehensive test suite documentation
 - Test suite: `tests/`
 - Configuration: `pyproject.toml`
 - Python style: https://pep8.org/
