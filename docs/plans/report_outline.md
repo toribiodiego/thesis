@@ -23,7 +23,7 @@ This document tracks the structure and source artifacts for the main results rep
 - **Content**: Implementation details and deviations from paper
 - **Data sources**:
   - `experiments/dqn_atari/configs/*.yaml` - training configs
-  - `docs/design/environment_notes.md` - toolchain differences
+  - `../reference/environment_notes.md` - toolchain differences
   - `src/models/dqn_model.py` - network architecture
 - **Key sections**:
   - 3.1 Network Architecture
@@ -80,8 +80,8 @@ This document tracks the structure and source artifacts for the main results rep
 #### 5.1 Comparison to Paper
 - **Content**: Match/gap analysis with root causes
 - **Data sources**:
-  - `docs/design/results_comparison.md` - methodology
-  - `docs/design/environment_notes.md` - known differences
+  - `../reports/results_comparison.md` - methodology
+  - `../reference/environment_notes.md` - known differences
 - **Key points**:
   - Percentage of paper score achieved
   - Environment version differences
@@ -199,7 +199,7 @@ This document tracks the structure and source artifacts for the main results rep
 | 2 | Paper Target Scores | DQN 2013 Table 1 | [ ] |
 | 3 | Reproduction Results | `results/summary/metrics.csv` | [ ] |
 | 4 | Comparison Summary | Computed from Table 2 & 3 | [ ] |
-| 5 | Environment Versions | `docs/design/environment_notes.md` | [ ] |
+| 5 | Environment Versions | `../reference/environment_notes.md` | [ ] |
 
 ---
 
@@ -282,8 +282,8 @@ Before finalizing report:
 ## References
 
 - Main report: `docs/reports/dqn_results.md` (to be created)
-- Results comparison guide: `docs/design/results_comparison.md`
-- Environment notes: `docs/design/environment_notes.md`
+- Results comparison guide: `../reports/results_comparison.md`
+- Environment notes: `../reference/environment_notes.md`
 - Reproduction recipe: `reproduce_recipe.md`
 - Training configs: `experiments/dqn_atari/configs/`
 - Plotting tools: `scripts/plot_results.py`
