@@ -134,6 +134,7 @@ Documentation in `docs/` should be:
 - Config files for specific runs
 - Run scripts and job submissions
 - Experiment metadata and logs
+- [notes.md](../experiments/dqn_atari/notes.md) - Experiment log for tracking observations and follow-ups during training runs
 
 **results/** - Generated outputs:
 - Plots and visualizations
