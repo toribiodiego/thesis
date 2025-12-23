@@ -1,6 +1,6 @@
 # Report Outline
 
-This document tracks the structure and source artifacts for the main results report (`docs/reports/dqn-results.md`).
+This document tracks the structure and source artifacts for the main results report (`docs/reports/report-dqn-results.md`).
 
 ## Report Structure
 
@@ -16,7 +16,7 @@ This document tracks the structure and source artifacts for the main results rep
 - **Content**: Project motivation, DQN 2013 paper context
 - **References**:
   - arXiv:1312.5602 (DQN 2013 paper)
-  - `game-suite-plan.md` - game selection rationale
+  - `plan-game-suite.md` - game selection rationale
 - **Status**: [ ] Draft | [ ] Complete
 
 ### 3. Methods
@@ -80,7 +80,7 @@ This document tracks the structure and source artifacts for the main results rep
 #### 5.1 Comparison to Paper
 - **Content**: Match/gap analysis with root causes
 - **Data sources**:
-  - `../reports/results-comparison.md` - methodology
+  - `../reports/report-results-comparison.md` - methodology
   - `../reference/environment-notes.md` - known differences
 - **Key points**:
   - Percentage of paper score achieved
@@ -106,7 +106,7 @@ This document tracks the structure and source artifacts for the main results rep
 - **Artifacts**:
   - `experiments/dqn_atari/runs/ablation_*/`
   - `results/ablations/*/`
-  - `ablations-plan.md` - hypotheses
+  - `plan-ablations.md` - hypotheses
 - **Ablations**:
   - Reward clipping disabled
   - Frame stack reduced to 2
@@ -150,7 +150,7 @@ This document tracks the structure and source artifacts for the main results rep
 - **Content**: Exact commands to reproduce
 - **Source**:
   - `scripts/reproduce_dqn.sh`
-  - `reproduce-recipe.md`
+  - `plan-reproduce-recipe.md`
 
 ---
 
@@ -281,10 +281,10 @@ Before finalizing report:
 
 ## References
 
-- Main report: `docs/reports/dqn-results.md` (to be created)
-- Results comparison guide: `../reports/results-comparison.md`
+- Main report: `docs/reports/report-dqn-results.md` (to be created)
+- Results comparison guide: `../reports/report-results-comparison.md`
 - Environment notes: `../reference/environment-notes.md`
-- Reproduction recipe: `reproduce-recipe.md`
+- Reproduction recipe: `plan-reproduce-recipe.md`
 - Training configs: `experiments/dqn_atari/configs/`
 - Plotting tools: `scripts/plot_results.py`
 - DQN 2013 paper: arXiv:1312.5602

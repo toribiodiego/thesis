@@ -90,11 +90,11 @@ All documentation files use **snake_case** with descriptive names:
 **Design/reference docs:**
 - `dqn-model.md` - Component specification
 - `config-cli.md` - System configuration
-- `ablations-plan.md` - Experiment plans
+- `plan-ablations.md` - Experiment plans
 
 **Analysis/reports:**
-- `design/gpu-validation.md` - Performance analysis
-- `design/results-comparison.md` - Multi-run analysis
+- `design/report-gpu-validation.md` - Performance analysis
+- `design/report-results-comparison.md` - Multi-run analysis
 
 ### Folder Structure
 - `docs/` - Top-level guides and overviews
@@ -193,14 +193,14 @@ The following table maps current file locations to their planned destinations. T
 | `docs/design/environment-notes.md` | `docs/reference/environment-notes.md` | Reference | Rename to kebab-case |
 | `docs/design/stability-notes.md` | `docs/reference/stability-notes.md` | Reference | Rename to kebab-case |
 | **Plans** | | | |
-| `docs/design/game-suite-plan.md` | `docs/plans/game-suite-plan.md` | Plan | Rename to kebab-case |
-| `docs/design/ablations-plan.md` | `docs/plans/ablations-plan.md` | Plan | Rename to kebab-case |
-| `docs/design/report-outline.md` | `docs/plans/report-outline.md` | Plan | Rename to kebab-case |
-| `docs/design/reproduce-recipe.md` | `docs/plans/reproduce-recipe.md` | Plan | Rename to kebab-case |
+| `docs/design/plan-game-suite.md` | `docs/plans/plan-game-suite.md` | Plan | Rename to kebab-case |
+| `docs/design/plan-ablations.md` | `docs/plans/plan-ablations.md` | Plan | Rename to kebab-case |
+| `docs/design/plan-report-outline.md` | `docs/plans/plan-report-outline.md` | Plan | Rename to kebab-case |
+| `docs/design/plan-reproduce-recipe.md` | `docs/plans/plan-reproduce-recipe.md` | Plan | Rename to kebab-case |
 | **Reports** | | | |
-| `docs/design/gpu-validation.md` | `docs/reports/gpu-validation.md` | Report | Rename to kebab-case |
-| `docs/design/results-comparison.md` | `docs/reports/results-comparison.md` | Report | Rename to kebab-case |
-| `docs/reports/dqn-results.md` | `docs/reports/dqn-results.md` | Report | Rename to kebab-case |
+| `docs/design/report-gpu-validation.md` | `docs/reports/report-gpu-validation.md` | Report | Rename to kebab-case |
+| `docs/design/report-results-comparison.md` | `docs/reports/report-results-comparison.md` | Report | Rename to kebab-case |
+| `docs/reports/report-dqn-results.md` | `docs/reports/report-dqn-results.md` | Report | Rename to kebab-case |
 | **Operational Docs** | | | |
 | `docs/design/code-quality.md` | `docs/ops/code-quality.md` | Ops | Rename to kebab-case |
 | `docs/maintenance/checklists.md` | `docs/ops/checklists.md` | Ops | Consolidate maintenance/ into ops/ |
@@ -243,14 +243,14 @@ docs/
 │   ├── environment-notes.md
 │   └── stability-notes.md
 ├── plans/                 # Experiment and analysis plans
-│   ├── game-suite-plan.md
-│   ├── ablations-plan.md
-│   ├── report-outline.md
-│   └── reproduce-recipe.md
+│   ├── plan-game-suite.md
+│   ├── plan-ablations.md
+│   ├── plan-report-outline.md
+│   └── plan-reproduce-recipe.md
 ├── reports/               # Experiment results and analysis
-│   ├── gpu-validation.md
-│   ├── results-comparison.md
-│   └── dqn-results.md
+│   ├── report-gpu-validation.md
+│   ├── report-results-comparison.md
+│   └── report-dqn-results.md
 ├── ops/                   # Operational procedures and maintenance
 │   ├── code-quality.md
 │   └── checklists.md

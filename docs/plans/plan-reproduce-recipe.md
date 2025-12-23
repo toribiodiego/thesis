@@ -395,8 +395,8 @@ print(f"Mean: {mean:.2f} +/- {ci_95:.2f} (95% CI)")
 ## References
 
 - Reproduction script: `scripts/reproduce_dqn.sh`
-- Results comparison: `../reports/results-comparison.md`
+- Results comparison: `../reports/report-results-comparison.md`
 - Environment notes: `docs/design/environment-notes.md`
-- Game suite plan: `game-suite-plan.md`
+- Game suite plan: `plan-game-suite.md`
 - Training configs: `experiments/dqn_atari/configs/`
 - DQN 2013 paper: arXiv:1312.5602
