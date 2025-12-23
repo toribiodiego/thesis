@@ -23,6 +23,7 @@ High-level task-oriented guides:
 
 - **[architecture.md](guides/architecture.md)** - System design and component interactions (start here)
 - **[quick-start.md](guides/quick-start.md)** - Setup and first training run
+- **[applied-research-quickstart.md](guides/applied-research-quickstart.md)** - Validation to production workflow
 - **[workflows.md](guides/workflows.md)** - Common task guides (train, debug, test)
 - **[troubleshooting.md](guides/troubleshooting.md)** - Problem diagnosis and fixes
 - **[testing.md](guides/testing.md)** - Test suite documentation
