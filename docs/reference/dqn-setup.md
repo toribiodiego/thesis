@@ -10,7 +10,7 @@ Central reference for everything completed in Subtask 1 (game selection, pinned 
 - Git for version control
 
 **Related Docs:**
-- [Quick Start Guide](../quick-start.md) - Step-by-step setup walkthrough
+- [Quick Start Guide](../guides/quick-start.md) - Step-by-step setup walkthrough
 - [Atari Wrappers](atari-env-wrapper.md) - Environment preprocessing
 - [Scripts README](../../experiments/dqn_atari/scripts/README.md) - CLI tools
 
@@ -289,7 +289,7 @@ Expected behavior - floating-point operations may differ:
 - cuDNN algorithms may vary
 - Use same device for reproducibility
 
-See [docs/design/checkpointing.md](checkpointing.md) for complete checkpoint/resume and determinism documentation.
+See [checkpointing.md](checkpointing.md) for complete checkpoint/resume and determinism documentation.
 
 ## Required Commands
 

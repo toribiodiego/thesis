@@ -926,7 +926,7 @@ print(env)  # Should show EpisodeLifeEnv in chain
 If your issue isn't covered here:
 
 1. **Search documentation:**
-   - [Index](../index.md) - All documentation
+   - [Index](../README.md) - All documentation
    - [Workflows](workflows.md) - Common tasks
    - Design docs for specific components
 

@@ -272,7 +272,7 @@ python scripts/export_results_table.py \
 1. Mnih, V., et al. (2013). "Playing Atari with Deep Reinforcement Learning." arXiv:1312.5602
 2. Mnih, V., et al. (2015). "Human-level control through deep reinforcement learning." Nature 518.7540
 3. Project Documentation: `docs/index.md`
-4. Design Specifications: `docs/design/`
+4. Design Specifications: `docs/reference/`
 5. Experiment Configs: `experiments/dqn_atari/configs/`
 
 ---

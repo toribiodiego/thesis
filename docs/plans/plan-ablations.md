@@ -151,7 +151,7 @@ python scripts/plot_results.py \
 | No Target Net | ??? | ???% | ??? | ??? |
 ```
 
-3. **Diagnose failures**: Document root causes in `docs/design/ablation_results.md`
+3. **Diagnose failures**: Document root causes in `docs/reports/report-ablation-results.md`
 
 ## Expected Findings
 

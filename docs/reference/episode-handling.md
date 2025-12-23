@@ -683,4 +683,4 @@ if done:
   - Handles both life-based (training) and full episodes (eval)
 
 **Next Steps:**
-See `docs/design/training-loop-runtime.md` for complete training loop orchestration that integrates episode handling, evaluation, and Q tracking with the DQN update pipeline.
+See [training-loop-runtime.md](training-loop-runtime.md) for complete training loop orchestration that integrates episode handling, evaluation, and Q tracking with the DQN update pipeline.

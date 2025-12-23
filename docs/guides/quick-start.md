@@ -471,7 +471,7 @@ python -c 'import torch; print(torch.cuda.is_available())'
 
 ### Learn More
 
-- **Design Docs:** Detailed specifications in [docs/design/](../reference/)
+- **Design Docs:** Detailed specifications in [docs/reference/](../reference/)
 - **Roadmap:** Complete project plan in [docs/roadmap.md](roadmap.md)
 - **Changelog:** Development history in [docs/changelog.md](../changelog.md)
 - **Config Reference:** All config options in [configs/README.md](../experiments/dqn_atari/configs/README.md)
@@ -490,4 +490,4 @@ python -c 'import torch; print(torch.cuda.is_available())'
 - **Preprocessing issues:** See [atari-env-wrapper.md](../reference/atari-env-wrapper.md)
 - **Training issues:** See [dqn-training.md](../reference/dqn-training.md)
 - **Config issues:** See [configs/README.md](../experiments/dqn_atari/configs/README.md)
-- **General questions:** Check [docs/index.md](../index.md) for navigation
+- **General questions:** Check [docs/README.md](../README.md) for navigation

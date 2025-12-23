@@ -5,7 +5,7 @@
 **Prerequisites:**
 - Completed [DQN Setup](dqn-setup.md) - Environment configured and dependencies installed
 - Understand [Atari Wrappers](atari-env-wrapper.md) - Frame preprocessing and stacking
-- Optional: [DQN Paper Section 3](../resear../research/papers/dqn-2013-notes.md) - Experience replay background
+- Optional: [DQN Paper Section 3](../research/papers/dqn-2013-notes.md) - Experience replay background
 
 **Related Docs:**
 - [DQN Training](dqn-training.md) - How sampled batches are used for Q-learning

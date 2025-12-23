@@ -1573,4 +1573,4 @@ ls experiments/dqn_atari/runs/pong_123/meta.json
 
 - [Training Loop](training-loop-runtime.md) - Integration with training loop
 - [Replay Buffer Design](replay-buffer.md) - Buffer structure and state
-- [Metadata Persistence](../design/reproducibility.md) - Git tracking and config snapshots
+- [DQN Setup](dqn-setup.md) - Deterministic seeding and metadata capture
