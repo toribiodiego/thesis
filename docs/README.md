@@ -57,9 +57,10 @@ Experiment and analysis plans:
 ### reports/
 Experiment results and analysis:
 
+- **[reporting-requirements.md](reports/reporting-requirements.md)** - Prioritized thesis reporting backlog
+- **[report-dqn-results.md](reports/report-dqn-results.md)** - DQN baseline results
 - **[report-gpu-validation.md](reports/report-gpu-validation.md)** - GPU vs CPU performance
 - **[report-results-comparison.md](reports/report-results-comparison.md)** - Multi-seed comparisons
-- **[report-dqn-results.md](reports/report-dqn-results.md)** - DQN baseline results
 
 ### ops/
 Operational procedures and maintenance:
