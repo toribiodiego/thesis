@@ -65,6 +65,38 @@ Operational checklists and maintenance guides:
 
 ---
 
+## Naming Conventions
+
+### Primary Entrypoint
+- **`docs/README.md`** - Main documentation entry point (start here)
+- **`README.md`** (repo root) - Project overview and quick links
+
+### File Naming
+All documentation files use **snake_case** with descriptive names:
+
+**Top-level guides:**
+- `quick_start.md` - Getting started guide
+- `git_commit_guide.md` - Commit message conventions
+- `colab_guide.md` - Platform-specific setup
+
+**Design/reference docs:**
+- `dqn_model.md` - Component specification
+- `config_cli.md` - System configuration
+- `ablations_plan.md` - Experiment plans
+
+**Analysis/reports:**
+- `design/gpu_validation.md` - Performance analysis
+- `design/results_comparison.md` - Multi-run analysis
+
+### Folder Structure
+- `docs/` - Top-level guides and overviews
+- `docs/design/` - Technical specifications
+- `docs/papers/` - Research paper notes
+- `docs/reports/` - Experiment results
+- `docs/maintenance/` - Operational guides
+
+---
+
 ## Navigation Tips
 
 1. **Getting started:** [architecture.md](architecture.md) → [quick_start.md](quick_start.md)
