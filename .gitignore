@@ -64,3 +64,10 @@ logs/
 
 # Weights & Biases
 wandb/
+
+# Personal TODO files (generated from docs/roadmap.md)
+TODO
+DONE.md
+
+# Temporary planning files
+notes/_temp/
