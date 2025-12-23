@@ -2,6 +2,9 @@
 
 Complete reference for the DQN Atari reproduction thesis project.
 
+> **Last Updated**: December 2025 (after Task 02 - docs reorganization)
+> **When to Read**: Start here when joining the project, setting up your environment, or looking for specific component documentation. Revisit after major milestones or when workflow changes.
+
 ## Quick Start
 
 - **New to the project?** Start with [Architecture Overview](guides/architecture.md) → [Quick Start Guide](guides/quick-start.md)
