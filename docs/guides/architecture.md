@@ -409,7 +409,7 @@ thesis/
 │   └── test_resume.py            # Resume tests
 │
 └── docs/                         # Documentation
-    ├── index.md                  # Documentation hub
+    ├── README.md                 # Documentation hub
     ├── workflows.md              # Task guides
     ├── troubleshooting.md        # Problem solving
     ├── roadmap.md                # Project plan
@@ -580,7 +580,7 @@ pytest tests/test_save_resume_determinism.py -v -s
    - Check test files for usage examples
    - Review config files for parameter tuning
 
-**Docs:** [index.md](../index.md) for full documentation index
+**Docs:** [README.md](../README.md) for full documentation index
 
 ---
 

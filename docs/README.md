@@ -4,11 +4,10 @@ Complete reference for the DQN Atari reproduction thesis project.
 
 ## Quick Start
 
-- **New to the project?** Start with [Architecture Overview](architecture.md) → [Quick Start Guide](quick_start.md)
-- **Need to do something?** Check [Workflows](workflows.md) for task-oriented guides
-- **Stuck on an issue?** See [Troubleshooting](troubleshooting.md)
+- **New to the project?** Start with [Architecture Overview](guides/architecture.md) → [Quick Start Guide](guides/quick_start.md)
+- **Need to do something?** Check [Workflows](guides/workflows.md) for task-oriented guides
+- **Stuck on an issue?** See [Troubleshooting](guides/troubleshooting.md)
 - **Track progress?** See [TODO](../TODO) in repo root (untracked file with current tasks)
-- **Full documentation index:** See [index.md](index.md)
 
 ---
 
@@ -16,19 +15,18 @@ Complete reference for the DQN Atari reproduction thesis project.
 
 This documentation is organized into the following sections:
 
-### Top-Level Guides
-High-level guides and references in the root `docs/` folder:
+### guides/
+High-level task-oriented guides:
 
-- **[architecture.md](architecture.md)** - System design and component interactions (start here)
-- **[quick_start.md](quick_start.md)** - Setup and first training run
-- **[workflows.md](workflows.md)** - Common task guides (train, debug, test)
-- **[troubleshooting.md](troubleshooting.md)** - Problem diagnosis and fixes
-- **[testing.md](testing.md)** - Test suite documentation
-- **[git_commit_guide.md](git_commit_guide.md)** - Commit message conventions
-- **[changelog.md](changelog.md)** - Project change history
-- **[colab_guide.md](colab_guide.md)** - Google Colab setup for GPU training
+- **[architecture.md](guides/architecture.md)** - System design and component interactions (start here)
+- **[quick_start.md](guides/quick_start.md)** - Setup and first training run
+- **[workflows.md](guides/workflows.md)** - Common task guides (train, debug, test)
+- **[troubleshooting.md](guides/troubleshooting.md)** - Problem diagnosis and fixes
+- **[testing.md](guides/testing.md)** - Test suite documentation
+- **[git_commit_guide.md](guides/git_commit_guide.md)** - Commit message conventions
+- **[colab_guide.md](guides/colab_guide.md)** - Google Colab setup for GPU training
 
-### design/
+### reference/
 Detailed technical specifications for each component:
 
 - Environment wrappers and preprocessing
@@ -39,30 +37,39 @@ Detailed technical specifications for each component:
 - Config system and CLI
 - Evaluation harness
 - Logging and plotting pipeline
-- GPU validation and performance
-- Game suite plan and ablations
+- Environment and stability notes
 
-See [design/README.md](design/README.md) for the full index.
+See [reference/README.md](reference/README.md) for the full index (to be created).
 
-### papers/
+### plans/
+Experiment and analysis plans:
+
+- Game suite selection
+- Ablation studies
+- Report outline
+- Reproduction recipe
+
+### reports/
+Experiment results and analysis:
+
+- GPU validation results
+- Multi-seed comparisons
+- DQN baseline results
+
+### ops/
+Operational procedures and maintenance:
+
+- Code quality and testing guide
+- Pre-commit checklists
+
+### research/papers/
 Notes and summaries from research papers:
 
 - DQN 2013 paper notes
 - Related work references
 
-### reports/
-Experiment results and analysis:
-
-- Training run summaries
-- Multi-seed comparisons
-- Performance benchmarks
-
-### maintenance/
-Operational checklists and maintenance guides:
-
-- Pre-commit checklists
-- Release procedures
-- Dependency updates
+### Other
+- **[changelog.md](changelog.md)** - Project timeline (kept in root)
 
 ---
 
@@ -144,11 +151,11 @@ Documentation in `docs/` should be:
 
 ## Navigation Tips
 
-1. **Getting started:** [architecture.md](architecture.md) → [quick_start.md](quick_start.md)
-2. **Implementing features:** Check relevant doc in [design/](design/)
-3. **Running experiments:** [workflows.md](workflows.md) or [quick_start.md](quick_start.md)
-4. **Debugging issues:** [troubleshooting.md](troubleshooting.md)
-5. **Full details:** [index.md](index.md) for complete documentation index
+1. **Getting started:** [architecture.md](guides/architecture.md) → [quick_start.md](guides/quick_start.md)
+2. **Implementing features:** Check relevant doc in [reference/](reference/)
+3. **Running experiments:** [workflows.md](guides/workflows.md) or [quick_start.md](guides/quick_start.md)
+4. **Debugging issues:** [troubleshooting.md](guides/troubleshooting.md)
+5. **Testing:** [testing.md](guides/testing.md) for test suite documentation
 
 ---
 
