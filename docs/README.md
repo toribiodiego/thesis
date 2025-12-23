@@ -95,12 +95,12 @@ All documentation files use **snake_case** with descriptive names:
 - `plan-ablations.md` - Experiment plans
 
 **Analysis/reports:**
-- `design/report-gpu-validation.md` - Performance analysis
-- `design/report-results-comparison.md` - Multi-run analysis
+- `reports/report-gpu-validation.md` - Performance analysis
+- `reports/report-results-comparison.md` - Multi-run analysis
 
 ### Folder Structure
 - `docs/` - Top-level guides and overviews
-- `docs/design/` - Technical specifications
+- `docs/reference/` - Technical specifications
 - `do../research/papers/` - Research paper notes
 - `docs/reports/` - Experiment results
 - `docs/maintenance/` - Operational guides
@@ -181,37 +181,37 @@ The following table maps current file locations to their planned destinations. T
 | `docs/git-commit-guide.md` | `docs/guides/git-commit-guide.md` | Guide | Rename to kebab-case |
 | `docs/changelog.md` | `docs/changelog.md` | Root | Keep in root |
 | **Design/Reference Docs** | | | |
-| `docs/design/dqn-setup.md` | `docs/reference/dqn-setup.md` | Reference | Rename to kebab-case |
-| `docs/design/atari-env-wrapper.md` | `docs/reference/atari-env-wrapper.md` | Reference | Rename to kebab-case |
-| `docs/design/dqn-model.md` | `docs/reference/dqn-model.md` | Reference | Rename to kebab-case |
-| `docs/design/replay-buffer.md` | `docs/reference/replay-buffer.md` | Reference | Rename to kebab-case |
-| `docs/design/dqn-training.md` | `docs/reference/dqn-training.md` | Reference | Rename to kebab-case |
-| `docs/design/episode-handling.md` | `docs/reference/episode-handling.md` | Reference | Rename to kebab-case |
-| `docs/design/training-loop-runtime.md` | `docs/reference/training-loop-runtime.md` | Reference | Rename to kebab-case |
-| `docs/design/checkpointing.md` | `docs/reference/checkpointing.md` | Reference | Rename to kebab-case |
-| `docs/design/config-cli.md` | `docs/reference/config-cli.md` | Reference | Rename to kebab-case |
-| `docs/design/eval-harness.md` | `docs/reference/eval-harness.md` | Reference | Rename to kebab-case |
-| `docs/design/logging-pipeline.md` | `docs/reference/logging-pipeline.md` | Reference | Rename to kebab-case |
-| `docs/design/environment-notes.md` | `docs/reference/environment-notes.md` | Reference | Rename to kebab-case |
-| `docs/design/stability-notes.md` | `docs/reference/stability-notes.md` | Reference | Rename to kebab-case |
+| `docs/reference/dqn-setup.md` | `docs/reference/dqn-setup.md` | Reference | Rename to kebab-case |
+| `docs/reference/atari-env-wrapper.md` | `docs/reference/atari-env-wrapper.md` | Reference | Rename to kebab-case |
+| `docs/reference/dqn-model.md` | `docs/reference/dqn-model.md` | Reference | Rename to kebab-case |
+| `docs/reference/replay-buffer.md` | `docs/reference/replay-buffer.md` | Reference | Rename to kebab-case |
+| `docs/reference/dqn-training.md` | `docs/reference/dqn-training.md` | Reference | Rename to kebab-case |
+| `docs/reference/episode-handling.md` | `docs/reference/episode-handling.md` | Reference | Rename to kebab-case |
+| `docs/reference/training-loop-runtime.md` | `docs/reference/training-loop-runtime.md` | Reference | Rename to kebab-case |
+| `docs/reference/checkpointing.md` | `docs/reference/checkpointing.md` | Reference | Rename to kebab-case |
+| `docs/reference/config-cli.md` | `docs/reference/config-cli.md` | Reference | Rename to kebab-case |
+| `docs/reference/eval-harness.md` | `docs/reference/eval-harness.md` | Reference | Rename to kebab-case |
+| `docs/reference/logging-pipeline.md` | `docs/reference/logging-pipeline.md` | Reference | Rename to kebab-case |
+| `docs/reference/environment-notes.md` | `docs/reference/environment-notes.md` | Reference | Rename to kebab-case |
+| `docs/reference/stability-notes.md` | `docs/reference/stability-notes.md` | Reference | Rename to kebab-case |
 | **Plans** | | | |
-| `docs/design/plan-game-suite.md` | `docs/plans/plan-game-suite.md` | Plan | Rename to kebab-case |
-| `docs/design/plan-ablations.md` | `docs/plans/plan-ablations.md` | Plan | Rename to kebab-case |
-| `docs/design/plan-report-outline.md` | `docs/plans/plan-report-outline.md` | Plan | Rename to kebab-case |
-| `docs/design/plan-reproduce-recipe.md` | `docs/plans/plan-reproduce-recipe.md` | Plan | Rename to kebab-case |
+| `docs/reference/plan-game-suite.md` | `docs/plans/plan-game-suite.md` | Plan | Rename to kebab-case |
+| `docs/reference/plan-ablations.md` | `docs/plans/plan-ablations.md` | Plan | Rename to kebab-case |
+| `docs/reference/plan-report-outline.md` | `docs/plans/plan-report-outline.md` | Plan | Rename to kebab-case |
+| `docs/reference/plan-reproduce-recipe.md` | `docs/plans/plan-reproduce-recipe.md` | Plan | Rename to kebab-case |
 | **Reports** | | | |
-| `docs/design/report-gpu-validation.md` | `docs/reports/report-gpu-validation.md` | Report | Rename to kebab-case |
-| `docs/design/report-results-comparison.md` | `docs/reports/report-results-comparison.md` | Report | Rename to kebab-case |
+| `docs/reports/report-gpu-validation.md` | `docs/reports/report-gpu-validation.md` | Report | Rename to kebab-case |
+| `docs/reports/report-results-comparison.md` | `docs/reports/report-results-comparison.md` | Report | Rename to kebab-case |
 | `docs/reports/report-dqn-results.md` | `docs/reports/report-dqn-results.md` | Report | Rename to kebab-case |
 | **Operational Docs** | | | |
-| `docs/design/code-quality.md` | `docs/ops/code-quality.md` | Ops | Rename to kebab-case |
+| `docs/reference/code-quality.md` | `docs/ops/code-quality.md` | Ops | Rename to kebab-case |
 | `docs/maintenance/checklists.md` | `docs/ops/checklists.md` | Ops | Consolidate maintenance/ into ops/ |
 | **Research/Papers** | | | |
 | `docs/resear../research/papers/README.md` | `docs/research/resear../research/papers/README.md` | Research | Move into research/ |
 | `docs/resear../research/papers/dqn-2013-notes.md` | `docs/research/resear../research/papers/dqn-2013-notes.md` | Research | Rename to kebab-case |
 | **Index/README** | | | |
 | `docs/index.md` | `docs/README.md` | Root | Merge into existing README.md |
-| `docs/design/README.md` | `docs/reference/README.md` | Reference | Consolidate design index |
+| `docs/reference/README.md` | `docs/reference/README.md` | Reference | Consolidate design index |
 
 ### New Folder Structure
 
@@ -265,7 +265,7 @@ docs/
 ### Legacy Folders to Remove
 
 After files are moved:
-- `docs/design/` (empty after moving all contents)
+- `docs/reference/` (empty after moving all contents)
 - `docs/maintenance/` (merged into ops/)
 - `do../research/papers/` (moved to resear../research/papers/)
 

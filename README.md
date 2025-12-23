@@ -217,9 +217,9 @@ python scripts/export_results_table.py \
 **New to the project?** Start with the [Quick Start](#quick-start) above, then explore:
 
 ### Navigation Hub
-- **[docs/index.md](docs/index.md)** - Complete documentation index with navigation guide
-- **[docs/workflows.md](docs/workflows.md)** - Task-oriented guides for common operations
-- **[docs/troubleshooting.md](docs/troubleshooting.md)** - Quick reference for problem diagnosis and solutions
+- **[docs/README.md](docs/README.md)** - Complete documentation index with navigation guide
+- **[docs/guides/workflows.md](docs/guides/workflows.md)** - Task-oriented guides for common operations
+- **[docs/guides/troubleshooting.md](docs/guides/troubleshooting.md)** - Quick reference for problem diagnosis and solutions
 
 ### Planning & Progress
 - **[TODO](TODO)** - Current roadmap and task tracker (source of truth for project status)
@@ -243,7 +243,7 @@ Core implementation specifications (read in this order):
 **Training & Evaluation:**
 - **[docs/reference/episode-handling.md](docs/reference/episode-handling.md)** - Episode management, termination policies, training vs. evaluation
 - **[docs/reference/training-loop-runtime.md](docs/reference/training-loop-runtime.md)** - Training loop orchestration, logging, evaluation, troubleshooting
-- **[docs/design/checkpointing.md](docs/design/checkpointing.md)** - Checkpoint/resume system, metadata schema, deterministic seeding
+- **[docs/reference/checkpointing.md](docs/reference/checkpointing.md)** - Checkpoint/resume system, metadata schema, deterministic seeding
 
 ### Quick References
 - **[experiments/dqn_atari/README.md](experiments/dqn_atari/README.md)** - Experiment setup and game selection
