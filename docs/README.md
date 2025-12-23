@@ -62,7 +62,7 @@ Operational procedures and maintenance:
 - Code quality and testing guide
 - Pre-commit checklists
 
-### research/papers/
+### resear../research/papers/
 Notes and summaries from research papers:
 
 - DQN 2013 paper notes
@@ -99,7 +99,7 @@ All documentation files use **snake_case** with descriptive names:
 ### Folder Structure
 - `docs/` - Top-level guides and overviews
 - `docs/design/` - Technical specifications
-- `docs/papers/` - Research paper notes
+- `do../research/papers/` - Research paper notes
 - `docs/reports/` - Experiment results
 - `docs/maintenance/` - Operational guides
 
@@ -205,8 +205,8 @@ The following table maps current file locations to their planned destinations. T
 | `docs/design/code-quality.md` | `docs/ops/code-quality.md` | Ops | Rename to kebab-case |
 | `docs/maintenance/checklists.md` | `docs/ops/checklists.md` | Ops | Consolidate maintenance/ into ops/ |
 | **Research/Papers** | | | |
-| `docs/papers/README.md` | `docs/research/papers/README.md` | Research | Move into research/ |
-| `docs/papers/dqn-2013-notes.md` | `docs/research/papers/dqn-2013-notes.md` | Research | Rename to kebab-case |
+| `docs/resear../research/papers/README.md` | `docs/research/resear../research/papers/README.md` | Research | Move into research/ |
+| `docs/resear../research/papers/dqn-2013-notes.md` | `docs/research/resear../research/papers/dqn-2013-notes.md` | Research | Rename to kebab-case |
 | **Index/README** | | | |
 | `docs/index.md` | `docs/README.md` | Root | Merge into existing README.md |
 | `docs/design/README.md` | `docs/reference/README.md` | Reference | Consolidate design index |
@@ -265,7 +265,7 @@ docs/
 After files are moved:
 - `docs/design/` (empty after moving all contents)
 - `docs/maintenance/` (merged into ops/)
-- `docs/papers/` (moved to research/papers/)
+- `do../research/papers/` (moved to resear../research/papers/)
 
 ---
 
