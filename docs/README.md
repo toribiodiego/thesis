@@ -46,29 +46,29 @@ Detailed technical specifications for each component:
 ### plans/
 Experiment and analysis plans:
 
-- Game suite selection
-- Ablation studies
-- Report outline
-- Reproduction recipe
+- **[plan-game-suite.md](plans/plan-game-suite.md)** - Game selection criteria and rationale
+- **[plan-ablations.md](plans/plan-ablations.md)** - Ablation study design
+- **[plan-report-outline.md](plans/plan-report-outline.md)** - Thesis report structure
+- **[plan-reproduce-recipe.md](plans/plan-reproduce-recipe.md)** - Reproduction workflow
 
 ### reports/
 Experiment results and analysis:
 
-- GPU validation results
-- Multi-seed comparisons
-- DQN baseline results
+- **[report-gpu-validation.md](reports/report-gpu-validation.md)** - GPU vs CPU performance
+- **[report-results-comparison.md](reports/report-results-comparison.md)** - Multi-seed comparisons
+- **[report-dqn-results.md](reports/report-dqn-results.md)** - DQN baseline results
 
 ### ops/
 Operational procedures and maintenance:
 
-- Code quality and testing guide
-- Pre-commit checklists
+- **[code-quality.md](ops/code-quality.md)** - Code quality and testing guide
+- **[checklists.md](ops/checklists.md)** - Pre-commit checklists
 
-### resear../research/papers/
+### research/papers/
 Notes and summaries from research papers:
 
-- DQN 2013 paper notes
-- Related work references
+- **[dqn-2013-notes.md](research/papers/dqn-2013-notes.md)** - DQN 2013 paper implementation notes
+- **[README.md](research/papers/README.md)** - Research paper index
 
 ### Other
 - **[changelog.md](changelog.md)** - Project timeline (kept in root)
@@ -82,7 +82,7 @@ Notes and summaries from research papers:
 - **`README.md`** (repo root) - Project overview and quick links
 
 ### File Naming
-All documentation files use **snake_case** with descriptive names:
+All documentation files use **kebab-case** with descriptive names:
 
 **Top-level guides:**
 - `quick-start.md` - Getting started guide
@@ -99,11 +99,13 @@ All documentation files use **snake_case** with descriptive names:
 - `reports/report-results-comparison.md` - Multi-run analysis
 
 ### Folder Structure
-- `docs/` - Top-level guides and overviews
-- `docs/reference/` - Technical specifications
-- `do../research/papers/` - Research paper notes
-- `docs/reports/` - Experiment results
-- `docs/maintenance/` - Operational guides
+- `docs/` - Documentation root (README, changelog)
+- `docs/guides/` - High-level task-oriented guides
+- `docs/reference/` - Technical component specifications
+- `docs/plans/` - Experiment and analysis plans
+- `docs/reports/` - Experiment results and analysis
+- `docs/ops/` - Operational procedures and maintenance
+- `docs/research/papers/` - Research paper notes
 
 ---
 
@@ -219,43 +221,42 @@ After reorganization, the docs tree will be:
 
 ```
 docs/
-├── README.md              # Main entry point (merge index.md content)
-├── changelog.md           # Project timeline (keep in root)
+├── README.md              # Main entry point
+├── changelog.md           # Project timeline
 ├── guides/                # High-level task-oriented guides
 │   ├── architecture.md
+│   ├── colab-guide.md
+│   ├── git-commit-guide.md
 │   ├── quick-start.md
-│   ├── workflows.md
-│   ├── troubleshooting.md
 │   ├── testing.md
-│   ├── colab-setup.md
-│   └── git-commit-guide.md
-├── reference/             # Technical component specifications
-│   ├── README.md
-│   ├── dqn-setup.md
-│   ├── atari-env-wrapper.md
-│   ├── dqn-model.md
-│   ├── replay-buffer.md
-│   ├── dqn-training.md
-│   ├── episode-handling.md
-│   ├── training-loop-runtime.md
-│   ├── checkpointing.md
-│   ├── config-cli.md
-│   ├── eval-harness.md
-│   ├── logging-pipeline.md
-│   ├── environment-notes.md
-│   └── stability-notes.md
+│   ├── troubleshooting.md
+│   └── workflows.md
+├── ops/                   # Operational procedures and maintenance
+│   ├── checklists.md
+│   └── code-quality.md
 ├── plans/                 # Experiment and analysis plans
-│   ├── plan-game-suite.md
 │   ├── plan-ablations.md
+│   ├── plan-game-suite.md
 │   ├── plan-report-outline.md
 │   └── plan-reproduce-recipe.md
+├── reference/             # Technical component specifications
+│   ├── atari-env-wrapper.md
+│   ├── checkpointing.md
+│   ├── config-cli.md
+│   ├── dqn-model.md
+│   ├── dqn-setup.md
+│   ├── dqn-training.md
+│   ├── environment-notes.md
+│   ├── episode-handling.md
+│   ├── eval-harness.md
+│   ├── logging-pipeline.md
+│   ├── replay-buffer.md
+│   ├── stability-notes.md
+│   └── training-loop-runtime.md
 ├── reports/               # Experiment results and analysis
+│   ├── report-dqn-results.md
 │   ├── report-gpu-validation.md
-│   ├── report-results-comparison.md
-│   └── report-dqn-results.md
-├── ops/                   # Operational procedures and maintenance
-│   ├── code-quality.md
-│   └── checklists.md
+│   └── report-results-comparison.md
 └── research/              # Research paper notes and references
     └── papers/
         ├── README.md
@@ -265,9 +266,9 @@ docs/
 ### Legacy Folders to Remove
 
 After files are moved:
-- `docs/reference/` (empty after moving all contents)
+- `docs/design/` (renamed to reference/)
 - `docs/maintenance/` (merged into ops/)
-- `do../research/papers/` (moved to resear../research/papers/)
+- `docs/papers/` (moved to research/papers/)
 
 ---
 
