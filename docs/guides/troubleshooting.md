@@ -58,7 +58,7 @@ pip install ale-py==0.8.1
 python -c "import ale_py; print(ale_py.__version__)"
 ```
 
-**Docs:** [DQN Setup](design/dqn_setup.md#dependencies--environment)
+**Docs:** [DQN Setup](../design/dqn_setup.md#dependencies--environment)
 
 ---
 
@@ -88,7 +88,7 @@ python -c "import ale_py; print(len(ale_py.roms.list()))"
 # Should print 60+
 ```
 
-**Docs:** [DQN Setup](design/dqn_setup.md#rom-installation)
+**Docs:** [DQN Setup](../design/dqn_setup.md#rom-installation)
 
 ---
 
@@ -127,7 +127,7 @@ pip install torch==2.4.1+cu121 --index-url https://download.pytorch.org/whl/cu12
 **CPU-only fallback:**
 Training will still work, just slower. No action needed.
 
-**Docs:** [DQN Setup](design/dqn_setup.md#troubleshooting)
+**Docs:** [DQN Setup](../design/dqn_setup.md#troubleshooting)
 
 ---
 
@@ -152,7 +152,7 @@ export PYTHONPATH=.
 python -c "from src.models import DQN; print('OK')"
 ```
 
-**Docs:** [DQN Setup](design/dqn_setup.md#import-errors)
+**Docs:** [DQN Setup](../design/dqn_setup.md#import-errors)
 
 ---
 
@@ -232,7 +232,7 @@ eval_scheduler = EvaluationScheduler(
 **Solution:**
 Check component API documentation and ensure all parameter names match current implementation.
 
-**Docs:** [Logging Pipeline](design/logging_pipeline.md), [Training Loop](design/training_loop_runtime.md)
+**Docs:** [Logging Pipeline](../design/logging_pipeline.md), [Training Loop](../design/training_loop_runtime.md)
 
 ---
 
@@ -283,7 +283,7 @@ filtered_entry = {k: v for k, v in log_entry.items()
 writer.writerow(filtered_entry)
 ```
 
-**Docs:** [Logging Pipeline](design/logging_pipeline.md#csv-backend)
+**Docs:** [Logging Pipeline](../design/logging_pipeline.md#csv-backend)
 
 ---
 
@@ -328,7 +328,7 @@ network:
   device: auto  # or 'cuda', 'mps', 'cpu'
 ```
 
-**Docs:** [DQN Setup](design/dqn_setup.md#device-configuration)
+**Docs:** [DQN Setup](../design/dqn_setup.md#device-configuration)
 
 ---
 
@@ -377,7 +377,7 @@ grep "td_error" experiments/dqn_atari/runs/pong_42/logs/steps.csv | tail -n 20
   --set training.loss_fn=huber
 ```
 
-**Docs:** [DQN Training](design/dqn_training.md#debugging-unstable-training)
+**Docs:** [DQN Training](../design/dqn_training.md#debugging-unstable-training)
 
 ---
 
@@ -421,7 +421,7 @@ pytest tests/test_dqn_trainer.py -k "target_update" -v
 grep "epsilon" experiments/dqn_atari/runs/pong_42/logs/steps.csv | head -n 20
 ```
 
-**Docs:** [Training Loop](design/training_loop_runtime.md#troubleshooting-guide)
+**Docs:** [Training Loop](../design/training_loop_runtime.md#troubleshooting-guide)
 
 ---
 
@@ -510,7 +510,7 @@ grep "target_sync_interval" experiments/dqn_atari/runs/pong_42/meta.json
 pytest tests/test_replay_buffer.py -v
 ```
 
-**Docs:** [DQN Training](design/dqn_training.md#debugging-unstable-training)
+**Docs:** [DQN Training](../design/dqn_training.md#debugging-unstable-training)
 
 ---
 
@@ -546,7 +546,7 @@ pytest tests/test_save_resume_determinism.py -v -s
   --set training.device=cpu
 ```
 
-**Docs:** [Checkpointing](design/checkpointing.md#deterministic-seeding), [DQN Setup](design/dqn_setup.md#deterministic-mode-configuration)
+**Docs:** [Checkpointing](../design/checkpointing.md#deterministic-seeding), [DQN Setup](../design/dqn_setup.md#deterministic-mode-configuration)
 
 ---
 
@@ -607,7 +607,7 @@ nvidia-smi -l 1
 - GPU (deterministic on): ~850 FPS
 - CPU: ~100-200 FPS
 
-**Docs:** [DQN Setup](design/dqn_setup.md#performance-impact)
+**Docs:** [DQN Setup](../design/dqn_setup.md#performance-impact)
 
 ---
 
@@ -649,7 +649,7 @@ replay_buffer = ReplayBuffer(
 )
 ```
 
-**Docs:** [Replay Buffer](design/replay_buffer.md#memory-layout)
+**Docs:** [Replay Buffer](../design/replay_buffer.md#memory-layout)
 
 ---
 
@@ -671,7 +671,7 @@ This is normal. Atari environments run on CPU. To reduce:
 --set training.train_every=8
 ```
 
-**Docs:** [Training Loop](design/training_loop_runtime.md#performance)
+**Docs:** [Training Loop](../design/training_loop_runtime.md#performance)
 
 ---
 
@@ -715,7 +715,7 @@ cp experiments/dqn_atari/runs/pong_42/meta.json \
   --resume path/to/checkpoint.pt
 ```
 
-**Docs:** [Checkpointing](design/checkpointing.md#config-validation-on-resume)
+**Docs:** [Checkpointing](../design/checkpointing.md#config-validation-on-resume)
 
 ---
 
@@ -749,7 +749,7 @@ export IGNORE_COMMIT_MISMATCH=1
 ./experiments/dqn_atari/scripts/run_dqn.sh ...
 ```
 
-**Docs:** [Checkpointing](design/checkpointing.md#checkpoint-validation)
+**Docs:** [Checkpointing](../design/checkpointing.md#checkpoint-validation)
 
 ---
 
@@ -787,7 +787,7 @@ Ensure checkpoint includes RNG states (should be default).
 pytest tests/test_save_resume_determinism.py -v -s
 ```
 
-**Docs:** [Checkpointing](design/checkpointing.md#rng-state-management)
+**Docs:** [Checkpointing](../design/checkpointing.md#rng-state-management)
 
 ---
 
@@ -828,7 +828,7 @@ print(env)
   experiments/dqn_atari/configs/pong.yaml --dry-run
 ```
 
-**Docs:** [Atari Wrappers](design/atari_env_wrapper.md#wrapper-chain)
+**Docs:** [Atari Wrappers](../design/atari_env_wrapper.md#wrapper-chain)
 
 ---
 
@@ -871,7 +871,7 @@ env = gym.make('ALE/Pong-v5', full_action_space=False)
 print(env.action_space.n)  # Use this value
 ```
 
-**Docs:** [DQN Setup](design/dqn_setup.md#selected-games)
+**Docs:** [DQN Setup](../design/dqn_setup.md#selected-games)
 
 ---
 
@@ -917,7 +917,7 @@ env = make_atari_env('ALE/Pong-v5', episode_life=True)
 print(env)  # Should show EpisodeLifeEnv in chain
 ```
 
-**Docs:** [Episode Handling](design/episode_handling.md), [Atari Wrappers](design/atari_env_wrapper.md)
+**Docs:** [Episode Handling](../design/episode_handling.md), [Atari Wrappers](../design/atari_env_wrapper.md)
 
 ---
 
@@ -926,7 +926,7 @@ print(env)  # Should show EpisodeLifeEnv in chain
 If your issue isn't covered here:
 
 1. **Search documentation:**
-   - [Index](index.md) - All documentation
+   - [Index](../index.md) - All documentation
    - [Workflows](workflows.md) - Common tasks
    - Design docs for specific components
 
