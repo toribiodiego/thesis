@@ -222,8 +222,10 @@ python scripts/export_results_table.py \
 - **[docs/troubleshooting.md](docs/troubleshooting.md)** - Quick reference for problem diagnosis and solutions
 
 ### Planning & Progress
-- **[docs/roadmap.md](docs/roadmap.md)** - Complete project plan with 21 subtasks and progress tracking
+- **[TODO](TODO)** - Current roadmap and task tracker (source of truth for project status)
 - **[docs/changelog.md](docs/changelog.md)** - Timeline of major completions and updates
+
+**Note:** The `TODO` file is untracked (local workspace) and contains the authoritative task list. For high-level progress and completed work, see `docs/changelog.md`.
 
 ### Design Documentation
 Core implementation specifications (read in this order):
@@ -294,8 +296,8 @@ pytest tests/test_dqn_trainer.py -k "smoke_test" -v
 ## Structure
 
 ```
+├── TODO                         # Current roadmap and task tracker (untracked)
 ├── docs/
-│   ├── roadmap.md              # Project plan with 21 subtasks
 │   └── design/                 # Architecture and implementation specs
 ├── envs/                        # Dependencies and setup scripts
 ├── src/                         # Reusable RL modules
@@ -311,9 +313,9 @@ pytest tests/test_dqn_trainer.py -k "smoke_test" -v
 
 ## Workflow
 
-1. Check `docs/roadmap.md` for current subtask
+1. Check `TODO` file for current tasks and priorities
 2. Review relevant design docs for specifications
 3. Implement following checklist items
 4. Run tests and dry-run validation
 5. Use commit prefixes from `docs/git_commit_guide.md`
-6. Mark completed items in roadmap
+6. Mark completed items in `TODO` file

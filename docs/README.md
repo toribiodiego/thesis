@@ -7,6 +7,7 @@ Complete reference for the DQN Atari reproduction thesis project.
 - **New to the project?** Start with [Architecture Overview](architecture.md) → [Quick Start Guide](quick_start.md)
 - **Need to do something?** Check [Workflows](workflows.md) for task-oriented guides
 - **Stuck on an issue?** See [Troubleshooting](troubleshooting.md)
+- **Track progress?** See [TODO](../TODO) in repo root (untracked file with current tasks)
 - **Full documentation index:** See [index.md](index.md)
 
 ---
@@ -130,6 +131,12 @@ Documentation in `docs/` should be:
 - Planning checklists
 - Temporary investigation notes
 - Draft content before formalization
+
+**TODO (repo root)** - Project roadmap and task tracker:
+- Untracked file (not in git)
+- Source of truth for current tasks and priorities
+- Personal workspace for tracking progress
+- See [TODO](../TODO) for active task list
 
 **Key principle:** If it documents *how the system works* → `docs/`. If it describes *what a specific run produced* → `results/` or `experiments/`.
 
