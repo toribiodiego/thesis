@@ -1,4 +1,4 @@
-# DQN Results Report Outline
+# Report Outline
 
 This document tracks the structure and source artifacts for the main results report (`docs/reports/dqn-results.md`).
 

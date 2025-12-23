@@ -1,4 +1,4 @@
-# DQN Game Suite Reproduction Plan
+# Game Suite Plan
 
 This document outlines the target games, baselines, frame budgets, and evaluation schedule for reproducing the DQN 2013 paper results.
 

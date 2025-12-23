@@ -1,4 +1,4 @@
-# Playing Atari with Deep Reinforcement Learning — Implementation Notes
+# DQN 2013 Notes
 
 - **Citation:** Mnih et al., 2013 (NIPS Deep Learning Workshop) / 2015 (Nature version with appendix).
 - **Objective for thesis:** Reproduce baseline DQN scores as groundwork for sample-efficient extensions.

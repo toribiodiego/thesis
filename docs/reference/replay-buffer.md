@@ -1,4 +1,4 @@
-# Replay Buffer Design
+# Replay Buffer
 
 ---
 

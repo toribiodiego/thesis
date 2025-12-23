@@ -1,4 +1,4 @@
-# Logging & Plotting Pipeline
+# Logging Pipeline
 
 **Status**: DONE Complete
 **Location**: `src/training/metrics_logger.py`, `scripts/plot_results.py`, `scripts/export_results_table.py`

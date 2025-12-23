@@ -1,4 +1,4 @@
-# DQN Ablation Study Plan
+# Ablations Plan
 
 This document outlines ablation experiments to quantify the impact of key DQN design choices.
 

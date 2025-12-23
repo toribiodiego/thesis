@@ -1,4 +1,4 @@
-# Training Loop Runtime & Orchestration
+# Training Loop Runtime
 
 Comprehensive guide to DQN training loop control flow, component orchestration, logging schema, evaluation cadence, and troubleshooting. This document describes how all training components work together during execution.
 

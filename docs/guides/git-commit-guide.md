@@ -1,4 +1,4 @@
-# Git Commit Message Guide
+# Git Commit Guide
 
 Use the prefixes below to keep history and changelogs consistent.
 

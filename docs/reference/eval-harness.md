@@ -1,4 +1,4 @@
-# Evaluation Harness Design
+# Eval Harness
 
 ---
 

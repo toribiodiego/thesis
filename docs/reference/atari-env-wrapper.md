@@ -1,4 +1,4 @@
-# Atari Environment Wrapper Specification
+# Atari Env Wrapper
 
 Comprehensive guide to the Atari preprocessing pipeline for DQN reproduction. This document covers the wrapper chain, configuration options, expected outputs, and troubleshooting common issues.
 

@@ -1,4 +1,4 @@
-# DQN Training Stability Notes
+# Stability Notes
 
 This document tracks hyperparameter choices, stability observations, and any tuning performed during DQN reproduction.
 

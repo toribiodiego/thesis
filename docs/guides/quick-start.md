@@ -1,4 +1,4 @@
-# Quick Start Guide
+# Quick Start
 
 Complete end-to-end workflow for running DQN on Atari games. This guide ties together environment setup, ROM download, dry-run validation, full training, and evaluation.
 

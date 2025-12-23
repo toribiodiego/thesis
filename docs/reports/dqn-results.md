@@ -1,4 +1,4 @@
-# DQN 2013 Reproduction Results
+# DQN Results
 
 **Report Date**: [YYYY-MM-DD]
 **Git Commit**: [COMMIT_HASH]

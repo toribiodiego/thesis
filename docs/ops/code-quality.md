@@ -1,4 +1,4 @@
-# Code Quality and Testing Guide
+# Code Quality
 
 This document provides a pragmatic guide for testing and maintaining code quality in the DQN reproduction thesis project.
 

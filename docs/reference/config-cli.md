@@ -1,4 +1,4 @@
-# Configuration & CLI System
+# Config CLI
 
 Complete guide to DQN training configuration management, command-line interface, and reproducibility features.
 

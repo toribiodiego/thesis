@@ -1,4 +1,4 @@
-# GPU Validation: Hardware Comparison and Bottleneck Analysis
+# GPU Validation
 
 Comparison of DQN training performance on Mac M1 CPU vs Google Colab A100 GPU for 1M frame Pong runs.
 

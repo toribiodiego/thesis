@@ -1,4 +1,4 @@
-# DQN Training Update Flow
+# DQN Training
 
 Comprehensive documentation for the DQN Q-learning update process, including TD targets, loss computation, optimizer configuration, target network synchronization, metrics logging, and debugging strategies.
 

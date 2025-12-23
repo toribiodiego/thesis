@@ -1,4 +1,4 @@
-# DQN 2013 Reproduction Recipe
+# Reproduce Recipe
 
 This document provides the complete guide for reproducing DQN 2013 paper results using the automated reproduction script.
 

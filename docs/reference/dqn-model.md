@@ -1,4 +1,4 @@
-# DQN Model Architecture
+# DQN Model
 
 ---
 

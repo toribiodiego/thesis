@@ -1,4 +1,4 @@
-# Results Comparison Guide
+# Results Comparison
 
 This document provides the authoritative methodology for comparing reproduction results against the DQN 2013 paper (arXiv:1312.5602).
 

@@ -1,4 +1,4 @@
-# Environment and Toolchain Notes
+# Environment Notes
 
 This document records environment/toolchain differences affecting comparability between our DQN reproduction and the original 2013 paper.
 

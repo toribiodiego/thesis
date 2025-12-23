@@ -1,4 +1,4 @@
-# Episode Handling in DQN Training
+# Episode Handling
 
 Comprehensive guide to episode management, termination policies, life-loss handling, no-op starts, and differences between training and evaluation modes.
 
