@@ -43,7 +43,7 @@ pip install -r requirements.txt
 
 **Expected time:** 2-5 minutes depending on internet speed
 
-**Troubleshooting:** See [docs/design/dqn-setup.md](../reference/dqn-setup.md) for detailed setup instructions and common issues.
+**Troubleshooting:** See [dqn-setup.md](../reference/dqn-setup.md) for detailed setup instructions and common issues.
 
 ---
 
@@ -472,13 +472,13 @@ python -c 'import torch; print(torch.cuda.is_available())'
 ### Learn More
 
 - **Design Docs:** Detailed specifications in [docs/reference/](../reference/)
-- **Roadmap:** Complete project plan in [docs/roadmap.md](roadmap.md)
+- **Roadmap:** Complete project plan in [TODO](../../TODO)
 - **Changelog:** Development history in [docs/changelog.md](../changelog.md)
 - **Config Reference:** All config options in [configs/README.md](../experiments/dqn_atari/configs/README.md)
 
 ### Contributing
 
-- Follow commit message style in `docs/git-commit-guide.md`
+- Follow commit message style in [git-commit-guide.md](git-commit-guide.md)
 - Update roadmap checkboxes as you complete tasks
 - Document major changes in changelog
 - Run dry-run validation before committing wrapper changes

@@ -126,7 +126,7 @@ This document tracks the structure and source artifacts for the main results rep
 ### 7. Future Work
 - **Content**: Next algorithmic steps
 - **References**:
-  - `docs/roadmap.md` - planned extensions
+  - [TODO](../../TODO) - planned extensions
   - Double DQN (Van Hasselt et al., 2016)
   - Prioritized Experience Replay (Schaul et al., 2016)
   - Dueling DQN (Wang et al., 2016)

@@ -531,7 +531,7 @@ Before training, verify wrapper setup:
 - **DQN Setup:** [dqn-setup.md](dqn-setup.md)
 - **Wrapper Implementation:** `src/envs/atari_wrappers.py`
 - **Config Reference:** `experiments/dqn_atari/configs/base.yaml`
-- **Roadmap:** `docs/roadmap.md` (Subtask 2)
+- **Roadmap:** [TODO](../../TODO) (Subtask 2)
 
 ## References
 

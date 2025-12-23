@@ -33,7 +33,7 @@ Before publishing results or sharing code:
   - [ ] Check artifact file integrity
 
 - [ ] **Documentation**
-  - [ ] Update `docs/roadmap.md` with completed tasks
+  - [ ] Update [TODO](../../TODO) with completed tasks
   - [ ] Review `CLAUDE.md` for accuracy
   - [ ] Ensure design docs reflect current implementation
   - [ ] Troubleshooting guide is current

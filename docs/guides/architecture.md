@@ -410,15 +410,16 @@ thesis/
 │
 └── docs/                         # Documentation
     ├── README.md                 # Documentation hub
-    ├── workflows.md              # Task guides
-    ├── troubleshooting.md        # Problem solving
-    ├── roadmap.md                # Project plan
-    └── design/                   # Design specs
-        ├── dqn-setup.md
-        ├── dqn-model.md
-        ├── replay-buffer.md
-        ├── dqn-training.md
-        └── training-loop-runtime.md
+    ├── guides/                   # Task-oriented guides
+    ├── reference/                # Design specs
+    │   ├── dqn-setup.md
+    │   ├── dqn-model.md
+    │   ├── replay-buffer.md
+    │   ├── dqn-training.md
+    │   └── training-loop-runtime.md
+    ├── plans/                    # Experiment plans
+    ├── reports/                  # Results analysis
+    └── ops/                      # Operational procedures
 ```
 
 ---
