@@ -2,6 +2,8 @@
 
 Complete end-to-end workflow for running DQN on Atari games. This guide ties together environment setup, ROM download, dry-run validation, full training, and evaluation.
 
+> **Note**: This is a step-by-step workflow guide. For authoritative setup reference (pinned versions, seeding, evaluation settings), see [DQN Setup](../reference/dqn-setup.md).
+
 ## Overview
 
 **Time to first run:** ~10 minutes (setup) + 2 minutes (dry run) + hours/days (training)
