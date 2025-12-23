@@ -287,3 +287,52 @@ When adding or updating documentation:
 5. Place operational guides in `docs/ops/`
 6. Update the relevant README/index when adding new docs
 7. Follow the git commit guide for doc changes: `docs: <description>`
+8. Use the minimal outline template below for new docs
+
+### Minimal Outline Template
+
+All new documentation should start with this minimal structure to keep scope tight and focused:
+
+```markdown
+# Document Title
+
+> **Status**: DRAFT | ACTIVE | REFERENCE
+> **Purpose**: One-sentence description of what this document provides.
+
+## Purpose
+
+What problem does this document solve? What questions does it answer?
+(2-3 sentences)
+
+## Inputs/Outputs
+
+**Inputs** (what readers need before using this doc):
+- Prerequisites, prior knowledge, or context required
+- Related docs to read first
+
+**Outputs** (what readers gain after reading):
+- Concrete outcomes, decisions, or capabilities
+- What they can now do that they couldn't before
+
+## [Main Content Sections]
+
+... (document-specific content) ...
+
+## Next Steps
+
+Where should readers go after this document?
+- Links to related docs
+- Follow-up actions or tasks
+- Further reading
+
+---
+
+**Last Updated**: YYYY-MM-DD
+```
+
+**Key principles**:
+- **Purpose** answers "Why does this doc exist?"
+- **Inputs/Outputs** sets clear expectations for readers
+- **Next Steps** provides navigation and prevents dead-ends
+- Keep each section concise (prefer bullet points over prose)
+- Add **Status** indicator: DRAFT (incomplete), ACTIVE (actively used), REFERENCE (stable/archival)
