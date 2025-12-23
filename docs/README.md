@@ -97,6 +97,44 @@ All documentation files use **snake_case** with descriptive names:
 
 ---
 
+## Docs Scope
+
+### What Belongs in docs/
+
+Documentation in `docs/` should be:
+- **Stable reference material** - Guides, specs, and procedures
+- **Reusable across experiments** - Not run-specific
+- **Version controlled** - Important for reproducibility
+
+**Include in docs/:**
+- Architecture and design decisions
+- Implementation guides and workflows
+- Testing and troubleshooting procedures
+- Configuration and setup instructions
+- Paper summaries and research notes
+
+### What Belongs Elsewhere
+
+**experiments/** - Experiment-specific content:
+- Config files for specific runs
+- Run scripts and job submissions
+- Experiment metadata and logs
+
+**results/** - Generated outputs:
+- Plots and visualizations
+- Analysis summaries and tables
+- Trained model checkpoints
+
+**notes/** - Personal workspace:
+- Scratch notes and ideas
+- Planning checklists
+- Temporary investigation notes
+- Draft content before formalization
+
+**Key principle:** If it documents *how the system works* → `docs/`. If it describes *what a specific run produced* → `results/` or `experiments/`.
+
+---
+
 ## Navigation Tips
 
 1. **Getting started:** [architecture.md](architecture.md) → [quick_start.md](quick_start.md)
