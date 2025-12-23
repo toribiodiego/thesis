@@ -1,5 +1,7 @@
 # Report Outline
 
+> **Status**: ACTIVE | Living outline used to structure thesis report and track progress.
+
 This document tracks the structure and source artifacts for the main results report (`docs/reports/report-dqn-results.md`).
 
 ## Report Structure

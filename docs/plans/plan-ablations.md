@@ -1,5 +1,7 @@
 # Ablations Plan
 
+> **Status**: DRAFT | Future work planned but not yet executed.
+
 This document outlines ablation experiments to quantify the impact of key DQN design choices.
 
 ## Objective

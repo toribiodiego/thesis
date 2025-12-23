@@ -1,5 +1,7 @@
 # Game Suite Plan
 
+> **Status**: REFERENCE | Game selection completed, this documents the rationale and final choices.
+
 This document outlines the target games, baselines, frame budgets, and evaluation schedule for reproducing the DQN 2013 paper results.
 
 ## Selected Games
