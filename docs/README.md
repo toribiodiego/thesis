@@ -4,7 +4,7 @@ Complete reference for the DQN Atari reproduction thesis project.
 
 ## Quick Start
 
-- **New to the project?** Start with [Architecture Overview](guides/architecture.md) → [Quick Start Guide](guides/quick_start.md)
+- **New to the project?** Start with [Architecture Overview](guides/architecture.md) → [Quick Start Guide](guides/quick-start.md)
 - **Need to do something?** Check [Workflows](guides/workflows.md) for task-oriented guides
 - **Stuck on an issue?** See [Troubleshooting](guides/troubleshooting.md)
 - **Track progress?** See [TODO](../TODO) in repo root (untracked file with current tasks)
@@ -19,12 +19,12 @@ This documentation is organized into the following sections:
 High-level task-oriented guides:
 
 - **[architecture.md](guides/architecture.md)** - System design and component interactions (start here)
-- **[quick_start.md](guides/quick_start.md)** - Setup and first training run
+- **[quick-start.md](guides/quick-start.md)** - Setup and first training run
 - **[workflows.md](guides/workflows.md)** - Common task guides (train, debug, test)
 - **[troubleshooting.md](guides/troubleshooting.md)** - Problem diagnosis and fixes
 - **[testing.md](guides/testing.md)** - Test suite documentation
-- **[git_commit_guide.md](guides/git_commit_guide.md)** - Commit message conventions
-- **[colab_guide.md](guides/colab_guide.md)** - Google Colab setup for GPU training
+- **[git-commit-guide.md](guides/git-commit-guide.md)** - Commit message conventions
+- **[colab-guide.md](guides/colab-guide.md)** - Google Colab setup for GPU training
 
 ### reference/
 Detailed technical specifications for each component:
@@ -83,18 +83,18 @@ Notes and summaries from research papers:
 All documentation files use **snake_case** with descriptive names:
 
 **Top-level guides:**
-- `quick_start.md` - Getting started guide
-- `git_commit_guide.md` - Commit message conventions
-- `colab_guide.md` - Platform-specific setup
+- `quick-start.md` - Getting started guide
+- `git-commit-guide.md` - Commit message conventions
+- `colab-guide.md` - Platform-specific setup
 
 **Design/reference docs:**
-- `dqn_model.md` - Component specification
-- `config_cli.md` - System configuration
-- `ablations_plan.md` - Experiment plans
+- `dqn-model.md` - Component specification
+- `config-cli.md` - System configuration
+- `ablations-plan.md` - Experiment plans
 
 **Analysis/reports:**
-- `design/gpu_validation.md` - Performance analysis
-- `design/results_comparison.md` - Multi-run analysis
+- `design/gpu-validation.md` - Performance analysis
+- `design/results-comparison.md` - Multi-run analysis
 
 ### Folder Structure
 - `docs/` - Top-level guides and overviews
@@ -151,9 +151,9 @@ Documentation in `docs/` should be:
 
 ## Navigation Tips
 
-1. **Getting started:** [architecture.md](guides/architecture.md) → [quick_start.md](guides/quick_start.md)
+1. **Getting started:** [architecture.md](guides/architecture.md) → [quick-start.md](guides/quick-start.md)
 2. **Implementing features:** Check relevant doc in [reference/](reference/)
-3. **Running experiments:** [workflows.md](guides/workflows.md) or [quick_start.md](guides/quick_start.md)
+3. **Running experiments:** [workflows.md](guides/workflows.md) or [quick-start.md](guides/quick-start.md)
 4. **Debugging issues:** [troubleshooting.md](guides/troubleshooting.md)
 5. **Testing:** [testing.md](guides/testing.md) for test suite documentation
 
@@ -171,42 +171,42 @@ The following table maps current file locations to their planned destinations. T
 |--------------|----------|----------|-------|
 | **Top-Level Guides** | | | |
 | `docs/architecture.md` | `docs/guides/architecture.md` | Guide | System design overview |
-| `docs/quick_start.md` | `docs/guides/quick-start.md` | Guide | Rename to kebab-case |
+| `docs/quick-start.md` | `docs/guides/quick-start.md` | Guide | Rename to kebab-case |
 | `docs/workflows.md` | `docs/guides/workflows.md` | Guide | Task-oriented guides |
 | `docs/troubleshooting.md` | `docs/guides/troubleshooting.md` | Guide | Problem diagnosis |
 | `docs/testing.md` | `docs/guides/testing.md` | Guide | Test suite docs |
-| `docs/colab_guide.md` | `docs/guides/colab-setup.md` | Guide | Rename to kebab-case |
-| `docs/git_commit_guide.md` | `docs/guides/git-commit-guide.md` | Guide | Rename to kebab-case |
+| `docs/colab-guide.md` | `docs/guides/colab-setup.md` | Guide | Rename to kebab-case |
+| `docs/git-commit-guide.md` | `docs/guides/git-commit-guide.md` | Guide | Rename to kebab-case |
 | `docs/changelog.md` | `docs/changelog.md` | Root | Keep in root |
 | **Design/Reference Docs** | | | |
-| `docs/design/dqn_setup.md` | `docs/reference/dqn-setup.md` | Reference | Rename to kebab-case |
-| `docs/design/atari_env_wrapper.md` | `docs/reference/atari-env-wrapper.md` | Reference | Rename to kebab-case |
-| `docs/design/dqn_model.md` | `docs/reference/dqn-model.md` | Reference | Rename to kebab-case |
-| `docs/design/replay_buffer.md` | `docs/reference/replay-buffer.md` | Reference | Rename to kebab-case |
-| `docs/design/dqn_training.md` | `docs/reference/dqn-training.md` | Reference | Rename to kebab-case |
-| `docs/design/episode_handling.md` | `docs/reference/episode-handling.md` | Reference | Rename to kebab-case |
-| `docs/design/training_loop_runtime.md` | `docs/reference/training-loop-runtime.md` | Reference | Rename to kebab-case |
+| `docs/design/dqn-setup.md` | `docs/reference/dqn-setup.md` | Reference | Rename to kebab-case |
+| `docs/design/atari-env-wrapper.md` | `docs/reference/atari-env-wrapper.md` | Reference | Rename to kebab-case |
+| `docs/design/dqn-model.md` | `docs/reference/dqn-model.md` | Reference | Rename to kebab-case |
+| `docs/design/replay-buffer.md` | `docs/reference/replay-buffer.md` | Reference | Rename to kebab-case |
+| `docs/design/dqn-training.md` | `docs/reference/dqn-training.md` | Reference | Rename to kebab-case |
+| `docs/design/episode-handling.md` | `docs/reference/episode-handling.md` | Reference | Rename to kebab-case |
+| `docs/design/training-loop-runtime.md` | `docs/reference/training-loop-runtime.md` | Reference | Rename to kebab-case |
 | `docs/design/checkpointing.md` | `docs/reference/checkpointing.md` | Reference | Rename to kebab-case |
-| `docs/design/config_cli.md` | `docs/reference/config-cli.md` | Reference | Rename to kebab-case |
-| `docs/design/eval_harness.md` | `docs/reference/eval-harness.md` | Reference | Rename to kebab-case |
-| `docs/design/logging_pipeline.md` | `docs/reference/logging-pipeline.md` | Reference | Rename to kebab-case |
-| `docs/design/environment_notes.md` | `docs/reference/environment-notes.md` | Reference | Rename to kebab-case |
-| `docs/design/stability_notes.md` | `docs/reference/stability-notes.md` | Reference | Rename to kebab-case |
+| `docs/design/config-cli.md` | `docs/reference/config-cli.md` | Reference | Rename to kebab-case |
+| `docs/design/eval-harness.md` | `docs/reference/eval-harness.md` | Reference | Rename to kebab-case |
+| `docs/design/logging-pipeline.md` | `docs/reference/logging-pipeline.md` | Reference | Rename to kebab-case |
+| `docs/design/environment-notes.md` | `docs/reference/environment-notes.md` | Reference | Rename to kebab-case |
+| `docs/design/stability-notes.md` | `docs/reference/stability-notes.md` | Reference | Rename to kebab-case |
 | **Plans** | | | |
-| `docs/design/game_suite_plan.md` | `docs/plans/game-suite-plan.md` | Plan | Rename to kebab-case |
-| `docs/design/ablations_plan.md` | `docs/plans/ablations-plan.md` | Plan | Rename to kebab-case |
-| `docs/design/report_outline.md` | `docs/plans/report-outline.md` | Plan | Rename to kebab-case |
-| `docs/design/reproduce_recipe.md` | `docs/plans/reproduce-recipe.md` | Plan | Rename to kebab-case |
+| `docs/design/game-suite-plan.md` | `docs/plans/game-suite-plan.md` | Plan | Rename to kebab-case |
+| `docs/design/ablations-plan.md` | `docs/plans/ablations-plan.md` | Plan | Rename to kebab-case |
+| `docs/design/report-outline.md` | `docs/plans/report-outline.md` | Plan | Rename to kebab-case |
+| `docs/design/reproduce-recipe.md` | `docs/plans/reproduce-recipe.md` | Plan | Rename to kebab-case |
 | **Reports** | | | |
-| `docs/design/gpu_validation.md` | `docs/reports/gpu-validation.md` | Report | Rename to kebab-case |
-| `docs/design/results_comparison.md` | `docs/reports/results-comparison.md` | Report | Rename to kebab-case |
-| `docs/reports/dqn_results.md` | `docs/reports/dqn-results.md` | Report | Rename to kebab-case |
+| `docs/design/gpu-validation.md` | `docs/reports/gpu-validation.md` | Report | Rename to kebab-case |
+| `docs/design/results-comparison.md` | `docs/reports/results-comparison.md` | Report | Rename to kebab-case |
+| `docs/reports/dqn-results.md` | `docs/reports/dqn-results.md` | Report | Rename to kebab-case |
 | **Operational Docs** | | | |
-| `docs/design/code_quality.md` | `docs/ops/code-quality.md` | Ops | Rename to kebab-case |
+| `docs/design/code-quality.md` | `docs/ops/code-quality.md` | Ops | Rename to kebab-case |
 | `docs/maintenance/checklists.md` | `docs/ops/checklists.md` | Ops | Consolidate maintenance/ into ops/ |
 | **Research/Papers** | | | |
 | `docs/papers/README.md` | `docs/research/papers/README.md` | Research | Move into research/ |
-| `docs/papers/dqn_2013_notes.md` | `docs/research/papers/dqn-2013-notes.md` | Research | Rename to kebab-case |
+| `docs/papers/dqn-2013-notes.md` | `docs/research/papers/dqn-2013-notes.md` | Research | Rename to kebab-case |
 | **Index/README** | | | |
 | `docs/index.md` | `docs/README.md` | Root | Merge into existing README.md |
 | `docs/design/README.md` | `docs/reference/README.md` | Reference | Consolidate design index |

@@ -58,7 +58,7 @@ pip install ale-py==0.8.1
 python -c "import ale_py; print(ale_py.__version__)"
 ```
 
-**Docs:** [DQN Setup](../reference/dqn_setup.md#dependencies--environment)
+**Docs:** [DQN Setup](../reference/dqn-setup.md#dependencies--environment)
 
 ---
 
@@ -88,7 +88,7 @@ python -c "import ale_py; print(len(ale_py.roms.list()))"
 # Should print 60+
 ```
 
-**Docs:** [DQN Setup](../reference/dqn_setup.md#rom-installation)
+**Docs:** [DQN Setup](../reference/dqn-setup.md#rom-installation)
 
 ---
 
@@ -127,7 +127,7 @@ pip install torch==2.4.1+cu121 --index-url https://download.pytorch.org/whl/cu12
 **CPU-only fallback:**
 Training will still work, just slower. No action needed.
 
-**Docs:** [DQN Setup](../reference/dqn_setup.md#troubleshooting)
+**Docs:** [DQN Setup](../reference/dqn-setup.md#troubleshooting)
 
 ---
 
@@ -152,7 +152,7 @@ export PYTHONPATH=.
 python -c "from src.models import DQN; print('OK')"
 ```
 
-**Docs:** [DQN Setup](../reference/dqn_setup.md#import-errors)
+**Docs:** [DQN Setup](../reference/dqn-setup.md#import-errors)
 
 ---
 
@@ -232,7 +232,7 @@ eval_scheduler = EvaluationScheduler(
 **Solution:**
 Check component API documentation and ensure all parameter names match current implementation.
 
-**Docs:** [Logging Pipeline](../reference/logging_pipeline.md), [Training Loop](../reference/training_loop_runtime.md)
+**Docs:** [Logging Pipeline](../reference/logging-pipeline.md), [Training Loop](../reference/training-loop-runtime.md)
 
 ---
 
@@ -283,7 +283,7 @@ filtered_entry = {k: v for k, v in log_entry.items()
 writer.writerow(filtered_entry)
 ```
 
-**Docs:** [Logging Pipeline](../reference/logging_pipeline.md#csv-backend)
+**Docs:** [Logging Pipeline](../reference/logging-pipeline.md#csv-backend)
 
 ---
 
@@ -328,7 +328,7 @@ network:
   device: auto  # or 'cuda', 'mps', 'cpu'
 ```
 
-**Docs:** [DQN Setup](../reference/dqn_setup.md#device-configuration)
+**Docs:** [DQN Setup](../reference/dqn-setup.md#device-configuration)
 
 ---
 
@@ -377,7 +377,7 @@ grep "td_error" experiments/dqn_atari/runs/pong_42/logs/steps.csv | tail -n 20
   --set training.loss_fn=huber
 ```
 
-**Docs:** [DQN Training](../reference/dqn_training.md#debugging-unstable-training)
+**Docs:** [DQN Training](../reference/dqn-training.md#debugging-unstable-training)
 
 ---
 
@@ -421,7 +421,7 @@ pytest tests/test_dqn_trainer.py -k "target_update" -v
 grep "epsilon" experiments/dqn_atari/runs/pong_42/logs/steps.csv | head -n 20
 ```
 
-**Docs:** [Training Loop](../reference/training_loop_runtime.md#troubleshooting-guide)
+**Docs:** [Training Loop](../reference/training-loop-runtime.md#troubleshooting-guide)
 
 ---
 
@@ -510,7 +510,7 @@ grep "target_sync_interval" experiments/dqn_atari/runs/pong_42/meta.json
 pytest tests/test_replay_buffer.py -v
 ```
 
-**Docs:** [DQN Training](../reference/dqn_training.md#debugging-unstable-training)
+**Docs:** [DQN Training](../reference/dqn-training.md#debugging-unstable-training)
 
 ---
 
@@ -546,7 +546,7 @@ pytest tests/test_save_resume_determinism.py -v -s
   --set training.device=cpu
 ```
 
-**Docs:** [Checkpointing](../reference/checkpointing.md#deterministic-seeding), [DQN Setup](../reference/dqn_setup.md#deterministic-mode-configuration)
+**Docs:** [Checkpointing](../reference/checkpointing.md#deterministic-seeding), [DQN Setup](../reference/dqn-setup.md#deterministic-mode-configuration)
 
 ---
 
@@ -607,7 +607,7 @@ nvidia-smi -l 1
 - GPU (deterministic on): ~850 FPS
 - CPU: ~100-200 FPS
 
-**Docs:** [DQN Setup](../reference/dqn_setup.md#performance-impact)
+**Docs:** [DQN Setup](../reference/dqn-setup.md#performance-impact)
 
 ---
 
@@ -649,7 +649,7 @@ replay_buffer = ReplayBuffer(
 )
 ```
 
-**Docs:** [Replay Buffer](../reference/replay_buffer.md#memory-layout)
+**Docs:** [Replay Buffer](../reference/replay-buffer.md#memory-layout)
 
 ---
 
@@ -671,7 +671,7 @@ This is normal. Atari environments run on CPU. To reduce:
 --set training.train_every=8
 ```
 
-**Docs:** [Training Loop](../reference/training_loop_runtime.md#performance)
+**Docs:** [Training Loop](../reference/training-loop-runtime.md#performance)
 
 ---
 
@@ -828,7 +828,7 @@ print(env)
   experiments/dqn_atari/configs/pong.yaml --dry-run
 ```
 
-**Docs:** [Atari Wrappers](../reference/atari_env_wrapper.md#wrapper-chain)
+**Docs:** [Atari Wrappers](../reference/atari-env-wrapper.md#wrapper-chain)
 
 ---
 
@@ -871,7 +871,7 @@ env = gym.make('ALE/Pong-v5', full_action_space=False)
 print(env.action_space.n)  # Use this value
 ```
 
-**Docs:** [DQN Setup](../reference/dqn_setup.md#selected-games)
+**Docs:** [DQN Setup](../reference/dqn-setup.md#selected-games)
 
 ---
 
@@ -917,7 +917,7 @@ env = make_atari_env('ALE/Pong-v5', episode_life=True)
 print(env)  # Should show EpisodeLifeEnv in chain
 ```
 
-**Docs:** [Episode Handling](../reference/episode_handling.md), [Atari Wrappers](../reference/atari_env_wrapper.md)
+**Docs:** [Episode Handling](../reference/episode-handling.md), [Atari Wrappers](../reference/atari-env-wrapper.md)
 
 ---
 

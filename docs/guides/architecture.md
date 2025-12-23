@@ -140,7 +140,7 @@ ALE/Pong-v5
 - `src/envs/atari_wrappers.py` - Wrapper implementations
 - `src/envs/make_env.py` - Environment factory
 
-**Docs:** [atari_env_wrapper.md](../reference/atari_env_wrapper.md)
+**Docs:** [atari-env-wrapper.md](../reference/atari-env-wrapper.md)
 
 ---
 
@@ -180,7 +180,7 @@ Output: Q-values for each action
 **Key Files:**
 - `src/models/dqn.py` - DQN model implementation
 
-**Docs:** [dqn_model.md](../reference/dqn_model.md)
+**Docs:** [dqn-model.md](../reference/dqn-model.md)
 
 ---
 
@@ -209,7 +209,7 @@ Total: ~27 GB
 **Key Files:**
 - `src/replay/uniform_buffer.py` - Circular replay buffer
 
-**Docs:** [replay_buffer.md](../reference/replay_buffer.md)
+**Docs:** [replay-buffer.md](../reference/replay-buffer.md)
 
 ---
 
@@ -237,7 +237,7 @@ Total: ~27 GB
 - `src/training/schedulers.py` - Epsilon and update schedulers
 - `src/training/checkpoint.py` - Checkpoint/resume system
 
-**Docs:** [training_loop_runtime.md](../reference/training_loop_runtime.md), [dqn_training.md](../reference/dqn_training.md)
+**Docs:** [training-loop-runtime.md](../reference/training-loop-runtime.md), [dqn-training.md](../reference/dqn-training.md)
 
 ---
 
@@ -414,11 +414,11 @@ thesis/
     ├── troubleshooting.md        # Problem solving
     ├── roadmap.md                # Project plan
     └── design/                   # Design specs
-        ├── dqn_setup.md
-        ├── dqn_model.md
-        ├── replay_buffer.md
-        ├── dqn_training.md
-        └── training_loop_runtime.md
+        ├── dqn-setup.md
+        ├── dqn-model.md
+        ├── replay-buffer.md
+        ├── dqn-training.md
+        └── training-loop-runtime.md
 ```
 
 ---
@@ -452,7 +452,7 @@ if step % target_update_interval == 0:
     target_net.load_state_dict(online_net.state_dict())
 ```
 
-**Docs:** [dqn_training.md](../reference/dqn_training.md#complete-update-pipeline)
+**Docs:** [dqn-training.md](../reference/dqn-training.md#complete-update-pipeline)
 
 ---
 
@@ -471,7 +471,7 @@ else:
         action = q_values.argmax().item()  # Exploit
 ```
 
-**Docs:** [training_loop_runtime.md](../reference/training_loop_runtime.md#component-orchestration)
+**Docs:** [training-loop-runtime.md](../reference/training-loop-runtime.md#component-orchestration)
 
 ---
 
@@ -554,7 +554,7 @@ pytest tests/test_save_resume_determinism.py -v -s
 
 1. **Read in this order:**
    - This architecture overview (you are here)
-   - [Quick Start Guide](quick_start.md) - Get environment running
+   - [Quick Start Guide](quick-start.md) - Get environment running
    - [Workflows](workflows.md) - Learn common tasks
    - Component design docs (as needed)
 

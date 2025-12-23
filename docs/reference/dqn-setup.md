@@ -10,8 +10,8 @@ Central reference for everything completed in Subtask 1 (game selection, pinned 
 - Git for version control
 
 **Related Docs:**
-- [Quick Start Guide](../quick_start.md) - Step-by-step setup walkthrough
-- [Atari Wrappers](atari_env_wrapper.md) - Environment preprocessing
+- [Quick Start Guide](../quick-start.md) - Step-by-step setup walkthrough
+- [Atari Wrappers](atari-env-wrapper.md) - Environment preprocessing
 - [Scripts README](../../experiments/dqn_atari/scripts/README.md) - CLI tools
 
 ---

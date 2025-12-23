@@ -9,4 +9,4 @@ Recommended format per file:
 - Implementation details (hyperparameters, architectures, evaluation protocols).
 - Open questions or replication risks.
 
-The first entry, `dqn_2013_notes.md`, records the essential details needed to reproduce “Playing Atari with Deep Reinforcement Learning.”
+The first entry, `dqn-2013-notes.md`, records the essential details needed to reproduce “Playing Atari with Deep Reinforcement Learning.”

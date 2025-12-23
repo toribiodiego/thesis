@@ -5,12 +5,12 @@ Comprehensive guide to episode management, termination policies, life-loss handl
 ---
 
 **Prerequisites:**
-- Completed [Atari Wrappers](atari_env_wrapper.md) - Understanding EpisodeLifeEnv wrapper
+- Completed [Atari Wrappers](atari-env-wrapper.md) - Understanding EpisodeLifeEnv wrapper
 - Gymnasium basics - Terminated vs truncated flags
 
 **Related Docs:**
-- [DQN Training](dqn_training.md) - How terminal flags affect TD targets
-- [Training Loop](training_loop_runtime.md) - Training vs evaluation environment setup
+- [DQN Training](dqn-training.md) - How terminal flags affect TD targets
+- [Training Loop](training-loop-runtime.md) - Training vs evaluation environment setup
 - Configuration in [base.yaml](../../experiments/dqn_atari/configs/base.yaml)
 
 ---
@@ -683,4 +683,4 @@ if done:
   - Handles both life-based (training) and full episodes (eval)
 
 **Next Steps:**
-See `docs/design/training_loop_runtime.md` for complete training loop orchestration that integrates episode handling, evaluation, and Q tracking with the DQN update pipeline.
+See `docs/design/training-loop-runtime.md` for complete training loop orchestration that integrates episode handling, evaluation, and Q tracking with the DQN update pipeline.

@@ -43,7 +43,7 @@ pip install -r requirements.txt
 
 **Expected time:** 2-5 minutes depending on internet speed
 
-**Troubleshooting:** See [docs/design/dqn_setup.md](../reference/dqn_setup.md) for detailed setup instructions and common issues.
+**Troubleshooting:** See [docs/design/dqn-setup.md](../reference/dqn-setup.md) for detailed setup instructions and common issues.
 
 ---
 
@@ -142,7 +142,7 @@ Run a short random-policy rollout to verify preprocessing pipeline and generate 
   experiments/dqn_atari/configs/beam_rider.yaml --dry-run
 ```
 
-**Troubleshooting:** See [atari_env_wrapper.md](../reference/atari_env_wrapper.md#troubleshooting) for common preprocessing issues.
+**Troubleshooting:** See [atari-env-wrapper.md](../reference/atari-env-wrapper.md#troubleshooting) for common preprocessing issues.
 
 ---
 
@@ -206,7 +206,7 @@ tensorboard --logdir experiments/dqn_atari/tensorboard
 - Breakout: 24-48 hours (GPU), 7-14 days (CPU)
 - Beam Rider: 24-48 hours (GPU), 7-14 days (CPU)
 
-**Troubleshooting:** See [dqn_training.md](../reference/dqn_training.md#debugging-unstable-training) for debugging convergence issues.
+**Troubleshooting:** See [dqn-training.md](../reference/dqn-training.md#debugging-unstable-training) for debugging convergence issues.
 
 ---
 
@@ -428,7 +428,7 @@ python -m AutoROM --accept-license
 
 **Problem:** Dry run fails with shape errors
 
-**Solution:** Check [atari_env_wrapper.md](../reference/atari_env_wrapper.md#troubleshooting) for common wrapper issues.
+**Solution:** Check [atari-env-wrapper.md](../reference/atari-env-wrapper.md#troubleshooting) for common wrapper issues.
 
 **Problem:** Frames look wrong (distorted, wrong size, color artifacts)
 
@@ -447,7 +447,7 @@ ls experiments/dqn_atari/runs/pong_0/frames/
 
 **Problem:** Training diverges (loss explodes, TD error increases)
 
-**Solution:** See [dqn_training.md](../reference/dqn_training.md#debugging-unstable-training) for debugging strategies.
+**Solution:** See [dqn-training.md](../reference/dqn-training.md#debugging-unstable-training) for debugging strategies.
 
 **Problem:** Training is very slow
 
@@ -478,7 +478,7 @@ python -c 'import torch; print(torch.cuda.is_available())'
 
 ### Contributing
 
-- Follow commit message style in `docs/git_commit_guide.md`
+- Follow commit message style in `docs/git-commit-guide.md`
 - Update roadmap checkboxes as you complete tasks
 - Document major changes in changelog
 - Run dry-run validation before committing wrapper changes
@@ -486,8 +486,8 @@ python -c 'import torch; print(torch.cuda.is_available())'
 
 ### Getting Help
 
-- **Setup issues:** See [dqn_setup.md](../reference/dqn_setup.md)
-- **Preprocessing issues:** See [atari_env_wrapper.md](../reference/atari_env_wrapper.md)
-- **Training issues:** See [dqn_training.md](../reference/dqn_training.md)
+- **Setup issues:** See [dqn-setup.md](../reference/dqn-setup.md)
+- **Preprocessing issues:** See [atari-env-wrapper.md](../reference/atari-env-wrapper.md)
+- **Training issues:** See [dqn-training.md](../reference/dqn-training.md)
 - **Config issues:** See [configs/README.md](../experiments/dqn_atari/configs/README.md)
 - **General questions:** Check [docs/index.md](../index.md) for navigation

@@ -55,7 +55,7 @@ python -c "import torch, gymnasium, ale_py; print('Success!')"
 - ROMs available: `python -c "import ale_py; print(len(ale_py.roms.list()))"`
 - `experiments/dqn_atari/system_info.txt` generated
 
-**Docs:** [DQN Setup](../reference/dqn_setup.md), [Quick Start](quick_start.md)
+**Docs:** [DQN Setup](../reference/dqn-setup.md), [Quick Start](quick-start.md)
 
 ---
 
@@ -83,7 +83,7 @@ pytest --version
 - Environment creates without errors
 - pytest 8.x or higher
 
-**Docs:** [DQN Setup](../reference/dqn_setup.md#troubleshooting)
+**Docs:** [DQN Setup](../reference/dqn-setup.md#troubleshooting)
 
 ---
 
@@ -111,7 +111,7 @@ experiments/dqn_atari/runs/pong_<timestamp>/
 └── meta.json                 # Run metadata
 ```
 
-**Docs:** [Atari Wrappers](../reference/atari_env_wrapper.md), [Scripts README](../experiments/dqn_atari/scripts/README.md)
+**Docs:** [Atari Wrappers](../reference/atari-env-wrapper.md), [Scripts README](../experiments/dqn_atari/scripts/README.md)
 
 ---
 
@@ -157,7 +157,7 @@ experiments/dqn_atari/runs/pong_42/
     └── Pong_step_250000_best_ep3_r21.mp4
 ```
 
-**Docs:** [Training Loop](../reference/training_loop_runtime.md), [Scripts README](../experiments/dqn_atari/scripts/README.md)
+**Docs:** [Training Loop](../reference/training-loop-runtime.md), [Scripts README](../experiments/dqn_atari/scripts/README.md)
 
 ---
 
@@ -221,7 +221,7 @@ ls -la experiments/dqn_atari/runs/pong_42/videos/
 - **Epsilon:** Should decay from 1.0 to 0.1
 - **Eval score:** Periodic assessment with low-epsilon policy
 
-**Docs:** [Training Loop](../reference/training_loop_runtime.md#logging-schema)
+**Docs:** [Training Loop](../reference/training-loop-runtime.md#logging-schema)
 
 ---
 
@@ -256,7 +256,7 @@ pytest tests/test_dqn_trainer.py -k "stability or nan" -v
 - Replay buffer issues: Check episode boundary handling
 - Bad initialization: Try different random seed
 
-**Docs:** [DQN Training](../reference/dqn_training.md#debugging-unstable-training), [Training Loop](../reference/training_loop_runtime.md#troubleshooting-guide)
+**Docs:** [DQN Training](../reference/dqn-training.md#debugging-unstable-training), [Training Loop](../reference/training-loop-runtime.md#troubleshooting-guide)
 
 ---
 
@@ -294,7 +294,7 @@ pytest tests/test_save_resume_determinism.py -v -s
 diff experiments/dqn_atari/runs/pong_42_*/logs/episodes.csv
 ```
 
-**Docs:** [Checkpointing](../reference/checkpointing.md#deterministic-seeding), [DQN Setup](../reference/dqn_setup.md#deterministic-mode-configuration)
+**Docs:** [Checkpointing](../reference/checkpointing.md#deterministic-seeding), [DQN Setup](../reference/dqn-setup.md#deterministic-mode-configuration)
 
 ---
 
@@ -391,7 +391,7 @@ pytest tests/test_dqn_trainer.py::test_epsilon_scheduler -v
 - Logs populated
 - Eval results generated
 
-**Docs:** [Training Loop](../reference/training_loop_runtime.md#smoke-test-procedure), [Scripts README](../experiments/dqn_atari/scripts/README.md#smoke-test)
+**Docs:** [Training Loop](../reference/training-loop-runtime.md#smoke-test-procedure), [Scripts README](../experiments/dqn_atari/scripts/README.md#smoke-test)
 
 ---
 
@@ -423,13 +423,13 @@ pytest tests/test_dqn_trainer.py -k "scheduler" -v
 ## Related Documentation
 
 **Setup and Installation:**
-- [DQN Setup](../reference/dqn_setup.md) - Environment and dependencies
-- [Quick Start](quick_start.md) - Step-by-step walkthrough
+- [DQN Setup](../reference/dqn-setup.md) - Environment and dependencies
+- [Quick Start](quick-start.md) - Step-by-step walkthrough
 - [Scripts README](../experiments/dqn_atari/scripts/README.md) - CLI reference
 
 **Training:**
-- [Training Loop](../reference/training_loop_runtime.md) - Orchestration and runtime behavior
-- [DQN Training](../reference/dqn_training.md) - Q-learning update details
+- [Training Loop](../reference/training-loop-runtime.md) - Orchestration and runtime behavior
+- [DQN Training](../reference/dqn-training.md) - Q-learning update details
 - [Checkpointing](../reference/checkpointing.md) - Save/resume system
 
 **Debugging:**

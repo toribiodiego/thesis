@@ -5,13 +5,13 @@ Comprehensive documentation for the DQN Q-learning update process, including TD 
 ---
 
 **Prerequisites:**
-- Completed [DQN Model](dqn_model.md) - Understanding Q-network architecture
-- Completed [Replay Buffer](replay_buffer.md) - Experience sampling mechanism
+- Completed [DQN Model](dqn-model.md) - Understanding Q-network architecture
+- Completed [Replay Buffer](replay-buffer.md) - Experience sampling mechanism
 - Basic RL knowledge - Bellman equation and temporal difference learning
 
 **Related Docs:**
-- [Training Loop](training_loop_runtime.md) - How training updates integrate with main loop
-- [Episode Handling](episode_handling.md) - Terminal state handling in TD targets
+- [Training Loop](training-loop-runtime.md) - How training updates integrate with main loop
+- [Episode Handling](episode-handling.md) - Terminal state handling in TD targets
 - [Checkpointing](checkpointing.md) - Saving optimizer and target network states
 
 ---

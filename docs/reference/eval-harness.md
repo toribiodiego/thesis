@@ -3,14 +3,14 @@
 ---
 
 **Prerequisites:**
-- Completed [DQN Model](dqn_model.md) - Understanding Q-network architecture
-- Completed [Training Loop](training_loop_runtime.md) - Training flow and step counters
-- Completed [Atari Wrappers](atari_env_wrapper.md) - Environment preprocessing
+- Completed [DQN Model](dqn-model.md) - Understanding Q-network architecture
+- Completed [Training Loop](training-loop-runtime.md) - Training flow and step counters
+- Completed [Atari Wrappers](atari-env-wrapper.md) - Environment preprocessing
 
 **Related Docs:**
-- [Config & CLI](config_cli.md) - Evaluation configuration and CLI overrides
+- [Config & CLI](config-cli.md) - Evaluation configuration and CLI overrides
 - [Checkpointing](checkpointing.md) - Saving best models from evaluation
-- [Episode Handling](episode_handling.md) - Full-episode vs life-loss termination
+- [Episode Handling](episode-handling.md) - Full-episode vs life-loss termination
 
 ---
 
@@ -1584,10 +1584,10 @@ print(df[['step', 'mean_return', 'median_return', 'std_return']].to_string())
 
 ### Related Documents
 
-- [Training Loop](training_loop_runtime.md) - Integration with main training loop
-- [Config & CLI](config_cli.md) - Configuration and CLI overrides
+- [Training Loop](training-loop-runtime.md) - Integration with main training loop
+- [Config & CLI](config-cli.md) - Configuration and CLI overrides
 - [Checkpointing](checkpointing.md) - Saving best models from evaluation
-- [Episode Handling](episode_handling.md) - Life-loss vs full-episode termination
+- [Episode Handling](episode-handling.md) - Life-loss vs full-episode termination
 
 ### Paper Reference
 

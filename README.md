@@ -208,7 +208,7 @@ python scripts/export_results_table.py \
 ```
 
 **See also:**
-- [docs/design/logging_pipeline.md](docs/design/logging_pipeline.md) - Complete logging & plotting documentation
+- [docs/reference/logging-pipeline.md](docs/reference/logging-pipeline.md) - Complete logging & plotting documentation
 - [scripts/plot_results.py](scripts/plot_results.py) - Full CLI reference with `--help`
 - [scripts/export_results_table.py](scripts/export_results_table.py) - Results table generator
 
@@ -231,18 +231,18 @@ python scripts/export_results_table.py \
 Core implementation specifications (read in this order):
 
 **Setup & Environment:**
-- **[docs/design/dqn_setup.md](docs/design/dqn_setup.md)** - Environment setup, dependencies, ROM installation, deterministic mode
-- **[docs/design/atari_env_wrapper.md](docs/design/atari_env_wrapper.md)** - Wrapper chain specification and preprocessing pipeline
-- **[docs/design/config_cli.md](docs/design/config_cli.md)** - Configuration system and CLI reference (hierarchical configs, overrides, validation, run artifacts)
+- **[docs/reference/dqn-setup.md](docs/reference/dqn-setup.md)** - Environment setup, dependencies, ROM installation, deterministic mode
+- **[docs/reference/atari-env-wrapper.md](docs/reference/atari-env-wrapper.md)** - Wrapper chain specification and preprocessing pipeline
+- **[docs/reference/config-cli.md](docs/reference/config-cli.md)** - Configuration system and CLI reference (hierarchical configs, overrides, validation, run artifacts)
 
 **Core Components:**
-- **[docs/design/dqn_model.md](docs/design/dqn_model.md)** - Q-network architecture and forward pass details
-- **[docs/design/replay_buffer.md](docs/design/replay_buffer.md)** - Experience replay storage and sampling
-- **[docs/design/dqn_training.md](docs/design/dqn_training.md)** - Q-learning update flow, loss functions, debugging
+- **[docs/reference/dqn-model.md](docs/reference/dqn-model.md)** - Q-network architecture and forward pass details
+- **[docs/reference/replay-buffer.md](docs/reference/replay-buffer.md)** - Experience replay storage and sampling
+- **[docs/reference/dqn-training.md](docs/reference/dqn-training.md)** - Q-learning update flow, loss functions, debugging
 
 **Training & Evaluation:**
-- **[docs/design/episode_handling.md](docs/design/episode_handling.md)** - Episode management, termination policies, training vs. evaluation
-- **[docs/design/training_loop_runtime.md](docs/design/training_loop_runtime.md)** - Training loop orchestration, logging, evaluation, troubleshooting
+- **[docs/reference/episode-handling.md](docs/reference/episode-handling.md)** - Episode management, termination policies, training vs. evaluation
+- **[docs/reference/training-loop-runtime.md](docs/reference/training-loop-runtime.md)** - Training loop orchestration, logging, evaluation, troubleshooting
 - **[docs/design/checkpointing.md](docs/design/checkpointing.md)** - Checkpoint/resume system, metadata schema, deterministic seeding
 
 ### Quick References
@@ -317,5 +317,5 @@ pytest tests/test_dqn_trainer.py -k "smoke_test" -v
 2. Review relevant design docs for specifications
 3. Implement following checklist items
 4. Run tests and dry-run validation
-5. Use commit prefixes from `docs/git_commit_guide.md`
+5. Use commit prefixes from `docs/guides/git-commit-guide.md`
 6. Mark completed items in `TODO` file

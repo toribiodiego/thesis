@@ -5,9 +5,9 @@ Comprehensive guide to DQN training loop control flow, component orchestration, 
 ---
 
 **Prerequisites:**
-- Completed all component docs: [Model](dqn_model.md), [Replay](replay_buffer.md), [Training](dqn_training.md)
-- Understand [Episode Handling](episode_handling.md) - Training vs evaluation modes
-- Read [Atari Wrappers](atari_env_wrapper.md) - Frame preprocessing pipeline
+- Completed all component docs: [Model](dqn-model.md), [Replay](replay-buffer.md), [Training](dqn-training.md)
+- Understand [Episode Handling](episode-handling.md) - Training vs evaluation modes
+- Read [Atari Wrappers](atari-env-wrapper.md) - Frame preprocessing pipeline
 
 **Related Docs:**
 - [Checkpointing](checkpointing.md) - Checkpoint/resume integration

@@ -5,13 +5,13 @@ Comprehensive guide to the Atari preprocessing pipeline for DQN reproduction. Th
 ---
 
 **Prerequisites:**
-- Completed [DQN Setup](dqn_setup.md) - ROMs installed and environment working
+- Completed [DQN Setup](dqn-setup.md) - ROMs installed and environment working
 - Gymnasium basics - Understanding env.step() and env.reset()
 
 **Related Docs:**
-- [DQN Model](dqn_model.md) - Expected input shape (4, 84, 84)
-- [Episode Handling](episode_handling.md) - Life-loss termination vs full episodes
-- [Training Loop](training_loop_runtime.md) - Frame counting and training/eval modes
+- [DQN Model](dqn-model.md) - Expected input shape (4, 84, 84)
+- [Episode Handling](episode-handling.md) - Life-loss termination vs full episodes
+- [Training Loop](training-loop-runtime.md) - Frame counting and training/eval modes
 
 ---
 
@@ -528,7 +528,7 @@ Before training, verify wrapper setup:
 
 ## Related Documentation
 
-- **DQN Setup:** `docs/design/dqn_setup.md`
+- **DQN Setup:** `docs/design/dqn-setup.md`
 - **Wrapper Implementation:** `src/envs/atari_wrappers.py`
 - **Config Reference:** `experiments/dqn_atari/configs/base.yaml`
 - **Roadmap:** `docs/roadmap.md` (Subtask 2)

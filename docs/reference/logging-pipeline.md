@@ -1784,10 +1784,10 @@ pytest tests/test_plot_results.py::test_plot_episode_returns -v
 
 ### Related Documentation
 
-- [Training Loop Runtime](training_loop_runtime.md) - Training loop integration
+- [Training Loop Runtime](training-loop-runtime.md) - Training loop integration
 - [Checkpointing](checkpointing.md) - Checkpoint metadata
-- [Evaluation Harness](eval_harness.md) - Evaluation logging
-- [Config & CLI](config_cli.md) - Configuration parameters
+- [Evaluation Harness](eval-harness.md) - Evaluation logging
+- [Config & CLI](config-cli.md) - Configuration parameters
 
 ### External Resources
 
