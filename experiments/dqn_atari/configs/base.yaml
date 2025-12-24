@@ -237,10 +237,10 @@ logging:
 
   # Multi-backend logging (TensorBoard, W&B, CSV)
   # All three backends operate independently and in parallel
-  # File system layout: results/logs/<game>/<run_id>/
+  # File system layout: experiments/dqn_atari/runs/<game>_<seed>_<timestamp>/
   #   ├── tensorboard/  (TensorBoard event files)
   #   ├── csv/          (CSV log files: training_steps.csv, episodes.csv)
-  #   └── wandb/        (W&B local cache, optional)
+  #   └── wandb/        (W&B local cache at root, optional)
 
   # TensorBoard backend
   tensorboard:

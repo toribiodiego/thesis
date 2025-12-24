@@ -155,7 +155,7 @@ def evaluate(
     record_video : bool
         Record video of first evaluation episode (default: False)
     video_dir : str
-        Directory to save videos (default: 'results/videos')
+        Directory to save videos (default: 'output/videos')
     video_fps : int
         Frames per second for video (default: 30)
     export_gif : bool
@@ -214,7 +214,7 @@ def evaluate(
     if record_video:
         # Determine video filename
         if video_dir is None:
-            video_dir = "results/videos"
+            video_dir = "output/videos"
 
         # Get environment name for filename
         env_spec = getattr(env.unwrapped, "spec", None)

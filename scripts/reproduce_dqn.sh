@@ -110,7 +110,7 @@ PREREQUISITES:
 OUTPUTS:
     - Training logs: experiments/dqn_atari/runs/<run_name>/
     - Checkpoints: experiments/dqn_atari/runs/<run_name>/checkpoints/
-    - Plots: results/plots/<game>_<seed>/
+    - Plots: output/plots/<game>_<seed>/
     - System info: experiments/dqn_atari/runs/<run_name>/system_info.txt
 
 EOF

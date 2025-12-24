@@ -9,7 +9,7 @@ Usage:
     python scripts/analyze_results.py --run-dir experiments/dqn_atari/runs/pong_42_*/
     python scripts/analyze_results.py --run-dir experiments/dqn_atari/runs/ --game pong
     python scripts/analyze_results.py --run-dir experiments/dqn_atari/runs/ --all-games
-    python scripts/analyze_results.py --run-dir experiments/dqn_atari/runs/ --output results/summary/
+    python scripts/analyze_results.py --run-dir experiments/dqn_atari/runs/ --output output/summary/
 
 Features:
     - Compute final evaluation statistics (last N evals or final checkpoint)

@@ -260,12 +260,12 @@ Examples:
   # Export all runs from experiments directory
   python scripts/export_results_table.py \\
     --runs-dir experiments/dqn_atari/runs \\
-    --output results/summary
+    --output output/summary
 
   # Export and upload to W&B
   python scripts/export_results_table.py \\
     --runs-dir experiments/dqn_atari/runs \\
-    --output results/summary \\
+    --output output/summary \\
     --upload-wandb \\
     --wandb-project dqn-atari
         """,
