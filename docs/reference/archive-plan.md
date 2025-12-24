@@ -130,16 +130,16 @@ These can be safely deleted and regenerated:
 For thesis-critical experiments:
 
 **Keep**:
-- ✓ Best checkpoint
-- ✓ All CSVs (episodes, training_steps, evaluations)
-- ✓ Final plots
-- ✓ Config + metadata (meta.json, system_info.txt)
-- ✓ Best evaluation videos (1-3 per game)
+- Best checkpoint
+- All CSVs (episodes, training_steps, evaluations)
+- Final plots
+- Config + metadata (meta.json, system_info.txt)
+- Best evaluation videos (1-3 per game)
 
 **Delete**:
-- ✗ Intermediate checkpoints
-- ✗ TensorBoard logs
-- ✗ All other videos
+- Intermediate checkpoints
+- TensorBoard logs
+- All other videos
 
 **Disk per run**: ~1-2 GB (checkpoint 500MB-1GB + CSVs 100MB + plots/config 10MB)
 
@@ -148,14 +148,14 @@ For thesis-critical experiments:
 For testing hyperparameters, debugging, validation:
 
 **Keep**:
-- ✓ Config file (for record-keeping)
-- ✓ Final eval CSV (if promising results)
+- Config file (for record-keeping)
+- Final eval CSV (if promising results)
 
 **Delete**:
-- ✗ All checkpoints
-- ✗ All other CSVs
-- ✗ All plots
-- ✗ All videos
+- All checkpoints
+- All other CSVs
+- All plots
+- All videos
 
 **Action**: Delete entire run directory after extracting key findings to notes.
 
@@ -164,13 +164,13 @@ For testing hyperparameters, debugging, validation:
 For systematic experiments:
 
 **Keep**:
-- ✓ Best checkpoint (if results are significant)
-- ✓ Evaluation CSV (for comparison tables)
-- ✓ Plots showing comparison to baseline
+- Best checkpoint (if results are significant)
+- Evaluation CSV (for comparison tables)
+- Plots showing comparison to baseline
 
 **Delete**:
-- ✗ Intermediate checkpoints
-- ✗ Episode/step CSVs (unless needed for detailed analysis)
+- Intermediate checkpoints
+- Episode/step CSVs (unless needed for detailed analysis)
 
 **Disk per study**: ~500MB-1GB per variant
 

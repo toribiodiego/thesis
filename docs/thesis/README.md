@@ -196,9 +196,9 @@ Before thesis submission:
 ## Current Status
 
 **Completed**:
-- ✓ Training infrastructure validated ([Foundation Validation](../reports/foundation-validation-summary.md))
-- ✓ Reporting pipeline documented ([Reporting Pipeline](../reference/reporting-pipeline.md))
-- ✓ Baseline runs defined ([Reporting Requirements](../reports/reporting-requirements.md))
+- Training infrastructure validated ([Foundation Validation](../reports/foundation-validation-summary.md))
+- Reporting pipeline documented ([Reporting Pipeline](../reference/reporting-pipeline.md))
+- Baseline runs defined ([Reporting Requirements](../reports/reporting-requirements.md))
 
 **In Progress**:
 - [ ] Pong 3-seed baseline runs (Priority 1)
