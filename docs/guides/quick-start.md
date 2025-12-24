@@ -83,7 +83,7 @@ Capture system and package versions for reproducibility.
 
 ```bash
 # Capture environment state
-./experiments/dqn_atari/scripts/capture_env.sh
+./setup/capture_env.sh
 ```
 
 **Output:** `experiments/dqn_atari/system_info.txt`
@@ -274,7 +274,7 @@ python scripts/compare_runs.py \
 # Complete setup from scratch
 pip install -r requirements.txt
 ./setup/setup_roms.sh
-./experiments/dqn_atari/scripts/capture_env.sh
+./setup/capture_env.sh
 ./experiments/dqn_atari/scripts/run_dqn.sh \
   experiments/dqn_atari/configs/pong.yaml --dry-run
 ```
@@ -302,7 +302,7 @@ pip install -r requirements.txt
 # Subtask 1: Environment setup
 pip install -r requirements.txt
 ./setup/setup_roms.sh
-./experiments/dqn_atari/scripts/capture_env.sh
+./setup/capture_env.sh
 
 # Subtask 2: Wrapper validation
 ./experiments/dqn_atari/scripts/run_dqn.sh \

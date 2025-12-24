@@ -322,7 +322,7 @@ Capture system and environment information for reproducibility tracking.
 
 **Usage:**
 ```bash
-./experiments/dqn_atari/scripts/capture_env.sh
+./setup/capture_env.sh
 ```
 
 **Required environment:** Must be run from repository root with active Python environment.
@@ -350,7 +350,7 @@ pip install -r requirements.txt
 ./setup/setup_roms.sh
 
 # Capture environment state
-./experiments/dqn_atari/scripts/capture_env.sh
+./setup/capture_env.sh
 
 # Verify setup with dry run
 ./experiments/dqn_atari/scripts/run_dqn.sh \
@@ -475,7 +475,7 @@ pip install -r requirements.txt
 ./setup/setup_roms.sh
 
 # 3. Capture environment
-./experiments/dqn_atari/scripts/capture_env.sh
+./setup/capture_env.sh
 
 # 4. Validate with dry run
 ./experiments/dqn_atari/scripts/run_dqn.sh \
@@ -486,7 +486,7 @@ pip install -r requirements.txt
 ```bash
 # Subtask 1: Environment setup and ROM installation
 ./setup/setup_roms.sh
-./experiments/dqn_atari/scripts/capture_env.sh
+./setup/capture_env.sh
 
 # Subtask 2: Wrapper validation with dry runs
 ./experiments/dqn_atari/scripts/run_dqn.sh \

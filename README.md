@@ -65,7 +65,7 @@ Expected output:
 
 ```bash
 # Capture system info for reproducibility
-./experiments/dqn_atari/scripts/capture_env.sh
+./setup/capture_env.sh
 ```
 
 ### Run a Training Job

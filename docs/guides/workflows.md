@@ -46,7 +46,7 @@ python -c "import torch, gymnasium, ale_py; print('Success!')"
 ./setup/setup_roms.sh
 
 # 5. Capture system info
-./experiments/dqn_atari/scripts/capture_env.sh
+./setup/capture_env.sh
 ```
 
 **Expected output:**

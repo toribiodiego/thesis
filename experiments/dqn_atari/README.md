@@ -78,7 +78,7 @@ All scripts are in `scripts/` and should be run from repository root:
 
 - **`capture_env.sh`** – Record system info and package versions
   ```bash
-  ./experiments/dqn_atari/scripts/capture_env.sh
+  ./setup/capture_env.sh
   ```
 
 See `scripts/README.md` for detailed documentation, all CLI flags, and common workflows.

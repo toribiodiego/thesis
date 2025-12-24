@@ -933,7 +933,7 @@ If your issue isn't covered here:
 2. **Run diagnostics:**
    ```bash
    # Environment info
-   ./experiments/dqn_atari/scripts/capture_env.sh
+   ./setup/capture_env.sh
    cat experiments/dqn_atari/system_info.txt
 
    # Test suite

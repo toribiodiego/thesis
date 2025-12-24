@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 # Capture system and environment information for reproducibility
-# Writes to experiments/dqn_atari/system_info.txt
+# Usage: ./setup/capture_env.sh [output_file]
+# Default output: experiments/dqn_atari/system_info.txt
 
 set -e
 
-OUTPUT_FILE="experiments/dqn_atari/system_info.txt"
+# Get repository root
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Allow override via argument, otherwise use default
+OUTPUT_FILE="${1:-$ROOT_DIR/experiments/dqn_atari/system_info.txt}"
 
 echo "Capturing system and environment information..."
 echo ""

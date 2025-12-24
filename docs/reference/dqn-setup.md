@@ -305,7 +305,7 @@ source setup/setup_env.sh
 
 ### 3. System Info Capture
 ```bash
-./experiments/dqn_atari/scripts/capture_env.sh
+./setup/capture_env.sh
 ```
 Outputs to: `experiments/dqn_atari/system_info.txt`
 
