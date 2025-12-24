@@ -2,7 +2,7 @@
 
 Complete reference for the DQN Atari reproduction thesis project.
 
-> **Last Updated**: December 2025 (after Task 02 - docs reorganization)
+> **Last Updated**: December 2025 (after docs reorganization)
 > **When to Read**: Start here when joining the project, setting up your environment, or looking for specific component documentation. Revisit after major milestones or when workflow changes.
 
 ## Quick Start
@@ -416,7 +416,7 @@ The documentation reorganization successfully established a coherent structure, 
 
 ### What Was Accomplished
 
-**Task 01 - Reorganize Docs Tree and Filenames** ✅
+**Reorganized Docs Tree and Filenames** ✅
 - Created folder structure: `guides/`, `reference/`, `plans/`, `reports/`, `ops/`, `research/papers/`, `thesis/`
 - Moved 40+ documentation files to appropriate locations
 - Renamed all files to kebab-case naming convention
@@ -425,21 +425,21 @@ The documentation reorganization successfully established a coherent structure, 
 - Removed legacy folders: `docs/design/`, `docs/maintenance/`, `docs/papers/`
 - Relocated non-doc artifacts from `docs/` to appropriate directories
 
-**Task 02 - Update Navigation and Cross-References** ✅
+**Updated Navigation and Cross-References** ✅
 - Updated all navigation in `README.md` and `docs/README.md`
 - Fixed 72+ internal doc links after file moves
 - Verified all primary documentation links resolve correctly
 - Updated references in `notes/`, `scripts/`, and `experiments/`
 - Refreshed metadata in `docs/README.md` (last updated, when to read)
 
-**Task 03 - De-duplicate and Clarify Scope** ✅
+**De-duplicated and Clarified Scope** ✅
 - Consolidated testing guidance between `testing.md` and `code-quality.md`
 - Added primary source markers to overlapping docs
 - Added status callouts (DRAFT/ACTIVE/REFERENCE) to all plan and research docs
 - Integrated `experiments/dqn_atari/notes.md` into docs navigation
 - Added cross-reference section to `architecture.md` pointing to component specs
 
-**Task 04 - Create Missing Docs Referenced in Roadmap** ✅
+**Created Missing Docs** ✅
 - Created minimal outline template for consistent doc structure
 - Added 6 new documentation files:
   - `docs/reports/reporting-requirements.md` - Prioritized thesis gaps
@@ -451,7 +451,7 @@ The documentation reorganization successfully established a coherent structure, 
 - Updated `docs/plans/plan-report-outline.md` with script-to-section mappings
 - All new docs linked from `docs/README.md` navigation
 
-**Task 05 - Establish Docs Governance and Maintenance** ✅
+**Established Docs Governance and Maintenance** ✅
 - Added "Docs Conventions" section to `docs/README.md` with naming, headings, and update cadence
 - Updated `docs/ops/checklists.md` with documentation review procedures (6 categories, quarterly cadence)
 - Added "Documentation Map" section to root `README.md` with clear link to `docs/README.md`
@@ -520,7 +520,7 @@ All documentation organization tasks verified complete:
 
 With documentation infrastructure complete, the project can now focus on:
 
-1. **Task 06+** - Repository layout baseline and consolidation
+1. **Repository layout consolidation** - Baseline documentation and directory reorganization
 2. **Applied research** - Production training runs using established reporting pipeline
 3. **Thesis integration** - Using `docs/thesis/README.md` artifact index for thesis writing
 
