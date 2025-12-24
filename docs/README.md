@@ -44,6 +44,7 @@ Detailed technical specifications for each component:
 - **[config-cli.md](reference/config-cli.md)** - Configuration system and command-line interface
 - **[eval-harness.md](reference/eval-harness.md)** - Periodic evaluation, metrics, and video capture
 - **[logging-pipeline.md](reference/logging-pipeline.md)** - Multi-backend logging, plotting, and results analysis
+- **[reporting-pipeline.md](reference/reporting-pipeline.md)** - Result generation and analysis workflow
 - **[environment-notes.md](reference/environment-notes.md)** - Toolchain differences and compatibility
 - **[stability-notes.md](reference/stability-notes.md)** - Hyperparameter choices and stability observations
 
