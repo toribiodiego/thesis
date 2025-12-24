@@ -78,6 +78,11 @@ Notes and summaries from research papers:
 - **[dqn-2013-notes.md](research/papers/dqn-2013-notes.md)** - DQN 2013 paper implementation notes
 - **[README.md](research/papers/README.md)** - Research paper index
 
+### thesis/
+Thesis-ready artifacts and integration:
+
+- **[README.md](thesis/README.md)** - Thesis artifact index and regeneration steps
+
 ### Other
 - **[changelog.md](changelog.md)** - Project timeline (kept in root)
 
