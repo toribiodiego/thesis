@@ -19,7 +19,7 @@ Initial games for DQN reproduction (Mnih et al., 2013):
 Atari ROMs are required to run ALE environments. Install them using:
 
 ```bash
-./scripts/setup_roms.sh
+../../setup/setup_roms.sh
 ```
 
 This script calls `python -m AutoROM --accept-license` to download legally-redistributable Atari 2600 ROMs.
@@ -45,7 +45,7 @@ These settings are applied when creating environments and ensure deterministic b
 pip install -r requirements.txt
 
 # 2. Download ROMs (first time only)
-./experiments/dqn_atari/scripts/setup_roms.sh
+./setup/setup_roms.sh
 
 # 3. Validate setup with dry run
 ./experiments/dqn_atari/scripts/run_dqn.sh \
@@ -73,7 +73,7 @@ All scripts are in `scripts/` and should be run from repository root:
 
 - **`setup_roms.sh`** – One-time ROM installation via AutoROM
   ```bash
-  ./experiments/dqn_atari/scripts/setup_roms.sh
+  ./setup/setup_roms.sh
   ```
 
 - **`capture_env.sh`** – Record system info and package versions

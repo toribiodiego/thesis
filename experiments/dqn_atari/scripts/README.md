@@ -234,7 +234,7 @@ Download and install Atari 2600 ROMs required for ALE environments.
 
 **Usage:**
 ```bash
-./experiments/dqn_atari/scripts/setup_roms.sh
+./setup/setup_roms.sh
 ```
 
 **Required environment:** Python environment with `AutoROM` package installed.
@@ -347,7 +347,7 @@ Capture system and environment information for reproducibility tracking.
 ```bash
 # Setup environment
 pip install -r requirements.txt
-./experiments/dqn_atari/scripts/setup_roms.sh
+./setup/setup_roms.sh
 
 # Capture environment state
 ./experiments/dqn_atari/scripts/capture_env.sh
@@ -472,7 +472,7 @@ experiments/dqn_atari/
 pip install -r requirements.txt
 
 # 2. Download ROMs
-./experiments/dqn_atari/scripts/setup_roms.sh
+./setup/setup_roms.sh
 
 # 3. Capture environment
 ./experiments/dqn_atari/scripts/capture_env.sh
@@ -485,7 +485,7 @@ pip install -r requirements.txt
 ### Reproduce Subtasks 1-2
 ```bash
 # Subtask 1: Environment setup and ROM installation
-./experiments/dqn_atari/scripts/setup_roms.sh
+./setup/setup_roms.sh
 ./experiments/dqn_atari/scripts/capture_env.sh
 
 # Subtask 2: Wrapper validation with dry runs

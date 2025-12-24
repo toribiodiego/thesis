@@ -43,7 +43,7 @@ source .venv/bin/activate
 python -c "import torch, gymnasium, ale_py; print('Success!')"
 
 # 4. Install ROMs (accept license)
-./experiments/dqn_atari/scripts/setup_roms.sh
+./setup/setup_roms.sh
 
 # 5. Capture system info
 ./experiments/dqn_atari/scripts/capture_env.sh

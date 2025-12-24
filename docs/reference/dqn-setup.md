@@ -300,7 +300,7 @@ source setup/setup_env.sh
 
 ### 2. ROM Installation
 ```bash
-./experiments/dqn_atari/scripts/setup_roms.sh
+./setup/setup_roms.sh
 ```
 
 ### 3. System Info Capture

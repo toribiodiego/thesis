@@ -55,7 +55,7 @@ Atari 2600 ROMs are required to run ALE environments. We use AutoROM to download
 
 ```bash
 # Run ROM setup script
-./experiments/dqn_atari/scripts/setup_roms.sh
+./setup/setup_roms.sh
 ```
 
 **What happens:**
@@ -273,7 +273,7 @@ python scripts/compare_runs.py \
 ```bash
 # Complete setup from scratch
 pip install -r requirements.txt
-./experiments/dqn_atari/scripts/setup_roms.sh
+./setup/setup_roms.sh
 ./experiments/dqn_atari/scripts/capture_env.sh
 ./experiments/dqn_atari/scripts/run_dqn.sh \
   experiments/dqn_atari/configs/pong.yaml --dry-run
@@ -301,7 +301,7 @@ pip install -r requirements.txt
 ```bash
 # Subtask 1: Environment setup
 pip install -r requirements.txt
-./experiments/dqn_atari/scripts/setup_roms.sh
+./setup/setup_roms.sh
 ./experiments/dqn_atari/scripts/capture_env.sh
 
 # Subtask 2: Wrapper validation
@@ -417,7 +417,7 @@ pip install -r requirements.txt
 **Solution:**
 ```bash
 # Retry ROM installation
-./experiments/dqn_atari/scripts/setup_roms.sh
+./setup/setup_roms.sh
 
 # Verify installation
 python -c 'import ale_py; print(ale_py.roms.list())'

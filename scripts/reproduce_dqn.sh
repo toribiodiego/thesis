@@ -254,7 +254,7 @@ fi
 if [[ "$SKIP_ROMS" == "false" ]]; then
     print_step "Step 2: Checking Atari ROMs"
 
-    ROM_SCRIPT="$PROJECT_ROOT/experiments/dqn_atari/scripts/setup_roms.sh"
+    ROM_SCRIPT="$PROJECT_ROOT/setup/setup_roms.sh"
     if [[ -f "$ROM_SCRIPT" ]]; then
         print_info "Running ROM setup script..."
         if [[ "$DRY_RUN" == "false" ]]; then

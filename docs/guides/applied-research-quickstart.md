@@ -91,7 +91,7 @@ pytest tests/test_dqn_trainer.py -v
 **Success criteria**: All tests pass (green output)
 
 **Common failures**:
-- ROM not found → Run `./experiments/dqn_atari/scripts/setup_roms.sh`
+- ROM not found → Run `./setup/setup_roms.sh`
 - Import errors → Check `pip install -r requirements.txt`
 - GPU tests fail → Expected if no CUDA available
 

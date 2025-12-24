@@ -78,7 +78,7 @@ ale_py._ale_py.ALEException: Unable to find ROM file
 **Solution:**
 ```bash
 # Run ROM setup script
-./experiments/dqn_atari/scripts/setup_roms.sh
+./setup/setup_roms.sh
 
 # Or manually
 python -m AutoROM --accept-license
