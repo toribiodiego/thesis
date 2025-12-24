@@ -10,7 +10,7 @@ Masters thesis on sample- and data-efficient reinforcement learning. First miles
 
 ```bash
 # Create .venv and install all dependencies
-bash envs/setup_env.sh
+bash setup/setup_env.sh
 
 # Activate the virtual environment
 source .venv/bin/activate
@@ -18,10 +18,10 @@ source .venv/bin/activate
 
 The `setup_env.sh` script:
 - Creates a Python virtual environment at `.venv/`
-- Installs all pinned dependencies from `envs/requirements.txt`
+- Installs all pinned dependencies from `setup/requirements.txt`
 - Sets up Atari ROM tooling (AutoROM)
 
-**Pinned Dependencies** (see `envs/requirements.txt` for authoritative versions):
+**Pinned Dependencies** (see `setup/requirements.txt` for authoritative versions):
 - **PyTorch 2.4.1** (CUDA 12.1)
 - **Gymnasium 0.29.1** (with Atari ROM license acceptance)
 - **ALE-py 0.8.1** (Atari emulator)
@@ -317,7 +317,7 @@ pytest tests/test_dqn_trainer.py -k "smoke_test" -v
 
 **Complete workflow for contributors:**
 1. Activate venv: `source .venv/bin/activate`
-2. Install dependencies: `bash envs/setup_env.sh` (first time only)
+2. Install dependencies: `bash setup/setup_env.sh` (first time only)
 3. Verify install: `python -c "import torch, gymnasium, ale_py"`
 4. Run tests: `pytest tests/`
 

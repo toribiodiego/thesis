@@ -30,7 +30,7 @@ Three Atari games chosen for initial DQN reproduction:
 
 ## Dependencies & Environment
 
-Pinned versions in `envs/requirements.txt`:
+Pinned versions in `setup/requirements.txt`:
 
 | Package      | Version       | Purpose                                    |
 |--------------|---------------|--------------------------------------------|
@@ -43,7 +43,7 @@ Pinned versions in `envs/requirements.txt`:
 
 **Setup:**
 ```bash
-source envs/setup_env.sh
+source setup/setup_env.sh
 ```
 
 ## ALE Runtime Settings
@@ -295,7 +295,7 @@ See [checkpointing.md](checkpointing.md) for complete checkpoint/resume and dete
 
 ### 1. Environment Setup
 ```bash
-source envs/setup_env.sh
+source setup/setup_env.sh
 ```
 
 ### 2. ROM Installation

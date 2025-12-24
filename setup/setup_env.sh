@@ -33,10 +33,10 @@ done
 
 # Select requirements file
 if [ "$USE_GPU" = true ]; then
-  REQUIREMENTS_FILE="${ROOT_DIR}/envs/requirements-gpu.txt"
+  REQUIREMENTS_FILE="${ROOT_DIR}/setup/requirements-gpu.txt"
   echo "[env] Setting up GPU environment (CUDA 12.1)"
 else
-  REQUIREMENTS_FILE="${ROOT_DIR}/envs/requirements.txt"
+  REQUIREMENTS_FILE="${ROOT_DIR}/setup/requirements.txt"
   echo "[env] Setting up CPU environment"
 fi
 

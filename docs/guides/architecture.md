@@ -562,7 +562,7 @@ pytest tests/test_save_resume_determinism.py -v -s
 2. **Run validation:**
    ```bash
    # Setup
-   bash envs/setup_env.sh
+   bash setup/setup_env.sh
    source .venv/bin/activate
 
    # Dry run

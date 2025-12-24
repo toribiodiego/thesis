@@ -34,7 +34,7 @@ Task-oriented guides for common development and experimentation workflows. Each 
 
 ```bash
 # 1. Create virtual environment and install dependencies
-bash envs/setup_env.sh
+bash setup/setup_env.sh
 
 # 2. Activate virtual environment
 source .venv/bin/activate
