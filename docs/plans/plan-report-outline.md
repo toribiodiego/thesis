@@ -216,6 +216,84 @@ This document tracks the structure and source artifacts for the main results rep
 
 ---
 
+## Reporting Pipeline Mapping
+
+This section maps the [Reporting Pipeline](../reference/reporting-pipeline.md) stages to specific report sections.
+
+### Pipeline Stage → Report Section Map
+
+| Pipeline Stage | Script | Input | Output | Report Section(s) |
+|----------------|--------|-------|--------|-------------------|
+| **Data Collection** | Training runs | `experiments/dqn_atari/runs/*/csv/*.csv` | Logs, metrics, configs | All sections (raw data) |
+| **Visualization** | `scripts/plot_results.py` | `episodes.csv`, `evaluations.csv` | `results/plots/*/returns.png`, `loss.png`, etc. | 4.1-4.3 (Results - per game) |
+| **Aggregation** | `scripts/export_results_table.py` | All runs in `runs/` | `results/summary/metrics.csv` | 4.4 (Aggregate Comparison), Appendix |
+| **Analysis** | `scripts/analyze_results.py` | `metrics.csv` | `analysis.txt`, statistical tests | 5.1 (Comparison to Paper), 5.2 (Learning Dynamics) |
+| **Thesis Integration** | Manual/LaTeX | All above outputs | Formatted figures/tables | All sections (final thesis) |
+
+### Detailed Script-to-Section Mapping
+
+**Section 1: Executive Summary**
+- Script: `scripts/export_results_table.py`
+- Input: `experiments/dqn_atari/runs/*/csv/evaluations.csv`
+- Output: `results/summary/metrics.csv` (final row per game)
+- Usage: Extract mean return, % of paper score for summary statement
+
+**Section 3: Methods**
+- Script: None (manual extraction from docs + configs)
+- Input: `experiments/dqn_atari/configs/*.yaml`, `docs/reference/*.md`
+- Output: Hyperparameters table, architecture description
+- Usage: Copy config values, cite design docs
+
+**Section 4.1-4.3: Per-Game Results**
+- Script: `scripts/plot_results.py`
+- Input: `experiments/dqn_atari/runs/<game>_<seed>_*/csv/episodes.csv`
+- Output: `results/plots/<game>_<seed>/returns.png`, `loss.png`, `q_values.png`
+- Usage: Embed learning curves in Results chapter
+
+**Section 4.4: Aggregate Comparison**
+- Script: `scripts/export_results_table.py` → `scripts/analyze_results.py`
+- Input: All runs (multi-seed)
+- Output: `results/summary/metrics.csv`, `metrics.md` (table), `analysis.txt`
+- Usage: Summary table showing all games, seeds, paper comparison
+
+**Section 5.1: Comparison to Paper**
+- Script: `scripts/analyze_results.py`
+- Input: `results/summary/metrics.csv`, paper scores (hardcoded or JSON)
+- Output: `results/summary/analysis.txt` (statistical tests, CI, % of paper)
+- Usage: Justify reproduction quality, discuss gaps
+
+**Section 5.2: Learning Dynamics**
+- Script: `scripts/plot_results.py` (loss, Q-values outputs)
+- Input: `experiments/dqn_atari/runs/*/csv/training_steps.csv`
+- Output: `results/plots/*/loss.png`, `q_values.png`, `episode_length.png`
+- Usage: Analyze convergence, stability, Q-value magnitudes
+
+**Appendix: Hyperparameters Table**
+- Script: Manual extraction or YAML→Markdown converter
+- Input: `experiments/dqn_atari/configs/pong.yaml`
+- Output: Markdown/LaTeX table
+- Usage: Document exact hyperparameters used
+
+**Appendix: Compute Resources**
+- Script: Manual extraction
+- Input: `experiments/dqn_atari/runs/*/system_info.txt`, training logs
+- Output: Hardware specs, FPS, runtime table
+- Usage: Document computational requirements
+
+**Appendix: Reproduction Commands**
+- Script: None (copy from docs)
+- Input: `docs/plans/plan-reproduce-recipe.md`
+- Output: Bash commands for full reproduction
+- Usage: Enable others to reproduce results
+
+### Quick Reference
+
+For full pipeline documentation, see [Reporting Pipeline](../reference/reporting-pipeline.md).
+
+For thesis artifact index and regeneration steps, see [Thesis Artifact Index](../thesis/README.md).
+
+---
+
 ## Regeneration Commands
 
 ### Complete report regeneration
@@ -277,16 +355,28 @@ Before finalizing report:
 | 0.1 | TBD | Initial outline created |
 | 0.2 | TBD | Pong results added |
 | 0.3 | TBD | Multi-game results added |
+| 0.4 | 2025-12-23 | Added reporting pipeline mapping |
 | 1.0 | TBD | Final report complete |
 
 ---
 
 ## References
 
+**Report Structure**:
 - Main report: `docs/reports/report-dqn-results.md` (to be created)
 - Results comparison guide: `../reports/report-results-comparison.md`
-- Environment notes: `../reference/environment-notes.md`
 - Reproduction recipe: `plan-reproduce-recipe.md`
+
+**Reporting Infrastructure**:
+- [Reporting Pipeline](../reference/reporting-pipeline.md) - End-to-end workflow from artifacts to thesis
+- [Thesis Artifact Index](../thesis/README.md) - Index of figures, tables, and regeneration steps
+- [Logging Pipeline](../reference/logging-pipeline.md) - Training metrics collection
+
+**Implementation References**:
+- Environment notes: `../reference/environment-notes.md`
 - Training configs: `experiments/dqn_atari/configs/`
 - Plotting tools: `scripts/plot_results.py`
+- Analysis tools: `scripts/export_results_table.py`, `scripts/analyze_results.py`
+
+**Source Material**:
 - DQN 2013 paper: arXiv:1312.5602
