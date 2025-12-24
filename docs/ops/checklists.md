@@ -139,6 +139,50 @@ Regular tasks to keep the repository healthy:
 
 ---
 
+## Documentation Review
+
+Quarterly documentation maintenance (or before major milestones):
+
+- [ ] **Navigation and Structure**
+  - [ ] Verify `docs/README.md` navigation is current
+  - [ ] Check all new docs are linked from appropriate sections
+  - [ ] Confirm folder structure matches documented layout
+  - [ ] Review `README.md` docs links point to correct locations
+
+- [ ] **Link Integrity**
+  - [ ] Run link check: `grep -r "\[.*\](.*\.md)" docs/ | grep -v "^Binary" > /tmp/doc_links.txt`
+  - [ ] Manually verify external links (arXiv, GitHub, W&B)
+  - [ ] Check internal cross-references resolve correctly
+  - [ ] Fix any broken links or outdated paths
+
+- [ ] **Content Accuracy**
+  - [ ] Reference docs match current implementation
+  - [ ] Config examples match actual YAML files
+  - [ ] Command examples work with current CLI
+  - [ ] Hyperparameters match current defaults
+  - [ ] File paths reflect current repository structure
+
+- [ ] **Status and Metadata**
+  - [ ] Update "Last Updated" dates for modified docs
+  - [ ] Check status callouts (DRAFT, ACTIVE, REFERENCE, DEPRECATED)
+  - [ ] Archive obsolete docs to `docs/archive/` if needed
+  - [ ] Update `docs/changelog.md` with major doc changes
+
+- [ ] **Conventions Compliance**
+  - [ ] File names use kebab-case
+  - [ ] H1 titles match filenames
+  - [ ] Reports use `report-` prefix, plans use `plan-` prefix
+  - [ ] New docs follow minimal outline template (Purpose, Inputs/Outputs, Next Steps)
+  - [ ] Docs use proper heading hierarchy (H1 → H2 → H3, max 3 levels)
+
+- [ ] **Cross-Reference Audit**
+  - [ ] Check `docs/guides/architecture.md` links to component specs
+  - [ ] Verify `docs/plans/plan-report-outline.md` script paths are valid
+  - [ ] Confirm `docs/thesis/README.md` artifact paths exist
+  - [ ] Review `docs/reference/reporting-pipeline.md` workflow matches current scripts
+
+---
+
 ## Troubleshooting Common Issues
 
 Quick reference for frequent problems:
@@ -217,4 +261,7 @@ ruff check src/ tests/
 
 # Formatting
 black src/ tests/ && isort src/ tests/
+
+# Check doc links
+grep -r "\[.*\](.*\.md)" docs/ | grep -v "^Binary" > /tmp/doc_links.txt
 ```
