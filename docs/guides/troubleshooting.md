@@ -952,7 +952,7 @@ If your issue isn't covered here:
 4. **Enable debug mode:**
    ```bash
    # Verbose logging
-   python -m pdb src/train_dqn.py ...
+   python -m pdb train_dqn.py ...
    ```
 
 ---

@@ -21,7 +21,7 @@ This directory contains scripts for:
 
 Launch DQN training or dry-run validation with specified config.
 
-**Purpose:** Convenience wrapper around `python src/train_dqn.py` that handles path resolution and config loading.
+**Purpose:** Convenience wrapper around `python train_dqn.py` that handles path resolution and config loading.
 
 **Usage:**
 ```bash
@@ -523,7 +523,7 @@ Evaluate a trained model from a checkpoint without continuing training.
 
 **Basic evaluation (DQN paper protocol: ε=0.05, 10 episodes):**
 ```bash
-python src/train_dqn.py \
+python train_dqn.py \
   --cfg experiments/dqn_atari/configs/pong.yaml \
   --eval-only \
   --checkpoint experiments/dqn_atari/runs/pong_123/checkpoints/step_1000000.pt \
@@ -532,7 +532,7 @@ python src/train_dqn.py \
 
 **Final reporting evaluation (30 episodes for paper results):**
 ```bash
-python src/train_dqn.py \
+python train_dqn.py \
   --cfg experiments/dqn_atari/configs/pong.yaml \
   --eval-only \
   --checkpoint experiments/dqn_atari/runs/pong_123/checkpoints/best_model.pt \
@@ -542,7 +542,7 @@ python src/train_dqn.py \
 
 **Pure greedy evaluation (ε=0, no exploration):**
 ```bash
-python src/train_dqn.py \
+python train_dqn.py \
   --cfg experiments/dqn_atari/configs/pong.yaml \
   --eval-only \
   --checkpoint experiments/dqn_atari/runs/pong_123/checkpoints/step_2000000.pt \
@@ -552,7 +552,7 @@ python src/train_dqn.py \
 
 **Evaluation with video recording:**
 ```bash
-python src/train_dqn.py \
+python train_dqn.py \
   --cfg experiments/dqn_atari/configs/pong.yaml \
   --eval-only \
   --checkpoint experiments/dqn_atari/runs/pong_123/checkpoints/best_model.pt \
@@ -602,7 +602,7 @@ The `evaluations.csv` file contains:
 ```bash
 # Evaluate all checkpoints from a run
 for ckpt in experiments/dqn_atari/runs/pong_123/checkpoints/step_*.pt; do
-    python src/train_dqn.py \
+    python train_dqn.py \
       --cfg experiments/dqn_atari/configs/pong.yaml \
       --eval-only \
       --checkpoint $ckpt \
@@ -617,7 +617,7 @@ cat experiments/dqn_atari/runs/pong_123/eval/evaluations.csv
 
 ```bash
 # Evaluate best model
-python src/train_dqn.py \
+python train_dqn.py \
   --cfg experiments/dqn_atari/configs/pong.yaml \
   --eval-only \
   --checkpoint experiments/dqn_atari/runs/pong_123/checkpoints/best_model.pt \
@@ -625,7 +625,7 @@ python src/train_dqn.py \
   --seed 0
 
 # Evaluate latest checkpoint
-python src/train_dqn.py \
+python train_dqn.py \
   --cfg experiments/dqn_atari/configs/pong.yaml \
   --eval-only \
   --checkpoint experiments/dqn_atari/runs/pong_123/checkpoints/step_10000000.pt \

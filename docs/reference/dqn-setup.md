@@ -363,7 +363,7 @@ Outputs to: `experiments/dqn_atari/system_info.txt`
 **Solution:**
 ```bash
 chmod +x experiments/dqn_atari/scripts/*.sh
-chmod +x src/train_dqn.py
+chmod +x train_dqn.py
 ```
 
 ### Import Errors

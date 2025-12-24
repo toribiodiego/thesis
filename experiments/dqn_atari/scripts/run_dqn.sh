@@ -25,6 +25,6 @@ shift || true
 
 # Launch training script with all remaining arguments
 cd "${ROOT_DIR}"
-python src/train_dqn.py \
+python train_dqn.py \
   --config "${CONFIG_PATH}" \
   "$@"
