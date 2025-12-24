@@ -1,15 +1,26 @@
-# Environment Specifications
+# Environment Setup (MOVED)
 
-This folder stores reproducible environment definitions shared across experiments.
+All environment setup assets have been moved to `setup/`.
 
-## Files
-- `requirements.txt` – Pinned base stack (PyTorch 2.4.1, Gymnasium/ALE, AutoROM helper, plotting/logging utilities).
-- `setup_env.sh` – Creates `.venv/`, installs dependencies, and runs `python -m AutoROM --accept-license`.
+## New Location
+
+- **Setup script**: `setup/setup_env.sh`
+- **Requirements files**: `setup/requirements*.txt`
+- **Documentation**: See project README and `docs/guides/workflows.md`
 
 ## Usage
+
 ```bash
-bash envs/setup_env.sh         # creates .venv and installs everything
-source .venv/bin/activate      # activate when working in the repo
+# Create virtual environment and install dependencies
+bash setup/setup_env.sh
+
+# For GPU support
+bash setup/setup_env.sh --gpu
+
+# Activate environment
+source .venv/bin/activate
 ```
 
-Pin any experiment-specific extras via additional `requirements-*.txt` files or pip-compile inputs as the project grows.
+---
+
+**Note**: This directory (`envs/`) is deprecated and will be removed in a future cleanup. Please update any scripts or workflows to use `setup/` instead.
