@@ -45,6 +45,7 @@ Detailed technical specifications for each component:
 - **[eval-harness.md](reference/eval-harness.md)** - Periodic evaluation, metrics, and video capture
 - **[logging-pipeline.md](reference/logging-pipeline.md)** - Multi-backend logging, plotting, and results analysis
 - **[reporting-pipeline.md](reference/reporting-pipeline.md)** - Result generation and analysis workflow
+- **[archive-plan.md](reference/archive-plan.md)** - Retention rules and artifact management
 - **[environment-notes.md](reference/environment-notes.md)** - Toolchain differences and compatibility
 - **[stability-notes.md](reference/stability-notes.md)** - Hyperparameter choices and stability observations
 
