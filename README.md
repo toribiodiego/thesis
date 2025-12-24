@@ -200,11 +200,11 @@ python scripts/plot_results.py \
 # Generate Markdown/CSV summary tables
 python scripts/export_results_table.py \
   --runs-dir experiments/dqn_atari/runs/ \
-  --output results/summary
+  --output output/summary
 
 # Outputs:
-# - results/summary/results_summary.csv
-# - results/summary/results_summary.md
+# - output/summary/results_summary.csv
+# - output/summary/results_summary.md
 ```
 
 **See also:**
@@ -283,10 +283,10 @@ Core implementation specifications (read in this order):
 See [experiments/dqn_atari/README.md](experiments/dqn_atari/README.md) for experiment-specific details and [experiments/dqn_atari/scripts/README.md](experiments/dqn_atari/scripts/README.md) for complete CLI documentation.
 
 **Key scripts:**
-- `run_dqn.sh` – Training and dry-run validation
-- `smoke_test.sh` – Fast end-to-end validation (~200K frames)
-- `setup_roms.sh` – One-time ROM installation
-- `capture_env.sh` – System and package information capture
+- `experiments/dqn_atari/scripts/run_dqn.sh` – Training and dry-run validation
+- `experiments/dqn_atari/scripts/smoke_test.sh` – Fast end-to-end validation (~200K frames)
+- `setup/setup_roms.sh` – One-time ROM installation
+- `setup/capture_env.sh` – System and package information capture
 
 ### Testing
 
@@ -324,19 +324,38 @@ pytest tests/test_dqn_trainer.py -k "smoke_test" -v
 ## Structure
 
 ```
+├── train_dqn.py                 # Main training entry point
 ├── TODO                         # Current roadmap and task tracker (untracked)
-├── docs/
-│   └── design/                 # Architecture and implementation specs
-├── envs/                        # Dependencies and setup scripts
+├── docs/                        # Project documentation
+│   ├── guides/                 # Task-oriented guides
+│   ├── reference/              # Technical specifications
+│   ├── plans/                  # Experiment plans
+│   ├── reports/                # Analysis and results
+│   └── ops/                    # Maintenance procedures
+├── setup/                       # Environment setup and dependencies
+│   ├── setup_env.sh            # Virtual environment creation
+│   ├── setup_roms.sh           # Atari ROM installation
+│   ├── capture_env.sh          # System info capture
+│   └── requirements*.txt       # Pinned dependencies
 ├── src/                         # Reusable RL modules
 │   ├── models/                 # Neural network architectures
 │   ├── replay/                 # Experience replay buffers
 │   ├── envs/                   # Atari wrappers and preprocessing
-│   └── training/               # DQN trainer and update logic
-├── experiments/dqn_atari/       # DQN configs and training scripts
+│   ├── training/               # DQN trainer and update logic
+│   └── config/                 # Configuration system
+├── scripts/                     # Global analysis utilities
+│   ├── plot_results.py         # Plotting from CSV logs
+│   ├── export_results_table.py # Results table generation
+│   └── analyze_results.py      # Statistical analysis
+├── experiments/dqn_atari/       # DQN experiment
 │   ├── configs/                # YAML configs for each game
-│   └── scripts/                # Training and setup utilities
-└── tests/                       # Unit tests for all modules
+│   ├── scripts/                # DQN-specific wrappers
+│   └── runs/                   # Training outputs (gitignored)
+├── tests/                       # Unit and integration tests
+├── output/                      # Analysis outputs (gitignored)
+│   ├── plots/                  # Generated visualizations
+│   └── summary/                # Results tables
+└── wandb/                       # W&B local cache (gitignored)
 ```
 
 ## Workflow
