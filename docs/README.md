@@ -346,3 +346,58 @@ Where should readers go after this document?
 - **Next Steps** provides navigation and prevents dead-ends
 - Keep each section concise (prefer bullet points over prose)
 - Add **Status** indicator: DRAFT (incomplete), ACTIVE (actively used), REFERENCE (stable/archival)
+
+---
+
+## Docs Conventions
+
+### Naming
+
+**Files**:
+- Use **kebab-case** for all documentation files (e.g., `quick-start.md`, `dqn-model.md`)
+- Prefix reports with `report-` (e.g., `report-gpu-validation.md`)
+- Prefix plans with `plan-` (e.g., `plan-ablations.md`)
+- Use descriptive, searchable names that indicate content
+
+**Folders**:
+- Follow the established structure: `guides/`, `reference/`, `plans/`, `reports/`, `ops/`, `research/`, `thesis/`
+- Keep folder names concise and self-explanatory
+
+### Headings and Structure
+
+**H1 Titles**:
+- Match the filename (e.g., `quick-start.md` → `# Quick Start`)
+- Use Title Case for H1 headings
+- Include status callout for plans and research docs
+
+**Section Hierarchy**:
+- Use proper heading levels (H2 for main sections, H3 for subsections)
+- Keep nesting to 3 levels maximum (H1 → H2 → H3)
+- Use parallel structure within a section (all bullets or all paragraphs)
+
+**Content Style**:
+- Prefer bullet points over long paragraphs
+- Use code blocks for commands, configs, and examples
+- Include concrete examples over abstract descriptions
+- Add cross-references to related docs
+
+### Update Cadence
+
+**When to Update**:
+- **Immediately**: When implementation changes behavior documented in reference docs
+- **Before commit**: When workflow changes affect guides or quickstarts
+- **After milestones**: Update reports and summaries when experiments complete
+- **Quarterly review**: Check all docs for stale references and broken links
+
+**Update Checklist**:
+- [ ] Update "Last Updated" date at bottom of modified docs
+- [ ] Check cross-references still point to correct sections
+- [ ] Update version numbers or commit hashes if referenced
+- [ ] Verify code examples still work with current implementation
+- [ ] Update navigation in `docs/README.md` if adding new docs
+
+**Maintenance**:
+- Mark outdated docs with `> **Status**: DEPRECATED` callout
+- Archive obsolete docs to `docs/archive/` rather than deleting
+- Keep `docs/changelog.md` current with major documentation changes
+- Run periodic link checks (manual or scripted) to find broken references
