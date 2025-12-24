@@ -386,13 +386,20 @@ thesis/
 │       ├── repro.py              # Seeding utilities
 │       └── determinism.py        # Deterministic mode
 │
+├── setup/                        # Environment setup
+│   ├── setup_env.sh              # Venv creation and dependencies
+│   ├── setup_roms.sh             # ROM installation
+│   ├── capture_env.sh            # System info capture
+│   ├── requirements.txt          # Base dependencies (CPU)
+│   ├── requirements-cpu.txt      # CPU-specific dependencies
+│   └── requirements-gpu.txt      # GPU dependencies (CUDA 12.1)
+│
 ├── experiments/dqn_atari/        # DQN experiment configs
 │   ├── configs/                  # YAML configurations
 │   │   ├── base.yaml             # Default settings
 │   │   └── pong.yaml             # Game-specific
 │   ├── scripts/                  # Training scripts
 │   │   ├── run_dqn.sh            # Main launcher
-│   │   ├── setup_roms.sh         # ROM installation
 │   │   └── smoke_test.sh         # Fast validation
 │   └── runs/                     # Training outputs
 │       └── pong_42/              # Run directory
