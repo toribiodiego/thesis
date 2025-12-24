@@ -48,7 +48,7 @@ CLAUDE.md
 experiments/**/runs/
 experiments/**/checkpoints/
 experiments/**/artifacts/
-results/
+output/
 *.mp4
 *.gif
 *.png
