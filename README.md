@@ -212,7 +212,35 @@ python scripts/export_results_table.py \
 - [scripts/plot_results.py](scripts/plot_results.py) - Full CLI reference with `--help`
 - [scripts/export_results_table.py](scripts/export_results_table.py) - Results table generator
 
-## Documentation
+## Documentation Map
+
+**Complete Documentation**: **[docs/README.md](docs/README.md)** is the main entry point for all project documentation.
+
+**Quick Navigation**:
+- **Getting Started**: [Quick Start](#quick-start) (this file) → [docs/guides/quick-start.md](docs/guides/quick-start.md) (detailed setup)
+- **Common Tasks**: [docs/guides/workflows.md](docs/guides/workflows.md) - Training, debugging, testing workflows
+- **Troubleshooting**: [docs/guides/troubleshooting.md](docs/guides/troubleshooting.md) - Problem diagnosis and fixes
+- **Architecture**: [docs/guides/architecture.md](docs/guides/architecture.md) - System design overview
+- **Component Specs**: [docs/reference/](docs/reference/) - Detailed technical specifications
+- **Progress Tracking**: [TODO](TODO) (local file) - Current tasks and roadmap
+
+**Documentation Structure**:
+```
+docs/
+├── README.md              # Documentation index and navigation guide
+├── guides/                # High-level task-oriented guides
+├── reference/             # Technical component specifications
+├── plans/                 # Experiment and analysis plans
+├── reports/               # Experiment results and analysis
+├── ops/                   # Maintenance procedures and checklists
+└── thesis/                # Thesis-ready artifacts and integration
+```
+
+For the full documentation index with descriptions of each file, see **[docs/README.md](docs/README.md)**.
+
+---
+
+## Detailed Documentation References
 
 **New to the project?** Start with the [Quick Start](#quick-start) above, then explore:
 
