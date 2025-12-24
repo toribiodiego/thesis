@@ -30,7 +30,7 @@ These must be completed before any report submission:
   - Seeds: 42, 123, 456
   - Est. time: 90-180 hours CPU or 15-30 hours GPU
   - Blocking: All results sections depend on this
-  - Script: `./scripts/reproduce_dqn.sh --game pong --seed <SEED>`
+  - Script: `./experiments/dqn_atari/scripts/reproduce_dqn.sh --game pong --seed <SEED>`
 
 ### 1.2 Core Visualizations
 - [ ] **Pong learning curves** (returns over time)

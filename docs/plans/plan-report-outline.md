@@ -151,7 +151,7 @@ This document tracks the structure and source artifacts for the main results rep
 #### C. Reproduction Commands
 - **Content**: Exact commands to reproduce
 - **Source**:
-  - `scripts/reproduce_dqn.sh`
+  - `experiments/dqn_atari/scripts/reproduce_dqn.sh`
   - `plan-reproduce-recipe.md`
 
 ---

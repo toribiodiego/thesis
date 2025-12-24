@@ -134,7 +134,7 @@ Validate learning on one seed before multi-seed production:
 
 ```bash
 # Pong single seed (10M frames)
-./scripts/reproduce_dqn.sh --game pong --seed 42
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --game pong --seed 42
 ```
 
 **Monitor progress**:
@@ -165,7 +165,7 @@ For statistical robustness, run 3 seeds:
 ```bash
 # Sequential (one at a time)
 for seed in 42 123 456; do
-    ./scripts/reproduce_dqn.sh --game pong --seed $seed
+    ./experiments/dqn_atari/scripts/reproduce_dqn.sh --game pong --seed $seed
 done
 
 # Or parallel (if multiple GPUs/machines available)
@@ -175,13 +175,13 @@ done
 **Parallel execution tip**:
 ```bash
 # Terminal 1
-./scripts/reproduce_dqn.sh --game pong --seed 42
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --game pong --seed 42
 
 # Terminal 2
-./scripts/reproduce_dqn.sh --game pong --seed 123
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --game pong --seed 123
 
 # Terminal 3
-./scripts/reproduce_dqn.sh --game pong --seed 456
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --game pong --seed 456
 ```
 
 **Checkpoint management**:
@@ -196,10 +196,10 @@ If GPU available and time permits:
 
 ```bash
 # Breakout (50M frames, ~5x longer than Pong)
-./scripts/reproduce_dqn.sh --game breakout --seed 42
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --game breakout --seed 42
 
 # Beam Rider (50M frames)
-./scripts/reproduce_dqn.sh --game beam_rider --seed 42
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --game beam_rider --seed 42
 ```
 
 **Note**: Breakout/Beam Rider each take 150-300 hours on CPU, 25-50 hours on GPU per seed. Consider deferring if GPU not available.
@@ -355,7 +355,7 @@ pytest tests/ -v -m "not slow"
 
 ### Test Run (1 day)
 ```bash
-./scripts/reproduce_dqn.sh --game pong --seed 42 --frames 1000000
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --game pong --seed 42 --frames 1000000
 python scripts/plot_results.py --episodes <run>/csv/episodes.csv
 ```
 
@@ -363,7 +363,7 @@ python scripts/plot_results.py --episodes <run>/csv/episodes.csv
 ```bash
 # Multi-seed Pong
 for seed in 42 123 456; do
-    ./scripts/reproduce_dqn.sh --game pong --seed $seed
+    ./experiments/dqn_atari/scripts/reproduce_dqn.sh --game pong --seed $seed
 done
 
 # Analysis
@@ -376,7 +376,7 @@ python scripts/plot_results.py --episodes <runs>/csv/episodes.csv
 # All games, all seeds
 for game in pong breakout beam_rider; do
     for seed in 42 123 456; do
-        ./scripts/reproduce_dqn.sh --game $game --seed $seed
+        ./experiments/dqn_atari/scripts/reproduce_dqn.sh --game $game --seed $seed
     done
 done
 ```

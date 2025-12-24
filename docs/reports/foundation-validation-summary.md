@@ -283,7 +283,7 @@ wandb:
    - Seeds: 42, 123, 456
    - Platform: Google Colab A100 GPU
    - Est. time: 12 hours × 3 = 36 hours
-   - Command: `./scripts/reproduce_dqn.sh --game pong --seed <SEED>`
+   - Command: `./experiments/dqn_atari/scripts/reproduce_dqn.sh --game pong --seed <SEED>`
 
 2. **Monitor first run closely**
    - Check FPS stabilizes >200 on GPU

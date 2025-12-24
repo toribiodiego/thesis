@@ -8,7 +8,7 @@ This document provides the complete guide for reproducing DQN 2013 paper results
 
 **One-command reproduction:**
 ```bash
-./scripts/reproduce_dqn.sh --game pong --seed 42
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --game pong --seed 42
 ```
 
 This will:
@@ -58,38 +58,38 @@ git --version
 
 ```bash
 # Full Pong reproduction (10M frames, ~30-60 hours CPU)
-./scripts/reproduce_dqn.sh --game pong --seed 42
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --game pong --seed 42
 
 # Quick test (1M frames, ~3-6 hours CPU)
-./scripts/reproduce_dqn.sh --game pong --seed 42 --frames 1000000
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --game pong --seed 42 --frames 1000000
 
 # Different game (50M frames for Breakout)
-./scripts/reproduce_dqn.sh --game breakout --seed 42
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --game breakout --seed 42
 
 # Different seed
-./scripts/reproduce_dqn.sh --game pong --seed 123
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --game pong --seed 123
 ```
 
 ### Advanced Options
 
 ```bash
 # Skip environment setup (already configured)
-./scripts/reproduce_dqn.sh --skip-setup
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --skip-setup
 
 # Skip ROM installation (already have ROMs)
-./scripts/reproduce_dqn.sh --skip-roms
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --skip-roms
 
 # Disable Weights & Biases logging
-./scripts/reproduce_dqn.sh --disable-wandb
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --disable-wandb
 
 # Skip plot generation
-./scripts/reproduce_dqn.sh --skip-plots
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --skip-plots
 
 # Preview what would be executed
-./scripts/reproduce_dqn.sh --dry-run
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --dry-run
 
 # Show help
-./scripts/reproduce_dqn.sh --help
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --help
 ```
 
 ### Multi-Seed Experiments
@@ -99,7 +99,7 @@ For statistical significance, run multiple seeds:
 ```bash
 # Sequential (one at a time)
 for seed in 42 123 456; do
-    ./scripts/reproduce_dqn.sh --game pong --seed $seed
+    ./experiments/dqn_atari/scripts/reproduce_dqn.sh --game pong --seed $seed
 done
 
 # Or use the multi-seed launcher
@@ -124,7 +124,7 @@ The script uses YAML configs but allows overrides:
 
 ```bash
 # Change total frames
-./scripts/reproduce_dqn.sh --frames 5000000
+./experiments/dqn_atari/scripts/reproduce_dqn.sh --frames 5000000
 
 # Other parameters via config files
 cat experiments/dqn_atari/configs/pong.yaml
@@ -285,7 +285,7 @@ export WANDB_API_KEY=your-key
 
 **5. Script permission denied:**
 ```bash
-chmod +x scripts/reproduce_dqn.sh
+chmod +x experiments/dqn_atari/scripts/reproduce_dqn.sh
 ```
 
 ### Performance Issues
@@ -396,7 +396,7 @@ print(f"Mean: {mean:.2f} +/- {ci_95:.2f} (95% CI)")
 
 ## References
 
-- Reproduction script: `scripts/reproduce_dqn.sh`
+- Reproduction script: `experiments/dqn_atari/scripts/reproduce_dqn.sh`
 - Results comparison: `../reports/report-results-comparison.md`
 - Environment notes: `docs/reference/environment-notes.md`
 - Game suite plan: `plan-game-suite.md`
