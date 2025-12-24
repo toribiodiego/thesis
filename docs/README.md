@@ -147,10 +147,10 @@ Documentation in `docs/` should be:
 - Experiment metadata and logs
 - [notes.md](../experiments/dqn_atari/notes.md) - Experiment log for tracking observations and follow-ups during training runs
 
-**results/** - Generated outputs:
+**output/** - Generated analysis outputs:
 - Plots and visualizations
 - Analysis summaries and tables
-- Trained model checkpoints
+- Statistical comparisons
 
 **notes/** - Personal workspace:
 - Scratch notes and ideas
@@ -164,7 +164,7 @@ Documentation in `docs/` should be:
 - Personal workspace for tracking progress
 - See [TODO](../TODO) for active task list
 
-**Key principle:** If it documents *how the system works* → `docs/`. If it describes *what a specific run produced* → `results/` or `experiments/`.
+**Key principle:** If it documents *how the system works* → `docs/`. If it describes *what a specific run produced* → `output/` or `experiments/`.
 
 ---
 
