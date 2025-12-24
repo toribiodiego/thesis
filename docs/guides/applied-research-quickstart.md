@@ -122,7 +122,7 @@ grep "FPS" <run_dir>/logs/training.log | tail -5
 - CPU (Intel): 50-100 FPS → Pong ~28-56 hours
 - GPU (RTX 3080): 1000-2000 FPS → Pong ~1.4-2.8 hours
 
-**Document baseline**: Save system info and FPS to `results/summary/performance_baseline.txt`
+**Document baseline**: Save system info and FPS to `output/summary/performance_baseline.txt`
 
 ---
 
@@ -216,7 +216,7 @@ Create learning curves and diagnostics:
 # Single run plots
 python scripts/plot_results.py \
   --episodes experiments/dqn_atari/runs/pong_42_*/csv/episodes.csv \
-  --output results/plots/pong_42
+  --output output/plots/pong_42
 
 # Multi-seed aggregation (manual for now)
 # TODO: Implement multi-seed plotting script
@@ -236,7 +236,7 @@ Create summary tables for thesis:
 # Aggregate all runs
 python scripts/export_results_table.py \
   --runs-dir experiments/dqn_atari/runs \
-  --output results/summary/metrics.csv
+  --output output/summary/metrics.csv
 ```
 
 **Output format**:
@@ -256,7 +256,7 @@ import pandas as pd
 import numpy as np
 
 # Load results
-df = pd.read_csv("results/summary/metrics.csv")
+df = pd.read_csv("output/summary/metrics.csv")
 
 # Aggregate seeds
 pong_results = df[df['game'] == 'pong']
@@ -305,12 +305,12 @@ Preserve reproducibility:
 
 ```bash
 # Organize run outputs
-mkdir -p results/final_runs/pong
-cp -r experiments/dqn_atari/runs/pong_*/ results/final_runs/pong/
+mkdir -p output/final_runs/pong
+cp -r experiments/dqn_atari/runs/pong_*/ output/final_runs/pong/
 
 # Save system provenance
 cp experiments/dqn_atari/runs/pong_42_*/system_info.txt \
-   results/summary/pong_system_info.txt
+   output/summary/pong_system_info.txt
 
 # Archive to W&B (if enabled)
 # Artifacts uploaded automatically during training

@@ -43,7 +43,7 @@ For operational usage, see [Applied Research Quickstart](../guides/applied-resea
 
 2. VISUALIZATION (plot_results.py)
    Input:  episodes.csv, evaluations.csv
-   Output: results/plots/<run>/
+   Output: output/plots/<run>/
            ├── returns.png         # Episode returns over time
            ├── episode_length.png  # Episode lengths
            ├── loss.png           # Training loss
@@ -51,7 +51,7 @@ For operational usage, see [Applied Research Quickstart](../guides/applied-resea
 
 3. AGGREGATION (export_results_table.py)
    Input:  Multiple runs (3+ seeds)
-   Output: results/summary/metrics.csv
+   Output: output/summary/metrics.csv
            game,seed,final_return,std,paper_score,percent
 
 4. ANALYSIS (analyze_results.py)
@@ -120,7 +120,7 @@ Generate publication-quality plots from training logs.
 ```bash
 python scripts/plot_results.py \
   --episodes experiments/dqn_atari/runs/pong_42_*/csv/episodes.csv \
-  --output results/plots/pong_42
+  --output output/plots/pong_42
 ```
 
 **Required**:
@@ -137,7 +137,7 @@ python scripts/plot_results.py \
 
 **Generated files**:
 ```
-results/plots/pong_42/
+output/plots/pong_42/
 ├── returns.png           # Episode returns over time
 ├── episode_length.png    # Episode durations
 ├── loss.png             # Training loss (if training_steps.csv provided)
@@ -175,7 +175,7 @@ Aggregate multi-seed runs into summary tables for thesis.
 ```bash
 python scripts/export_results_table.py \
   --runs-dir experiments/dqn_atari/runs \
-  --output results/summary/metrics.csv
+  --output output/summary/metrics.csv
 ```
 
 **Required**:
@@ -235,9 +235,9 @@ Perform statistical tests and generate paper comparisons.
 
 ```bash
 python scripts/analyze_results.py \
-  --metrics results/summary/metrics.csv \
+  --metrics output/summary/metrics.csv \
   --paper-scores paper_baselines.json \
-  --output results/summary/analysis.txt
+  --output output/summary/analysis.txt
 ```
 
 **Required**:
@@ -405,18 +405,18 @@ Process all runs automatically:
 for run in experiments/dqn_atari/runs/*/; do
     python scripts/plot_results.py \
         --episodes "$run/csv/episodes.csv" \
-        --output "results/plots/$(basename $run)"
+        --output "output/plots/$(basename $run)"
 done
 
 # Export summary table
 python scripts/export_results_table.py \
     --runs-dir experiments/dqn_atari/runs \
-    --output results/summary/metrics.csv
+    --output output/summary/metrics.csv
 
 # Run analysis
 python scripts/analyze_results.py \
-    --metrics results/summary/metrics.csv \
-    --output results/summary/analysis.txt
+    --metrics output/summary/metrics.csv \
+    --output output/summary/analysis.txt
 ```
 
 ### Makefile Integration
@@ -428,18 +428,18 @@ plots:
 	@for run in experiments/dqn_atari/runs/*/; do \
 		python scripts/plot_results.py \
 			--episodes "$$run/csv/episodes.csv" \
-			--output "results/plots/$$(basename $$run)"; \
+			--output "output/plots/$$(basename $$run)"; \
 	done
 
 tables:
 	python scripts/export_results_table.py \
 		--runs-dir experiments/dqn_atari/runs \
-		--output results/summary/metrics.csv
+		--output output/summary/metrics.csv
 
 analysis: tables
 	python scripts/analyze_results.py \
-		--metrics results/summary/metrics.csv \
-		--output results/summary/analysis.txt
+		--metrics output/summary/metrics.csv \
+		--output output/summary/analysis.txt
 
 all: plots tables analysis
 ```
@@ -454,7 +454,7 @@ Before including results in thesis:
 
 - [ ] All runs completed to target frames
 - [ ] All evaluations.csv files present and non-empty
-- [ ] Plots generated for all runs (check results/plots/)
+- [ ] Plots generated for all runs (check output/plots/)
 - [ ] Summary table exported with all seeds
 - [ ] Statistical analysis shows ≥90% of paper scores
 - [ ] W&B run URLs accessible and linked
@@ -471,15 +471,15 @@ find experiments/dqn_atari/runs -name "evaluations.csv" | wc -l
 # Expected: 3 per game × N games
 
 # Verify plot generation
-find results/plots -name "returns.png" | wc -l
+find output/plots -name "returns.png" | wc -l
 # Expected: Same as number of runs
 
 # Check metrics table
-wc -l results/summary/metrics.csv
+wc -l output/summary/metrics.csv
 # Expected: N_runs + 1 (header)
 
 # Validate analysis output
-grep "SUCCESS" results/summary/analysis.txt
+grep "SUCCESS" output/summary/analysis.txt
 # Expected: At least 1 game meets threshold
 ```
 

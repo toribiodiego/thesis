@@ -74,7 +74,7 @@ These artifacts should be excluded from git but retained selectively:
 - Rationale: Can regenerate plots from evaluations.csv if needed
 
 **Thesis-ready plots**:
-- `results/plots/**/*.png` - Generated visualizations
+- `output/plots/**/*.png` - Generated visualizations
 - Keep: Final versions for thesis
 - Delete: Intermediate/test plots
 - Size: 1-5MB per plot
@@ -187,7 +187,7 @@ For systematic experiments:
 experiments/**/runs/
 experiments/**/checkpoints/
 experiments/**/artifacts/
-results/
+output/
 
 # Media files (regenerable or very large)
 *.mp4
@@ -215,7 +215,7 @@ notes/_temp/
 
 **Rationale**:
 - **Never commit large binaries** (checkpoints, videos, plots)
-- **Never commit generated outputs** (results/, runs/, wandb/)
+- **Never commit generated outputs** (output/, runs/, wandb/)
 - **Never commit personal workspace** (TODO, notes drafts)
 
 ### Exceptions (Should Be Tracked)
@@ -236,10 +236,10 @@ git lfs track "experiments/baselines/*.pt"
 **Option 3: Exception pattern**
 ```gitignore
 # In .gitignore
-results/*
+output/*
 
 # To track specific file
-!results/final_thesis_plots/
+!output/final_thesis_plots/
 ```
 
 **Recommendation**: Use W&B artifacts for checkpoints, track only code/docs in git.
@@ -300,7 +300,7 @@ find experiments/ -name "*.pt" ! -name "best_model.pt" -delete
 find experiments/ -name "*.mp4" -delete
 
 # Remove all plots (regenerable)
-rm -rf results/plots/
+rm -rf output/plots/
 ```
 
 **Est. space saved**: 70-80% immediately
@@ -368,7 +368,7 @@ rm -rf results/plots/
 ## Next Steps
 
 **To apply retention rules**:
-1. Review current disk usage: `du -sh experiments/ results/`
+1. Review current disk usage: `du -sh experiments/ output/`
 2. Identify production vs exploratory runs
 3. Run cleanup scripts for intermediate artifacts
 4. Archive production runs to external storage

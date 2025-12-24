@@ -139,7 +139,7 @@ python train_dqn.py --cfg experiments/dqn_atari/configs/ablations/no_target_net.
 ```bash
 python scripts/plot_results.py \
   --episodes <baseline_csv> \
-  --output results/ablations/reward_clip_off/ \
+  --output output/ablations/reward_clip_off/ \
   --game-name "Pong (No Reward Clipping)"
 ```
 
@@ -199,7 +199,7 @@ experiments/dqn_atari/
         ├── checkpoints/
         └── config.yaml
 
-results/ablations/
+output/ablations/
 ├── reward_clip_off/
 │   ├── plots/
 │   └── summary.csv

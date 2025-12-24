@@ -36,12 +36,12 @@ These must be completed before any report submission:
 - [ ] **Pong learning curves** (returns over time)
   - Script: `python scripts/plot_results.py`
   - Depends on: 1.1 Pong runs
-  - Output: `results/plots/pong_*/returns.png`
+  - Output: `output/plots/pong_*/returns.png`
 
 - [ ] **Pong multi-seed comparison**
   - Aggregate 3 seeds with confidence intervals
   - Script: Custom aggregation (needs creation)
-  - Output: `results/plots/pong_aggregate.png`
+  - Output: `output/plots/pong_aggregate.png`
 
 ### 1.3 Summary Tables
 - [ ] **Hyperparameters table**
@@ -127,7 +127,7 @@ Optional content that strengthens the report:
 - [ ] **Aggregate comparison bar chart**
   - Multi-game comparison to paper
   - Error bars for confidence intervals
-  - Output: `results/summary/plots/comparison.png`
+  - Output: `output/summary/plots/comparison.png`
 
 - [ ] **Video recordings**
   - Best episode videos for each game

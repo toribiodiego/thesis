@@ -137,7 +137,7 @@ log_dir = "experiments/dqn_atari/runs/<game>_<seed>_<timestamp>/tensorboard"
 ```yaml
 logging:
   enable_tensorboard: true
-  tensorboard_dir: "results/logs/{game}/{run_id}/tensorboard"
+  tensorboard_dir: "experiments/dqn_atari/runs/{game}_{seed}_{timestamp}/tensorboard"
 ```
 
 #### W&B Backend
@@ -185,14 +185,14 @@ export WANDB_DISABLED=true
 enable_csv=True
 
 # Output directory (automatically created)
-log_dir = "results/logs/<game>/<run_id>/csv"
+log_dir = "experiments/dqn_atari/runs/<game>/<run_id>/csv"
 ```
 
 **Config Fields**:
 ```yaml
 logging:
   enable_csv: true
-  csv_dir: "results/logs/{game}/{run_id}/csv"
+  csv_dir: "experiments/dqn_atari/runs/{game}/{run_id}/csv"
   flush_interval: 1000  # Flush every N steps
 ```
 
@@ -728,8 +728,8 @@ Every plot generation creates a **metadata bundle** for full reproducibility. Th
   "commit_hash": "abc123def456789",
   "generated_at": "2025-11-14T12:34:56",
   "data_sources": {
-    "episodes_csv": "results/logs/pong/pong_seed42/csv/episodes.csv",
-    "steps_csv": "results/logs/pong/pong_seed42/csv/training_steps.csv"
+    "episodes_csv": "experiments/dqn_atari/runs/pong/pong_seed42/csv/episodes.csv",
+    "steps_csv": "experiments/dqn_atari/runs/pong/pong_seed42/csv/training_steps.csv"
   },
   "num_episodes": 1250,
   "num_steps": 500000,
@@ -827,7 +827,7 @@ The W&B artifact system provides **versioned storage** for plots, logs, and meta
 **Basic upload:**
 ```bash
 python scripts/plot_results.py \
-  --episodes results/logs/pong/run_123/csv/episodes.csv \
+  --episodes experiments/dqn_atari/runs/pong/run_123/csv/episodes.csv \
   --output plots/pong \
   --upload-wandb \
   --wandb-project dqn-atari \
@@ -846,7 +846,7 @@ python scripts/plot_results.py \
 **Multi-format upload:**
 ```bash
 python scripts/plot_results.py \
-  --episodes results/logs/pong/run_123/csv/episodes.csv \
+  --episodes experiments/dqn_atari/runs/pong/run_123/csv/episodes.csv \
   --output plots/pong \
   --formats png pdf svg \
   --upload-wandb \
@@ -963,12 +963,12 @@ python scripts/plot_results.py \
 # Export all runs to summary tables
 python scripts/export_results_table.py \
   --runs-dir experiments/dqn_atari/runs \
-  --output results/summary
+  --output output/summary
 
 # Upload to W&B
 python scripts/export_results_table.py \
   --runs-dir experiments/dqn_atari/runs \
-  --output results/summary \
+  --output output/summary \
   --upload-wandb \
   --wandb-project dqn-atari
 ```
@@ -1190,7 +1190,7 @@ python scripts/plot_results.py \
 **Configuration**:
 ```python
 logger = MetricsLogger(
-    log_dir="results/logs/pong/run_123",
+    log_dir="experiments/dqn_atari/runs/pong/run_123",
     enable_wandb=True,
     upload_artifacts=True,
     wandb_config={
@@ -1219,8 +1219,8 @@ logger = MetricsLogger(
 **Upload plots from local files:**
 ```bash
 python scripts/plot_results.py \
-  --episodes results/logs/pong/run_123/csv/episodes.csv \
-  --steps results/logs/pong/run_123/csv/training_steps.csv \
+  --episodes experiments/dqn_atari/runs/pong/run_123/csv/episodes.csv \
+  --steps experiments/dqn_atari/runs/pong/run_123/csv/training_steps.csv \
   --output plots/pong \
   --upload-wandb \
   --wandb-project dqn-atari \
@@ -1230,8 +1230,8 @@ python scripts/plot_results.py \
 **Upload results table:**
 ```bash
 python scripts/export_results_table.py \
-  --runs-dir results/logs/pong/ \
-  --output results/summary \
+  --runs-dir experiments/dqn_atari/runs/pong/ \
+  --output output/summary \
   --upload-wandb \
   --wandb-project dqn-atari
 ```
@@ -1283,7 +1283,7 @@ Each artifact includes custom metadata for searchability:
 
 6. **Offline workflows**:
    - Use `WANDB_MODE=offline` during training
-   - Sync later with `wandb sync results/logs/pong/run_123/wandb/`
+   - Sync later with `wandb sync experiments/dqn_atari/runs/pong/run_123/wandb/`
 
 ### Naming Convention Summary
 
@@ -1518,19 +1518,19 @@ logger.log_step(step=1000, loss=0.5, ...)
 pip install tensorboard
 
 # Verify files exist
-ls -la results/logs/pong/pong_seed42/tensorboard/
+ls -la experiments/dqn_atari/runs/pong/pong_seed42/tensorboard/
 
 # Launch TensorBoard
-tensorboard --logdir results/logs/pong/
+tensorboard --logdir experiments/dqn_atari/runs/pong/
 
 # If corrupted, delete and restart training
-rm -rf results/logs/pong/pong_seed42/tensorboard/*
+rm -rf experiments/dqn_atari/runs/pong/pong_seed42/tensorboard/*
 ```
 
 **Disabling TensorBoard**:
 ```python
 logger = MetricsLogger(
-    log_dir="results/logs/pong/run_123",
+    log_dir="experiments/dqn_atari/runs/pong/run_123",
     enable_tensorboard=False  # Disable if not needed
 )
 ```
@@ -1564,7 +1564,7 @@ export WANDB_API_KEY="your_key_here"
 export WANDB_MODE=offline
 
 # Later, sync offline runs
-wandb sync results/logs/pong/pong_seed42/wandb/
+wandb sync experiments/dqn_atari/runs/pong/pong_seed42/wandb/
 ```
 
 5. **Wrong Project/Entity**:
@@ -1586,7 +1586,7 @@ wandb_config = {
 ```python
 # In code:
 logger = MetricsLogger(
-    log_dir="results/logs/pong/run_123",
+    log_dir="experiments/dqn_atari/runs/pong/run_123",
     enable_wandb=False
 )
 
@@ -1606,16 +1606,16 @@ export WANDB_DISABLED=true
 **Fix**:
 ```bash
 # Check disk space
-df -h results/
+df -h output/
 
 # Check permissions
-ls -la results/logs/pong/pong_seed42/csv/
+ls -la experiments/dqn_atari/runs/pong/pong_seed42/csv/
 
 # Check file integrity (should have header + data rows)
-head -5 results/logs/pong/pong_seed42/csv/training_steps.csv
+head -5 experiments/dqn_atari/runs/pong/pong_seed42/csv/training_steps.csv
 
 # If corrupted, delete and restart
-rm results/logs/pong/pong_seed42/csv/*.csv
+rm experiments/dqn_atari/runs/pong/pong_seed42/csv/*.csv
 ```
 
 **Recovery**:
@@ -1641,13 +1641,13 @@ rm results/logs/pong/pong_seed42/csv/*.csv
 **Diagnosis**:
 ```bash
 # Check CSV exists
-ls -la results/logs/pong/pong_seed42/csv/episodes.csv
+ls -la experiments/dqn_atari/runs/pong/pong_seed42/csv/episodes.csv
 
 # Check file is not empty
-wc -l results/logs/pong/pong_seed42/csv/episodes.csv
+wc -l experiments/dqn_atari/runs/pong/pong_seed42/csv/episodes.csv
 
 # Check columns
-head -1 results/logs/pong/pong_seed42/csv/episodes.csv
+head -1 experiments/dqn_atari/runs/pong/pong_seed42/csv/episodes.csv
 # Should see: step,episode,return,length
 ```
 
@@ -1712,15 +1712,15 @@ logger = MetricsLogger(
 - Upload manually after training completes:
   ```bash
   python scripts/export_results_table.py \
-    --runs-dir results/logs/pong/ \
-    --output results/summary \
+    --runs-dir experiments/dqn_atari/runs/pong/ \
+    --output output/summary \
     --upload-wandb \
     --wandb-project dqn-atari
   ```
 
 ### Permission Denied Errors
 
-**Symptoms**: `PermissionError: [Errno 13] Permission denied: 'results/logs/...'`
+**Symptoms**: `PermissionError: [Errno 13] Permission denied: 'experiments/dqn_atari/runs/...'`
 
 **Causes**:
 - Running as different user
@@ -1730,10 +1730,10 @@ logger = MetricsLogger(
 **Fix**:
 ```bash
 # Check ownership
-ls -la results/logs/pong/
+ls -la experiments/dqn_atari/runs/pong/
 
 # Fix permissions
-chmod -R u+rwX results/logs/pong/
+chmod -R u+rwX experiments/dqn_atari/runs/pong/
 
 # On NFS: disable file locking for CSV (use with caution)
 # Only if above fixes don't work

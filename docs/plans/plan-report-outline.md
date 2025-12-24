@@ -9,7 +9,7 @@ This document tracks the structure and source artifacts for the main results rep
 ### 1. Executive Summary
 - **Content**: High-level reproduction results vs paper
 - **Data sources**:
-  - `results/summary/metrics.csv` - aggregated scores
+  - `output/summary/metrics.csv` - aggregated scores
   - `experiments/dqn_atari/runs/*/eval/evaluations.csv` - final evals
 - **Scripts**: `scripts/export_results_table.py`
 - **Status**: [ ] Draft | [ ] Complete
@@ -39,7 +39,7 @@ This document tracks the structure and source artifacts for the main results rep
 #### 4.1 Pong
 - **Content**: Learning curves, final scores, videos
 - **Artifacts**:
-  - Learning curves: `results/plots/pong_*/returns.png`
+  - Learning curves: `output/plots/pong_*/returns.png`
   - Final eval: `experiments/dqn_atari/runs/pong_*/eval/evaluations.csv`
   - Videos: `experiments/dqn_atari/runs/pong_*/videos/*.mp4`
 - **Paper comparison**: Score 20 (Table 1)
@@ -49,7 +49,7 @@ This document tracks the structure and source artifacts for the main results rep
 #### 4.2 Breakout
 - **Content**: Learning curves, final scores, videos
 - **Artifacts**:
-  - Learning curves: `results/plots/breakout_*/returns.png`
+  - Learning curves: `output/plots/breakout_*/returns.png`
   - Final eval: `experiments/dqn_atari/runs/breakout_*/eval/evaluations.csv`
   - Videos: `experiments/dqn_atari/runs/breakout_*/videos/*.mp4`
 - **Paper comparison**: Score 168 (Table 1)
@@ -59,7 +59,7 @@ This document tracks the structure and source artifacts for the main results rep
 #### 4.3 Beam Rider
 - **Content**: Learning curves, final scores, videos
 - **Artifacts**:
-  - Learning curves: `results/plots/beam_rider_*/returns.png`
+  - Learning curves: `output/plots/beam_rider_*/returns.png`
   - Final eval: `experiments/dqn_atari/runs/beam_rider_*/eval/evaluations.csv`
   - Videos: `experiments/dqn_atari/runs/beam_rider_*/videos/*.mp4`
 - **Paper comparison**: Score 4092 (Table 1)
@@ -69,9 +69,9 @@ This document tracks the structure and source artifacts for the main results rep
 #### 4.4 Aggregate Comparison
 - **Content**: Summary table comparing all games
 - **Artifacts**:
-  - `results/summary/metrics.csv` - consolidated scores
-  - `results/summary/metrics.md` - markdown table
-  - `results/summary/plots/comparison.png` - bar chart
+  - `output/summary/metrics.csv` - consolidated scores
+  - `output/summary/metrics.md` - markdown table
+  - `output/summary/plots/comparison.png` - bar chart
 - **Scripts**:
   - `scripts/export_results_table.py`
   - `scripts/analyze_results.py` (planned)
@@ -94,9 +94,9 @@ This document tracks the structure and source artifacts for the main results rep
 #### 5.2 Learning Dynamics
 - **Content**: Analysis of training behavior
 - **Artifacts**:
-  - Loss curves: `results/plots/*/loss.png`
-  - Q-value evolution: `results/plots/*/q_values.png`
-  - Episode length: `results/plots/*/episode_length.png`
+  - Loss curves: `output/plots/*/loss.png`
+  - Q-value evolution: `output/plots/*/q_values.png`
+  - Episode length: `output/plots/*/episode_length.png`
 - **Key insights**:
   - Convergence speed
   - Stability (loss variance)
@@ -107,7 +107,7 @@ This document tracks the structure and source artifacts for the main results rep
 - **Content**: Impact of key design choices
 - **Artifacts**:
   - `experiments/dqn_atari/runs/ablation_*/`
-  - `results/ablations/*/`
+  - `output/ablations/*/`
   - `plan-ablations.md` - hypotheses
 - **Ablations**:
   - Reward clipping disabled
@@ -145,7 +145,7 @@ This document tracks the structure and source artifacts for the main results rep
 - **Content**: Hardware specs, runtime statistics
 - **Sources**:
   - `experiments/dqn_atari/runs/*/system_info.txt`
-  - `results/summary/cpu_performance_baseline.md` (gitignored)
+  - `output/summary/cpu_performance_baseline.md` (gitignored)
 - **Metrics**: FPS, memory usage, GPU utilization
 
 #### C. Reproduction Commands
@@ -165,9 +165,9 @@ This document tracks the structure and source artifacts for the main results rep
 | Pong seed 42 run | `experiments/dqn_atari/runs/pong_42_*` | `train_dqn.py` | [ ] |
 | Pong seed 123 run | `experiments/dqn_atari/runs/pong_123_*` | `train_dqn.py` | [ ] |
 | Pong seed 456 run | `experiments/dqn_atari/runs/pong_456_*` | `train_dqn.py` | [ ] |
-| Pong learning curves | `results/plots/pong_*` | `scripts/plot_results.py` | [ ] |
-| Summary metrics CSV | `results/summary/metrics.csv` | `scripts/export_results_table.py` | [ ] |
-| Summary metrics MD | `results/summary/metrics.md` | Manual/script | [ ] |
+| Pong learning curves | `output/plots/pong_*` | `scripts/plot_results.py` | [ ] |
+| Summary metrics CSV | `output/summary/metrics.csv` | `scripts/export_results_table.py` | [ ] |
+| Summary metrics MD | `output/summary/metrics.md` | Manual/script | [ ] |
 
 ### Optional Artifacts (enhance report)
 
@@ -176,7 +176,7 @@ This document tracks the structure and source artifacts for the main results rep
 | Breakout runs (3 seeds) | `experiments/dqn_atari/runs/breakout_*` | `train_dqn.py` | [ ] |
 | Beam Rider runs (3 seeds) | `experiments/dqn_atari/runs/beam_rider_*` | `train_dqn.py` | [ ] |
 | Ablation runs | `experiments/dqn_atari/runs/ablation_*` | `train_dqn.py` | [ ] |
-| Comparison bar chart | `results/summary/plots/comparison.png` | Custom script | [ ] |
+| Comparison bar chart | `output/summary/plots/comparison.png` | Custom script | [ ] |
 | W&B dashboard | wandb.ai URL | W&B UI | [ ] |
 
 ---
@@ -185,11 +185,11 @@ This document tracks the structure and source artifacts for the main results rep
 
 | Figure # | Title | Source File | Status |
 |----------|-------|-------------|--------|
-| 1 | Pong Learning Curve | `results/plots/pong_42/returns.png` | [ ] |
-| 2 | Pong Loss Curve | `results/plots/pong_42/loss.png` | [ ] |
-| 3 | Pong Q-Values | `results/plots/pong_42/q_values.png` | [ ] |
-| 4 | Multi-Seed Pong Comparison | `results/plots/pong_aggregate.png` | [ ] |
-| 5 | Paper vs Reproduction Scores | `results/summary/plots/comparison.png` | [ ] |
+| 1 | Pong Learning Curve | `output/plots/pong_42/returns.png` | [ ] |
+| 2 | Pong Loss Curve | `output/plots/pong_42/loss.png` | [ ] |
+| 3 | Pong Q-Values | `output/plots/pong_42/q_values.png` | [ ] |
+| 4 | Multi-Seed Pong Comparison | `output/plots/pong_aggregate.png` | [ ] |
+| 5 | Paper vs Reproduction Scores | `output/summary/plots/comparison.png` | [ ] |
 
 ---
 
@@ -199,7 +199,7 @@ This document tracks the structure and source artifacts for the main results rep
 |---------|-------|-------------|--------|
 | 1 | Hyperparameters | Config YAML files | [ ] |
 | 2 | Paper Target Scores | DQN 2013 Table 1 | [ ] |
-| 3 | Reproduction Results | `results/summary/metrics.csv` | [ ] |
+| 3 | Reproduction Results | `output/summary/metrics.csv` | [ ] |
 | 4 | Comparison Summary | Computed from Table 2 & 3 | [ ] |
 | 5 | Environment Versions | `../reference/environment-notes.md` | [ ] |
 
@@ -225,8 +225,8 @@ This section maps the [Reporting Pipeline](../reference/reporting-pipeline.md) s
 | Pipeline Stage | Script | Input | Output | Report Section(s) |
 |----------------|--------|-------|--------|-------------------|
 | **Data Collection** | Training runs | `experiments/dqn_atari/runs/*/csv/*.csv` | Logs, metrics, configs | All sections (raw data) |
-| **Visualization** | `scripts/plot_results.py` | `episodes.csv`, `evaluations.csv` | `results/plots/*/returns.png`, `loss.png`, etc. | 4.1-4.3 (Results - per game) |
-| **Aggregation** | `scripts/export_results_table.py` | All runs in `runs/` | `results/summary/metrics.csv` | 4.4 (Aggregate Comparison), Appendix |
+| **Visualization** | `scripts/plot_results.py` | `episodes.csv`, `evaluations.csv` | `output/plots/*/returns.png`, `loss.png`, etc. | 4.1-4.3 (Results - per game) |
+| **Aggregation** | `scripts/export_results_table.py` | All runs in `runs/` | `output/summary/metrics.csv` | 4.4 (Aggregate Comparison), Appendix |
 | **Analysis** | `scripts/analyze_results.py` | `metrics.csv` | `analysis.txt`, statistical tests | 5.1 (Comparison to Paper), 5.2 (Learning Dynamics) |
 | **Thesis Integration** | Manual/LaTeX | All above outputs | Formatted figures/tables | All sections (final thesis) |
 
@@ -235,7 +235,7 @@ This section maps the [Reporting Pipeline](../reference/reporting-pipeline.md) s
 **Section 1: Executive Summary**
 - Script: `scripts/export_results_table.py`
 - Input: `experiments/dqn_atari/runs/*/csv/evaluations.csv`
-- Output: `results/summary/metrics.csv` (final row per game)
+- Output: `output/summary/metrics.csv` (final row per game)
 - Usage: Extract mean return, % of paper score for summary statement
 
 **Section 3: Methods**
@@ -247,25 +247,25 @@ This section maps the [Reporting Pipeline](../reference/reporting-pipeline.md) s
 **Section 4.1-4.3: Per-Game Results**
 - Script: `scripts/plot_results.py`
 - Input: `experiments/dqn_atari/runs/<game>_<seed>_*/csv/episodes.csv`
-- Output: `results/plots/<game>_<seed>/returns.png`, `loss.png`, `q_values.png`
+- Output: `output/plots/<game>_<seed>/returns.png`, `loss.png`, `q_values.png`
 - Usage: Embed learning curves in Results chapter
 
 **Section 4.4: Aggregate Comparison**
 - Script: `scripts/export_results_table.py` → `scripts/analyze_results.py`
 - Input: All runs (multi-seed)
-- Output: `results/summary/metrics.csv`, `metrics.md` (table), `analysis.txt`
+- Output: `output/summary/metrics.csv`, `metrics.md` (table), `analysis.txt`
 - Usage: Summary table showing all games, seeds, paper comparison
 
 **Section 5.1: Comparison to Paper**
 - Script: `scripts/analyze_results.py`
-- Input: `results/summary/metrics.csv`, paper scores (hardcoded or JSON)
-- Output: `results/summary/analysis.txt` (statistical tests, CI, % of paper)
+- Input: `output/summary/metrics.csv`, paper scores (hardcoded or JSON)
+- Output: `output/summary/analysis.txt` (statistical tests, CI, % of paper)
 - Usage: Justify reproduction quality, discuss gaps
 
 **Section 5.2: Learning Dynamics**
 - Script: `scripts/plot_results.py` (loss, Q-values outputs)
 - Input: `experiments/dqn_atari/runs/*/csv/training_steps.csv`
-- Output: `results/plots/*/loss.png`, `q_values.png`, `episode_length.png`
+- Output: `output/plots/*/loss.png`, `q_values.png`, `episode_length.png`
 - Usage: Analyze convergence, stability, Q-value magnitudes
 
 **Appendix: Hyperparameters Table**
@@ -302,19 +302,19 @@ For thesis artifact index and regeneration steps, see [Thesis Artifact Index](..
 for run in experiments/dqn_atari/runs/*/; do
     python scripts/plot_results.py \
         --episodes "$run/csv/episodes.csv" \
-        --output "results/plots/$(basename $run)"
+        --output "output/plots/$(basename $run)"
 done
 
 # 2. Export summary table
 python scripts/export_results_table.py \
     --runs-dir experiments/dqn_atari/runs \
-    --output results/summary/metrics.csv
+    --output output/summary/metrics.csv
 
 # 3. Generate markdown report sections
 # (manual or semi-automated with templates)
 
 # 4. Upload to W&B
-# python scripts/upload_to_wandb.py --report results/summary/
+# python scripts/upload_to_wandb.py --report output/summary/
 ```
 
 ### Quick update (new run added)
@@ -322,7 +322,7 @@ python scripts/export_results_table.py \
 # Generate plots for new run
 python scripts/plot_results.py \
     --episodes experiments/dqn_atari/runs/<new_run>/csv/episodes.csv \
-    --output results/plots/<new_run>
+    --output output/plots/<new_run>
 
 # Re-export summary table
 python scripts/export_results_table.py \

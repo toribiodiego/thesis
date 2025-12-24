@@ -905,7 +905,7 @@ python scripts/evaluate_model.py \
     --env ALE/Pong-v5 \
     --num-episodes 10 \
     --record-video \
-    --video-dir results/videos/pong_final \
+    --video-dir output/videos/pong_final \
     --export-gif
 ```
 
@@ -944,7 +944,7 @@ python scripts/evaluate_model.py \
     --env ALE/Pong-v5 \
     --num-episodes 5 \
     --record-video \
-    --video-dir results/videos/pong_step1M_rerender \
+    --video-dir output/videos/pong_step1M_rerender \
     --video-fps 30
 ```
 
@@ -968,7 +968,7 @@ for seed in 0 1 2; do
         --env ALE/Pong-v5 \
         --num-episodes 30 \
         --eval-epsilon 0.05 \
-        --output results/final_eval/pong_seed${seed}.json
+        --output output/final_eval/pong_seed${seed}.json
 done
 ```
 
@@ -991,7 +991,7 @@ plt.plot(df['step'], df['mean_return_rolling'], label='Rolling Avg (5 evals)')
 plt.xlabel('Training Steps')
 plt.ylabel('Mean Evaluation Return')
 plt.legend()
-plt.savefig('results/plots/pong_eval_curve.png')
+plt.savefig('output/plots/pong_eval_curve.png')
 ```
 
 **Aggregate per-episode data:**
@@ -1500,7 +1500,7 @@ python scripts/evaluate_model.py \
     --checkpoint runs/pong_seed42/checkpoints/step_1000000.pt \
     --env ALE/Pong-v5 \
     --num-episodes 30 \
-    --output results/re_eval/pong_1M.json
+    --output output/re_eval/pong_1M.json
 ```
 
 ### Re-render Video
@@ -1511,7 +1511,7 @@ python scripts/evaluate_model.py \
     --env ALE/Pong-v5 \
     --num-episodes 1 \
     --record-video \
-    --video-dir results/videos/best_model \
+    --video-dir output/videos/best_model \
     --video-fps 30 \
     --export-gif
 ```
@@ -1564,7 +1564,7 @@ plt.ylabel('Evaluation Return')
 plt.title('Pong Evaluation Performance')
 plt.legend()
 plt.grid(True)
-plt.savefig('results/plots/pong_eval_curve.png', dpi=150)
+plt.savefig('output/plots/pong_eval_curve.png', dpi=150)
 
 # Summary table
 print(df[['step', 'mean_return', 'median_return', 'std_return']].to_string())

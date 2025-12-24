@@ -218,7 +218,7 @@ python train_dqn.py --cfg experiments/dqn_atari/configs/beam_rider.yaml \
 ```bash
 python scripts/plot_results.py \
   --run-dir experiments/dqn_atari/runs/<run_id> \
-  --output results/plots/
+  --output output/plots/
 ```
 
 ### Export Results
@@ -226,7 +226,7 @@ python scripts/plot_results.py \
 ```bash
 python scripts/export_results_table.py \
   --runs experiments/dqn_atari/runs/ \
-  --output results/summary/
+  --output output/summary/
 ```
 
 ## References

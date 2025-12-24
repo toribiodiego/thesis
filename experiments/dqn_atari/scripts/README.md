@@ -788,7 +788,7 @@ python scripts/plot_results.py \
 ```bash
 # Downsample to 10K points (faster plotting)
 python scripts/plot_results.py \
-  --episodes results/logs/pong/run_123/csv/episodes.csv \
+  --episodes experiments/dqn_atari/runs/pong/run_123/csv/episodes.csv \
   --downsample 10000 \
   --warn-size-mb 100 \
   --output plots/pong
@@ -797,7 +797,7 @@ python scripts/plot_results.py \
 **Upload plots to W&B:**
 ```bash
 python scripts/plot_results.py \
-  --episodes results/logs/pong/run_123/csv/episodes.csv \
+  --episodes experiments/dqn_atari/runs/pong/run_123/csv/episodes.csv \
   --output plots/pong \
   --upload-wandb \
   --wandb-project dqn-atari \
@@ -811,19 +811,19 @@ Generate summary tables from multiple runs:
 ```bash
 # Scan all runs and generate Markdown/CSV tables
 python scripts/export_results_table.py \
-  --runs-dir results/logs/pong/ \
-  --output results/summary
+  --runs-dir experiments/dqn_atari/runs/pong/ \
+  --output output/summary
 
 # Outputs:
-# - results/summary/results_summary.md
-# - results/summary/results_summary.csv
+# - output/summary/results_summary.md
+# - output/summary/results_summary.csv
 ```
 
 **With W&B upload:**
 ```bash
 python scripts/export_results_table.py \
-  --runs-dir results/logs/pong/ \
-  --output results/summary \
+  --runs-dir experiments/dqn_atari/runs/pong/ \
+  --output output/summary \
   --upload-wandb \
   --wandb-project dqn-atari
 ```
@@ -856,19 +856,19 @@ python -c "import wandb; wandb.init(project='test', mode='online')"
 **TensorBoard not showing logs:**
 ```bash
 # Check files exist
-ls -la results/logs/pong/pong_seed42/tensorboard/
+ls -la experiments/dqn_atari/runs/pong/pong_seed42/tensorboard/
 
 # Try different port
-tensorboard --logdir results/logs/pong/ --port 6007
+tensorboard --logdir experiments/dqn_atari/runs/pong/ --port 6007
 ```
 
 **CSV files missing:**
 ```bash
 # Check training actually ran
-ls -la results/logs/pong/pong_seed42/csv/
+ls -la experiments/dqn_atari/runs/pong/pong_seed42/csv/
 
 # Check file isn't empty
-wc -l results/logs/pong/pong_seed42/csv/episodes.csv
+wc -l experiments/dqn_atari/runs/pong/pong_seed42/csv/episodes.csv
 ```
 
 ### See Also

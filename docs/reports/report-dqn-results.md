@@ -53,7 +53,7 @@ This report presents results from reproducing the DQN algorithm from Mnih et al.
 | Seeds Run | [SEEDS] |
 | Wall-clock Time | [TIME] hours |
 
-**Learning Curve**: See `results/plots/pong/learning_curve.png`
+**Learning Curve**: See `output/plots/pong/learning_curve.png`
 
 **Observations**:
 - [OBSERVATION_1]
@@ -80,7 +80,7 @@ This report presents results from reproducing the DQN algorithm from Mnih et al.
 | Seeds Run | [SEEDS] |
 | Wall-clock Time | [TIME] hours |
 
-**Learning Curve**: See `results/plots/breakout/learning_curve.png`
+**Learning Curve**: See `output/plots/breakout/learning_curve.png`
 
 **Observations**:
 - [OBSERVATION_1]
@@ -102,7 +102,7 @@ This report presents results from reproducing the DQN algorithm from Mnih et al.
 | Seeds Run | [SEEDS] |
 | Wall-clock Time | [TIME] hours |
 
-**Learning Curve**: See `results/plots/beam_rider/learning_curve.png`
+**Learning Curve**: See `output/plots/beam_rider/learning_curve.png`
 
 **Observations**:
 - [OBSERVATION_1]
@@ -222,8 +222,8 @@ For games that match or exceed paper scores:
 - **Evaluation CSVs**: `experiments/dqn_atari/runs/*/eval/`
 - **Training Logs**: `experiments/dqn_atari/runs/*/csv/`
 - **Videos**: `experiments/dqn_atari/runs/*/videos/`
-- **Plots**: `results/plots/`
-- **Summary Tables**: `results/summary/`
+- **Plots**: `output/plots/`
+- **Summary Tables**: `output/summary/`
 
 ### W&B Links
 
@@ -240,17 +240,17 @@ For games that match or exceed paper scores:
 python scripts/analyze_results.py \
   --run-dir experiments/dqn_atari/runs/ \
   --all-games \
-  --output results/summary/
+  --output output/summary/
 
 # Generate plots
 python scripts/plot_results.py \
   --run-dir experiments/dqn_atari/runs/ \
-  --output results/plots/
+  --output output/plots/
 
 # Export comparison table
 python scripts/export_results_table.py \
-  --input results/summary/analysis.json \
-  --output results/summary/comparison.md
+  --input output/summary/analysis.json \
+  --output output/summary/comparison.md
 ```
 
 ---

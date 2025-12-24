@@ -166,7 +166,7 @@ experiments/dqn_atari/runs/<game>_<seed>_<timestamp>/
 └── logs/
     └── *.txt            # Detailed logs
 
-results/plots/<game>_<seed>/
+output/plots/<game>_<seed>/
 ├── returns.png          # Episode returns
 ├── episode_length.png   # Episode lengths
 ├── loss.png            # Training loss
@@ -354,12 +354,12 @@ wandb artifact get Cooper-Union/dqn-atari/model:latest
 # Create summary tables
 python scripts/export_results_table.py \
     --runs-dir experiments/dqn_atari/runs \
-    --output results/summary/metrics.csv
+    --output output/summary/metrics.csv
 
 # Create comparison plots
 python scripts/plot_results.py \
     --episodes <run>/csv/episodes.csv \
-    --output results/plots/
+    --output output/plots/
 ```
 
 ### Calculate Paper Percentage

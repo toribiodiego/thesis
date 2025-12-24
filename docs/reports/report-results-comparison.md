@@ -60,7 +60,7 @@ Generate summary CSV/Markdown from all runs:
 ```bash
 python scripts/export_results_table.py \
   --runs-dir experiments/dqn_atari/runs \
-  --output results/summary/metrics.csv
+  --output output/summary/metrics.csv
 ```
 
 Output format:
@@ -76,7 +76,7 @@ Create publication-quality figures:
 ```bash
 python scripts/plot_results.py \
   --episodes experiments/dqn_atari/runs/<run>/csv/episodes.csv \
-  --output results/summary/plots/ \
+  --output output/summary/plots/ \
   --game-name "Pong (DQN 2013 Reproduction)"
 ```
 
@@ -94,7 +94,7 @@ For final evaluation window (last 5 evaluations or 100 episodes):
 python scripts/analyze_results.py \
   --eval-csv experiments/dqn_atari/runs/<run>/csv/evaluation.csv \
   --paper-score 20 \
-  --output results/summary/<game>_analysis.json
+  --output output/summary/<game>_analysis.json
 ```
 
 Output includes:
@@ -194,7 +194,7 @@ frames_to_threshold = df[df["mean_return"] >= threshold]["frame"].iloc[0]
 - ROM versions
 - Terminal signal handling
 
-Document in `results/summary/notes.md`:
+Document in `output/summary/notes.md`:
 ```markdown
 ## Environment Configuration
 
@@ -298,7 +298,7 @@ wandb.log({"results_comparison": table})
 
 ### Required Deliverables
 
-1. **Metrics table** (`results/summary/metrics.csv`):
+1. **Metrics table** (`output/summary/metrics.csv`):
 ```csv
 game,mean_score_ours,paper_score,percentage,std_dev,frames,seeds,notes
 Pong,19.5,20.0,97.5,0.8,10000000,"42,123,456",Matches paper
@@ -306,7 +306,7 @@ Breakout,155,168,92.3,12.4,50000000,"42,123,456",Slight lag
 Beam Rider,3680,4092,89.9,342,50000000,"42,123,456",Within variance
 ```
 
-2. **Markdown table** (`results/summary/metrics.md`):
+2. **Markdown table** (`output/summary/metrics.md`):
 ```markdown
 | Game | Mean Score (Ours) | Paper Score | % of Paper | Std Dev | Notes |
 |------|-------------------|-------------|------------|---------|-------|
@@ -315,12 +315,12 @@ Beam Rider,3680,4092,89.9,342,50000000,"42,123,456",Within variance
 | Beam Rider | 3680 | 4092 | 89.9% | 342 | Within variance |
 ```
 
-3. **Comparison plots** (`results/summary/plots/`):
+3. **Comparison plots** (`output/summary/plots/`):
 - `pong_comparison.png`
 - `breakout_comparison.png`
 - `beam_rider_comparison.png`
 
-4. **Environment notes** (`results/summary/notes.md`):
+4. **Environment notes** (`output/summary/notes.md`):
 - Software versions
 - Hardware specs
 - Known differences from paper
