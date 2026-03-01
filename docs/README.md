@@ -71,7 +71,6 @@ Operational procedures and maintenance:
 
 - **[code-quality.md](ops/code-quality.md)** - Code quality and testing guide
 - **[checklists.md](ops/checklists.md)** - Pre-commit checklists
-- **[repo-layout.md](ops/repo-layout.md)** - Repository structure and layout conventions
 
 ### research/papers/
 Notes and summaries from research papers:
