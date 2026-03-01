@@ -80,21 +80,37 @@ Every experiment must be reproducible from its logged configuration:
 
 Keep the repository clean and navigable:
 
-**Repo root:** Only project-level files belong at the root
-(`train_dqn.py`, `requirements.txt`, `README.md`, `.gitignore`).
-Configs go in `experiments/`, scripts in `scripts/`, docs in `docs/`.
+**Repo root:** Keep the root minimal. Only these tracked files belong
+at the root level:
+
+- `train_dqn.py` -- main entry point
+- `README.md` -- project overview
+- `CONTRIBUTING.md` -- development workflow
+- `pyproject.toml` -- package metadata
+- `.gitignore` -- version control exclusions
+
+Everything else goes in a subdirectory (`docs/`, `src/`, `scripts/`,
+`experiments/`, `setup/`, `tests/`). New root-level files require
+explicit justification.
+
+**Public vs private files:** This repo will be public. Use
+`.git/info/exclude` (local-only, never tracked) for tool configs and
+private planning files. Use `.gitignore` (tracked) only for
+project-relevant ignores (build artifacts, venvs, media files). Never
+add tool-specific paths to `.gitignore`.
 
 **Work-in-progress files:** Investigation notes, draft scripts, and
-planning artifacts go in `tmp/` (gitignored). Only finalized
-documentation gets committed to `docs/`. This keeps the committed tree
-free of transient artifacts.
+planning artifacts go in `tmp/` or `notes/` (both excluded). Only
+finalized documentation gets committed to `docs/`. This keeps the
+committed tree free of transient artifacts.
 
 **Experiment artifacts:** Raw outputs (plots, logs, checkpoints) go in
 `output/` (gitignored) or W&B. Only curated results and analysis
 belong in `docs/reports/`.
 
-**Tool-specific configuration:** Editor and IDE configs (`.vscode/`,
-`.idea/`) stay in `.gitignore`, not committed.
+**Tool-specific configuration:** Editor, IDE, and AI tool configs
+(`.vscode/`, `.idea/`, and similar) belong in `.git/info/exclude`,
+not `.gitignore`.
 
 <br><br>
 
