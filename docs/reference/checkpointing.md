@@ -2,7 +2,7 @@
 
 **Objective:** Save and restore complete training state to enable resumption and reproducibility.
 
----
+<br><br>
 
 ## Table of Contents
 
@@ -31,7 +31,7 @@
 14. [Troubleshooting](#troubleshooting)
 15. [Related Documentation](#related-documentation)
 
----
+<br><br>
 
 ## Quick Start (90 seconds)
 
@@ -47,7 +47,7 @@ Checkpoints are saved automatically during training:
 ```
 
 **Expected output:**
-```
+```text
 experiments/dqn_atari/runs/pong_42/checkpoints/
 ├── checkpoint_1000000.pt    # Every 1M frames
 ├── checkpoint_2000000.pt
@@ -81,7 +81,7 @@ pytest tests/test_save_resume_determinism.py -v -s
 
 **Need more details?** Jump to [Command-Line Interface](#command-line-interface) or [Deterministic Execution](#deterministic-execution).
 
----
+<br><br>
 
 ## Checkpoint Structure
 
@@ -112,7 +112,7 @@ Checkpoints save the complete training state including:
 
 Checkpoints are saved as PyTorch `.pt` files using `torch.save()`:
 
-```
+```text
 experiments/dqn_atari/checkpoints/
 ├── checkpoint_1000000.pt    # Periodic checkpoint at 1M steps
 ├── checkpoint_2000000.pt    # Periodic checkpoint at 2M steps
@@ -514,7 +514,7 @@ python train_dqn.py --resume checkpoint.pt --strict-resume
 ```
 
 **Warnings Example:**
-```
+```text
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   CRITICAL: Environment ID mismatch - checkpoint: ALE/Pong-v5, current: ALE/Breakout-v5
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -526,7 +526,7 @@ WARNING: Learning rate differs - checkpoint: 0.00025, current: 0.0001
 
 Resume automatically checks for code changes:
 
-```
+```text
 WARNING: Git commit hash mismatch
   Checkpoint was saved at commit: abc1234
   Current commit: def5678
@@ -1326,7 +1326,7 @@ if 'replay_buffer_state' in checkpoint:
 
 Every training run creates a `meta.json` file in the run directory:
 
-```
+```text
 experiments/dqn_atari/runs/pong_123/meta.json
 ```
 
@@ -1454,7 +1454,7 @@ set_rng_states(loaded['rng_states'], env)
 
 To confirm RNG states were restored, check console output:
 
-```
+```text
 Restoring RNG states for reproducibility...
   DONE Python random state restored
   DONE NumPy random state restored
@@ -1519,7 +1519,7 @@ if 'rng_states' in checkpoint:
 **Issue: Git commit hash mismatch**
 
 Resume shows:
-```
+```text
 WARNING: Git commit hash mismatch
   Checkpoint was saved at commit: abc123
   Current commit: def456

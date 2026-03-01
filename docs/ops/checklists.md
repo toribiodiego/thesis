@@ -44,7 +44,7 @@ Before publishing results or sharing code:
   - [ ] Branch is up-to-date with main
   - [ ] CI pipeline passes
 
----
+<br><br>
 
 ## Pre-Training Checklist
 
@@ -73,7 +73,7 @@ Before starting a full training run:
   - [ ] W&B dashboard accessible (if enabled)
   - [ ] Process monitoring in place (htop, nvidia-smi)
 
----
+<br><br>
 
 ## Post-Training Checklist
 
@@ -111,7 +111,7 @@ After completing a training run:
   - [ ] Note any issues or anomalies
   - [ ] Update experiment notes
 
----
+<br><br>
 
 ## Weekly Maintenance
 
@@ -137,7 +137,7 @@ Regular tasks to keep the repository healthy:
   - [ ] Add tests for new features
   - [ ] Fix flaky tests
 
----
+<br><br>
 
 ## Documentation Review
 
@@ -181,7 +181,7 @@ Quarterly documentation maintenance (or before major milestones):
   - [ ] Confirm `docs/thesis/README.md` artifact paths exist
   - [ ] Review `docs/reference/reporting-pipeline.md` workflow matches current scripts
 
----
+<br><br>
 
 ## Troubleshooting Common Issues
 
@@ -211,7 +211,7 @@ Quick reference for frequent problems:
 3. Check for non-deterministic operations
 4. Verify exact package versions
 
----
+<br><br>
 
 ## Emergency Procedures
 
@@ -235,7 +235,7 @@ When things go wrong:
 3. Run tests: `pytest tests/ -x`
 4. Fix issues before pushing
 
----
+<br><br>
 
 ## Scripts Quick Reference
 

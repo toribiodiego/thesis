@@ -2,7 +2,7 @@
 
 Comprehensive documentation for the DQN Q-learning update process, including TD targets, loss computation, optimizer configuration, target network synchronization, metrics logging, and debugging strategies.
 
----
+<br><br>
 
 **Prerequisites:**
 - Completed [DQN Model](dqn-model.md) - Understanding Q-network architecture
@@ -14,7 +14,7 @@ Comprehensive documentation for the DQN Q-learning update process, including TD 
 - [Episode Handling](episode-handling.md) - Terminal state handling in TD targets
 - [Checkpointing](checkpointing.md) - Saving optimizer and target network states
 
----
+<br><br>
 
 ## Table of Contents
 
@@ -31,7 +31,7 @@ Comprehensive documentation for the DQN Q-learning update process, including TD 
 11. [Testing and Validation](#testing-and-validation)
 12. [Configuration Flags](#configuration-flags)
 
----
+<br><br>
 
 ## Overview
 
@@ -45,7 +45,7 @@ The DQN training update implements the Q-learning algorithm with deep neural net
 - **Loss Function**: MSE or Huber loss on TD errors
 
 **Training Loop High-Level:**
-```
+```python
 For each environment step:
   1. Select action using ε-greedy policy
   2. Execute action in environment
@@ -57,7 +57,7 @@ For each environment step:
      - Sync target network with online network
 ```
 
----
+<br><br>
 
 ## TD Target Computation
 
@@ -65,7 +65,7 @@ For each environment step:
 
 The TD target represents the expected cumulative future reward:
 
-```
+```python
 y = r + γ × (1 - done) × max_a' Q_target(s', a')
 ```
 
@@ -107,7 +107,7 @@ td_targets = compute_td_targets(
 - Without it, Q-values and targets are highly correlated (moving target problem)
 - Introduced in 2015 Nature DQN paper (not in 2013 arXiv version)
 
----
+<br><br>
 
 ## Loss Functions
 
@@ -115,7 +115,7 @@ td_targets = compute_td_targets(
 
 The temporal difference error measures prediction error:
 
-```
+```text
 TD error = Q_online(s, a) - y
 ```
 
@@ -127,7 +127,7 @@ Where:
 
 **Default loss function:**
 
-```
+```text
 L_MSE = (1/N) × Σ (Q_online(s, a) - y)²
 ```
 
@@ -141,7 +141,7 @@ L_MSE = (1/N) × Σ (Q_online(s, a) - y)²
 
 **Alternative loss function for robustness:**
 
-```
+```text
 L_Huber(δ) = {
   0.5 × (Q - y)²           if |Q - y| ≤ δ
   δ × (|Q - y| - 0.5δ)     otherwise
@@ -167,7 +167,7 @@ L_Huber(δ) = {
 - Training is unstable with MSE
 - Want more robust learning
 
----
+<br><br>
 
 ## Optimizer Configuration
 
@@ -217,7 +217,7 @@ optimizer = torch.optim.Adam(
 - Too low: Slow learning, may not converge in reasonable time
 - Can use learning rate schedules (not in original DQN)
 
----
+<br><br>
 
 ## Gradient Clipping
 
@@ -249,7 +249,7 @@ torch.nn.utils.clip_grad_norm_(
 - Gradient norm > 1000: Severe instability, check learning rate and reward scale
 - Consistently hitting max_norm: Consider reducing learning rate
 
----
+<br><br>
 
 ## Target Network Synchronization
 
@@ -349,7 +349,7 @@ agent:
 - Stability is important
 - Reproducing 2015 Nature DQN paper
 
----
+<br><br>
 
 ## Training Frequency Scheduling
 
@@ -398,7 +398,7 @@ for env_step in range(total_steps):
 - Subsequent training: 8, 12, 16, ...
 - Only when `buffer.can_sample() == True`
 
----
+<br><br>
 
 ## Complete Update Pipeline
 
@@ -479,7 +479,7 @@ q_selected = q_values.gather(1, actions_unsqueezed).squeeze(1)  # (32,)
 - We only want Q-values for actions that were taken
 - `gather()` selects specific indices along dimension 1
 
----
+<br><br>
 
 ## Metrics Logging
 
@@ -661,7 +661,7 @@ if reference_batch_loaded and env_step % config.intervals.eval_frames == 0:
     logger.log({'reference_max_q': avg_max_q}, step=env_step)
 ```
 
----
+<br><br>
 
 ## Debugging Unstable Training
 
@@ -671,7 +671,7 @@ if reference_batch_loaded and env_step % config.intervals.eval_frames == 0:
 
 **Symptoms:**
 - TD error increases rapidly
-- Loss diverges to very large values
+- Loss diverges (exceeds 1e6)
 - Q-values become extremely large
 
 **Causes:**
@@ -757,7 +757,7 @@ optimizer = torch.optim.RMSProp(..., eps=1e-2)  # Increase if needed
 **Symptoms:**
 - Q-values barely change
 - Episode returns don't improve
-- TD error decreases very slowly
+- TD error decreases slowly (<1% per 100K steps)
 
 **Causes:**
 - Learning rate too low
@@ -805,9 +805,9 @@ scheduler = TrainingScheduler(train_every=1)  # Instead of 4
 3. Verify target network updates
 4. Try Huber loss instead of MSE
 5. Reduce learning rate by factor of 2-10
-6. Increase gradient clipping (max_norm=1.0 for very unstable)
+6. Increase gradient clipping (max_norm=1.0 for diverging training)
 
----
+<br><br>
 
 ## Testing and Validation
 
@@ -927,7 +927,7 @@ assert scheduler.training_step_count > 0
 assert updater.total_updates > 0
 ```
 
----
+<br><br>
 
 ## Configuration Flags
 
@@ -1020,7 +1020,7 @@ config = {
 }
 ```
 
----
+<br><br>
 
 ## Summary
 

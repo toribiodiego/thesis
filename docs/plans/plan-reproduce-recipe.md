@@ -18,7 +18,7 @@ This will:
 4. Generate result plots
 5. Save system provenance
 
----
+<br><br>
 
 ## Prerequisites
 
@@ -50,7 +50,7 @@ pip --version
 git --version
 ```
 
----
+<br><br>
 
 ## Usage
 
@@ -106,7 +106,7 @@ done
 ./experiments/dqn_atari/scripts/run_multi_seed.sh pong "42 123 456"
 ```
 
----
+<br><br>
 
 ## Configuration
 
@@ -140,13 +140,13 @@ export WANDB_API_KEY="your-key-here"
 echo "WANDB_API_KEY=your-key" >> .env
 ```
 
----
+<br><br>
 
 ## Output Structure
 
 After running, outputs are organized as:
 
-```
+```python
 experiments/dqn_atari/runs/<game>_<seed>_<timestamp>/
 ├── config.yaml           # Resolved configuration
 ├── meta.json            # Run metadata
@@ -173,7 +173,7 @@ output/plots/<game>_<seed>/
 └── q_values.png        # Q-value estimates
 ```
 
----
+<br><br>
 
 ## Runtime Estimates
 
@@ -195,7 +195,7 @@ output/plots/<game>_<seed>/
 
 **Note:** Times are estimates. Actual performance depends on hardware.
 
----
+<br><br>
 
 ## Verification
 
@@ -243,7 +243,7 @@ python scripts/analyze_results.py \
 - Paper score: 168
 - Success: >= 90% of paper (>= 151)
 
----
+<br><br>
 
 ## Troubleshooting
 
@@ -304,7 +304,7 @@ chmod +x experiments/dqn_atari/scripts/reproduce_dqn.sh
 - Verify reward clipping enabled
 - Monitor Q-values for explosion
 
----
+<br><br>
 
 ## Advanced Usage
 
@@ -344,7 +344,7 @@ wandb artifact get Cooper-Union/dqn-atari/model:latest
 # https://wandb.ai/Cooper-Union/dqn-atari
 ```
 
----
+<br><br>
 
 ## Post-Reproduction Analysis
 
@@ -392,7 +392,7 @@ ci_95 = 1.96 * std / np.sqrt(len(scores))
 print(f"Mean: {mean:.2f} +/- {ci_95:.2f} (95% CI)")
 ```
 
----
+<br><br>
 
 ## References
 

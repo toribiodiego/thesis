@@ -18,7 +18,7 @@ We reproduce results on three representative Atari games from the original paper
 
 1. **Pong**: Simplest game, fastest learning curve. Agent should converge quickly and beat human performance. Good for validating infrastructure.
 
-2. **Breakout**: More complex strategy (angle shots, break through ceiling). DQN significantly outperforms human baseline.
+2. **Breakout**: More complex strategy (angle shots, break through ceiling). DQN scores well above human baseline.
 
 3. **Beam Rider**: Requires long-term planning and multi-step strategies. DQN approaches but doesn't match human performance.
 

@@ -21,7 +21,7 @@ Complete end-to-end workflow for running DQN on Atari games. This guide ties tog
 - ~2GB disk space for dependencies and ROMs
 - (Optional) CUDA-capable GPU for faster training
 
----
+<br><br>
 
 ## Step 1: Environment Setup
 
@@ -47,7 +47,7 @@ pip install -r requirements.txt
 
 **Troubleshooting:** See [dqn-setup.md](../reference/dqn-setup.md) for detailed setup instructions and common issues.
 
----
+<br><br>
 
 ## Step 2: Download Atari ROMs
 
@@ -75,7 +75,7 @@ python -c 'import ale_py; print(ale_py.roms.list())'
 
 **Troubleshooting:** If ROMs fail to install, see [scripts documentation](../experiments/dqn_atari/scripts/README.md#setup_romssh).
 
----
+<br><br>
 
 ## Step 3: Capture Environment Info (Optional)
 
@@ -99,7 +99,7 @@ Capture system and package versions for reproducibility.
 - When reporting bugs
 - For reproducibility documentation
 
----
+<br><br>
 
 ## Step 4: Validate Setup with Dry Run
 
@@ -146,7 +146,7 @@ Run a short random-policy rollout to verify preprocessing pipeline and generate 
 
 **Troubleshooting:** See [atari-env-wrapper.md](../reference/atari-env-wrapper.md#troubleshooting) for common preprocessing issues.
 
----
+<br><br>
 
 ## Step 5: Start Full Training
 
@@ -210,7 +210,7 @@ tensorboard --logdir experiments/dqn_atari/tensorboard
 
 **Troubleshooting:** See [dqn-training.md](../reference/dqn-training.md#debugging-unstable-training) for debugging convergence issues.
 
----
+<br><br>
 
 ## Step 6: Evaluation and Plotting
 
@@ -264,7 +264,7 @@ python scripts/compare_runs.py \
 
 **Note:** Evaluation and plotting scripts are planned for Subtask 6 (Training Loop). For now, you can inspect logs and checkpoints manually.
 
----
+<br><br>
 
 ## Common Workflows
 
@@ -359,7 +359,7 @@ open experiments/dqn_atari/runs/pong_42/frames/reset_0_frame_0.png
   --seed 4 --agent.target_update_interval 0
 ```
 
----
+<br><br>
 
 ## Configuration Quick Reference
 
@@ -393,7 +393,7 @@ open experiments/dqn_atari/runs/pong_42/frames/reset_0_frame_0.png
 
 See [config documentation](../experiments/dqn_atari/configs/README.md) for complete reference.
 
----
+<br><br>
 
 ## Troubleshooting
 
@@ -451,7 +451,7 @@ ls experiments/dqn_atari/runs/pong_0/frames/
 
 **Solution:** See [dqn-training.md](../reference/dqn-training.md#debugging-unstable-training) for debugging strategies.
 
-**Problem:** Training is very slow
+**Problem:** Training is slower than expected
 
 **Solution:**
 ```bash
@@ -467,7 +467,7 @@ python -c 'import torch; print(torch.cuda.is_available())'
   experiments/dqn_atari/configs/pong.yaml --agent.batch_size 16
 ```
 
----
+<br><br>
 
 ## Next Steps
 

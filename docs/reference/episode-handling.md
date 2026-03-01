@@ -2,7 +2,7 @@
 
 Comprehensive guide to episode management, termination policies, life-loss handling, no-op starts, and differences between training and evaluation modes.
 
----
+<br><br>
 
 **Prerequisites:**
 - Completed [Atari Wrappers](atari-env-wrapper.md) - Understanding EpisodeLifeEnv wrapper
@@ -13,7 +13,7 @@ Comprehensive guide to episode management, termination policies, life-loss handl
 - [Training Loop](training-loop-runtime.md) - Training vs evaluation environment setup
 - Configuration in [base.yaml](../../experiments/dqn_atari/configs/base.yaml)
 
----
+<br><br>
 
 ## Table of Contents
 
@@ -27,7 +27,7 @@ Comprehensive guide to episode management, termination policies, life-loss handl
 8. [Configuration](#configuration)
 9. [Common Pitfalls](#common-pitfalls)
 
----
+<br><br>
 
 ## Overview
 
@@ -42,7 +42,7 @@ The 2015 Nature DQN paper introduced several episode handling techniques that di
 - **Evaluation**: Run full episodes (all lives) to measure true performance
 - **Both**: Use no-op starts for stochasticity and episode reset handling
 
----
+<br><br>
 
 ## Episode Termination Policies
 
@@ -79,7 +79,7 @@ When `done=True`:
 - Episode must be reset before next step
 - Episode metrics (return, length) are recorded
 
----
+<br><br>
 
 ## Life-Loss as Terminal (Training Mode)
 
@@ -154,7 +154,7 @@ td_target = reward + 0.99 * (1 - 0.0) * max_Q = reward + 0.99 * max_Q
 - Evaluation mode (want true episode returns)
 - Single-life games
 
----
+<br><br>
 
 ## Full Episodes (Evaluation Mode)
 
@@ -241,7 +241,7 @@ def evaluate(agent, env_id, num_episodes=10, eval_epsilon=0.05, seed=None):
 | Stochasticity | High (exploration) | Low (mostly greedy) |
 | Episode length | Variable (life-based) | Full (all lives) |
 
----
+<br><br>
 
 ## No-Op Starts
 
@@ -300,7 +300,7 @@ eval:
 
 **Recommendation:** Use `noop_max=30` for both training and evaluation to match the DQN paper.
 
----
+<br><br>
 
 ## Episode Tracking and Metrics
 
@@ -395,7 +395,7 @@ for step in range(total_steps):
 - `std_eval_return`: Standard deviation (measures consistency)
 - `min/max_eval_return`: Range of performance
 
----
+<br><br>
 
 ## Implementation Guide
 
@@ -488,7 +488,7 @@ for step in range(total_steps):
         obs = result['next_state']
 ```
 
----
+<br><br>
 
 ## Configuration
 
@@ -545,7 +545,7 @@ def make_env_from_config(config, mode='train'):
     return env
 ```
 
----
+<br><br>
 
 ## Common Pitfalls
 
@@ -619,7 +619,7 @@ if done:
     obs, info = env.reset()
 ```
 
----
+<br><br>
 
 ## Summary
 

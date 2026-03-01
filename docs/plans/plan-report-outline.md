@@ -154,7 +154,7 @@ This document tracks the structure and source artifacts for the main results rep
   - `experiments/dqn_atari/scripts/reproduce_dqn.sh`
   - `plan-reproduce-recipe.md`
 
----
+<br><br>
 
 ## Artifact Inventory
 
@@ -179,7 +179,7 @@ This document tracks the structure and source artifacts for the main results rep
 | Comparison bar chart | `output/summary/plots/comparison.png` | Custom script | [ ] |
 | W&B dashboard | wandb.ai URL | W&B UI | [ ] |
 
----
+<br><br>
 
 ## Figure List
 
@@ -191,7 +191,7 @@ This document tracks the structure and source artifacts for the main results rep
 | 4 | Multi-Seed Pong Comparison | `output/plots/pong_aggregate.png` | [ ] |
 | 5 | Paper vs Reproduction Scores | `output/summary/plots/comparison.png` | [ ] |
 
----
+<br><br>
 
 ## Table List
 
@@ -203,7 +203,7 @@ This document tracks the structure and source artifacts for the main results rep
 | 4 | Comparison Summary | Computed from Table 2 & 3 | [ ] |
 | 5 | Environment Versions | `../reference/environment-notes.md` | [ ] |
 
----
+<br><br>
 
 ## Open Questions / TODOs
 
@@ -214,7 +214,7 @@ This document tracks the structure and source artifacts for the main results rep
 - [ ] Choose plot style (seaborn, matplotlib, custom)
 - [ ] Define episode window for "final performance" (last 100? last 5 evals?)
 
----
+<br><br>
 
 ## Reporting Pipeline Mapping
 
@@ -292,7 +292,7 @@ For full pipeline documentation, see [Reporting Pipeline](../reference/reporting
 
 For thesis artifact index and regeneration steps, see [Thesis Artifact Index](../thesis/README.md).
 
----
+<br><br>
 
 ## Regeneration Commands
 
@@ -329,7 +329,7 @@ python scripts/export_results_table.py \
     --runs-dir experiments/dqn_atari/runs
 ```
 
----
+<br><br>
 
 ## Review Checklist
 
@@ -346,7 +346,7 @@ Before finalizing report:
 - [ ] Statistical claims are justified
 - [ ] Code snippets are syntax-highlighted
 
----
+<br><br>
 
 ## Version History
 
@@ -358,7 +358,7 @@ Before finalizing report:
 | 0.4 | 2025-12-23 | Added reporting pipeline mapping |
 | 1.0 | TBD | Final report complete |
 
----
+<br><br>
 
 ## References
 

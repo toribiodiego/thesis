@@ -1,6 +1,6 @@
 # DQN Model
 
----
+<br><br>
 
 **Prerequisites:**
 - Completed [DQN Setup](dqn-setup.md) - PyTorch environment ready
@@ -12,7 +12,7 @@
 - [Training Loop](training-loop-runtime.md) - Online vs target network usage
 - [Checkpointing](checkpointing.md) - Saving/loading model weights
 
----
+<br><br>
 
 ## Overview
 
@@ -28,7 +28,7 @@ This document describes the DQN (Deep Q-Network) CNN architecture implementation
 
 ### Layer-by-Layer Tensor Shapes
 
-```
+```text
 Input:  (B, 4, 84, 84)   - 4 stacked frames, uint8 → float32 [0,1]
    ↓
 Conv1:  in=4, out=16, kernel=8×8, stride=4, padding=0
@@ -152,7 +152,7 @@ print_model_summary(model, input_shape=(4, 84, 84))
 ```
 
 **Example output:**
-```
+```text
 ======================================================================
 Layer (type)               Output Shape         Param #
 ======================================================================

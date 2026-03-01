@@ -10,7 +10,7 @@ This report presents results from reproducing the DQN algorithm from Mnih et al.
 
 **Overall Status**: [SUMMARY_STATUS]
 
----
+<br><br>
 
 ## Results Overview
 
@@ -35,7 +35,7 @@ This report presents results from reproducing the DQN algorithm from Mnih et al.
 2. **[FINDING_2]**
 3. **[FINDING_3]**
 
----
+<br><br>
 
 ## Per-Game Results
 
@@ -64,7 +64,7 @@ This report presents results from reproducing the DQN algorithm from Mnih et al.
 - `experiments/dqn_atari/runs/pong_43_[TIMESTAMP]/`
 - `experiments/dqn_atari/runs/pong_44_[TIMESTAMP]/`
 
----
+<br><br>
 
 ### Breakout
 
@@ -86,7 +86,7 @@ This report presents results from reproducing the DQN algorithm from Mnih et al.
 - [OBSERVATION_1]
 - [OBSERVATION_2]
 
----
+<br><br>
 
 ### Beam Rider
 
@@ -108,7 +108,7 @@ This report presents results from reproducing the DQN algorithm from Mnih et al.
 - [OBSERVATION_1]
 - [OBSERVATION_2]
 
----
+<br><br>
 
 ## Methodology
 
@@ -156,7 +156,7 @@ All experiments use DQN 2013 paper defaults unless noted:
 - **Evaluation Epsilon**: 0.05 (5% random actions)
 - **Deterministic Seeds**: Yes (42, 43, 44 for multi-seed runs)
 
----
+<br><br>
 
 ## Runtime Statistics
 
@@ -174,7 +174,7 @@ All experiments use DQN 2013 paper defaults unless noted:
 - Python: [VERSION]
 - PyTorch: [VERSION]
 
----
+<br><br>
 
 ## Analysis
 
@@ -212,7 +212,7 @@ For games that match or exceed paper scores:
 2. **For future experiments**: [RECOMMENDATION_2]
 3. **Known issues to address**: [RECOMMENDATION_3]
 
----
+<br><br>
 
 ## Artifacts
 
@@ -253,7 +253,7 @@ python scripts/export_results_table.py \
   --output output/summary/comparison.md
 ```
 
----
+<br><br>
 
 ## Conclusions
 
@@ -265,7 +265,7 @@ python scripts/export_results_table.py \
 2. [NEXT_STEP_2]
 3. [NEXT_STEP_3]
 
----
+<br><br>
 
 ## References
 
@@ -275,7 +275,7 @@ python scripts/export_results_table.py \
 4. Design Specifications: `docs/reference/`
 5. Experiment Configs: `experiments/dqn_atari/configs/`
 
----
+<br><br>
 
 **Document Version**: 1.0
 **Last Updated**: [DATE]

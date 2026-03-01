@@ -21,7 +21,7 @@ This document establishes retention rules and gitignore policies for managing th
 - Thesis-ready figures and tables
 - Clean repository for collaboration
 
----
+<br><br>
 
 ## Retention Categories
 
@@ -47,7 +47,7 @@ These files are essential for reproducibility and should be version-controlled:
 
 **Rationale**: Code and docs must be tracked for reproducibility and collaboration.
 
----
+<br><br>
 
 ### Archive Locally (Gitignored, Keep Selectively)
 
@@ -82,7 +82,7 @@ These artifacts should be excluded from git but retained selectively:
 
 **Rationale**: Selective retention balances reproducibility with disk space.
 
----
+<br><br>
 
 ### Delete Immediately (Gitignored, Disposable)
 
@@ -121,7 +121,7 @@ These can be safely deleted and regenerated:
 
 **Rationale**: Reduce disk usage, keep repo clean.
 
----
+<br><br>
 
 ## Retention Rules by Use Case
 
@@ -174,7 +174,7 @@ For systematic experiments:
 
 **Disk per study**: ~500MB-1GB per variant
 
----
+<br><br>
 
 ## Git Configuration
 
@@ -244,7 +244,7 @@ output/*
 
 **Recommendation**: Use W&B artifacts for checkpoints, track only code/docs in git.
 
----
+<br><br>
 
 ## Cleanup Procedures
 
@@ -305,7 +305,7 @@ rm -rf output/plots/
 
 **Est. space saved**: 70-80% immediately
 
----
+<br><br>
 
 ## Backup Strategy
 
@@ -336,7 +336,7 @@ rm -rf output/plots/
 **Intermediate artifacts**:
 - No backup needed (regenerable from code + checkpoints)
 
----
+<br><br>
 
 ## Disk Space Planning
 
@@ -363,7 +363,7 @@ rm -rf output/plots/
 
 **Recommendation**: Provision 20-30 GB disk space for comfortable development.
 
----
+<br><br>
 
 ## Next Steps
 
@@ -384,7 +384,7 @@ rm -rf output/plots/
 - Document W&B run URLs in thesis appendix
 - Keep archive safe (external drive + cloud backup)
 
----
+<br><br>
 
 ## Related Documents
 
@@ -393,6 +393,6 @@ rm -rf output/plots/
 - [Applied Research Quickstart](../guides/applied-research-quickstart.md) - Phase 4 (document findings)
 - [Checkpointing](checkpointing.md) - Checkpoint format and resumption
 
----
+<br><br>
 
 **Last Updated**: 2025-12-23

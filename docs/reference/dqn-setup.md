@@ -2,7 +2,7 @@
 
 Central reference for everything completed in Subtask 1 (game selection, pinned dependencies, evaluation settings, seeding, and dry-run tooling). Update this file whenever the foundation changes so collaborators know exactly how to bootstrap the project.
 
----
+<br><br>
 
 **Prerequisites:**
 - Python 3.10+ installed
@@ -14,7 +14,7 @@ Central reference for everything completed in Subtask 1 (game selection, pinned 
 - [Atari Wrappers](atari-env-wrapper.md) - Environment preprocessing
 - [Scripts README](../../experiments/dqn_atari/scripts/README.md) - CLI tools
 
----
+<br><br>
 
 ## Selected Games
 

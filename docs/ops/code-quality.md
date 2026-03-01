@@ -13,7 +13,7 @@ For this thesis project, focus on:
 
 Note: This is a thesis project, not production software. Prioritize working code over perfect code.
 
----
+<br><br>
 
 ## Testing
 
@@ -28,7 +28,7 @@ This runs the full test suite and stops on first failure.
 
 ### Test Suite Structure
 
-```
+```text
 tests/
 ├── test_dqn_model.py         # CNN architecture tests
 ├── test_dqn_trainer.py       # Training loop tests
@@ -86,7 +86,7 @@ Available markers for filtering tests:
 - After small config changes
 - For documentation-only changes
 
----
+<br><br>
 
 ## Code Formatting (Optional)
 
@@ -137,7 +137,7 @@ Run both together:
 black src/ tests/ scripts/ && isort src/ tests/
 ```
 
----
+<br><br>
 
 ## Linting (Optional)
 
@@ -171,7 +171,7 @@ ignore = [
 ]
 ```
 
----
+<br><br>
 
 ## Test Coverage (Optional)
 
@@ -187,7 +187,7 @@ open htmlcov/index.html
 ```
 
 Current coverage (as of latest run):
-```
+```text
 src/models/           92%
 src/training/         85%
 src/replay/           88%
@@ -197,7 +197,7 @@ Overall:              84%
 
 Don't obsess over coverage percentages for thesis work.
 
----
+<br><br>
 
 ## Type Checking (Optional)
 
@@ -219,7 +219,7 @@ ignore_missing_imports = true
 
 Type annotations are helpful but not required for all code.
 
----
+<br><br>
 
 ## Recommended Workflow
 
@@ -255,7 +255,7 @@ Use linting to catch potential bugs:
 ruff check src/ tests/
 ```
 
----
+<br><br>
 
 ## Troubleshooting
 
@@ -279,7 +279,7 @@ pip install -r requirements.txt
 pip install pytest-cov
 ```
 
----
+<br><br>
 
 ## Philosophy for Thesis Work
 
@@ -298,7 +298,7 @@ pip install pytest-cov
 ### Remember:
 This is research code for a thesis, not production software. The goal is correct, reproducible results - not perfect code style.
 
----
+<br><br>
 
 ## References
 

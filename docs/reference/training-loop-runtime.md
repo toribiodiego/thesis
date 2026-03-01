@@ -2,7 +2,7 @@
 
 Comprehensive guide to DQN training loop control flow, component orchestration, logging schema, evaluation cadence, and troubleshooting. This document describes how all training components work together during execution.
 
----
+<br><br>
 
 **Prerequisites:**
 - Completed all component docs: [Model](dqn-model.md), [Replay](replay-buffer.md), [Training](dqn-training.md)
@@ -14,7 +14,7 @@ Comprehensive guide to DQN training loop control flow, component orchestration, 
 - [Scripts README](../../experiments/dqn_atari/scripts/README.md) - CLI usage
 - [Test README](../../tests/README.md) - Running smoke tests
 
----
+<br><br>
 
 ## Table of Contents
 
@@ -28,7 +28,7 @@ Comprehensive guide to DQN training loop control flow, component orchestration, 
 8. [Troubleshooting Guide](#troubleshooting-guide)
 9. [Configuration Knobs](#configuration-knobs)
 
----
+<br><br>
 
 ## Overview
 
@@ -51,13 +51,13 @@ The DQN training loop orchestrates multiple components to implement the complete
 - **Reproducibility**: Metadata capture (git hash, config, seed) with every run
 - **Fail-Fast Validation**: Smoke tests verify end-to-end stability before long runs
 
----
+<br><br>
 
 ## Control Flow
 
 ### High-Level Training Loop
 
-```
+```bash
 Initialize:
   - Create environment with preprocessing wrappers
   - Build online and target Q-networks
@@ -131,7 +131,7 @@ Finalization:
 
 ### Detailed Step Flow Diagram
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                     training_step()                          │
 │                                                              │
@@ -225,7 +225,7 @@ Finalization:
          └────────────────────────────────────┘
 ```
 
----
+<br><br>
 
 ## Component Orchestration
 
@@ -255,7 +255,7 @@ epsilon = epsilon_scheduler.get_epsilon(frame_counter.frames)
 - `exploration.epsilon_end`: Final epsilon (default: 0.1)
 - `exploration.decay_frames`: Decay period (default: 1M)
 
----
+<br><br>
 
 ### 2. Frame Counter
 
@@ -282,7 +282,7 @@ fps = frame_counter.fps(elapsed_time)
 - Target sync based on `steps` (every 10K decisions)
 - Evaluation based on `frames` (every 250K environment frames)
 
----
+<br><br>
 
 ### 3. Training Scheduler
 
@@ -306,7 +306,7 @@ if training_scheduler.should_train(step, replay_buffer):
 **Config Keys**:
 - `training.train_every`: Training frequency in steps (default: 4)
 
----
+<br><br>
 
 ### 4. Target Network Updater
 
@@ -330,7 +330,7 @@ if target_updater.should_update(step):
 - `agent.target_update_interval`: Sync interval in steps (default: 10K)
 - Set to 0 to disable target network (2013 DQN variant)
 
----
+<br><br>
 
 ### 5. Step Logger
 
@@ -376,7 +376,7 @@ step,epsilon,loss,loss_ma,td_error_mean,grad_norm,lr,replay_size,fps
 - `replay_size`: Number of transitions in buffer
 - `fps`: Frames per second
 
----
+<br><br>
 
 ### 6. Episode Logger
 
@@ -419,7 +419,7 @@ step,episode_return,episode_length,fps,epsilon,rolling_mean,rolling_std
 - `rolling_mean`: Mean return over last N episodes
 - `rolling_std`: Std of return over last N episodes
 
----
+<br><br>
 
 ### 7. Evaluation Scheduler & Logger
 
@@ -491,7 +491,7 @@ step,mean_return,median_return,std_return,min_return,max_return,mean_length,num_
 - `eval.num_episodes`: Episodes per evaluation (default: 10)
 - `eval.epsilon`: Exploration during eval (default: 0.05)
 
----
+<br><br>
 
 ### 8. Reference Q Tracker & Logger
 
@@ -545,7 +545,7 @@ step,avg_max_q,max_q,min_q
 - Should increase monotonically if learning progresses
 - Helps diagnose value overestimation/underestimation
 
----
+<br><br>
 
 ### 9. Checkpoint Manager
 
@@ -597,7 +597,7 @@ if eval_results:
 - `training.checkpoint_interval`: Steps between saves (default: 1M)
 - `training.keep_last_n`: Number of periodic checkpoints to keep (default: 3)
 
----
+<br><br>
 
 ### 10. Metadata Writer
 
@@ -636,7 +636,7 @@ metadata_writer.write_metadata(
 ```
 
 **git_info.txt Format**:
-```
+```text
 Git Information
 ===============
 Commit: 14153d1b082ec917dcc04f0020305b2095d10e9e
@@ -644,13 +644,13 @@ Branch: main
 Status: clean
 ```
 
----
+<br><br>
 
 ## Logging Schema
 
 ### Directory Structure
 
-```
+```python
 experiments/dqn_atari/runs/{game}_{seed}/
 ├── metadata.json                    # Run metadata (git, config, seed)
 ├── git_info.txt                     # Git state snapshot
@@ -700,7 +700,7 @@ q_vals = pd.read_csv('logs/reference_q_values.csv')
 q_vals.plot(x='step', y=['avg_max_q', 'max_q', 'min_q'])
 ```
 
----
+<br><br>
 
 ## Evaluation Cadence
 
@@ -710,7 +710,7 @@ q_vals.plot(x='step', y=['avg_max_q', 'max_q', 'min_q'])
 
 **Rationale**:
 - Frequent enough to track learning progress (40 evals in 10M frames)
-- Infrequent enough to not slow training significantly
+- Infrequent enough to not add measurable overhead to training
 - Matches Nature DQN evaluation protocol
 
 **Alternative Schedules**:
@@ -754,7 +754,7 @@ q_vals.plot(x='step', y=['avg_max_q', 'max_q', 'min_q'])
 - **High variance**: Increase num_episodes (10 → 30)
 - **Sudden drops**: Check for target sync issues or learning rate problems
 
----
+<br><br>
 
 ## Command Reference
 
@@ -823,7 +823,7 @@ ls -lh experiments/dqn_atari/runs/pong_42/checkpoints/
   --resume runs/pong_42/checkpoints/step_5000000.pt
 ```
 
----
+<br><br>
 
 ## Smoke Test Procedure
 
@@ -851,7 +851,7 @@ Validate end-to-end training stability **before** launching long experiments.
 
 ### Expected Output
 
-```
+```text
 ========================================
 DQN Training Smoke Test
 ========================================
@@ -946,7 +946,7 @@ runs/smoke_test_0/
 | **Checkpoints** | 1-2 checkpoints | 10-20 checkpoints |
 | **Evaluations** | 1-4 evals | 40+ evals |
 
----
+<br><br>
 
 ## Testing
 
@@ -1033,7 +1033,7 @@ pytest tests/test_dqn_trainer.py::test_training_step_integration -v
 2. Run smoke test before commits: `./experiments/dqn_atari/scripts/smoke_test.sh`
 3. Run full test suite before PRs: `pytest tests/ -v`
 
----
+<br><br>
 
 ## Troubleshooting Guide
 
@@ -1070,7 +1070,7 @@ grep -A5 "replay" experiments/dqn_atari/configs/base.yaml
 ./experiments/dqn_atari/scripts/run_dqn.sh ... --device cpu
 ```
 
----
+<br><br>
 
 ### Issue: Loss Not Decreasing
 
@@ -1115,7 +1115,7 @@ agent:
   replay_capacity: 1000000  # From 100K to 1M
 ```
 
----
+<br><br>
 
 ### Issue: NaN/Inf in Losses
 
@@ -1160,13 +1160,13 @@ agent:
   target_update_interval: 5000  # From 10000
 ```
 
----
+<br><br>
 
 ### Issue: Target Network Not Syncing
 
 **Symptoms**:
 - No "Target network synced" messages in logs
-- TD error stays very high
+- TD error stays elevated (no downward trend)
 - Learning unstable
 
 **Diagnosis**:
@@ -1194,7 +1194,7 @@ agent:
   target_update_interval: 5000
 ```
 
----
+<br><br>
 
 ### Issue: Evaluation Not Triggering
 
@@ -1228,7 +1228,7 @@ eval:
   interval: 250000  # Must be > 0
 ```
 
----
+<br><br>
 
 ### Issue: Checkpoints Not Saving
 
@@ -1264,7 +1264,7 @@ df -h
 chmod -R u+w experiments/dqn_atari/runs/
 ```
 
----
+<br><br>
 
 ### Issue: High Memory Usage
 
@@ -1308,7 +1308,7 @@ training:
   keep_last_n: 3  # Only keep 3 recent checkpoints
 ```
 
----
+<br><br>
 
 ### Issue: Slow Training
 
@@ -1351,7 +1351,7 @@ eval:
 device: cuda  # Ensure all components use same device
 ```
 
----
+<br><br>
 
 ### Issue: Episode Returns Not Improving
 
@@ -1399,7 +1399,7 @@ agent:
   replay_min_transitions: 50000  # Should be < total frames
 ```
 
----
+<br><br>
 
 ## Configuration Knobs
 
@@ -1420,7 +1420,7 @@ exploration:
 - Longer `decay_frames` → Gradual transition → More stable learning
 - Shorter `decay_frames` → Quick transition → Faster exploitation
 
----
+<br><br>
 
 ### Frame Counters
 
@@ -1442,7 +1442,7 @@ env:
 - Increases temporal granularity
 - Matches Nature DQN protocol
 
----
+<br><br>
 
 ### Training Frequency
 
@@ -1461,7 +1461,7 @@ training:
 - CartPole: `train_every: 1` (every step)
 - Atari: `train_every: 4` (Nature DQN default)
 
----
+<br><br>
 
 ### Target Network Sync
 
@@ -1483,7 +1483,7 @@ agent:
 - 2015 Nature DQN: `target_update_interval: 10000` (10K steps)
 - Alternative: `target_update_interval: 8000` (more frequent)
 
----
+<br><br>
 
 ### Evaluation Interval
 
@@ -1506,7 +1506,7 @@ eval:
 - Standard: `interval: 250000`, `num_episodes: 10`
 - Final runs: `interval: 500000`, `num_episodes: 30`
 
----
+<br><br>
 
 ### Logging Frequency
 
@@ -1527,7 +1527,7 @@ logging:
 - Standard: `step_interval: 1000`
 - Long runs: `step_interval: 10000`
 
----
+<br><br>
 
 ### Checkpoint Frequency
 
@@ -1549,7 +1549,7 @@ training:
 - Standard runs (10M frames): `checkpoint_interval: 1000000`, `keep_last_n: 3`
 - Long runs (50M+ frames): `checkpoint_interval: 5000000`, `keep_last_n: 2`
 
----
+<br><br>
 
 ## Summary
 

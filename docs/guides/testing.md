@@ -8,7 +8,7 @@ This document describes the test suite organization, how to run tests, and what 
 
 The test suite uses **pytest** and is organized into focused test modules:
 
-```
+```python
 tests/
 ├── test_dqn_model.py          # DQN CNN architecture tests
 ├── test_dqn_trainer.py         # Core training utilities tests
@@ -24,7 +24,7 @@ tests/
 
 **Total:** ~194 tests across 13 test modules
 
----
+<br><br>
 
 ## Quick Start
 
@@ -48,7 +48,7 @@ pytest tests/ -k "evaluate" -v
 pytest tests/ --cov=src --cov-report=html
 ```
 
----
+<br><br>
 
 ## Evaluation Tests
 
@@ -92,7 +92,7 @@ pytest tests/test_evaluation.py -k "test_evaluation_logger" -v
 ```
 
 **Example output:**
-```
+```text
 tests/test_evaluation.py::test_evaluate_basic PASSED                     [  5%]
 tests/test_evaluation.py::test_evaluate_greedy PASSED                    [ 10%]
 tests/test_evaluation.py::test_evaluate_with_metadata PASSED             [ 15%]
@@ -136,7 +136,7 @@ pytest tests/test_video_recorder.py -k "test_evaluate" -v
 ```
 
 **Example output:**
-```
+```text
 tests/test_video_recorder.py::test_video_recorder_basic PASSED           [ 10%]
 tests/test_video_recorder.py::test_video_recorder_grayscale PASSED       [ 20%]
 tests/test_video_recorder.py::test_video_recorder_float_frames PASSED    [ 30%]
@@ -150,7 +150,7 @@ tests/test_video_recorder.py::test_evaluate_with_video_recording PASSED  [ 90%]
 pip install opencv-python
 ```
 
----
+<br><br>
 
 ## Common Test Commands
 
@@ -230,7 +230,7 @@ pytest tests/ -x
 pytest tests/ --durations=10
 ```
 
----
+<br><br>
 
 ## Test Organization by Component
 
@@ -272,7 +272,7 @@ pytest tests/ --durations=10
 - Schema validation
 - CLI overrides
 
----
+<br><br>
 
 ## Continuous Integration
 
@@ -287,7 +287,7 @@ pytest tests/ -v
 pytest tests/test_evaluation.py tests/test_video_recorder.py -v
 ```
 
----
+<br><br>
 
 ## Debugging Test Failures
 
@@ -315,7 +315,7 @@ pytest tests/test_evaluation.py -v --debug
 pytest tests/test_evaluation.py -v --showlocals
 ```
 
----
+<br><br>
 
 ## Adding New Tests
 
@@ -354,7 +354,7 @@ def test_evaluation_feature():
 5. **Mock external dependencies**: Use `unittest.mock` for environments, file I/O
 6. **Document expectations**: Include docstring explaining what test verifies
 
----
+<br><br>
 
 ## Test Coverage Goals
 
@@ -381,7 +381,7 @@ pytest tests/ --cov=src --cov-report=html
 open htmlcov/index.html
 ```
 
----
+<br><br>
 
 ## Troubleshooting
 
@@ -422,7 +422,7 @@ pytest tests/ -v --timeout=60
 from conftest import mock_env_fixture
 ```
 
----
+<br><br>
 
 ## Related Documentation
 
@@ -431,7 +431,7 @@ from conftest import mock_env_fixture
 - [Testing Best Practices](https://docs.pytest.org/en/stable/goodpractices.html) - Pytest conventions
 - [Coverage.py](https://coverage.readthedocs.io/) - Coverage measurement tool
 
----
+<br><br>
 
 ## Quick Reference
 

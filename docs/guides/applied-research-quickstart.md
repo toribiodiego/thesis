@@ -22,11 +22,11 @@ Unlike [Quick Start](quick-start.md) (detailed step-by-step setup), this focuses
 - Performance metrics and plots
 - Reproducible experiment artifacts
 
----
+<br><br>
 
 ## Workflow Overview
 
-```
+```text
 1. Validate Foundation
    └─ Smoke test → Unit tests → Performance baseline
 
@@ -42,7 +42,7 @@ Unlike [Quick Start](quick-start.md) (detailed step-by-step setup), this focuses
 
 **Est. time**: 1 hour (validation) + days-weeks (training) + hours (analysis)
 
----
+<br><br>
 
 ## Phase 1: Validate Foundation
 
@@ -124,7 +124,7 @@ grep "FPS" <run_dir>/logs/training.log | tail -5
 
 **Document baseline**: Save system info and FPS to `output/summary/performance_baseline.txt`
 
----
+<br><br>
 
 ## Phase 2: Run Baseline Experiments
 
@@ -204,7 +204,7 @@ If GPU available and time permits:
 
 **Note**: Breakout/Beam Rider each take 150-300 hours on CPU, 25-50 hours on GPU per seed. Consider deferring if GPU not available.
 
----
+<br><br>
 
 ## Phase 3: Analyze Results
 
@@ -240,7 +240,7 @@ python scripts/export_results_table.py \
 ```
 
 **Output format**:
-```
+```text
 game,seed,final_mean_return,final_std,paper_score,percent_of_paper
 pong,42,19.5,0.8,20,97.5
 pong,123,20.2,0.5,20,101.0
@@ -277,7 +277,7 @@ success = mean_score >= 0.9 * paper_score
 print(f"Reproduction: {'SUCCESS' if success else 'NEEDS INVESTIGATION'}")
 ```
 
----
+<br><br>
 
 ## Phase 4: Document Findings
 
@@ -343,7 +343,7 @@ vim experiments/dqn_atari/notes.md
 - Follow-up experiments planned
 - Issues encountered and resolutions
 
----
+<br><br>
 
 ## Common Workflows
 
@@ -381,7 +381,7 @@ for game in pong breakout beam_rider; do
 done
 ```
 
----
+<br><br>
 
 ## Troubleshooting Quick Reference
 
@@ -396,7 +396,7 @@ done
 | W&B login required | `wandb login` or `export WANDB_API_KEY=<key>` |
 | Checkpoints too large | Expected (~500MB each), exclude intermediate ones |
 
----
+<br><br>
 
 ## Next Steps
 
@@ -415,7 +415,7 @@ done
 - Reproducibility: [Checkpointing](../reference/checkpointing.md)
 - Results analysis: [Results Comparison](../reports/report-results-comparison.md)
 
----
+<br><br>
 
 ## Related Documents
 
@@ -426,6 +426,6 @@ done
 - [Reproduce Recipe](../plans/plan-reproduce-recipe.md) - Detailed reproduction commands
 - [Troubleshooting](troubleshooting.md) - Problem diagnosis and fixes
 
----
+<br><br>
 
 **Last Updated**: 2025-12-23

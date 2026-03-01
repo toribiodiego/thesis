@@ -225,7 +225,7 @@ python scripts/export_results_table.py \
 - **Progress Tracking**: [TODO](TODO) (local file) - Current tasks and roadmap
 
 **Documentation Structure**:
-```
+```text
 docs/
 ├── README.md              # Documentation index and navigation guide
 ├── guides/                # High-level task-oriented guides
@@ -238,7 +238,7 @@ docs/
 
 For the full documentation index with descriptions of each file, see **[docs/README.md](docs/README.md)**.
 
----
+<br><br>
 
 ## Detailed Documentation References
 
@@ -323,7 +323,7 @@ pytest tests/test_dqn_trainer.py -k "smoke_test" -v
 
 ## Structure
 
-```
+```text
 ├── train_dqn.py                 # Main training entry point
 ├── TODO                         # Current roadmap and task tracker (untracked)
 ├── docs/                        # Project documentation

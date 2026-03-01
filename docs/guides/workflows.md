@@ -2,7 +2,7 @@
 
 Task-oriented guides for common development and experimentation workflows. Each workflow provides quick commands with links to detailed documentation.
 
----
+<br><br>
 
 ## Table of Contents
 
@@ -26,7 +26,7 @@ Task-oriented guides for common development and experimentation workflows. Each 
 - [Run Smoke Test](#run-smoke-test)
 - [Validate Component](#validate-component)
 
----
+<br><br>
 
 ## First-Time Setup
 
@@ -57,7 +57,7 @@ python -c "import torch, gymnasium, ale_py; print('Success!')"
 
 **Docs:** [DQN Setup](../reference/dqn-setup.md), [Quick Start](quick-start.md)
 
----
+<br><br>
 
 ## Verify Installation
 
@@ -85,7 +85,7 @@ pytest --version
 
 **Docs:** [DQN Setup](../reference/dqn-setup.md#troubleshooting)
 
----
+<br><br>
 
 ## Run Dry Run Test
 
@@ -103,7 +103,7 @@ pytest --version
 ```
 
 **Expected output:**
-```
+```python
 experiments/dqn_atari/runs/pong_<timestamp>/
 ├── frames/frame_*.npy        # Sample preprocessed frames
 ├── action_list.json          # Available actions
@@ -113,7 +113,7 @@ experiments/dqn_atari/runs/pong_<timestamp>/
 
 **Docs:** [Atari Wrappers](../reference/atari-env-wrapper.md), [Scripts README](../experiments/dqn_atari/scripts/README.md)
 
----
+<br><br>
 
 ## Train From Scratch
 
@@ -138,7 +138,7 @@ experiments/dqn_atari/runs/pong_<timestamp>/
 ```
 
 **Expected output:**
-```
+```python
 experiments/dqn_atari/runs/pong_42/
 ├── config.yaml                      # Full resolved configuration
 ├── meta.json                        # Run metadata
@@ -159,7 +159,7 @@ experiments/dqn_atari/runs/pong_42/
 
 **Docs:** [Training Loop](../reference/training-loop-runtime.md), [Scripts README](../experiments/dqn_atari/scripts/README.md)
 
----
+<br><br>
 
 ## Resume Training
 
@@ -190,7 +190,7 @@ ls experiments/dqn_atari/runs/pong_42/checkpoints/
 
 **Docs:** [Checkpointing](../reference/checkpointing.md), [Scripts README](../experiments/dqn_atari/scripts/README.md#resume-a-run)
 
----
+<br><br>
 
 ## Monitor Training Progress
 
@@ -223,7 +223,7 @@ ls -la experiments/dqn_atari/runs/pong_42/videos/
 
 **Docs:** [Training Loop](../reference/training-loop-runtime.md#logging-schema)
 
----
+<br><br>
 
 ## Debug Unstable Training
 
@@ -258,7 +258,7 @@ pytest tests/test_dqn_trainer.py -k "stability or nan" -v
 
 **Docs:** [DQN Training](../reference/dqn-training.md#debugging-unstable-training), [Training Loop](../reference/training-loop-runtime.md#troubleshooting-guide)
 
----
+<br><br>
 
 ## Verify Determinism
 
@@ -296,7 +296,7 @@ diff experiments/dqn_atari/runs/pong_42_*/logs/episodes.csv
 
 **Docs:** [Checkpointing](../reference/checkpointing.md#deterministic-seeding), [DQN Setup](../reference/dqn-setup.md#deterministic-mode-configuration)
 
----
+<br><br>
 
 ## Inspect Checkpoint Contents
 
@@ -331,7 +331,7 @@ print(f"Replay index: {ckpt['replay_buffer_state']['index']}")
 
 **Docs:** [Checkpointing](../reference/checkpointing.md#checkpoint-structure)
 
----
+<br><br>
 
 ## Run Unit Tests
 
@@ -365,7 +365,7 @@ pytest tests/test_dqn_trainer.py::test_epsilon_scheduler -v
 
 **Docs:** [Test README](../tests/README.md)
 
----
+<br><br>
 
 ## Run Smoke Test
 
@@ -393,7 +393,7 @@ pytest tests/test_dqn_trainer.py::test_epsilon_scheduler -v
 
 **Docs:** [Training Loop](../reference/training-loop-runtime.md#smoke-test-procedure), [Scripts README](../experiments/dqn_atari/scripts/README.md#smoke-test)
 
----
+<br><br>
 
 ## Validate Component
 
@@ -418,7 +418,7 @@ pytest tests/test_dqn_trainer.py -k "scheduler" -v
 
 **Docs:** [Test README](../tests/README.md), individual design docs for each component
 
----
+<br><br>
 
 ## Related Documentation
 
@@ -436,6 +436,6 @@ pytest tests/test_dqn_trainer.py -k "scheduler" -v
 - [Troubleshooting Guide](troubleshooting.md) - Common issues and solutions
 - [Test README](../tests/README.md) - Running tests
 
----
+<br><br>
 
 **Last Updated:** 2025-11-13

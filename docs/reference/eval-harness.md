@@ -1,6 +1,6 @@
 # Eval Harness
 
----
+<br><br>
 
 **Prerequisites:**
 - Completed [DQN Model](dqn-model.md) - Understanding Q-network architecture
@@ -12,7 +12,7 @@
 - [Checkpointing](checkpointing.md) - Saving best models from evaluation
 - [Episode Handling](episode-handling.md) - Full-episode vs life-loss termination
 
----
+<br><br>
 
 ## Overview
 
@@ -31,7 +31,7 @@ This document describes the evaluation harness implementation for periodic perfo
 - Records best-performing episode (highest return) per evaluation interval for video inspection
 - Persists results to multiple formats for analysis and plotting
 
----
+<br><br>
 
 ## Architecture Components
 
@@ -245,13 +245,13 @@ logger = EvaluationLogger(log_dir='runs/pong_123/eval')
 - `get_all_results() -> list`: Load all results from CSV
   - Returns list of dicts for plotting/analysis
 
----
+<br><br>
 
 ## Evaluation Loop Structure
 
 ### Control Flow
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                     Training Loop (main)                         │
 │                                                                   │
@@ -354,7 +354,7 @@ def evaluate(env, model, ...):
 - `torch.no_grad()`: Disables gradient computation (faster inference)
 - Automatic restoration ensures training continues correctly
 
----
+<br><br>
 
 ## Metric Definitions
 
@@ -387,14 +387,14 @@ def evaluate(env, model, ...):
 | `seed` | Random seed (if provided) | `42` |
 | `training_epsilon` | Current training epsilon (optional) | `0.15` |
 
----
+<br><br>
 
 ## Output File Schemas
 
 ### CSV Schema (`evaluations.csv`)
 
 **Headers:**
-```
+```text
 step,mean_return,median_return,std_return,min_return,max_return,episodes,eval_epsilon
 ```
 
@@ -490,7 +490,7 @@ with open('evaluations.jsonl', 'r') as f:
 
 **Purpose:** Archival format with full evaluation context
 
----
+<br><br>
 
 ## Artifact Directory Layout
 
@@ -498,7 +498,7 @@ with open('evaluations.jsonl', 'r') as f:
 
 Evaluation artifacts are organized under the run directory with dedicated subdirectories for different output types:
 
-```
+```python
 experiments/dqn_atari/runs/
 └── <game>_<seed>_<timestamp>/          # Run directory (e.g., pong_42_20250114_1430/)
     ├── eval/                            # Evaluation outputs
@@ -700,7 +700,7 @@ tar -czf pong_42_eval.tar.gz \
    - `per_episode_returns.jsonl` enables post-hoc statistical analysis
    - Can recompute summary statistics if needed
 
----
+<br><br>
 
 ## Video Capture Settings
 
@@ -732,7 +732,7 @@ evaluate(
 ### Video File Organization
 
 **Directory structure:**
-```
+```text
 runs/
 └── pong_seed42_20250114/
     └── videos/
@@ -783,7 +783,7 @@ pip install Pillow
 
 **Output:** Generates both MP4 and GIF with same filename base
 
----
+<br><br>
 
 ## Scheduling Triggers
 
@@ -872,7 +872,7 @@ metadata = scheduler.get_schedule_metadata()
 }
 ```
 
----
+<br><br>
 
 ## CLI Examples
 
@@ -1014,7 +1014,7 @@ print(f"Overall mean: {np.mean(all_returns)}")
 print(f"Overall std: {np.std(all_returns)}")
 ```
 
----
+<br><br>
 
 ## Debugging Guide
 
@@ -1296,7 +1296,7 @@ def evaluate(...):
 assert model.training, "Model should be in training mode"
 ```
 
----
+<br><br>
 
 ## DQN Paper Evaluation Protocol
 
@@ -1414,7 +1414,7 @@ evaluation:
 
 # Beam Rider: High variance, more episodes
 evaluation:
-  num_episodes: 30        # Very high variance
+  num_episodes: 30        # High variance (std > 50% of mean)
   epsilon: 0.05           # Standard
 ```
 
@@ -1422,7 +1422,7 @@ evaluation:
 
 **Increase num_episodes (10 → 30) when:**
 - Final reporting for paper/thesis
-- High-variance games (returns vary significantly)
+- High-variance games (returns vary widely across episodes)
 - Comparing models (need statistical significance)
 - Publication-quality results required
 
@@ -1439,7 +1439,7 @@ evaluation:
 - **Note:** Not recommended for reproducibility (brittle)
 
 **Use higher ε (0.05 → 0.1) when:**
-- Very stochastic environments
+- High-variance environments
 - Testing robustness to exploration
 - **Note:** Deviates from paper protocol
 
@@ -1489,7 +1489,7 @@ print(f"Run 2: {run2['episodes'].iloc[0]} episodes")  # 30
 # Note: Direct comparison may not be valid if settings differ
 ```
 
----
+<br><br>
 
 ## Regenerating Artifacts
 
@@ -1570,7 +1570,7 @@ plt.savefig('output/plots/pong_eval_curve.png', dpi=150)
 print(df[['step', 'mean_return', 'median_return', 'std_return']].to_string())
 ```
 
----
+<br><br>
 
 ## References
 
@@ -1596,7 +1596,7 @@ Nature, 518(7540), 529-533.
 
 **Evaluation protocol details:** Supplementary Methods, Section "Evaluation procedure"
 
----
+<br><br>
 
 ## Quick Reference
 

@@ -16,13 +16,13 @@ The logging and plotting pipeline provides a comprehensive system for recording,
 - Results table generation (Markdown/CSV)
 - Performance safeguards for large logs
 
----
+<br><br>
 
 ## Architecture
 
 ### Components
 
-```
+```text
 Logging Pipeline
 ├── MetricsLogger          # Unified logging interface
 │   ├── TensorBoardBackend # TensorBoard logs
@@ -37,7 +37,7 @@ Logging Pipeline
 
 The three backends operate **independently** and **in parallel**:
 
-```
+```text
 MetricsLogger.log_step(step=1000, loss=0.5, ...)
     │
     ├──→ TensorBoardBackend.log_scalar("train/loss", 0.5, step=1000)
@@ -58,7 +58,7 @@ MetricsLogger.log_step(step=1000, loss=0.5, ...)
 
 ### File System Layout
 
-```
+```python
 experiments/dqn_atari/runs/
 └── <game>_<seed>_<timestamp>/   # e.g., "pong_42_20251115_230409"
     ├── config.yaml              # Frozen config snapshot
@@ -85,7 +85,7 @@ experiments/dqn_atari/runs/
 
 ### Data Flow
 
-```
+```text
 Training Loop
     ↓
 MetricsLogger.log_step()     # Per-step metrics (loss, epsilon, FPS)
@@ -200,7 +200,7 @@ logging:
 - `training_steps.csv` - Per-step metrics (step, loss, epsilon, learning_rate, grad_norm, fps)
 - `episodes.csv` - Per-episode metrics (step, episode, return, length)
 
----
+<br><br>
 
 ## MetricsLogger
 
@@ -377,7 +377,7 @@ logger.upload_logs_as_artifacts(
 logger.close()
 ```
 
----
+<br><br>
 
 ## Standardized Metric Keys
 
@@ -421,7 +421,7 @@ All metrics follow a consistent naming scheme:
 | `q_values/std` | Q-value std dev |
 | `q_values/max` | Max Q-value |
 
----
+<br><br>
 
 ## Implementation Decisions and Bug Fixes
 
@@ -457,7 +457,7 @@ writer.writerow(filtered_entry)
 
 **Rationale:**
 - Predefined schema prevents runtime errors
-- Missing fields are simply not written (graceful degradation)
+- Missing fields are omitted (graceful degradation)
 - Extra fields are filtered out automatically
 - Schema is self-documenting
 
@@ -465,7 +465,7 @@ writer.writerow(filtered_entry)
 
 **Related Commit:** `3e67aa6` - fix: Resolve all integration bugs and test failures
 
----
+<br><br>
 
 ### Device Auto-Detection (Added 2025-11-14)
 
@@ -527,7 +527,7 @@ def setup_device(config):
 
 **Related Commit:** `3e67aa6` - fix: Resolve all integration bugs and test failures
 
----
+<br><br>
 
 ### API Parameter Naming Consistency
 
@@ -588,7 +588,7 @@ save_checkpoint(step=1M, episode=100, epsilon=0.5,
 
 **Related Commit:** `3e67aa6` - fix: Resolve all integration bugs and test failures
 
----
+<br><br>
 
 ### Missing Imports Resolution
 
@@ -623,13 +623,13 @@ import torch
 
 **Related Commit:** `3e67aa6` - fix: Resolve all integration bugs and test failures
 
----
+<br><br>
 
 ## CSV Log Layout
 
 ### Directory Structure
 
-```
+```text
 runs/pong_123/logs/
 ├── tensorboard/           # TensorBoard event files
 │   └── events.out.tfevents.*
@@ -659,7 +659,7 @@ runs/pong_123/logs/
 | `return` | float | Episode return |
 | `length` | int | Episode length |
 
----
+<br><br>
 
 ## Plotting Script
 
@@ -916,7 +916,7 @@ Artifacts automatically include:
 3. **Custom Metadata**: Can be added via script
 
 **Example**: View metadata in W&B UI:
-```
+```text
 Artifact: pong_plots:v2
 Files: 5
 Size: 2.3 MB
@@ -953,7 +953,7 @@ python scripts/plot_results.py \
 
 **Format**: 300 DPI, publication-quality (PNG/PDF/SVG)
 
----
+<br><br>
 
 ## Results Table Exporter
 
@@ -1009,7 +1009,7 @@ pong_123,pong,42,21.50,3.20,50000000,50000000,24.5,abc123d
 pong_456,pong,43,20.80,3.50,50000000,50000000,24.2,abc123d
 ```
 
----
+<br><br>
 
 ## W&B Artifact Workflow Reference
 
@@ -1068,7 +1068,7 @@ All artifacts follow deterministic naming patterns for consistency:
 
 W&B automatically versions artifacts on each upload:
 
-```
+```text
 First upload:    pong_plots:v0
 Second upload:   pong_plots:v1
 Third upload:    pong_plots:v2
@@ -1090,7 +1090,7 @@ wandb artifact get entity/project/pong_plots:v1
 ### Artifact Structure in W&B
 
 **Organization**:
-```
+```text
 W&B Project: dqn-atari
 ├── Run: pong_seed42_20231114_120000
 │   ├── Artifacts (Produced)
@@ -1340,7 +1340,7 @@ for artifact in artifacts:
 - Use `:latest` alias for most recent
 - Check version history in W&B UI
 
----
+<br><br>
 
 ## Integration with Training Loop
 
@@ -1412,7 +1412,7 @@ class DQNTrainer:
         self.logger.close()
 ```
 
----
+<br><br>
 
 ## Performance Considerations
 
@@ -1443,7 +1443,7 @@ class DQNTrainer:
 2. **Downsampling**: Reduce data before plotting
 3. **File Size Warnings**: Alert user to large files
 
----
+<br><br>
 
 ## Best Practices
 
@@ -1479,7 +1479,7 @@ class DQNTrainer:
 3. Aggregate with `--multi-seed` flag
 4. Report mean ± 95% CI in papers
 
----
+<br><br>
 
 ## Troubleshooting
 
@@ -1739,7 +1739,7 @@ chmod -R u+rwX experiments/dqn_atari/runs/pong/
 # Only if above fixes don't work
 ```
 
----
+<br><br>
 
 ## Testing
 
@@ -1778,7 +1778,7 @@ pytest tests/test_plot_results.py::test_plot_episode_returns -v
 - Multi-format output
 - Metadata saving
 
----
+<br><br>
 
 ## References
 
@@ -1795,7 +1795,7 @@ pytest tests/test_plot_results.py::test_plot_episode_returns -v
 - [Weights & Biases Documentation](https://docs.wandb.ai/)
 - [Matplotlib Documentation](https://matplotlib.org/stable/contents.html)
 
----
+<br><br>
 
 ## Summary
 

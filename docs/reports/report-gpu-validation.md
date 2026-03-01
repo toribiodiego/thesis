@@ -2,7 +2,7 @@
 
 Comparison of DQN training performance on Mac M1 CPU vs Google Colab A100 GPU for 1M frame Pong runs.
 
----
+<br><br>
 
 ## Executive Summary
 
@@ -15,7 +15,7 @@ Comparison of DQN training performance on Mac M1 CPU vs Google Colab A100 GPU fo
 
 **Recommendation:** Proceed with 10M frame multi-seed Pong runs on Colab A100 GPU.
 
----
+<br><br>
 
 ## Hardware Specifications
 
@@ -28,7 +28,7 @@ Comparison of DQN training performance on Mac M1 CPU vs Google Colab A100 GPU fo
 | PyTorch | 2.4.1 (CPU) | 2.4.1+cu121 |
 | Environment | Local macOS | Colab Linux VM |
 
----
+<br><br>
 
 ## Training Configuration
 
@@ -54,7 +54,7 @@ eval_episodes: 30
 - CPU: `Cooper-Union/dqn-atari/xlraluxg`
 - GPU: `Cooper-Union/dqn-atari/dxkfzx35`
 
----
+<br><br>
 
 ## Performance Metrics
 
@@ -72,7 +72,7 @@ eval_episodes: 30
 
 **Analysis:**
 
-Overall mean FPS is misleading because it includes the warmup phase (0-200k steps) where no training occurs. During warmup, the agent only collects experience without computing gradients, leading to very high FPS on CPU (1943-3500 FPS).
+Overall mean FPS is misleading because it includes the warmup phase (0-200k steps) where no training occurs. During warmup, the agent only collects experience without computing gradients, leading to high FPS on CPU (1943-3500 FPS).
 
 The **training phase mean** (steps >= 200k) is the relevant metric. GPU achieves 2.18x speedup during actual training, completing 232.7 frames/sec vs 106.7 on CPU.
 
@@ -101,7 +101,7 @@ Warmup is slightly slower on GPU due to higher overhead from CUDA initialization
 
 **Note:** 10M frame runs will use the full 10-hour Colab Pro session effectively, with minimal warmup overhead.
 
----
+<br><br>
 
 ## Convergence Verification
 
@@ -139,7 +139,7 @@ Both converge to the expected baseline performance for untrained Pong agents. Th
 
 **Convergence Verified:** Loss and evaluation metrics match across platforms, confirming deterministic seeding and identical training dynamics.
 
----
+<br><br>
 
 ## Bottleneck Analysis
 
@@ -206,7 +206,7 @@ GPU training is slightly slowed by CPU-side environment steps. Future optimizati
 
 **Verdict:** Environment overhead is acceptable. Vectorization is not required for 10M runs.
 
----
+<br><br>
 
 ## Deterministic Seeding Verification
 
@@ -227,7 +227,7 @@ While loss and evaluation metrics are highly similar, exact step-by-step reprodu
 
 **Verdict:** Seeding works correctly. Training dynamics are consistent across platforms, which is sufficient for scientific reproducibility.
 
----
+<br><br>
 
 ## Recommendations for 10M Frame Runs
 
@@ -299,7 +299,7 @@ Total time: ~36 hours across 3 sessions over 3 days.
 
 3. Verify W&B run ID matches to ensure logs concatenate correctly
 
----
+<br><br>
 
 ## Validation Conclusion
 
@@ -323,13 +323,13 @@ Total time: ~36 hours across 3 sessions over 3 days.
 5. Repeat for seeds 123 and 456
 6. Generate multi-seed plots and statistical analysis
 
----
+<br><br>
 
 ## Appendix: Raw Data
 
 ### CPU Training Steps (Sample)
 
-```
+```text
 step,epsilon,replay_size,fps,loss
 4000,0.9964,1000,1943.81,
 200000,0.8200,50000,2608.35,116.52
@@ -339,7 +339,7 @@ step,epsilon,replay_size,fps,loss
 
 ### GPU Training Steps (Sample from W&B Log)
 
-```
+```json
 [2025-01-19 15:45:23] Step 200000, FPS: 350, Loss: 120.4
 [2025-01-19 16:00:15] Step 400000, FPS: 245, Loss: 2.87
 [2025-01-19 16:15:42] Step 600000, FPS: 198, Loss: 0.52
@@ -349,7 +349,7 @@ step,epsilon,replay_size,fps,loss
 
 ### CPU Evaluation Results
 
-```
+```text
 step,mean_return,median_return,std_return
 250000,-20.70,-21.00,0.46
 500000,-21.00,-21.00,0.00
@@ -359,12 +359,12 @@ step,mean_return,median_return,std_return
 
 ### GPU Evaluation Results
 
-```
+```text
 step,mean_return,std_return
 1000000,-21.00,0.00
 ```
 
----
+<br><br>
 
 ## Post-Validation Bottleneck Analysis
 
@@ -427,7 +427,7 @@ After GPU validation, a detailed bottleneck analysis was performed on the CPU ba
 - Learning rate: 0.00025
 - Replay capacity: 1,000,000
 
----
+<br><br>
 
 ## Checkpoint Verification
 
@@ -437,7 +437,7 @@ After validation, checkpoint integrity and W&B compatibility were verified to en
 
 **CPU Baseline Run:** `experiments/dqn_atari/runs/pong_42_20251115_230409/checkpoints/`
 
-```
+```text
 checkpoint_1000000.pt: 7.78 MB
 best_model.pt: 7.78 MB
 ```
@@ -505,7 +505,7 @@ python train_dqn.py \
 
 All artifacts are bundled together and uploaded as `training_logs_step_{step}` with type `logs`.
 
----
+<br><br>
 
 **Document Version:** 1.2
 **Date:** 2025-11-20

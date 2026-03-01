@@ -120,7 +120,7 @@ Resume training from a saved checkpoint using the `--resume` flag.
 - DONE RNG states (Python, NumPy, PyTorch, CUDA, environment)
 
 **Expected Output on Resume:**
-```
+```text
 ================================================================================
 RESUMING FROM CHECKPOINT
 ================================================================================
@@ -163,7 +163,7 @@ RESUME COMPLETE - Starting from step 1,000,001
 **Files Written by Checkpoint Manager:**
 
 During training, the checkpoint manager creates these files:
-```
+```text
 experiments/dqn_atari/runs/pong_123/
 ├── checkpoints/
 │   ├── checkpoint_1000000.pt     # Periodic checkpoint (every 1M steps)
@@ -411,7 +411,7 @@ Quick reference table for script inputs, outputs, and side effects.
 
 ### Output Directory Structure
 
-```
+```python
 experiments/dqn_atari/
 ├── runs/
 │   └── {game}_{seed}/              # Run directory (e.g., pong_123)
@@ -563,7 +563,7 @@ python train_dqn.py \
 
 **Expected outputs (in checkpoint's run directory):**
 
-```
+```text
 experiments/dqn_atari/runs/pong_123/
 ├── eval/
 │   ├── evaluations.csv              # Summary: step, mean_return, median_return, std_return, etc.
@@ -642,7 +642,7 @@ print(df[['step', 'mean_return', 'median_return', 'std_return']])
 
 See [docs/design/eval_harness.md](../../../docs/design/eval_harness.md) for complete evaluation harness documentation.
 
----
+<br><br>
 
 ## Logging & Plotting
 
@@ -732,7 +732,7 @@ tail -f experiments/dqn_atari/runs/pong_42_20251115/csv/episodes.csv
 
 ### File Locations
 
-```
+```python
 experiments/dqn_atari/runs/<game>_<seed>_<timestamp>/
 ├── config.yaml             # Frozen config snapshot
 ├── meta.json               # Run metadata (git hash, etc.)

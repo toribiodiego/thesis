@@ -19,7 +19,7 @@ This document maintains a prioritized list of missing artifacts, analyses, and d
 - Actionable list of missing artifacts and analyses
 - Timeline estimates for report completion
 
----
+<br><br>
 
 ## Priority 1: Essential for Minimal Viable Report
 
@@ -61,7 +61,7 @@ These must be completed before any report submission:
   - Preprocessing pipeline (from [atari-env-wrapper.md](../reference/atari-env-wrapper.md))
   - Known deviations from paper (from [environment-notes.md](../reference/environment-notes.md))
 
----
+<br><br>
 
 ## Priority 2: Important for Strong Report
 
@@ -101,7 +101,7 @@ Should be included if time permits before submission:
   - Environment setup verification
   - Source: [reproduce-recipe.md](../plans/plan-reproduce-recipe.md)
 
----
+<br><br>
 
 ## Priority 3: Nice-to-Have Enhancements
 
@@ -145,7 +145,7 @@ Optional content that strengthens the report:
   - Literature survey on DQN variants
   - Link to future work (Double DQN, etc.)
 
----
+<br><br>
 
 ## Bottlenecks and Blockers
 
@@ -160,7 +160,7 @@ Optional content that strengthens the report:
 3. Run training overnight/weekends to maximize throughput
 4. Consider 2-seed runs instead of 3 if time-constrained
 
----
+<br><br>
 
 ## Timeline Estimates
 
@@ -182,7 +182,7 @@ Optional content that strengthens the report:
 - Writing: 3-4 weeks
 - **Total**: 13-23 weeks (CPU) or 8-11 weeks (GPU)
 
----
+<br><br>
 
 ## Next Steps
 
@@ -201,7 +201,7 @@ Optional content that strengthens the report:
 - Week 4: Review Pong results → Decide on ablation studies
 - Week 6: Finalize report scope based on available data
 
----
+<br><br>
 
 ## Related Documents
 
@@ -211,6 +211,6 @@ Optional content that strengthens the report:
 - [GPU Validation](report-gpu-validation.md) - GPU performance analysis (completed)
 - [Results Comparison](report-results-comparison.md) - Multi-seed comparison methodology
 
----
+<br><br>
 
 **Last Updated**: 2025-12-23

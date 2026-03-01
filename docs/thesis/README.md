@@ -20,7 +20,7 @@ This index tracks all thesis-ready artifacts (figures, tables, data) and documen
 - Statistical analyses and comparisons
 - Provenance documentation
 
----
+<br><br>
 
 ## Artifact Inventory
 
@@ -70,7 +70,7 @@ This index tracks all thesis-ready artifacts (figures, tables, data) and documen
 | **System info** | Hardware/software specs | `experiments/dqn_atari/runs/*/system_info.txt` |
 | **W&B run URLs** | Online run tracking | [Foundation Validation](../reports/foundation-validation-summary.md) |
 
----
+<br><br>
 
 ## Regeneration Steps
 
@@ -120,7 +120,7 @@ python scripts/analyze_results.py \
 
 **Est. time**: 1-2 minutes
 
----
+<br><br>
 
 ## Thesis Integration
 
@@ -158,7 +158,7 @@ python scripts/analyze_results.py \
    \end{figure}
    ```
 
----
+<br><br>
 
 ## Quality Checklist
 
@@ -191,7 +191,7 @@ Before thesis submission:
 - [ ] W&B run URLs accessible
 - [ ] Hyperparameters match paper specifications
 
----
+<br><br>
 
 ## Current Status
 
@@ -215,7 +215,7 @@ Before thesis submission:
 - Thesis integration: 1-2 weeks
 - **Target completion**: TBD based on run completion
 
----
+<br><br>
 
 ## Automation
 
@@ -245,7 +245,7 @@ thesis-artifacts:
 
 **Usage**: `make thesis-artifacts`
 
----
+<br><br>
 
 ## Next Steps
 
@@ -265,7 +265,7 @@ thesis-artifacts:
 - Create comparison bar chart generator
 - Add ablation study results (if completed)
 
----
+<br><br>
 
 ## Related Documents
 
@@ -275,6 +275,6 @@ thesis-artifacts:
 - [Foundation Validation](../reports/foundation-validation-summary.md) - Readiness assessment
 - [Archive Plan](../reference/archive-plan.md) - Artifact retention rules
 
----
+<br><br>
 
 **Last Updated**: 2025-12-23

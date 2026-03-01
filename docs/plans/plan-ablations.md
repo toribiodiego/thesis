@@ -35,7 +35,7 @@ environment:
 
 **Severity**: Medium-High (critical for stability)
 
----
+<br><br>
 
 ### 2. Reduced Frame Stack (2 frames)
 
@@ -57,7 +57,7 @@ environment:
 
 **Severity**: Medium (degrades but doesn't break)
 
----
+<br><br>
 
 ### 3. No Target Network
 
@@ -79,7 +79,7 @@ training:
 
 **Severity**: High (fundamental stability mechanism)
 
----
+<br><br>
 
 ## Experimental Protocol
 
@@ -185,7 +185,7 @@ Based on literature and DQN paper analysis:
 
 ## File Structure
 
-```
+```text
 experiments/dqn_atari/
 ├── configs/
 │   └── ablations/

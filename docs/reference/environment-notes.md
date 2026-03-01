@@ -24,7 +24,7 @@ python -c "import torch; print(f'PyTorch: {torch.__version__}')"
 python -c "import numpy; print(f'NumPy: {numpy.__version__}')"
 ```
 
----
+<br><br>
 
 ## Atari Environment Configuration
 
@@ -56,7 +56,7 @@ Impact: More frequent episode boundaries can accelerate learning in games with m
 
 Purpose: Provides diverse initial states for better generalization.
 
----
+<br><br>
 
 ## Preprocessing Pipeline
 
@@ -98,14 +98,14 @@ Implementation: Identical in concept. Order: oldest to newest.
 
 Purpose: Normalizes gradient magnitudes across different games.
 
----
+<br><br>
 
 ## Network Architecture
 
 ### Convolutional Layers
 
 **Paper**:
-```
+```text
 Conv1: 32 filters, 8x8, stride 4
 Conv2: 64 filters, 4x4, stride 2
 Conv3: 64 filters, 3x3, stride 1
@@ -129,21 +129,21 @@ Impact: None.
 
 Impact: May affect early learning dynamics, but convergence should be similar.
 
----
+<br><br>
 
 ## Optimization
 
 ### Optimizer
 
 **Paper**: RMSprop
-```
+```python
 learning_rate = 0.00025
 momentum = 0.95
 epsilon = 0.01
 ```
 
 **Ours**: Adam
-```
+```python
 learning_rate = 0.00025
 beta1 = 0.9
 beta2 = 0.999
@@ -166,7 +166,7 @@ Impact: Identical in effect - bounds gradients for stability.
 
 Impact: None.
 
----
+<br><br>
 
 ## Replay Buffer
 
@@ -189,7 +189,7 @@ Impact: None.
 
 Impact: Memory efficient, identical approach.
 
----
+<br><br>
 
 ## Training Schedule
 
@@ -208,7 +208,7 @@ Impact: Memory efficient, identical approach.
 **Paper**: 50,000 frames before training
 **Ours**: 50,000 frames (replay buffer population)
 
----
+<br><br>
 
 ## Hardware Differences
 
@@ -230,7 +230,7 @@ Impact: Memory efficient, identical approach.
 2. **Python overhead**: Slightly slower than Lua/C++
 3. **Memory bandwidth**: Improved in modern hardware
 
----
+<br><br>
 
 ## Known Discrepancies
 
@@ -262,7 +262,7 @@ Paper may have used float32 throughout. We use:
 
 Some Gymnasium versions introduce stochastic frame skipping (sticky actions). We disable this for determinism.
 
----
+<br><br>
 
 ## Verification Commands
 
@@ -301,7 +301,7 @@ print(f'Total parameters: {params:,}')
 "
 ```
 
----
+<br><br>
 
 ## Recommendations
 
@@ -311,7 +311,7 @@ print(f'Total parameters: {params:,}')
 4. **Monitor for divergence**: Watch for Q-value explosions or loss spikes
 5. **Report honestly**: Note where we deviate from paper methodology
 
----
+<br><br>
 
 ## References
 

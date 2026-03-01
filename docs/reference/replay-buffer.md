@@ -1,6 +1,6 @@
 # Replay Buffer
 
----
+<br><br>
 
 **Prerequisites:**
 - Completed [DQN Setup](dqn-setup.md) - Environment configured and dependencies installed
@@ -12,7 +12,7 @@
 - [Training Loop](training-loop-runtime.md) - Replay integration with optimization
 - [Checkpointing](checkpointing.md) - Saving/loading replay buffer state
 
----
+<br><br>
 
 ## Overview
 
@@ -30,7 +30,7 @@ The replay buffer implements uniform experience replay for DQN training, storing
 
 ### Storage Arrays
 
-```
+```text
 ReplayBuffer (capacity=1,000,000)
 ├── observations:     (1M, 4, 84, 84) uint8     ~27 GB
 ├── actions:          (1M,) int64                ~8 MB
@@ -43,7 +43,7 @@ Total memory: ~27 GB (vs ~108 GB if observations were float32)
 
 ### Circular Buffer Mechanics
 
-```
+```text
 Initial state (capacity=10, empty):
 ┌─────────────────────────────────────┐
 │ 0 │ 1 │ 2 │ 3 │ 4 │ 5 │ 6 │ 7 │ 8 │ 9 │
@@ -74,7 +74,7 @@ After adding 12 total (wrapped around):
 
 ### Episode Boundary Tracking
 
-```
+```text
 Episode 1: transitions 0-4 (done at index 4)
 Episode 2: transitions 5-9 (done at index 9)
 
@@ -175,7 +175,7 @@ def _is_valid_index(idx):
 
 Terminal transitions (done=True) are valid for sampling because the TD target for terminal states is just the reward:
 
-```
+```text
 TD target = r + γ * (1 - done) * max_a' Q(s', a')
 
 When done=True:

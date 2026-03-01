@@ -17,7 +17,7 @@
 
 ## Network Architecture (Nature-CNN)
 
-```
+```text
 Input: 4 × 84 × 84 tensor  (frames stacked on channel dimension)
 Conv1: 32 filters, 8×8 kernel, stride 4, ReLU
 Conv2: 64 filters, 4×4 kernel, stride 2, ReLU

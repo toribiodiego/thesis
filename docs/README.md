@@ -12,7 +12,7 @@ Complete reference for the DQN Atari reproduction thesis project.
 - **Stuck on an issue?** See [Troubleshooting](guides/troubleshooting.md)
 - **Track progress?** See [TODO](../TODO) in repo root (untracked file with current tasks)
 
----
+<br><br>
 
 ## Docs Structure
 
@@ -87,7 +87,7 @@ Thesis-ready artifacts and integration:
 ### Other
 - **[changelog.md](changelog.md)** - Project timeline (kept in root)
 
----
+<br><br>
 
 ## Naming Conventions
 
@@ -121,7 +121,7 @@ All documentation files use **kebab-case** with descriptive names:
 - `docs/ops/` - Operational procedures and maintenance
 - `docs/research/papers/` - Research paper notes
 
----
+<br><br>
 
 ## Docs Scope
 
@@ -166,7 +166,7 @@ Documentation in `docs/` should be:
 
 **Key principle:** If it documents *how the system works* → `docs/`. If it describes *what a specific run produced* → `output/` or `experiments/`.
 
----
+<br><br>
 
 ## Navigation Tips
 
@@ -176,7 +176,7 @@ Documentation in `docs/` should be:
 4. **Debugging issues:** [troubleshooting.md](guides/troubleshooting.md)
 5. **Testing:** [testing.md](guides/testing.md) for test suite documentation
 
----
+<br><br>
 
 ## Docs Reorganization Plan
 
@@ -234,7 +234,7 @@ The following table maps current file locations to their planned destinations. T
 
 After reorganization, the docs tree will be:
 
-```
+```text
 docs/
 ├── README.md              # Main entry point
 ├── changelog.md           # Project timeline
@@ -285,7 +285,7 @@ After files are moved:
 - `docs/maintenance/` (merged into ops/)
 - `docs/papers/` (moved to research/papers/)
 
----
+<br><br>
 
 ## Contributing to Docs
 
@@ -336,7 +336,7 @@ Where should readers go after this document?
 - Follow-up actions or tasks
 - Further reading
 
----
+<br><br>
 
 **Last Updated**: YYYY-MM-DD
 ```
@@ -348,7 +348,7 @@ Where should readers go after this document?
 - Keep each section concise (prefer bullet points over prose)
 - Add **Status** indicator: DRAFT (incomplete), ACTIVE (actively used), REFERENCE (stable/archival)
 
----
+<br><br>
 
 ## Docs Conventions
 
@@ -403,7 +403,7 @@ Where should readers go after this document?
 - Keep `docs/changelog.md` current with major documentation changes
 - Run periodic link checks (manual or scripted) to find broken references
 
----
+<br><br>
 
 ## Reorganization Audit
 
@@ -530,7 +530,7 @@ With documentation infrastructure complete, the project can now focus on:
 - Use minimal outline template for all new documentation
 - Keep `docs/README.md` navigation current when adding new files
 
----
+<br><br>
 
 **Audit Completed**: December 24, 2025
 **Final Status**: All Tasks 01-05 complete, documentation infrastructure ready for production use

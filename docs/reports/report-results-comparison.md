@@ -22,14 +22,14 @@ From Table 1 of "Playing Atari with Deep Reinforcement Learning":
 
 **Important**: These are 2013 arXiv paper scores, NOT the 2015 Nature paper scores.
 
----
+<br><br>
 
 ## Data Collection
 
 ### Training Outputs
 
 Each training run produces:
-```
+```text
 experiments/dqn_atari/runs/<run_name>/
 ├── csv/
 │   ├── episodes.csv          # Per-episode data (return, length)
@@ -49,7 +49,7 @@ experiments/dqn_atari/runs/<run_name>/
 3. **Learning Frames**: Total environment frames processed
 4. **Training Steps**: Gradient updates performed
 
----
+<br><br>
 
 ## Analysis Scripts
 
@@ -103,7 +103,7 @@ Output includes:
 - Confidence intervals (95%)
 - Number of seeds aggregated
 
----
+<br><br>
 
 ## Comparison Methodology
 
@@ -163,7 +163,7 @@ threshold = paper_score * 0.5
 frames_to_threshold = df[df["mean_return"] >= threshold]["frame"].iloc[0]
 ```
 
----
+<br><br>
 
 ## Result Classification
 
@@ -182,7 +182,7 @@ frames_to_threshold = df[df["mean_return"] >= threshold]["frame"].iloc[0]
 - Divergence or instability
 - Missing critical learning milestones
 
----
+<br><br>
 
 ## Common Discrepancies
 
@@ -225,7 +225,7 @@ Document in `output/summary/notes.md`:
 - No-op start (up to 30)
 - Episode termination (life loss vs game over)
 
----
+<br><br>
 
 ## Regeneration Steps
 
@@ -292,7 +292,7 @@ table.add_data("Pong", 19.5, 20.0, 97.5)
 wandb.log({"results_comparison": table})
 ```
 
----
+<br><br>
 
 ## Output Files
 
@@ -325,7 +325,7 @@ Beam Rider,3680,4092,89.9,342,50000000,"42,123,456",Within variance
 - Hardware specs
 - Known differences from paper
 
----
+<br><br>
 
 ## Validation Checklist
 
@@ -341,7 +341,7 @@ Before finalizing results:
 - [ ] Plots generated and reviewed
 - [ ] Notes file updated with any anomalies
 
----
+<br><br>
 
 ## Troubleshooting
 
@@ -364,7 +364,7 @@ Before finalizing results:
 2. **Monitor Q-value magnitudes**: Should be bounded
 3. **Verify target network updates**: Every 10K steps
 
----
+<br><br>
 
 ## References
 

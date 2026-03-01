@@ -2,7 +2,7 @@
 
 Complete guide to DQN training configuration management, command-line interface, and reproducibility features.
 
----
+<br><br>
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@ Complete guide to DQN training configuration management, command-line interface,
 9. [Troubleshooting](#troubleshooting)
 10. [Advanced Usage](#advanced-usage)
 
----
+<br><br>
 
 ## Overview
 
@@ -35,13 +35,13 @@ The DQN configuration system provides:
 - **Traceability**: Every run folder contains complete reproducibility info
 - **Flexibility**: Override any parameter without editing files
 
----
+<br><br>
 
 ## File Hierarchy
 
 ### Configuration Directory Structure
 
-```
+```text
 experiments/dqn_atari/configs/
 ├── base.yaml              # Global defaults for all games
 ├── pong.yaml             # Pong-specific overrides
@@ -115,7 +115,7 @@ training:
 - All other values inherited from base
 - Comments explain game-specific choices
 
----
+<br><br>
 
 ## Configuration Loading
 
@@ -182,13 +182,13 @@ Resolution order:
 2. Try relative to config file's directory
 3. Fall back to relative to current working directory
 
----
+<br><br>
 
 ## Override Precedence
 
 Configuration values are resolved in this order (later overrides earlier):
 
-```
+```text
 1. base.yaml (lowest priority)
    ↓
 2. game.yaml (overrides base)
@@ -238,7 +238,7 @@ CLI overrides use dot notation to modify nested values:
 
 **Note:** `--set` is repeatable - use one `--set` flag per KEY=VALUE override.
 
----
+<br><br>
 
 ## Command-Line Interface
 
@@ -270,7 +270,7 @@ python train_dqn.py --cfg <config_file> [OPTIONS]
 
 ### Config Lifecycle
 
-```
+```text
 1. Parse CLI arguments
    ↓
 2. Load YAML config (with base merging)
@@ -290,7 +290,7 @@ python train_dqn.py --cfg <config_file> [OPTIONS]
 9. Start training
 ```
 
----
+<br><br>
 
 ## Schema Validation
 
@@ -357,7 +357,7 @@ training:
 
 All validation errors follow this format:
 
-```
+```text
 Configuration validation failed:
 <section>.<field>: <constraint description>, got <actual_value>
 
@@ -372,7 +372,7 @@ training.gamma: must be in range [0.0, 1.0], got 1.5
 - DONE Actual invalid value
 - DONE List of valid options (for enums)
 
----
+<br><br>
 
 ## Run Directory Structure
 
@@ -380,7 +380,7 @@ training.gamma: must be in range [0.0, 1.0], got 1.5
 
 On every training run, a timestamped directory is created:
 
-```
+```bash
 experiments/dqn_atari/runs/
 └── pong_42_20250113_143022/          # <game>_<seed>_<timestamp>
     ├── config.yaml                   # Merged config snapshot
@@ -401,7 +401,7 @@ experiments/dqn_atari/runs/
 
 ### Naming Convention
 
-```
+```text
 <experiment_name>_<seed>_<timestamp>
 
 Examples:
@@ -494,7 +494,7 @@ Reproducibility metadata saved alongside config:
 | `artifacts/` | Debug outputs | Plots, visualizations, debug info |
 | `eval/` | Evaluation results | Metrics JSON, video recordings |
 
----
+<br><br>
 
 ## Example Commands
 
@@ -610,7 +610,7 @@ python train_dqn.py \
   --device mps
 ```
 
----
+<br><br>
 
 ## Troubleshooting
 
@@ -834,7 +834,7 @@ config = load_config('experiments/dqn_atari/configs/base.yaml', resolve_base=Fal
 cat experiments/dqn_atari/runs/pong_42_*/meta.json | grep -A 10 '"cli"'
 ```
 
----
+<br><br>
 
 ## Advanced Usage
 
@@ -1023,7 +1023,7 @@ done
 ```
 
 Each run creates separate directory:
-```
+```text
 runs/
 ├── pong_42_20250113_143022/
 ├── pong_123_20250113_150000/
@@ -1050,7 +1050,7 @@ done
 --set experiment.notes="LR sweep: lr=$lr"
 ```
 
----
+<br><br>
 
 ## Summary
 
@@ -1084,7 +1084,7 @@ done
 4. **Save everything**: Config + metadata for reproducibility
 5. **Fail fast**: Clear error messages guide fixes
 
----
+<br><br>
 
 ## References
 

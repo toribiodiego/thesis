@@ -2,13 +2,13 @@
 
 High-level system architecture and component interactions for DQN Atari implementation. This document provides a bird's-eye view before diving into detailed design docs.
 
----
+<br><br>
 
 ## System Components
 
 The DQN implementation consists of 5 core subsystems:
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                         DQN TRAINING SYSTEM                      │
 └─────────────────────────────────────────────────────────────────┘
@@ -37,13 +37,13 @@ The DQN implementation consists of 5 core subsystems:
                     └──────────────────────┘
 ```
 
----
+<br><br>
 
 ## Data Flow
 
 ### Training Step (Single Iteration)
 
-```
+```text
 1. SELECT ACTION
    ┌─────────────────────────────────────────────┐
    │ Epsilon Scheduler                           │
@@ -116,7 +116,7 @@ The DQN implementation consists of 5 core subsystems:
    └─────────────────────────────────────────────┘
 ```
 
----
+<br><br>
 
 ## Component Details
 
@@ -125,7 +125,7 @@ The DQN implementation consists of 5 core subsystems:
 **Purpose:** Atari game simulation with DQN-specific preprocessing
 
 **Wrapper Chain:**
-```
+```text
 ALE/Pong-v5
   ↓ NoopResetEnv (0-30 random no-ops at episode start)
   ↓ MaxAndSkipEnv (action repeat 4x + max-pooling last 2 frames)
@@ -142,14 +142,14 @@ ALE/Pong-v5
 
 **Docs:** [atari-env-wrapper.md](../reference/atari-env-wrapper.md)
 
----
+<br><br>
 
 ### 2. Q-Network (src/models/)
 
 **Purpose:** Deep CNN mapping frames to Q-values
 
 **Architecture:**
-```
+```text
 Input: (B, 4, 84, 84) float32
 
 Conv1: 16 filters, 8x8 kernel, stride=4
@@ -182,14 +182,14 @@ Output: Q-values for each action
 
 **Docs:** [dqn-model.md](../reference/dqn-model.md)
 
----
+<br><br>
 
 ### 3. Replay Buffer (src/replay/)
 
 **Purpose:** Store and sample past experiences for off-policy learning
 
 **Storage:**
-```
+```text
 Capacity: 1,000,000 transitions
 Memory Layout:
   observations:    (1M, 4, 84, 84) uint8   ~27 GB
@@ -211,7 +211,7 @@ Total: ~27 GB
 
 **Docs:** [replay-buffer.md](../reference/replay-buffer.md)
 
----
+<br><br>
 
 ### 4. Training Loop (src/training/)
 
@@ -239,7 +239,7 @@ Total: ~27 GB
 
 **Docs:** [training-loop-runtime.md](../reference/training-loop-runtime.md), [dqn-training.md](../reference/dqn-training.md)
 
----
+<br><br>
 
 ### 5. Checkpointing System (src/training/)
 
@@ -289,13 +289,13 @@ checkpoint = {
 
 **Docs:** [checkpointing.md](../reference/checkpointing.md)
 
----
+<br><br>
 
 ## Configuration System
 
 **Hierarchical YAML Configs:**
 
-```
+```text
 experiments/dqn_atari/configs/
 ├── base.yaml              # Global defaults
 ├── pong.yaml              # Game-specific overrides
@@ -362,11 +362,11 @@ logging:
 
 **Docs:** [Config README](../experiments/dqn_atari/configs/README.md)
 
----
+<br><br>
 
 ## Directory Structure
 
-```
+```text
 thesis/
 ├── src/                          # Reusable RL components
 │   ├── models/                   # Neural network architectures
@@ -429,7 +429,7 @@ thesis/
     └── ops/                      # Operational procedures
 ```
 
----
+<br><br>
 
 ## Key Algorithms
 
@@ -462,7 +462,7 @@ if step % target_update_interval == 0:
 
 **Docs:** [dqn-training.md](../reference/dqn-training.md#complete-update-pipeline)
 
----
+<br><br>
 
 ### Epsilon-Greedy Exploration
 
@@ -481,7 +481,7 @@ else:
 
 **Docs:** [training-loop-runtime.md](../reference/training-loop-runtime.md#component-orchestration)
 
----
+<br><br>
 
 ## Testing Strategy
 
@@ -519,11 +519,11 @@ pytest tests/test_save_resume_determinism.py -v -s
 
 **Docs:** [tests/README.md](../tests/README.md)
 
----
+<br><br>
 
 ## Execution Flow Summary
 
-```
+```text
 1. Setup
    └─ Install deps → Download ROMs → Verify
 
@@ -554,7 +554,7 @@ pytest tests/test_save_resume_determinism.py -v -s
    └─ Resume: restore all state, continue training
 ```
 
----
+<br><br>
 
 ## Next Steps
 
@@ -590,7 +590,7 @@ pytest tests/test_save_resume_determinism.py -v -s
 
 **Docs:** [README.md](../README.md) for full documentation index
 
----
+<br><br>
 
 ## See Also
 
@@ -615,6 +615,6 @@ For detailed technical specifications of each component:
 - [Environment Notes](../reference/environment-notes.md) - Toolchain differences and compatibility
 - [Stability Notes](../reference/stability-notes.md) - Hyperparameter choices and stability observations
 
----
+<br><br>
 
 **Last Updated:** 2025-11-13

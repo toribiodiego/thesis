@@ -46,12 +46,12 @@ The following hyperparameters match the 2013 DQN paper (arXiv:1312.5602):
 
 1. **Learning Rate Sensitivity**
    - Too high (>5e-4): Q-values may diverge
-   - Too low (<1e-4): Very slow learning
+   - Too low (<1e-4): Slow convergence
    - Paper default 2.5e-4 is stable
 
 2. **Target Network Update Frequency**
-   - Very frequent (1K steps): Some oscillation
-   - Very rare (100K steps): Slow adaptation
+   - Frequent (1K steps): Some oscillation
+   - Infrequent (100K steps): Slow adaptation
    - 10K steps balances stability and adaptation
 
 3. **Replay Buffer Size**

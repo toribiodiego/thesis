@@ -2,7 +2,7 @@
 
 Quick reference for diagnosing and fixing common issues. Organized by symptom for fast problem resolution.
 
----
+<br><br>
 
 ## Table of Contents
 
@@ -33,14 +33,14 @@ Quick reference for diagnosing and fixing common issues. Organized by symptom fo
 - [Action space mismatch](#action-space-mismatch)
 - [Episode termination issues](#episode-termination-issues)
 
----
+<br><br>
 
 ## Setup Issues
 
 ### ImportError: No module named 'ale_py'
 
 **Symptom:**
-```
+```text
 ImportError: No module named 'ale_py'
 ```
 
@@ -60,16 +60,16 @@ python -c "import ale_py; print(ale_py.__version__)"
 
 **Docs:** [DQN Setup](../reference/dqn-setup.md#dependencies--environment)
 
----
+<br><br>
 
 ### ROM not found errors
 
 **Symptom:**
-```
+```text
 gymnasium.error.NameNotFound: Environment ALE/Pong-v5 doesn't exist
 ```
 or
-```
+```text
 ale_py._ale_py.ALEException: Unable to find ROM file
 ```
 
@@ -90,7 +90,7 @@ python -c "import ale_py; print(len(ale_py.roms.list()))"
 
 **Docs:** [DQN Setup](../reference/dqn-setup.md#rom-installation)
 
----
+<br><br>
 
 ### CUDA not available
 
@@ -125,16 +125,16 @@ pip install torch==2.4.1+cu121 --index-url https://download.pytorch.org/whl/cu12
 ```
 
 **CPU-only fallback:**
-Training will still work, just slower. No action needed.
+Training will still work at reduced speed. No action needed.
 
 **Docs:** [DQN Setup](../reference/dqn-setup.md#troubleshooting)
 
----
+<br><br>
 
 ### ModuleNotFoundError
 
 **Symptom:**
-```
+```text
 ModuleNotFoundError: No module named 'src'
 ```
 
@@ -154,14 +154,14 @@ python -c "from src.models import DQN; print('OK')"
 
 **Docs:** [DQN Setup](../reference/dqn-setup.md#import-errors)
 
----
+<br><br>
 
 ## Training Issues
 
 ### TypeError: Parameter mismatch errors
 
 **Symptom:**
-```
+```text
 TypeError: __init__() got an unexpected keyword argument 'start_epsilon'
 TypeError: __init__() missing 1 required positional argument: 'obs_shape'
 ```
@@ -234,12 +234,12 @@ Check component API documentation and ensure all parameter names match current i
 
 **Docs:** [Logging Pipeline](../reference/logging-pipeline.md), [Training Loop](../reference/training-loop-runtime.md)
 
----
+<br><br>
 
 ### ImportError: cannot import name
 
 **Symptom:**
-```
+```python
 ImportError: cannot import name 'hard_update_target' from 'src.training.target_network'
 ```
 
@@ -255,12 +255,12 @@ from .target_network import hard_update_target
 - `hard_update_target` in `schedulers.py`
 - `torch` in `metadata.py`
 
----
+<br><br>
 
 ### CSV schema errors
 
 **Symptom:**
-```
+```text
 ValueError: dict contains fields not in fieldnames
 ```
 
@@ -285,7 +285,7 @@ writer.writerow(filtered_entry)
 
 **Docs:** [Logging Pipeline](../reference/logging-pipeline.md#csv-backend)
 
----
+<br><br>
 
 ### Device detection failures
 
@@ -330,7 +330,7 @@ network:
 
 **Docs:** [DQN Setup](../reference/dqn-setup.md#device-configuration)
 
----
+<br><br>
 
 ### NaN loss after training starts
 
@@ -379,7 +379,7 @@ grep "td_error" experiments/dqn_atari/runs/pong_42/logs/steps.csv | tail -n 20
 
 **Docs:** [DQN Training](../reference/dqn-training.md#debugging-unstable-training)
 
----
+<br><br>
 
 ### Loss not decreasing
 
@@ -423,12 +423,12 @@ grep "epsilon" experiments/dqn_atari/runs/pong_42/logs/steps.csv | head -n 20
 
 **Docs:** [Training Loop](../reference/training-loop-runtime.md#troubleshooting-guide)
 
----
+<br><br>
 
 ### MetricsLogger.log_evaluation() missing arguments (FIXED)
 
 **Symptom:**
-```
+```text
 TypeError: MetricsLogger.log_evaluation() missing 3 required positional arguments:
 'median_return', 'min_return', and 'max_return'
 ```
@@ -458,12 +458,12 @@ metrics_logger.log_evaluation(
 
 **Status:** Fixed in train_dqn.py
 
----
+<br><br>
 
 ### TensorBoard not available
 
 **Symptom:**
-```
+```python
 Warning: torch.utils.tensorboard not available. TensorBoard logging disabled.
 ```
 
@@ -477,7 +477,7 @@ pip install tensorboard
 
 **Note:** Training continues without TensorBoard, but CSV logging still works.
 
----
+<br><br>
 
 ### Training diverges
 
@@ -512,7 +512,7 @@ pytest tests/test_replay_buffer.py -v
 
 **Docs:** [DQN Training](../reference/dqn-training.md#debugging-unstable-training)
 
----
+<br><br>
 
 ### Different results with same seed
 
@@ -548,7 +548,7 @@ pytest tests/test_save_resume_determinism.py -v -s
 
 **Docs:** [Checkpointing](../reference/checkpointing.md#deterministic-seeding), [DQN Setup](../reference/dqn-setup.md#deterministic-mode-configuration)
 
----
+<br><br>
 
 ## Performance Issues
 
@@ -609,12 +609,12 @@ nvidia-smi -l 1
 
 **Docs:** [DQN Setup](../reference/dqn-setup.md#performance-impact)
 
----
+<br><br>
 
 ### Out of memory errors
 
 **Symptom:**
-```
+```text
 RuntimeError: CUDA out of memory
 ```
 
@@ -651,7 +651,7 @@ replay_buffer = ReplayBuffer(
 
 **Docs:** [Replay Buffer](../reference/replay-buffer.md#memory-layout)
 
----
+<br><br>
 
 ### High CPU usage
 
@@ -673,14 +673,14 @@ This is normal. Atari environments run on CPU. To reduce:
 
 **Docs:** [Training Loop](../reference/training-loop-runtime.md#performance)
 
----
+<br><br>
 
 ## Checkpoint/Resume Issues
 
 ### Resume fails with config mismatch
 
 **Symptom:**
-```
+```text
 ValueError: Config mismatch between checkpoint and current config
 ```
 
@@ -717,12 +717,12 @@ cp experiments/dqn_atari/runs/pong_42/meta.json \
 
 **Docs:** [Checkpointing](../reference/checkpointing.md#config-validation-on-resume)
 
----
+<br><br>
 
 ### Resume warning about git commit
 
 **Symptom:**
-```
+```python
 Warning: Checkpoint commit hash (abc123) differs from current (def456)
 ```
 
@@ -751,7 +751,7 @@ export IGNORE_COMMIT_MISMATCH=1
 
 **Docs:** [Checkpointing](../reference/checkpointing.md#checkpoint-validation)
 
----
+<br><br>
 
 ### RNG states not restored
 
@@ -789,7 +789,7 @@ pytest tests/test_save_resume_determinism.py -v -s
 
 **Docs:** [Checkpointing](../reference/checkpointing.md#rng-state-management)
 
----
+<br><br>
 
 ## Environment Issues
 
@@ -830,12 +830,12 @@ print(env)
 
 **Docs:** [Atari Wrappers](../reference/atari-env-wrapper.md#wrapper-chain)
 
----
+<br><br>
 
 ### Action space mismatch
 
 **Symptom:**
-```
+```text
 IndexError: index N is out of bounds for axis 0 with size M
 ```
 
@@ -873,7 +873,7 @@ print(env.action_space.n)  # Use this value
 
 **Docs:** [DQN Setup](../reference/dqn-setup.md#selected-games)
 
----
+<br><br>
 
 ### Episode termination issues
 
@@ -919,7 +919,7 @@ print(env)  # Should show EpisodeLifeEnv in chain
 
 **Docs:** [Episode Handling](../reference/episode-handling.md), [Atari Wrappers](../reference/atari-env-wrapper.md)
 
----
+<br><br>
 
 ## Getting More Help
 
@@ -955,6 +955,6 @@ If your issue isn't covered here:
    python -m pdb train_dqn.py ...
    ```
 
----
+<br><br>
 
 **Last Updated:** 2025-11-13

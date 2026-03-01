@@ -19,7 +19,7 @@ python train_dqn.py --cfg experiments/dqn_atari/configs/breakout.yaml --seed 123
 
 ## File Structure
 
-```
+```text
 experiments/dqn_atari/configs/
 ├── base.yaml           # Global defaults for all games
 ├── pong.yaml          # Pong-specific overrides
@@ -65,7 +65,7 @@ training:
 
 Configs are merged in this order (later overrides earlier):
 
-```
+```text
 1. base.yaml           (lowest priority)
    ↓
 2. pong.yaml           (game overrides)
@@ -229,7 +229,7 @@ training:
 
 Every training run creates a timestamped directory with **complete reproducibility information**:
 
-```
+```bash
 experiments/dqn_atari/runs/pong_42_20250113_143022/
 ├── config.yaml                   # Merged config snapshot (exact settings used)
 ├── meta.json                     # Metadata (git hash, seed, versions)
@@ -297,25 +297,25 @@ The config system validates all settings at startup with helpful error messages.
 ### Common Validation Errors
 
 **Invalid gamma:**
-```
+```text
 Error: training.gamma: must be in range [0.0, 1.0], got 1.5
 Fix: --set training.gamma=0.99
 ```
 
 **Invalid optimizer:**
-```
+```text
 Error: optimizer.type: must be one of ['adam', 'rmsprop'], got 'sgd'
 Fix: --set training.optimizer.type=adam
 ```
 
 **Unknown environment:**
-```
+```text
 Error: env_id: unknown environment 'Pong-v0'
 Fix: Use "PongNoFrameskip-v4" (must be NoFrameskip-v4 variant)
 ```
 
 **Zero frameskip:**
-```
+```text
 Error: action_repeat: must be positive, got 0
 Fix: environment.action_repeat: 4
 ```

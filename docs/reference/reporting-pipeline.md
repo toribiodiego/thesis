@@ -23,11 +23,11 @@ For operational usage, see [Applied Research Quickstart](../guides/applied-resea
 - Statistical analyses (confidence intervals, paper comparisons)
 - Thesis-ready figures and tables
 
----
+<br><br>
 
 ## Pipeline Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    REPORTING PIPELINE                        │
 └─────────────────────────────────────────────────────────────┘
@@ -63,7 +63,7 @@ For operational usage, see [Applied Research Quickstart](../guides/applied-resea
    Output: Markdown sections, LaTeX figures, result summaries
 ```
 
----
+<br><br>
 
 ## Data Collection
 
@@ -85,7 +85,7 @@ Training runs produce standardized artifacts:
 
 ### Artifact Locations
 
-```
+```text
 experiments/dqn_atari/runs/
 ├── pong_42_20251115_230409/    # Seed 42
 │   ├── csv/
@@ -107,7 +107,7 @@ find experiments/dqn_atari/runs -name "pong_*" -type d
 find experiments/dqn_atari/runs -name "evaluations.csv"
 ```
 
----
+<br><br>
 
 ## Visualization (plot_results.py)
 
@@ -136,7 +136,7 @@ python scripts/plot_results.py \
 ### Outputs
 
 **Generated files**:
-```
+```text
 output/plots/pong_42/
 ├── returns.png           # Episode returns over time
 ├── episode_length.png    # Episode durations
@@ -162,7 +162,7 @@ output/plots/pong_42/
 | `MemoryError` | Large CSV (>100M rows) | Use `--subsample` flag (future) |
 | Permission denied | Output dir not writable | Check permissions, create dir |
 
----
+<br><br>
 
 ## Aggregation (export_results_table.py)
 
@@ -223,7 +223,7 @@ breakout,42,165.3,12.4,168,98.4
 | `Inconsistent seeds` | Different games have different seed counts | Document in notes, proceed with available |
 | `Parse error` | Malformed CSV | Inspect CSV, fix manually or re-run |
 
----
+<br><br>
 
 ## Analysis (analyze_results.py)
 
@@ -264,7 +264,7 @@ python scripts/analyze_results.py \
 ### Outputs
 
 **Analysis report** (`analysis.txt`):
-```
+```text
 DQN Baseline Results Analysis
 ==============================
 
@@ -291,7 +291,7 @@ Overall: 2/2 games meet ≥90% threshold
 | `High variance` | Unstable training | Check hyperparams, add more seeds |
 | `Invalid paper scores` | Malformed JSON | Verify JSON format, check paper reference |
 
----
+<br><br>
 
 ## Thesis Integration
 
@@ -309,7 +309,7 @@ Overall: 2/2 games meet ≥90% threshold
 ### Thesis Artifacts
 
 **Figures**:
-```
+```text
 thesis/figures/
 ├── pong_learning_curve.png      # Main learning curve
 ├── pong_multi_seed.png          # Aggregate across seeds
@@ -318,7 +318,7 @@ thesis/figures/
 ```
 
 **Tables**:
-```
+```text
 thesis/tables/
 ├── hyperparameters.tex          # Training config
 ├── results_summary.tex          # Reproduction results
@@ -330,7 +330,7 @@ thesis/tables/
 - Git commit hash in appendix
 - System provenance in methods
 
----
+<br><br>
 
 ## Common Failure Modes
 
@@ -359,7 +359,7 @@ thesis/tables/
 - **Solution**: Increase `--smooth` parameter, use PDF format
 
 **Out of memory**:
-- **Cause**: Very long runs (>50M steps), large CSVs
+- **Cause**: Long runs (>50M steps), large CSVs
 - **Detection**: `MemoryError` during plotting
 - **Solution**: Subsample data (every Nth row), increase RAM
 
@@ -377,7 +377,7 @@ thesis/tables/
 
 **Performance outlier**:
 - **Cause**: One seed diverged (hyperparameter instability)
-- **Detection**: Very high std, one seed much lower/higher
+- **Detection**: High std (>50% of mean), one seed much lower/higher
 - **Solution**: Investigate logs, consider excluding outlier, add note
 
 ### Analysis Issues
@@ -392,7 +392,7 @@ thesis/tables/
 - **Detection**: Warning messages, suspicious p-values
 - **Solution**: Use non-parametric tests (bootstrap), increase samples
 
----
+<br><br>
 
 ## Automation
 
@@ -444,7 +444,7 @@ analysis: tables
 all: plots tables analysis
 ```
 
----
+<br><br>
 
 ## Quality Checks
 
@@ -483,7 +483,7 @@ grep "SUCCESS" output/summary/analysis.txt
 # Expected: At least 1 game meets threshold
 ```
 
----
+<br><br>
 
 ## Next Steps
 
@@ -502,7 +502,7 @@ grep "SUCCESS" output/summary/analysis.txt
 - Add new metrics to `scripts/export_results_table.py`
 - Extend analysis in `scripts/analyze_results.py`
 
----
+<br><br>
 
 ## Related Documents
 
@@ -512,6 +512,6 @@ grep "SUCCESS" output/summary/analysis.txt
 - [Report Outline](../plans/plan-report-outline.md) - Detailed thesis report structure
 - [Results Comparison](../reports/report-results-comparison.md) - Multi-seed comparison methodology
 
----
+<br><br>
 
 **Last Updated**: 2025-12-23
