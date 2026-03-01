@@ -7,4 +7,4 @@
 Guidelines:
 - Append rows chronologically; keep descriptions short but actionable.
 - Link to relevant configs, commits, or paper notes.
-- Mirror anything urgent in `notes/revisit.md` so it stays visible outside this file.
+- Flag urgent items for follow-up outside this file.
