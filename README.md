@@ -143,7 +143,6 @@ entry points:
 | Experiment plans | [`docs/plans/`](docs/plans/) | Ablation, multi-game, and report plans |
 | Results | [`docs/reports/`](docs/reports/) | Experiment results and analysis |
 | Standards | [`docs/standards/`](docs/standards/) | Documentation and engineering conventions |
-| Changelog | [`docs/changelog.md`](docs/changelog.md) | Timeline of completions and updates |
 
 <br><br>
 

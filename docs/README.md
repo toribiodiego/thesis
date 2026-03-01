@@ -10,7 +10,7 @@ Complete reference for the DQN Atari reproduction thesis project.
 - **New to the project?** Start with [Architecture Overview](guides/architecture.md) → [Quick Start Guide](guides/quick-start.md)
 - **Need to do something?** Check [Workflows](guides/workflows.md) for task-oriented guides
 - **Stuck on an issue?** See [Troubleshooting](guides/troubleshooting.md)
-- **Track progress?** See [TODO](../TODO) in repo root (untracked file with current tasks)
+- **Track progress?** See [changelog.md](changelog.md) for completed milestones
 
 <br><br>
 
@@ -84,8 +84,6 @@ Thesis-ready artifacts and integration:
 
 - **[README.md](thesis/README.md)** - Thesis artifact index and regeneration steps
 
-### Other
-- **[changelog.md](changelog.md)** - Project timeline (kept in root)
 
 <br><br>
 
@@ -152,19 +150,7 @@ Documentation in `docs/` should be:
 - Analysis summaries and tables
 - Statistical comparisons
 
-**notes/** - Personal workspace:
-- Scratch notes and ideas
-- Planning checklists
-- Temporary investigation notes
-- Draft content before formalization
-
-**TODO (repo root)** - Project roadmap and task tracker:
-- Untracked file (not in git)
-- Source of truth for current tasks and priorities
-- Personal workspace for tracking progress
-- See [TODO](../TODO) for active task list
-
-**Key principle:** If it documents *how the system works* → `docs/`. If it describes *what a specific run produced* → `output/` or `experiments/`.
+**Key principle:** If it documents *how the system works* --> `docs/`. If it describes *what a specific run produced* --> `output/` or `experiments/`.
 
 <br><br>
 
@@ -196,7 +182,6 @@ The following table maps current file locations to their planned destinations. T
 | `docs/testing.md` | `docs/guides/testing.md` | Guide | Test suite docs |
 | `docs/colab-guide.md` | `docs/guides/colab-setup.md` | Guide | Rename to kebab-case |
 | `docs/git-commit-guide.md` | `docs/guides/git-commit-guide.md` | Guide | Rename to kebab-case |
-| `docs/changelog.md` | `docs/changelog.md` | Root | Keep in root |
 | **Design/Reference Docs** | | | |
 | `docs/reference/dqn-setup.md` | `docs/reference/dqn-setup.md` | Reference | Rename to kebab-case |
 | `docs/reference/atari-env-wrapper.md` | `docs/reference/atari-env-wrapper.md` | Reference | Rename to kebab-case |
@@ -400,7 +385,7 @@ Where should readers go after this document?
 **Maintenance**:
 - Mark outdated docs with `> **Status**: DEPRECATED` callout
 - Archive obsolete docs to `docs/archive/` rather than deleting
-- Keep `docs/changelog.md` current with major documentation changes
+- Keep documentation current with major project changes
 - Run periodic link checks (manual or scripted) to find broken references
 
 <br><br>
@@ -501,7 +486,7 @@ The documentation reorganization successfully established a coherent structure, 
 - Separated plans and reports (were previously mixed in reference/)
 - Created dedicated `thesis/` folder for thesis-ready artifacts
 - Deferred CI/automation in favor of documented manual procedures (appropriate for solo work)
-- Kept `TODO` file in repo root (untracked) for active task tracking
+- Established local-only task tracking in repo root
 
 ### Verification
 

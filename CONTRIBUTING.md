@@ -21,14 +21,13 @@ thesis/
   output/           Plots, logs, reports (gitignored)
   scripts/          Utility scripts (plotting, analysis, setup)
   setup/            Environment setup, requirements
-  notes/            Paper reviews, research log, literature map
 ```
 
 **Key files:**
 
 - `train_dqn.py` -- main training entry point
 - `experiments/dqn_atari/configs/` -- YAML configuration files
-- `docs/vision.md` -- research vision and scope boundaries
+- `docs/guides/architecture.md` -- system design overview
 - `docs/reports/reporting-requirements.md` -- thesis reporting backlog
 
 <br><br>
@@ -82,7 +81,7 @@ Rules:
 
 ## Documentation Standards
 
-All files under `docs/` and `notes/` follow consistent formatting
+All files under `docs/` follow consistent formatting
 conventions. Key rules:
 
 - Active voice, imperative mood for instructions
@@ -140,4 +139,4 @@ change per commit and explain WHY in the body.
 
 Review existing issues on GitHub or open a new issue with detailed
 reproduction steps. For research direction questions, check
-`docs/vision.md` and `future_work.md` first.
+[`docs/guides/architecture.md`](docs/guides/architecture.md).

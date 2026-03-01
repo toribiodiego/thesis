@@ -474,14 +474,11 @@ python -c 'import torch; print(torch.cuda.is_available())'
 ### Learn More
 
 - **Design Docs:** Detailed specifications in [docs/reference/](../reference/)
-- **Roadmap:** Complete project plan in [TODO](../../TODO)
-- **Changelog:** Development history in [docs/changelog.md](../changelog.md)
-- **Config Reference:** All config options in [configs/README.md](../experiments/dqn_atari/configs/README.md)
+- **Config Reference:** All config options in [configs/README.md](../../experiments/dqn_atari/configs/README.md)
 
 ### Contributing
 
 - Follow commit message style in [git-commit-guide.md](git-commit-guide.md)
-- Update roadmap checkboxes as you complete tasks
 - Document major changes in changelog
 - Run dry-run validation before committing wrapper changes
 - Run tests before committing: `pytest tests/`

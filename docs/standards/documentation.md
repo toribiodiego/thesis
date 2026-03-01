@@ -1,8 +1,8 @@
 # Documentation Standards
 
-All files under `docs/` and `notes/` follow these conventions so
-documentation reads consistently across the project. When adding or
-editing docs, match these patterns rather than inventing new ones.
+All files under `docs/` follow these conventions so documentation reads
+consistently across the project. When adding or editing docs, match
+these patterns rather than inventing new ones.
 
 For development setup and commit conventions, see
 [Contributing Guide](../../CONTRIBUTING.md).
@@ -84,7 +84,7 @@ Supported tags: `bash`, `python`, `yaml`, `json`, `toml`, `csv`,
 
 - Class names: `DQNAgent`, `ReplayBuffer`, `AtariWrapper`
 - Method names: `select_action()`, `train_step()`, `evaluate()`
-- File paths: `docs/vision.md`, `experiments/dqn_atari/configs/`
+- File paths: `docs/guides/architecture.md`, `experiments/dqn_atari/configs/`
 - Environment variables: `WANDB_API_KEY`, `CUDA_VISIBLE_DEVICES`
 - CLI flags and commands: `--num-steps`, `pytest tests/ -x`
 - Literal values: `True`, `None`, `0.001`, `"breakout"`

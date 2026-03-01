@@ -385,4 +385,4 @@ chmod +x train_dqn.py
 
 **Subtask 2:** Implement Atari environment wrapper (preprocessing, frame stacking, reward clipping)
 
-See [TODO](../../TODO) for complete implementation plan.
+See the project documentation for implementation details.

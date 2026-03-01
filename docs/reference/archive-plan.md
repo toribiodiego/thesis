@@ -207,16 +207,12 @@ logs/
 # W&B cache
 wandb/
 
-# Personal workspace
-TODO
-DONE.md
-notes/_temp/
 ```
 
 **Rationale**:
 - **Never commit large binaries** (checkpoints, videos, plots)
 - **Never commit generated outputs** (output/, runs/, wandb/)
-- **Never commit personal workspace** (TODO, notes drafts)
+- **Personal workspace files** belong in `.git/info/exclude` (local-only)
 
 ### Exceptions (Should Be Tracked)
 

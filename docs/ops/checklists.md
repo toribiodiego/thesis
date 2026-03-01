@@ -33,8 +33,6 @@ Before publishing results or sharing code:
   - [ ] Check artifact file integrity
 
 - [ ] **Documentation**
-  - [ ] Update [TODO](../../TODO) with completed tasks
-  - [ ] Review `CLAUDE.md` for accuracy
   - [ ] Ensure design docs reflect current implementation
   - [ ] Troubleshooting guide is current
 
@@ -166,7 +164,6 @@ Quarterly documentation maintenance (or before major milestones):
   - [ ] Update "Last Updated" dates for modified docs
   - [ ] Check status callouts (DRAFT, ACTIVE, REFERENCE, DEPRECATED)
   - [ ] Archive obsolete docs to `docs/archive/` if needed
-  - [ ] Update `docs/changelog.md` with major doc changes
 
 - [ ] **Conventions Compliance**
   - [ ] File names use kebab-case
