@@ -40,10 +40,6 @@ env/
 *~
 .DS_Store
 
-# Claude Code
-.claude/
-CLAUDE.md
-
 # Experiment artifacts
 experiments/**/runs/
 experiments/**/checkpoints/
@@ -65,10 +61,3 @@ logs/
 # Weights & Biases
 wandb/
 
-# Personal TODO files (generated from docs/roadmap.md)
-TODO
-DONE.md
-ROADMAP.md
-
-# Temporary planning files
-notes/_temp/
