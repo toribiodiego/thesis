@@ -238,7 +238,7 @@ if [[ "$SKIP_SETUP" == "false" ]]; then
 
     print_info "Installing dependencies..."
     if [[ "$DRY_RUN" == "false" ]]; then
-        pip install -q -r "$PROJECT_ROOT/requirements.txt"
+        pip install -q -r "$PROJECT_ROOT/setup/requirements.txt"
     fi
 else
     print_step "Step 1: Skipping environment setup (--skip-setup)"

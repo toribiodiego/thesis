@@ -92,7 +92,7 @@ pytest tests/test_dqn_trainer.py -v
 
 **Common failures**:
 - ROM not found → Run `./setup/setup_roms.sh`
-- Import errors → Check `pip install -r requirements.txt`
+- Import errors → Check `pip install -r setup/requirements.txt`
 - GPU tests fail → Expected if no CUDA available
 
 ### 1.3 Performance Baseline (30 minutes)

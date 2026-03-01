@@ -270,7 +270,7 @@ PYTHONPATH=. pytest tests/
 **Tests fail after environment changes:**
 ```bash
 # Reinstall dependencies
-pip install -r requirements.txt
+pip install -r setup/requirements.txt
 ```
 
 **Coverage report not showing:**

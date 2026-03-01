@@ -346,7 +346,7 @@ Capture system and environment information for reproducibility tracking.
 **Example workflow:**
 ```bash
 # Setup environment
-pip install -r requirements.txt
+pip install -r setup/requirements.txt
 ./setup/setup_roms.sh
 
 # Capture environment state
@@ -469,7 +469,7 @@ experiments/dqn_atari/
 ### First-time setup
 ```bash
 # 1. Install dependencies
-pip install -r requirements.txt
+pip install -r setup/requirements.txt
 
 # 2. Download ROMs
 ./setup/setup_roms.sh

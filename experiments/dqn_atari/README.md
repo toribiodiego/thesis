@@ -42,7 +42,7 @@ These settings are applied when creating environments and ensure deterministic b
 
 ```bash
 # 1. Install dependencies (first time only)
-pip install -r requirements.txt
+pip install -r setup/requirements.txt
 
 # 2. Download ROMs (first time only)
 ./setup/setup_roms.sh

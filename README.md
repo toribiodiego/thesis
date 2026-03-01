@@ -166,7 +166,6 @@ docs/                            # Project documentation
   reports/                       # Results and analysis
   standards/                     # Documentation and engineering standards
   thesis/                        # Thesis manuscript assets
-  vision.md                      # Research direction and scope
 scripts/                         # Analysis utilities (plotting, export)
 tests/                           # Unit and integration tests (487+)
 setup/                           # Environment setup and dependencies

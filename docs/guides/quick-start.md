@@ -32,7 +32,7 @@ Complete end-to-end workflow for running DQN on Atari games. This guide ties tog
 cd /path/to/thesis
 
 # Install required packages
-pip install -r requirements.txt
+pip install -r setup/requirements.txt
 ```
 
 **What gets installed:**
@@ -272,7 +272,7 @@ python scripts/compare_runs.py \
 
 ```bash
 # Complete setup from scratch
-pip install -r requirements.txt
+pip install -r setup/requirements.txt
 ./setup/setup_roms.sh
 ./setup/capture_env.sh
 ./experiments/dqn_atari/scripts/run_dqn.sh \
@@ -300,7 +300,7 @@ pip install -r requirements.txt
 
 ```bash
 # Subtask 1: Environment setup
-pip install -r requirements.txt
+pip install -r setup/requirements.txt
 ./setup/setup_roms.sh
 ./setup/capture_env.sh
 
@@ -409,7 +409,7 @@ source venv/bin/activate  # Linux/Mac
 # or: venv\Scripts\activate  # Windows
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r setup/requirements.txt
 ```
 
 **Problem:** ROM download fails or ROMs not found

@@ -8,7 +8,7 @@ Before publishing results or sharing code:
 
 - [ ] **Environment Setup**
   - [ ] Rebuild virtual environment: `rm -rf .venv && python -m venv .venv`
-  - [ ] Install dependencies: `pip install -r requirements.txt`
+  - [ ] Install dependencies: `pip install -r setup/requirements.txt`
   - [ ] Verify PyTorch version matches expected: `python -c "import torch; print(torch.__version__)"`
 
 - [ ] **Code Quality**

@@ -38,7 +38,7 @@ thesis/
 
 ```bash
 cd /path/to/thesis
-pip install -r requirements.txt
+pip install -r setup/requirements.txt
 ```
 
 For CPU-only or GPU-specific installs, use `setup/requirements-cpu.txt`

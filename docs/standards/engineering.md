@@ -64,7 +64,7 @@ Every experiment must be reproducible from its logged configuration:
   initialization when possible
 
 **Dependency pinning:**
-- `requirements.txt` pins exact versions (`torch==2.1.0`, not `torch>=2`)
+- `setup/requirements.txt` pins exact versions (`torch==2.4.1`, not `torch>=2`)
 - Document CUDA version and GPU type for training runs
 - Use `setup/capture_env.sh` to snapshot the full environment
 

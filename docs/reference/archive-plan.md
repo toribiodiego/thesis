@@ -38,7 +38,7 @@ These files are essential for reproducibility and should be version-controlled:
 **Documentation**:
 - `docs/**/*.md` - All documentation
 - `README.md` - Project overview
-- `requirements.txt` - Python dependencies
+- `setup/requirements.txt` - Pinned Python dependencies
 
 **Essential configs**:
 - `.gitignore` - File exclusion rules
