@@ -1,0 +1,69 @@
+\documentclass[12pt, a4paper, oneside]{report}
+
+% --- Encoding and fonts ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+% --- Page geometry ---
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+
+% --- Math and symbols ---
+\usepackage{amsmath, amssymb, amsthm}
+
+% --- Figures and tables ---
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage{float}
+\graphicspath{{figures/}}
+
+% --- Cross-references and links ---
+\usepackage[hidelinks]{hyperref}
+\usepackage[capitalise, noabbrev]{cleveref}
+
+% --- Bibliography ---
+\usepackage[numbers, sort&compress]{natbib}
+
+% --- Code listings (optional, for pseudocode) ---
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+% --- Title information ---
+\title{Data-Efficient Deep Q-Networks with Self-Supervised
+       Representation Learning}
+\author{Diego Toribio}
+\date{2026}
+
+\begin{document}
+
+% --- Front matter ---
+\maketitle
+
+\begin{abstract}
+% Placeholder -- fill after experiments complete.
+\end{abstract}
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+% --- Chapters ---
+\include{chapters/introduction}
+\include{chapters/background}
+\include{chapters/methods}
+\include{chapters/results}
+\include{chapters/discussion}
+\include{chapters/conclusion}
+
+% --- Bibliography ---
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+% --- Appendices (optional) ---
+% \appendix
+% \include{chapters/appendix}
+
+\end{document}
