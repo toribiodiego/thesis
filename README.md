@@ -133,6 +133,25 @@ documentation.
 
 <br><br>
 
+## Reproducibility
+
+- **Seeded RNG with checkpoint persistence** -- Centralised seeding
+  across Python, NumPy, and PyTorch; full RNG state saved in
+  checkpoints and restored on resume
+- **Deterministic mode** -- Optional strict determinism via
+  `torch.use_deterministic_algorithms` with configurable strictness
+- **Pinned dependencies** -- All packages pinned to exact versions in
+  `setup/requirements.txt`
+- **Metadata tracking** -- Every run records git commit, merged
+  config, environment settings, and system info
+- **Multi-backend logging** -- TensorBoard, Weights & Biases, and CSV
+  backends operate in parallel with a unified metric interface
+
+See [Engineering Standards](docs/standards/engineering.md) and
+[Config Reference](docs/reference/config-cli.md) for details.
+
+<br><br>
+
 ## Documentation
 
 [`docs/README.md`](docs/README.md) is the documentation index. Key
