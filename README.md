@@ -10,6 +10,8 @@ on the Atari-100K benchmark. Includes a 2x2 factorial study isolating
 SPR on vanilla DQN, augmentation interaction analysis, and
 interpretability probes into learned representations.
 
+**Status:** Infrastructure validated -- baseline experiments in progress.
+
 > **Quick links:** [Quick Start](#quick-start) ·
 > [Documentation](docs/README.md) ·
 > [Architecture](docs/guides/architecture.md) ·
