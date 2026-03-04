@@ -1,4 +1,4 @@
-# Thesis: Data-Efficient DQN with Self-Supervised Representation Learning
+# MEng Thesis
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
 ![PyTorch 2.4](https://img.shields.io/badge/pytorch-2.4-ee4c2c)
