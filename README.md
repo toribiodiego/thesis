@@ -1,5 +1,9 @@
 # Thesis: Data-Efficient DQN with Self-Supervised Representation Learning
 
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
+![PyTorch 2.4](https://img.shields.io/badge/pytorch-2.4-ee4c2c)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
+
 Masters thesis investigating how self-supervised representation learning
 (SPR) and data augmentation interact to improve data efficiency for DQN
 on the Atari-100K benchmark. Includes a 2x2 factorial study isolating
