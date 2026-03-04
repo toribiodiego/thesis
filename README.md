@@ -167,7 +167,7 @@ docs/                            # Project documentation
   standards/                     # Documentation and engineering standards
   thesis/                        # Thesis manuscript assets
 scripts/                         # Analysis utilities (plotting, export)
-tests/                           # Unit and integration tests (487+)
+tests/                           # Unit and integration tests
 setup/                           # Environment setup and dependencies
 ```
 

@@ -7,7 +7,7 @@ This document provides a pragmatic guide for testing and maintaining code qualit
 ## Overview
 
 For this thesis project, focus on:
-1. **Testing** - Run tests before important commits (335+ tests available)
+1. **Testing** - Run tests before important commits
 2. **Optional formatting** - Use when convenient (Black, isort)
 3. **Optional linting** - Use when debugging issues (Ruff)
 

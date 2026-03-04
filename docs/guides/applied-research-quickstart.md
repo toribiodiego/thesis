@@ -76,7 +76,7 @@ Verify end-to-end pipeline before committing to long training runs:
 Run comprehensive test suite to verify components:
 
 ```bash
-# All tests (335+ tests)
+# All tests
 pytest tests/ -v
 
 # Faster: Skip slow integration tests

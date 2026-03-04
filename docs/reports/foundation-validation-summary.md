@@ -11,7 +11,7 @@ This document summarizes the validation work completed to ensure the DQN impleme
 
 **Inputs** (validation artifacts):
 - [GPU Validation Report](report-gpu-validation.md) - CPU vs GPU performance analysis
-- [Testing Guide](../guides/testing.md) - 335+ unit and integration tests
+- [Testing Guide](../guides/testing.md) - Unit and integration test suite
 - Smoke test results (200K frames validation)
 - Checkpoint verification runs
 
@@ -29,7 +29,7 @@ This document summarizes the validation work completed to ensure the DQN impleme
 The DQN implementation foundation has been validated across all critical components. Infrastructure testing confirms correctness, reproducibility, and performance readiness for multi-seed production runs.
 
 **Key Findings:**
-- **Correctness**: All 335+ tests pass, smoke test validates end-to-end pipeline
+- **Correctness**: All unit tests pass, smoke test validates end-to-end pipeline
 - **Performance**: GPU provides 2.18x speedup (232.7 vs 106.7 FPS during training)
 - **Reproducibility**: Checkpointing and seeding enable deterministic resume
 - **Infrastructure**: Logging, W&B integration, and evaluation harness work correctly
@@ -41,7 +41,7 @@ The DQN implementation foundation has been validated across all critical compone
 
 ## Validation Coverage
 
-### 1. Component Testing (335+ Unit Tests)
+### 1. Component Testing
 
 Comprehensive test suite validates all core components:
 
@@ -53,12 +53,12 @@ Comprehensive test suite validates all core components:
 | Evaluation | 19+ | Metrics, scheduling, multi-format output |
 | Checkpointing | 25+ | Save/resume, determinism, schema validation |
 | Config System | 22+ | YAML parsing, CLI overrides, validation |
-| **Total** | **335+** | **All critical paths covered** |
+| **Total** | **All modules** | **All critical paths covered** |
 
 **Test execution**:
 ```bash
 pytest tests/ -v
-# Result: 335+ tests pass (as of 2025-11-13)
+# Result: All tests pass (as of 2025-11-13)
 ```
 
 **Key validations**:
@@ -262,7 +262,7 @@ wandb:
 
 | Criterion | Status | Evidence |
 |-----------|--------|----------|
-| All unit tests pass | GO | 335+ tests pass |
+| All unit tests pass | GO | Full suite passes |
 | Smoke test passes | GO | 200K frames validated |
 | GPU validation complete | GO | 2.18x speedup confirmed |
 | Checkpointing works | GO | Save/resume determinism verified |
@@ -335,7 +335,7 @@ wandb:
 |------|-----------|--------|
 | 2025-11-13 | Subtask 6 complete: Training loop infrastructure | Complete |
 | 2025-11-13 | Smoke test script created and validated | Complete |
-| 2025-11-13 | Unit test suite reaches 335+ tests | Complete |
+| 2025-11-13 | Unit test suite covers all components | Complete |
 | 2025-11-14 | GPU validation (1M Pong, CPU vs A100) | Complete |
 | 2025-11-14 | Bottleneck analysis (CPU profiling) | Complete |
 | 2025-11-15 | Checkpoint verification and W&B integration | Complete |

@@ -18,7 +18,7 @@ Comprehensive test coverage for DQN implementation. All tests can be run from th
 | `test_metrics_logger.py` | ~900 | 28 | Multi-backend logging (TensorBoard/W&B/CSV), flush, artifacts (Subtask 10) |
 | `test_plot_results.py` | ~490 | 20 | Plotting script, CSV loading, smoothing, metadata (Subtask 10) |
 
-**Total:** 335+ unit tests across all modules
+**Total:** Unit and integration tests across all modules
 
 <br><br>
 
@@ -664,7 +664,7 @@ pytest tests/ --collect-only  # Should list all tests
 - `src.training.metrics_logger`: 28 tests
 - `scripts.plot_results`: 20 tests
 
-**Total:** 335+ tests
+**Total:** See `pytest tests/ -v` for current count
 
 **Average Test Runtime:**
 - Unit tests: < 1s each
