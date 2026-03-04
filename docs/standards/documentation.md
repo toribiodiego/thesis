@@ -4,8 +4,8 @@ All files under `docs/` follow these conventions so documentation reads
 consistently across the project. When adding or editing docs, match
 these patterns rather than inventing new ones.
 
-For development setup and commit conventions, see
-[Contributing Guide](../../CONTRIBUTING.md).
+For development setup and code conventions, see
+[Engineering Standards](./engineering.md).
 
 <br><br>
 
@@ -166,4 +166,3 @@ Bad:   TrainingLoop.md, plan_ablations.md, DQN-Model.md
 
 <br><br>
 
-[Back to Contributing Guide](../../CONTRIBUTING.md)

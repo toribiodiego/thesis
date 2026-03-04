@@ -4,9 +4,31 @@ Standards for writing reliable, reproducible, and efficient research
 code. The goal is work that produces trustworthy results, runs
 efficiently on limited compute, and remains understandable months later.
 
-For development setup and commit conventions, see
-[Contributing Guide](../../CONTRIBUTING.md). For documentation
-conventions, see [Documentation Standards](./documentation.md).
+For documentation conventions, see
+[Documentation Standards](./documentation.md).
+
+<br><br>
+
+## Development Setup
+
+**Local environment:**
+
+```bash
+cd /path/to/thesis
+pip install -r setup/requirements.txt
+```
+
+For CPU-only or GPU-specific installs, use `setup/requirements-cpu.txt`
+or `setup/requirements-gpu.txt`.
+
+**ROM setup:**
+
+```bash
+bash setup/setup_roms.sh
+```
+
+**Google Colab:** See [Colab Guide](../guides/colab-guide.md) for
+notebook setup, checkpointing, and auto-shutdown patterns.
 
 <br><br>
 
@@ -85,7 +107,7 @@ at the root level:
 
 - `train_dqn.py` -- main entry point
 - `README.md` -- project overview
-- `CONTRIBUTING.md` -- development workflow
+- `LICENSE` -- MIT license
 - `pyproject.toml` -- package metadata
 - `.gitignore` -- version control exclusions
 
@@ -194,4 +216,3 @@ Treat experiments as first-class engineering work:
 
 <br><br>
 
-[Back to Contributing Guide](../../CONTRIBUTING.md)

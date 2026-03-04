@@ -51,9 +51,29 @@ output/
 *.jpg
 *.jpeg
 
+# Allow figures committed in writing/ and presentation/
+!writing/figures/**
+!presentation/figures/**
+
 # Logs
 *.log
 logs/
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.out
+*.toc
+*.lof
+*.lot
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.nav
+*.snm
+*.vrb
+*.pdf
 
 # Environment variables
 .env
