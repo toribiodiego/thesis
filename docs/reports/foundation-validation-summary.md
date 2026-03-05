@@ -35,7 +35,7 @@ The DQN implementation foundation has been validated across all critical compone
 - **Infrastructure**: Logging, W&B integration, and evaluation harness work correctly
 - **Bottlenecks**: No critical issues identified for 10M frame runs
 
-**Recommendation**: Proceed with Priority 1 baseline experiments (Pong 3-seed runs) as outlined in [Reporting Requirements](reporting-requirements.md).
+**Recommendation**: Proceed with Atari-100K baseline experiments.
 
 <br><br>
 
@@ -194,42 +194,6 @@ Deterministic training and resume validation:
 
 <br><br>
 
-### 6. W&B Integration Validation
-
-Logging and artifact management integration:
-
-**Validated Features**:
-- Run initialization with config, seed, git hash
-- Step-level metrics logging (loss, epsilon, FPS, Q-values)
-- Episode-level metrics logging (return, length)
-- Evaluation metrics logging (mean return, std, performance trend)
-- Checkpoint uploads to W&B artifacts (optional, configurable)
-- Video uploads (optional, evaluation episodes)
-- Run resumption links to original run
-
-**Configuration**:
-```yaml
-wandb:
-  enabled: true
-  project: "dqn-atari"
-  entity: "Cooper-Union"
-  upload_checkpoints: false  # Disable for large runs (>5 GB)
-```
-
-**Known Issues**:
-- ⚠ Large checkpoint uploads (>1 GB) can be slow on limited bandwidth
-- Mitigation: Set `upload_checkpoints: false` and rely on local backups
-- CSV logs and metrics always uploaded (small, <100 MB)
-
-**Artifact Upload Strategy**:
-- Essential: Step/episode/eval CSVs, final checkpoint
-- Optional: Intermediate checkpoints (every 1M frames)
-- Deferred: Videos (upload manually for presentation)
-
-**Reference**: See [Logging Pipeline](../reference/logging-pipeline.md) for configuration details.
-
-<br><br>
-
 ## Known Limitations
 
 ### Hardware Constraints
@@ -275,60 +239,6 @@ wandb:
 
 <br><br>
 
-## Recommendations
-
-### Immediate Actions (Priority 1)
-
-1. **Launch Pong 3-seed baseline runs**
-   - Seeds: 42, 123, 456
-   - Platform: Google Colab A100 GPU
-   - Est. time: 12 hours × 3 = 36 hours
-   - Command: `./experiments/dqn_atari/scripts/reproduce_dqn.sh --game pong --seed <SEED>`
-
-2. **Monitor first run closely**
-   - Check FPS stabilizes >200 on GPU
-   - Verify loss decreases and stabilizes
-   - Confirm eval return improves over time
-   - Validate checkpoints save correctly
-
-3. **Generate plots after first completion**
-   - Learning curves (returns, loss, Q-values)
-   - Episode length trends
-   - FPS over time
-   - Command: `python scripts/plot_results.py --episodes <run>/csv/episodes.csv`
-
-### Short-term Actions (Priority 2)
-
-4. **Create multi-seed aggregation script**
-   - Aggregate 3 seeds with confidence intervals
-   - Generate comparison plots
-   - Export summary table for thesis
-
-5. **Document baseline results**
-   - Update [DQN Results](report-dqn-results.md) with Pong findings
-   - Record actual training time and FPS achieved
-   - Compare to paper score (target: ≥90% of 20)
-
-6. **Decide on extended games**
-   - Based on GPU availability and time constraints
-   - Breakout/Beam Rider require ~50 hours each (3 seeds = 150 hours)
-   - Defer if GPU access limited
-
-### Long-term Actions (Priority 3)
-
-7. **Plan ablation studies** (optional)
-   - Reward clipping ablation
-   - Frame stack ablation
-   - Target network ablation
-   - Defer if time-constrained
-
-8. **Archive and backup**
-   - Save final checkpoints to cloud storage
-   - Archive CSVs and plots
-   - Document W&B run URLs in thesis
-
-<br><br>
-
 ## Validation History
 
 | Date | Milestone | Status |
@@ -346,34 +256,13 @@ wandb:
 
 <br><br>
 
-## Next Steps
-
-**For researchers starting production runs**:
-1. Follow [Applied Research Quickstart](../guides/applied-research-quickstart.md)
-2. Use GPU (Colab A100) for all production runs
-3. Monitor [Reporting Requirements](reporting-requirements.md) for backlog
-
-**For troubleshooting**:
-- Consult [Troubleshooting Guide](../guides/troubleshooting.md)
-- Review [Stability Notes](../reference/stability-notes.md)
-- Check [Environment Notes](../reference/environment-notes.md)
-
-**For deeper understanding**:
-- Read [Architecture Overview](../guides/architecture.md)
-- Study component specs in [reference/](../reference/)
-- Review [DQN 2013 Notes](../research/papers/dqn-2013-notes.md)
-
-<br><br>
-
 ## Related Documents
 
 - [GPU Validation Report](report-gpu-validation.md) - Detailed CPU vs GPU analysis
 - [Testing Guide](../guides/testing.md) - Complete test suite documentation
-- [Applied Research Quickstart](../guides/applied-research-quickstart.md) - Production workflow
-- [Reporting Requirements](reporting-requirements.md) - Prioritized thesis backlog
 - [Checkpointing](../reference/checkpointing.md) - Save/resume implementation
-- [Logging Pipeline](../reference/logging-pipeline.md) - Metrics and W&B integration
+- [Logging Pipeline](../reference/logging-pipeline.md) - Metrics and logging integration
 
 <br><br>
 
-**Last Updated**: 2025-12-23
+**Last Updated**: 2026-03-04
