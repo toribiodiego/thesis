@@ -112,7 +112,7 @@ python scripts/export_results_table.py \
 Enable W&B by setting `WANDB_API_KEY` and
 `logging.wandb.enabled=true` in the config. See
 [`docs/reference/logging-pipeline.md`](docs/reference/logging-pipeline.md)
-for full logging documentation.
+for logging documentation.
 
 <br><br>
 
@@ -165,8 +165,7 @@ entry points:
 | Architecture | [`docs/guides/architecture.md`](docs/guides/architecture.md) | System design overview |
 | Config & CLI | [`docs/reference/config-cli.md`](docs/reference/config-cli.md) | Configuration system and CLI reference |
 | Training loop | [`docs/reference/training-loop-runtime.md`](docs/reference/training-loop-runtime.md) | Loop orchestration, logging, evaluation |
-| Experiment plans | [`docs/plans/`](docs/plans/) | Ablation, multi-game, and report plans |
-| Results | [`docs/reports/`](docs/reports/) | Experiment results and analysis |
+| Results | [`docs/reports/`](docs/reports/) | Validation reports and analysis |
 | Standards | [`docs/standards/`](docs/standards/) | Documentation and engineering conventions |
 
 <br><br>
@@ -184,13 +183,16 @@ src/                             # Core implementation
 experiments/dqn_atari/           # DQN experiment
   configs/                       # YAML configs per game
   scripts/                       # Training and validation scripts
+writing/                         # Thesis manuscript (LaTeX)
+  chapters/                      # Chapter .tex files
+  figures/                       # Thesis figures
+  tables/                        # Thesis tables
+presentation/                    # Defense slides (LaTeX/Beamer)
 docs/                            # Project documentation
   guides/                        # Task-oriented guides
   reference/                     # Technical component specs
-  plans/                         # Experiment plans
   reports/                       # Results and analysis
   standards/                     # Documentation and engineering standards
-  thesis/                        # Thesis manuscript assets
 scripts/                         # Analysis utilities (plotting, export)
 tests/                           # Unit and integration tests
 setup/                           # Environment setup and dependencies

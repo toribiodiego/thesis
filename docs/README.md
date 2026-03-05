@@ -22,7 +22,6 @@ High-level task-oriented guides:
 
 - **[architecture.md](guides/architecture.md)** - System design and component interactions (start here)
 - **[quick-start.md](guides/quick-start.md)** - Setup and first training run
-- **[applied-research-quickstart.md](guides/applied-research-quickstart.md)** - Validation to production workflow
 - **[workflows.md](guides/workflows.md)** - Common task guides (train, debug, test)
 - **[troubleshooting.md](guides/troubleshooting.md)** - Problem diagnosis and fixes
 - **[testing.md](guides/testing.md)** - Test suite documentation
@@ -43,29 +42,19 @@ Detailed technical specifications for each component:
 - **[config-cli.md](reference/config-cli.md)** - Configuration system and command-line interface
 - **[eval-harness.md](reference/eval-harness.md)** - Periodic evaluation, metrics, and video capture
 - **[logging-pipeline.md](reference/logging-pipeline.md)** - Multi-backend logging, plotting, and results analysis
-- **[reporting-pipeline.md](reference/reporting-pipeline.md)** - Result generation and analysis workflow
-- **[archive-plan.md](reference/archive-plan.md)** - Retention rules and artifact management
 - **[environment-notes.md](reference/environment-notes.md)** - Toolchain differences and compatibility
 - **[stability-notes.md](reference/stability-notes.md)** - Hyperparameter choices and stability observations
-
-### plans/
-Experiment and analysis plans:
-
-- **[plan-reproduce-recipe.md](plans/plan-reproduce-recipe.md)** - Reproduction workflow
 
 ### reports/
 Experiment results and analysis:
 
 - **[foundation-validation-summary.md](reports/foundation-validation-summary.md)** - Implementation validation recap
-- **[report-dqn-results.md](reports/report-dqn-results.md)** - DQN baseline results
 - **[report-gpu-validation.md](reports/report-gpu-validation.md)** - GPU vs CPU performance
-- **[report-results-comparison.md](reports/report-results-comparison.md)** - Multi-seed comparisons
 
 ### ops/
 Operational procedures and maintenance:
 
 - **[code-quality.md](ops/code-quality.md)** - Code quality and testing guide
-- **[checklists.md](ops/checklists.md)** - Pre-commit checklists
 
 ### research/papers/
 Notes and summaries from research papers:
@@ -92,11 +81,7 @@ All documentation files use **kebab-case** with descriptive names:
 **Design/reference docs:**
 - `dqn-model.md` - Component specification
 - `config-cli.md` - System configuration
-- `plan-reproduce-recipe.md` - Experiment plans
-
-**Analysis/reports:**
-- `reports/report-gpu-validation.md` - Performance analysis
-- `reports/report-results-comparison.md` - Multi-run analysis
+- `report-gpu-validation.md` - Performance analysis
 
 ### Folder Structure
 - `docs/` - Documentation root
@@ -222,7 +207,7 @@ Where should readers go after this document?
 **Files**:
 - Use **kebab-case** for all documentation files (e.g., `quick-start.md`, `dqn-model.md`)
 - Prefix reports with `report-` (e.g., `report-gpu-validation.md`)
-- Prefix plans with `plan-` (e.g., `plan-reproduce-recipe.md`)
+- Prefix plans with `plan-` (e.g., `plan-experiment.md`)
 - Use descriptive, searchable names that indicate content
 
 **Folders**:
