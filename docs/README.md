@@ -51,16 +51,12 @@ Detailed technical specifications for each component:
 ### plans/
 Experiment and analysis plans:
 
-- **[plan-game-suite.md](plans/plan-game-suite.md)** - Game selection criteria and rationale
-- **[plan-ablations.md](plans/plan-ablations.md)** - Ablation study design
-- **[plan-report-outline.md](plans/plan-report-outline.md)** - Thesis report structure
 - **[plan-reproduce-recipe.md](plans/plan-reproduce-recipe.md)** - Reproduction workflow
 
 ### reports/
 Experiment results and analysis:
 
 - **[foundation-validation-summary.md](reports/foundation-validation-summary.md)** - Implementation validation recap
-- **[reporting-requirements.md](reports/reporting-requirements.md)** - Prioritized thesis reporting backlog
 - **[report-dqn-results.md](reports/report-dqn-results.md)** - DQN baseline results
 - **[report-gpu-validation.md](reports/report-gpu-validation.md)** - GPU vs CPU performance
 - **[report-results-comparison.md](reports/report-results-comparison.md)** - Multi-seed comparisons
@@ -76,12 +72,6 @@ Notes and summaries from research papers:
 
 - **[dqn-2013-notes.md](research/papers/dqn-2013-notes.md)** - DQN 2013 paper implementation notes
 - **[README.md](research/papers/README.md)** - Research paper index
-
-### thesis/
-Thesis-ready artifacts and integration:
-
-- **[README.md](thesis/README.md)** - Thesis artifact index and regeneration steps
-
 
 <br><br>
 
@@ -102,7 +92,7 @@ All documentation files use **kebab-case** with descriptive names:
 **Design/reference docs:**
 - `dqn-model.md` - Component specification
 - `config-cli.md` - System configuration
-- `plan-ablations.md` - Experiment plans
+- `plan-reproduce-recipe.md` - Experiment plans
 
 **Analysis/reports:**
 - `reports/report-gpu-validation.md` - Performance analysis
@@ -232,11 +222,11 @@ Where should readers go after this document?
 **Files**:
 - Use **kebab-case** for all documentation files (e.g., `quick-start.md`, `dqn-model.md`)
 - Prefix reports with `report-` (e.g., `report-gpu-validation.md`)
-- Prefix plans with `plan-` (e.g., `plan-ablations.md`)
+- Prefix plans with `plan-` (e.g., `plan-reproduce-recipe.md`)
 - Use descriptive, searchable names that indicate content
 
 **Folders**:
-- Follow the established structure: `guides/`, `reference/`, `plans/`, `reports/`, `ops/`, `research/`, `thesis/`
+- Follow the established structure: `guides/`, `reference/`, `plans/`, `reports/`, `ops/`, `research/`
 - Keep folder names concise and self-explanatory
 
 ### Headings and Structure
