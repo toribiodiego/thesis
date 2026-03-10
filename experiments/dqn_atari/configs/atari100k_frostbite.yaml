@@ -1,0 +1,21 @@
+# Frostbite - Atari-100K Configuration
+# ======================================
+# Moderate reward game. SPR produces the largest relative improvement
+# in the benchmark (6x over baseline); augmentation adds only 10%.
+#
+# Action space: 18 actions
+#
+# SPR paper reference (modified Rainbow): 1821.5 mean return
+# Random agent: 65.2 | Human: 4334.7
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_frostbite.yaml --seed 42
+
+base_config: "experiments/dqn_atari/configs/atari100k_base.yaml"
+
+environment:
+  env_id: "FrostbiteNoFrameskip-v4"
+
+experiment:
+  name: "atari100k_frostbite"
+  notes: "Vanilla DQN on Frostbite under Atari-100K protocol"

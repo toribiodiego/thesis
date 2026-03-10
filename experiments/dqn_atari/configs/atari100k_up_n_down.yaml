@@ -1,0 +1,21 @@
+# Up N Down - Atari-100K Configuration
+# ======================================
+# Dense reward game. Augmentation produces the largest interaction
+# effect in the benchmark, boosting SPR scores by over 4x.
+#
+# Action space: 6 actions
+#
+# SPR paper reference (modified Rainbow): 28138.5 mean return
+# Random agent: 533.4 | Human: 11693.2
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_up_n_down.yaml --seed 42
+
+base_config: "experiments/dqn_atari/configs/atari100k_base.yaml"
+
+environment:
+  env_id: "UpNDownNoFrameskip-v4"
+
+experiment:
+  name: "atari100k_up_n_down"
+  notes: "Vanilla DQN on Up N Down under Atari-100K protocol"

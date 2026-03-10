@@ -1,0 +1,21 @@
+# Kangaroo - Atari-100K Configuration
+# =====================================
+# Moderate reward game. Strong synergy between SPR and augmentation
+# in published results.
+#
+# Action space: 18 actions
+#
+# SPR paper reference (modified Rainbow): 3276.4 mean return
+# Random agent: 52.0 | Human: 3035.0
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_kangaroo.yaml --seed 42
+
+base_config: "experiments/dqn_atari/configs/atari100k_base.yaml"
+
+environment:
+  env_id: "KangarooNoFrameskip-v4"
+
+experiment:
+  name: "atari100k_kangaroo"
+  notes: "Vanilla DQN on Kangaroo under Atari-100K protocol"
