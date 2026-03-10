@@ -88,9 +88,12 @@ KNOWN_STRUCTURE = {
         "exploration",
         "evaluation",
         "logging",
+        "augmentation",
         "seed",
         "system",
     },
+    "augmentation": {"enabled", "type", "random_shift"},
+    "augmentation.random_shift": {"pad"},
     "experiment": {"name", "run_id", "notes", "deterministic"},
     "experiment.deterministic": {"enabled", "strict", "warn_only"},
     "environment": {
