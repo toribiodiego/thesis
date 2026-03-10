@@ -34,6 +34,11 @@ class MetricKeys:
     FPS = "train/fps"
     LOSS_MA = "train/loss_moving_avg"
 
+    # SPR auxiliary metrics (logged only when SPR is enabled)
+    SPR_LOSS = "spr/loss"
+    SPR_COSINE_SIMILARITY = "spr/cosine_similarity"
+    SPR_EMA_UPDATE_COUNT = "spr/ema_update_count"
+
     # Per-episode metrics
     EPISODE = "episode/number"
     EPISODE_RETURN = "episode/return"
@@ -288,6 +293,9 @@ class CSVBackend:
                 "grad_norm",
                 "learning_rate",
                 "loss_ma",  # moving average
+                "spr_loss",
+                "cosine_similarity",
+                "ema_update_count",
             ]
             with open(self.step_csv_path, "w", newline="") as f:
                 writer = csv.DictWriter(f, fieldnames=self._step_fieldnames)
@@ -499,6 +507,9 @@ class MetricsLogger:
         epsilon: Optional[float] = None,
         replay_size: Optional[int] = None,
         fps: Optional[float] = None,
+        spr_loss: Optional[float] = None,
+        cosine_similarity: Optional[float] = None,
+        ema_update_count: Optional[int] = None,
         extra_metrics: Optional[Dict[str, float]] = None,
     ):
         """
@@ -515,6 +526,11 @@ class MetricsLogger:
             epsilon: Current exploration rate
             replay_size: Current replay buffer size
             fps: Frames per second
+            spr_loss: SPR auxiliary loss (None when SPR disabled)
+            cosine_similarity: Mean cosine similarity between predicted
+                and target representations (None when SPR disabled)
+            ema_update_count: Number of EMA encoder updates performed
+                (None when SPR disabled)
             extra_metrics: Additional custom metrics to log
         """
         import numpy as np
@@ -549,6 +565,14 @@ class MetricsLogger:
         if fps is not None:
             metrics[MetricKeys.FPS] = fps
 
+        # SPR metrics (only logged when SPR is enabled)
+        if spr_loss is not None:
+            metrics[MetricKeys.SPR_LOSS] = spr_loss
+        if cosine_similarity is not None:
+            metrics[MetricKeys.SPR_COSINE_SIMILARITY] = cosine_similarity
+        if ema_update_count is not None:
+            metrics[MetricKeys.SPR_EMA_UPDATE_COUNT] = ema_update_count
+
         # Add extra metrics
         if extra_metrics is not None:
             metrics.update(extra_metrics)
@@ -572,6 +596,9 @@ class MetricsLogger:
                 "replay_size": replay_size,
                 "fps": fps,
                 "loss_ma": metrics.get(MetricKeys.LOSS_MA),
+                "spr_loss": spr_loss,
+                "cosine_similarity": cosine_similarity,
+                "ema_update_count": ema_update_count,
             }
             # Remove None values
             csv_metrics = {k: v for k, v in csv_metrics.items() if v is not None}

@@ -340,15 +340,19 @@ def run_training(config, paths, device):
             elapsed = current_time - last_log_time
             fps = (config.logging.log_every_steps * config.environment.action_repeat) / elapsed if elapsed > 0 else 0
 
+            m = step_result['metrics']
             metrics_logger.log_step(
                 step=frame_counter.frames,
                 epsilon=step_result['epsilon'],
                 replay_size=replay_buffer.size,
                 fps=fps,
-                loss=step_result['metrics'].loss if step_result['metrics'] else None,
-                td_error=step_result['metrics'].td_error if step_result['metrics'] else None,
-                grad_norm=step_result['metrics'].grad_norm if step_result['metrics'] else None,
-                learning_rate=step_result['metrics'].learning_rate if step_result['metrics'] else None
+                loss=m.loss if m else None,
+                td_error=m.td_error if m else None,
+                grad_norm=m.grad_norm if m else None,
+                learning_rate=m.learning_rate if m else None,
+                spr_loss=m.spr_loss if m else None,
+                cosine_similarity=m.cosine_similarity if m else None,
+                ema_update_count=m.update_count if m and m.spr_loss is not None else None,
             )
 
             last_log_time = current_time
