@@ -22,6 +22,9 @@ from .loss import (
     select_q_values,
 )
 
+# SPR loss computation
+from .spr_loss import compute_spr_forward, compute_spr_loss
+
 # Metadata
 from .metadata import MetadataWriter, get_git_commit_hash, get_git_status
 
@@ -74,6 +77,9 @@ __all__ = [
     "select_q_values",
     "compute_td_loss_components",
     "compute_dqn_loss",
+    # SPR loss
+    "compute_spr_loss",
+    "compute_spr_forward",
     # Optimization
     "configure_optimizer",
     "clip_gradients",

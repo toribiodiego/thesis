@@ -148,15 +148,19 @@ def training_step(
     batch_size: int = 32,
     device: str = "cpu",
     augment_fn=None,
+    spr_components=None,
+    spr_weight: float = 2.0,
+    spr_prediction_steps: int = 5,
 ):
     """
     Execute one step of the DQN training loop.
 
     This function orchestrates the 5-step training process:
-    1. Select action via ε-greedy from online Q-network
+    1. Select action via epsilon-greedy from online Q-network
     2. Step environment with frame-skip (handled by wrapper)
     3. Append transition to replay buffer
     4. If warm-up done and step % train_every == 0: perform optimization
+       (with optional SPR auxiliary loss)
     5. If step % target_update_interval == 0: sync target network
 
     Parameters
@@ -168,7 +172,7 @@ def training_step(
     target_net : torch.nn.Module
         Target Q-network for TD targets
     optimizer : torch.optim.Optimizer
-        Optimizer for online network
+        Optimizer for online network (and SPR modules if enabled)
     replay_buffer : ReplayBuffer
         Experience replay buffer
     epsilon_scheduler : EpsilonScheduler
@@ -193,6 +197,16 @@ def training_step(
         Batch size for sampling from replay buffer (default: 32)
     device : str
         Device for tensors (default: 'cpu')
+    augment_fn : callable, optional
+        Data augmentation function applied to observations
+    spr_components : dict, optional
+        SPR model components. Required keys: 'transition_model',
+        'projection_head', 'prediction_head', 'target_encoder',
+        'target_projection'. Pass None to disable SPR.
+    spr_weight : float
+        Weight for SPR loss in combined objective (default: 2.0)
+    spr_prediction_steps : int
+        Number of future steps K for SPR prediction (default: 5)
 
     Returns
     -------
@@ -264,6 +278,26 @@ def training_step(
             batch_device["states"] = augment_fn(batch_device["states"])
             batch_device["next_states"] = augment_fn(batch_device["next_states"])
 
+        # Sample SPR sequence batch (if SPR enabled)
+        spr_batch_device = None
+        if spr_components is not None:
+            seq_batch = replay_buffer.sample_sequences(
+                batch_size, spr_prediction_steps
+            )
+            spr_batch_device = {
+                "states": to_tensor(seq_batch["states"]),
+                "actions": to_tensor(seq_batch["actions"]),
+                "dones": to_tensor(seq_batch["dones"]),
+            }
+            # Apply augmentation to each state in the sequence
+            if augment_fn is not None:
+                s = spr_batch_device["states"]
+                B, Kp1 = s.shape[0], s.shape[1]
+                s_flat = augment_fn(s.reshape(B * Kp1, *s.shape[2:]))
+                spr_batch_device["states"] = s_flat.reshape(
+                    B, Kp1, *s_flat.shape[1:]
+                )
+
         # Perform optimization step
         metrics = perform_update_step(
             online_net=online_net,
@@ -274,6 +308,9 @@ def training_step(
             loss_type=loss_type,
             max_grad_norm=max_grad_norm,
             update_count=training_scheduler.training_step_count,
+            spr_components=spr_components,
+            spr_batch=spr_batch_device,
+            spr_weight=spr_weight,
         )
 
         training_scheduler.mark_trained(frame_counter.steps)

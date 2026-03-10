@@ -50,17 +50,22 @@ class UpdateMetrics:
         grad_norm: float,
         learning_rate: float,
         update_count: int,
+        spr_loss: float = None,
+        cosine_similarity: float = None,
     ):
         """
         Initialize update metrics.
 
         Args:
-            loss: Training loss value
+            loss: Training loss value (total loss when SPR enabled)
             td_error: Mean absolute TD error
             td_error_std: Standard deviation of TD errors
             grad_norm: Gradient norm before clipping
             learning_rate: Current optimizer learning rate
             update_count: Total number of updates performed
+            spr_loss: SPR auxiliary loss value (None when SPR disabled)
+            cosine_similarity: Mean cosine similarity between predicted
+                and target representations (None when SPR disabled)
         """
         self.loss = loss
         self.td_error = td_error
@@ -68,6 +73,8 @@ class UpdateMetrics:
         self.grad_norm = grad_norm
         self.learning_rate = learning_rate
         self.update_count = update_count
+        self.spr_loss = spr_loss
+        self.cosine_similarity = cosine_similarity
 
     def to_dict(self) -> Dict[str, float]:
         """
@@ -82,7 +89,7 @@ class UpdateMetrics:
             >>> assert 'loss' in metrics_dict
             >>> assert 'td_error' in metrics_dict
         """
-        return {
+        d = {
             "loss": self.loss,
             "td_error": self.td_error,
             "td_error_std": self.td_error_std,
@@ -90,14 +97,24 @@ class UpdateMetrics:
             "learning_rate": self.learning_rate,
             "update_count": self.update_count,
         }
+        if self.spr_loss is not None:
+            d["spr_loss"] = self.spr_loss
+        if self.cosine_similarity is not None:
+            d["cosine_similarity"] = self.cosine_similarity
+        return d
 
     def __repr__(self) -> str:
         """String representation for debugging."""
-        return (
+        base = (
             f"UpdateMetrics(loss={self.loss:.4f}, td_error={self.td_error:.4f}, "
             f"grad_norm={self.grad_norm:.4f}, lr={self.learning_rate:.6f}, "
-            f"updates={self.update_count})"
+            f"updates={self.update_count}"
         )
+        if self.spr_loss is not None:
+            base += f", spr_loss={self.spr_loss:.4f}"
+        if self.cosine_similarity is not None:
+            base += f", cos_sim={self.cosine_similarity:.4f}"
+        return base + ")"
 
 
 def perform_update_step(
@@ -109,6 +126,9 @@ def perform_update_step(
     loss_type: str = "mse",
     max_grad_norm: float = 10.0,
     update_count: int = 0,
+    spr_components: Dict[str, nn.Module] = None,
+    spr_batch: Dict[str, torch.Tensor] = None,
+    spr_weight: float = 2.0,
 ) -> UpdateMetrics:
     """
     Perform a single training update and return metrics.
@@ -117,40 +137,49 @@ def perform_update_step(
     1. Compute TD targets using target network
     2. Select Q-values for actions from online network
     3. Compute loss (MSE or Huber)
-    4. Backpropagate gradients
-    5. Clip gradients by global norm
-    6. Update network parameters
-    7. Collect and return metrics
+    4. (Optional) Compute SPR loss and combine with TD loss
+    5. Backpropagate gradients
+    6. Clip gradients by global norm
+    7. Update network parameters
+    8. (Optional) Update EMA encoder and projection
+    9. Collect and return metrics
+
+    When spr_components and spr_batch are provided, the SPR auxiliary
+    loss is computed alongside the TD loss. The total loss is:
+        total = td_loss + spr_weight * spr_loss
+    After the optimizer step, the EMA encoder and projection are
+    updated to track the online encoder and projection head.
+
+    The optimizer must include parameters from all trainable modules
+    (online network, transition model, projection head, prediction
+    head) when SPR is enabled.
 
     Args:
         online_net: Online Q-network to train
         target_net: Target Q-network for TD targets
-        optimizer: Optimizer for online network
+        optimizer: Optimizer for online network (and SPR modules if enabled)
         batch: Dictionary with keys 'states', 'actions', 'rewards', 'next_states', 'dones'
         gamma: Discount factor (default: 0.99)
         loss_type: 'mse' or 'huber' (default: 'mse')
         max_grad_norm: Maximum gradient norm for clipping (default: 10.0)
         update_count: Current update count for metrics (default: 0)
+        spr_components: Optional dict with SPR modules. Required keys:
+            'transition_model', 'projection_head', 'prediction_head',
+            'target_encoder', 'target_projection'. Pass None to disable SPR.
+        spr_batch: Optional dict with sequence data for SPR. Required keys:
+            'states' (B, K+1, C, H, W), 'actions' (B, K), 'dones' (B, K).
+        spr_weight: Weight for SPR loss in combined objective (default: 2.0).
 
     Returns:
-        UpdateMetrics object with loss, TD error, grad norm, learning rate, and count
-
-    Example:
-        >>> from src.replay import ReplayBuffer
-        >>> online_net = DQN(num_actions=6)
-        >>> target_net = init_target_network(online_net, num_actions=6)
-        >>> optimizer = configure_optimizer(online_net)
-        >>> buffer = ReplayBuffer(capacity=10000, batch_size=32)
-        >>> # ... fill buffer ...
-        >>> batch = buffer.sample()
-        >>> metrics = perform_update_step(
-        ...     online_net, target_net, optimizer, batch,
-        ...     update_count=1
-        ... )
-        >>> print(f"Loss: {metrics.loss:.4f}")
+        UpdateMetrics object with loss, TD error, grad norm, learning rate,
+        update count, and optionally spr_loss and cosine_similarity.
     """
-    # Set online network to training mode
+    # Set online network and SPR components to training mode
     online_net.train()
+    if spr_components is not None:
+        spr_components["transition_model"].train()
+        spr_components["projection_head"].train()
+        spr_components["prediction_head"].train()
 
     # Extract batch data
     states = batch["states"]
@@ -165,33 +194,78 @@ def perform_update_step(
     # Select Q-values for taken actions (with gradient)
     q_selected = select_q_values(online_net, states, actions)
 
-    # Compute loss and TD error stats
+    # Compute TD loss and error stats
     loss_dict = compute_dqn_loss(q_selected, td_targets, loss_type=loss_type)
-    loss = loss_dict["loss"]
+    td_loss = loss_dict["loss"]
     td_error = loss_dict["td_error"].item()
     td_error_std = loss_dict["td_error_std"].item()
 
+    # Compute SPR loss (if enabled)
+    spr_loss_val = None
+    cos_sim_val = None
+    if spr_components is not None and spr_batch is not None:
+        from .spr_loss import compute_spr_forward
+
+        spr_result = compute_spr_forward(
+            online_encoder=online_net,
+            transition_model=spr_components["transition_model"],
+            projection_head=spr_components["projection_head"],
+            prediction_head=spr_components["prediction_head"],
+            target_encoder=spr_components["target_encoder"],
+            target_projection=spr_components["target_projection"],
+            states=spr_batch["states"],
+            actions=spr_batch["actions"],
+            dones=spr_batch["dones"],
+        )
+
+        spr_loss = spr_result["loss"]
+        total_loss = td_loss + spr_weight * spr_loss
+        spr_loss_val = spr_loss.item()
+        cos_sim_val = spr_result["cosine_similarity"].item()
+    else:
+        total_loss = td_loss
+
     # Backward pass
     optimizer.zero_grad()
-    loss.backward()
+    total_loss.backward()
 
-    # Clip gradients and get norm before clipping
-    grad_norm = clip_gradients(online_net, max_norm=max_grad_norm)
+    # Clip gradients across all trainable parameters
+    if spr_components is not None:
+        all_params = (
+            list(online_net.parameters())
+            + list(spr_components["transition_model"].parameters())
+            + list(spr_components["projection_head"].parameters())
+            + list(spr_components["prediction_head"].parameters())
+        )
+        grad_norm = torch.nn.utils.clip_grad_norm_(
+            all_params, max_norm=max_grad_norm
+        ).item()
+    else:
+        grad_norm = clip_gradients(online_net, max_norm=max_grad_norm)
 
     # Update parameters
     optimizer.step()
+
+    # Update EMA after gradient step (SPR only)
+    if spr_components is not None:
+        spr_components["target_encoder"].update(online_net)
+        spr_components["target_projection"].update(
+            spr_components["projection_head"]
+        )
 
     # Get current learning rate
     learning_rate = optimizer.param_groups[0]["lr"]
 
     # Create and return metrics
     metrics = UpdateMetrics(
-        loss=loss.item(),
+        loss=total_loss.item(),
         td_error=td_error,
         td_error_std=td_error_std,
         grad_norm=grad_norm,
         learning_rate=learning_rate,
         update_count=update_count,
+        spr_loss=spr_loss_val,
+        cosine_similarity=cos_sim_val,
     )
 
     return metrics
