@@ -180,22 +180,38 @@ class ReplayBuffer:
         """
         Get all valid indices for sampling.
 
+        Uses vectorized numpy operations instead of per-index Python loop.
+
         Returns:
             Array of valid indices that can be safely sampled
         """
-        if self.size < self.capacity:
-            # Buffer not full yet, check indices [0, size)
-            valid = np.array(
-                [i for i in range(self.size) if self._is_valid_index(i)], dtype=np.int64
-            )
-        else:
-            # Buffer is full, check all indices
-            valid = np.array(
-                [i for i in range(self.capacity) if self._is_valid_index(i)],
-                dtype=np.int64,
-            )
+        n = self.size if self.size < self.capacity else self.capacity
+        indices = np.arange(n, dtype=np.int64)
 
-        return valid
+        # Start with all indices as valid
+        valid_mask = np.ones(n, dtype=bool)
+
+        # Exclude episode starts
+        valid_mask &= ~self.episode_starts[:n]
+
+        # Exclude indices beyond buffer size
+        # (only matters when buffer is not full)
+        if self.size < self.capacity:
+            valid_mask &= indices < self.size
+
+        # For non-terminal transitions, check next index validity
+        next_indices = (indices + 1) % self.capacity
+        is_terminal = self.dones[:n]
+
+        # Non-terminal transitions need a valid next index in the same episode
+        non_terminal = ~is_terminal & valid_mask
+        next_out_of_bounds = next_indices >= self.size if self.size < self.capacity else np.zeros(n, dtype=bool)
+        next_is_episode_start = self.episode_starts[next_indices]
+
+        # Invalidate non-terminal transitions with bad next indices
+        valid_mask &= is_terminal | (~next_out_of_bounds & ~next_is_episode_start)
+
+        return indices[valid_mask]
 
     def sample(self, batch_size: int) -> Dict[str, Union[np.ndarray, torch.Tensor]]:
         """
