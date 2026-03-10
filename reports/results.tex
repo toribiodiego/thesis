@@ -33,6 +33,36 @@
 \maketitle
 \thispagestyle{empty}
 
+\section{Game Selection Reference}
+
+Atari-100K games grouped by reward density. Determines how much
+learning signal vanilla DQN receives within the 100K step budget.
+
+\vspace{0.3em}
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{12pt}
+\begin{tabular}{l l}
+\toprule
+\textbf{Category} & \textbf{Games} \\
+\midrule
+Dense    & Road Runner, Crazy Climber, Kung Fu Master, Up N Down, \\
+         & Krull, Demon Attack, Chopper Command \\[4pt]
+Moderate & Seaquest, Frostbite, Hero, Alien, Asterix, Ms.\ Pac-Man, \\
+         & BattleZone, Kangaroo, Breakout, Jamesbond, Boxing, Gopher \\[4pt]
+Sparse   & Pong, Freeway, Private Eye, Bank Heist \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent{\small \textbf{Table 1.} Dense: frequent scoring through basic
+actions. Moderate: regular scoring but requires learned behavior.
+Sparse: long stretches of zero reward. Published scores in Schwarzer et
+al.\ (2021), Table 4.}
+
+\newpage
+
 \section{Preliminary Results}
 
 We evaluate vanilla DQN against three augmented conditions under the
@@ -52,16 +82,16 @@ across 3 games with 3 seeds. Results report mean episode return
   & \textbf{+ SPR}
   & \textbf{+ Both} \\
 \midrule
-Pong       & --  & --  & --  & --  \\
-Breakout   & --  & --  & --  & --  \\
-Seaquest   & --  & --  & --  & --  \\
+--         & --  & --  & --  & --  \\
+--         & --  & --  & --  & --  \\
+--         & --  & --  & --  & --  \\
 \midrule
 Mean       & --  & --  & --  & --  \\
 \bottomrule
 \end{tabular}
 
 \vspace{0.8em}
-\noindent{\small \textbf{Table 1.} Atari-100K results across 3 games.}
+\noindent{\small \textbf{Table 2.} Atari-100K results across 3 games.}
 \end{table}
 
 \end{document}
