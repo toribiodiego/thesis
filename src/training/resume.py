@@ -136,6 +136,7 @@ def resume_from_checkpoint(
     config: Dict[str, Any] = None,
     device: str = "cpu",
     strict_config: bool = False,
+    spr_components: Dict = None,
 ) -> Dict[str, Any]:
     """
     Resume training from checkpoint with full validation.
@@ -146,6 +147,7 @@ def resume_from_checkpoint(
     - Warns on git commit hash mismatch
     - Restores all training state (models, optimizer, counters, epsilon, RNG)
     - Optionally restores replay buffer
+    - Optionally restores SPR component weights
 
     Args:
         checkpoint_path: Path to checkpoint file
@@ -158,6 +160,7 @@ def resume_from_checkpoint(
         config: Current configuration for validation
         device: Device to map tensors to ('cpu', 'cuda', 'cuda:0', etc.)
         strict_config: If True, require exact config match (raise error on mismatch)
+        spr_components: Optional dict with SPR modules to restore
 
     Returns:
         Dict with resumed state:
@@ -206,6 +209,7 @@ def resume_from_checkpoint(
             replay_buffer=replay_buffer,
             device=device,
             strict=True,
+            spr_components=spr_components,
         )
     except Exception as e:
         raise RuntimeError(f"Failed to load checkpoint: {e}")

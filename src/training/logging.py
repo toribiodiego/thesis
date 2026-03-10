@@ -347,6 +347,7 @@ class CheckpointManager:
         replay_buffer: Any = None,
         rng_states: Dict = None,
         extra_metadata: Dict = None,
+        spr_components: Dict[str, nn.Module] = None,
     ) -> str:
         """
         Save complete checkpoint with all training state.
@@ -363,6 +364,9 @@ class CheckpointManager:
             replay_buffer: Replay buffer object (optional, can be large)
             rng_states: Dict with RNG states from get_rng_states()
             extra_metadata: Additional metadata to include
+            spr_components: Optional dict with SPR modules. When provided,
+                saves state dicts for transition_model, projection_head,
+                prediction_head, target_encoder, and target_projection.
 
         Returns:
             str: Path to saved checkpoint
@@ -416,6 +420,16 @@ class CheckpointManager:
         if extra_metadata is not None:
             checkpoint["metadata"] = extra_metadata
 
+        # Add SPR component state (when SPR is enabled)
+        if spr_components is not None:
+            checkpoint["spr_state"] = {
+                "transition_model": spr_components["transition_model"].state_dict(),
+                "projection_head": spr_components["projection_head"].state_dict(),
+                "prediction_head": spr_components["prediction_head"].state_dict(),
+                "target_encoder": spr_components["target_encoder"].state_dict(),
+                "target_projection": spr_components["target_projection"].state_dict(),
+            }
+
         # Atomic write: save to temp file, then rename
         # This prevents corruption if process is killed during write
         temp_fd, temp_path = tempfile.mkstemp(dir=self.checkpoint_dir, suffix=".pt.tmp")
@@ -459,6 +473,7 @@ class CheckpointManager:
         replay_buffer: Any = None,
         rng_states: Dict = None,
         extra_metadata: Dict = None,
+        spr_components: Dict[str, nn.Module] = None,
     ) -> bool:
         """
         Save checkpoint if it's the best model so far.
@@ -476,6 +491,7 @@ class CheckpointManager:
             replay_buffer: Replay buffer (optional)
             rng_states: RNG states
             extra_metadata: Additional metadata
+            spr_components: Optional dict with SPR modules to save
 
         Returns:
             bool: True if checkpoint was saved (new best), False otherwise
@@ -529,6 +545,16 @@ class CheckpointManager:
         if extra_metadata is not None:
             checkpoint["metadata"] = extra_metadata
 
+        # Add SPR component state (when SPR is enabled)
+        if spr_components is not None:
+            checkpoint["spr_state"] = {
+                "transition_model": spr_components["transition_model"].state_dict(),
+                "projection_head": spr_components["projection_head"].state_dict(),
+                "prediction_head": spr_components["prediction_head"].state_dict(),
+                "target_encoder": spr_components["target_encoder"].state_dict(),
+                "target_projection": spr_components["target_projection"].state_dict(),
+            }
+
         # Atomic write
         temp_fd, temp_path = tempfile.mkstemp(dir=self.checkpoint_dir, suffix=".pt.tmp")
 
@@ -553,6 +579,7 @@ class CheckpointManager:
         replay_buffer: Any = None,
         device: str = "cpu",
         strict: bool = True,
+        spr_components: Dict[str, nn.Module] = None,
     ) -> Dict:
         """
         Load checkpoint and restore complete training state.
@@ -565,10 +592,14 @@ class CheckpointManager:
             replay_buffer: Replay buffer to restore state into (optional)
             device: Device to map checkpoint tensors to
             strict: Whether to strictly enforce state_dict key matching
+            spr_components: Optional dict with SPR modules to restore.
+                If provided and checkpoint contains 'spr_state', restores
+                transition_model, projection_head, prediction_head,
+                target_encoder, and target_projection weights.
 
         Returns:
             dict: Loaded checkpoint data including step, episode, epsilon,
-                  rng_states, and metadata
+                  rng_states, metadata, and spr_restored flag
         """
         checkpoint = torch.load(
             checkpoint_path, map_location=device, weights_only=False
@@ -609,6 +640,27 @@ class CheckpointManager:
                 replay_buffer.dones = data["dones"]
                 replay_buffer.episode_starts = data["episode_starts"]
 
+        # Restore SPR component state
+        spr_restored = False
+        if spr_components is not None and "spr_state" in checkpoint:
+            spr_state = checkpoint["spr_state"]
+            spr_components["transition_model"].load_state_dict(
+                spr_state["transition_model"]
+            )
+            spr_components["projection_head"].load_state_dict(
+                spr_state["projection_head"]
+            )
+            spr_components["prediction_head"].load_state_dict(
+                spr_state["prediction_head"]
+            )
+            spr_components["target_encoder"].load_state_dict(
+                spr_state["target_encoder"]
+            )
+            spr_components["target_projection"].load_state_dict(
+                spr_state["target_projection"]
+            )
+            spr_restored = True
+
         # Return all state for manual restoration
         return {
             "step": checkpoint.get("step", 0),
@@ -620,6 +672,7 @@ class CheckpointManager:
             "timestamp": checkpoint.get("timestamp", "unknown"),
             "commit_hash": checkpoint.get("commit_hash", "unknown"),
             "schema_version": schema_version,
+            "spr_restored": spr_restored,
         }
 
 
