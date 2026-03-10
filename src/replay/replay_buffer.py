@@ -7,6 +7,7 @@ Features:
 - Episode boundary tracking to prevent cross-episode samples
 - uint8 storage for memory efficiency
 - Configurable capacity (default ~1M transitions)
+- Sequence sampling for SPR (K consecutive transitions)
 """
 
 from typing import Dict, Optional, Tuple, Union
@@ -339,6 +340,137 @@ class ReplayBuffer:
             return len(valid_indices) >= batch_size
 
         return True
+
+    def _get_valid_sequence_starts(self, seq_len: int) -> np.ndarray:
+        """
+        Get indices that can start a valid sequence of length seq_len.
+
+        A starting index is valid if the next seq_len indices (inclusive)
+        all contain stored data and do not cross the write pointer in a
+        wrapped buffer. Episode boundaries are NOT filtered here -- the
+        caller uses the returned done flags for masking.
+
+        Args:
+            seq_len: Number of transitions in the sequence. The sequence
+                uses seq_len + 1 consecutive observation slots (the
+                starting state plus seq_len next-states).
+
+        Returns:
+            Array of valid starting indices.
+        """
+        if self.size < seq_len + 1:
+            return np.array([], dtype=np.int64)
+
+        if self.size < self.capacity:
+            # Buffer not full: indices 0..size-1 have data.
+            # Need start + seq_len < size (to access obs[start+seq_len]).
+            max_start = self.size - seq_len - 1
+            if max_start < 0:
+                return np.array([], dtype=np.int64)
+            return np.arange(max_start + 1, dtype=np.int64)
+        else:
+            # Buffer full (wrapped). All capacity slots have data, but
+            # sequences must not span the write pointer (self.index),
+            # where old data was just overwritten.
+            # The write pointer is at self.index. The freshest datum is
+            # at (self.index - 1) % capacity, the oldest at self.index.
+            #
+            # A sequence start..start+seq_len (mod capacity) is invalid
+            # if any of those indices equals self.index (the oldest
+            # slot about to be overwritten is stale relative to its
+            # neighbours).
+            #
+            # Equivalently, exclude starts in the range
+            # [index - seq_len, index] (mod capacity).
+            all_indices = np.arange(self.capacity, dtype=np.int64)
+            # Distance from each index to the write pointer, going forward
+            dist = (self.index - all_indices) % self.capacity
+            valid_mask = dist > seq_len
+            return all_indices[valid_mask]
+
+    def sample_sequences(
+        self, batch_size: int, seq_len: int
+    ) -> Dict[str, Union[np.ndarray, torch.Tensor]]:
+        """
+        Sample a batch of consecutive transition sequences.
+
+        Each sequence contains seq_len transitions (and seq_len + 1
+        observations). Episode boundaries are encoded in the returned
+        done flags -- the caller is responsible for masking predictions
+        that cross boundaries.
+
+        Args:
+            batch_size: Number of sequences to sample.
+            seq_len: Length of each sequence (number of transitions).
+                For SPR with K prediction steps, use seq_len=K.
+
+        Returns:
+            Dictionary containing:
+                - 'states': (batch_size, seq_len+1, *obs_shape) float32
+                    Observations s_t through s_{t+seq_len}.
+                - 'actions': (batch_size, seq_len) int64
+                    Actions a_t through a_{t+seq_len-1}.
+                - 'rewards': (batch_size, seq_len) float32
+                    Rewards r_t through r_{t+seq_len-1}.
+                - 'dones': (batch_size, seq_len) bool
+                    Done flags for each transition.
+
+        Raises:
+            ValueError: If not enough valid starting indices.
+        """
+        valid_starts = self._get_valid_sequence_starts(seq_len)
+
+        if len(valid_starts) < batch_size:
+            raise ValueError(
+                f"Not enough valid sequence starts. "
+                f"Requested {batch_size}, available {len(valid_starts)}. "
+                f"Buffer size: {self.size}, seq_len: {seq_len}"
+            )
+
+        # Sample starting indices without replacement
+        starts = np.random.choice(valid_starts, size=batch_size, replace=False)
+
+        # Build index arrays for gathering: (batch_size, seq_len+1) for obs,
+        # (batch_size, seq_len) for actions/rewards/dones
+        offsets_obs = np.arange(seq_len + 1)  # 0..seq_len
+        offsets_trans = np.arange(seq_len)  # 0..seq_len-1
+
+        obs_indices = (starts[:, None] + offsets_obs[None, :]) % self.capacity
+        trans_indices = (starts[:, None] + offsets_trans[None, :]) % self.capacity
+
+        # Gather data
+        states = self.observations[obs_indices].astype(np.float32)
+        actions = self.actions[trans_indices]
+        rewards = self.rewards[trans_indices]
+        dones = self.dones[trans_indices]
+
+        if self.normalize:
+            states = states / 255.0
+
+        # Convert to tensors if device is set
+        if self.device is not None:
+            if self.pin_memory and self.device.type == "cuda":
+                states = torch.from_numpy(states).pin_memory()
+                actions = torch.from_numpy(actions).pin_memory()
+                rewards = torch.from_numpy(rewards).pin_memory()
+                dones = torch.from_numpy(dones.copy()).pin_memory()
+            else:
+                states = torch.from_numpy(states)
+                actions = torch.from_numpy(actions)
+                rewards = torch.from_numpy(rewards)
+                dones = torch.from_numpy(dones.copy())
+
+            states = states.to(self.device, non_blocking=True)
+            actions = actions.to(self.device, non_blocking=True)
+            rewards = rewards.to(self.device, non_blocking=True)
+            dones = dones.to(self.device, non_blocking=True)
+
+        return {
+            "states": states,
+            "actions": actions,
+            "rewards": rewards,
+            "dones": dones,
+        }
 
     def __len__(self) -> int:
         """
