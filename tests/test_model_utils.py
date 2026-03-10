@@ -39,7 +39,7 @@ def test_model_summary():
     assert "q_values" in summary["output_shape"]
     assert "features" in summary["output_shape"]
     assert summary["output_shape"]["q_values"] == (1, 6)
-    assert summary["output_shape"]["features"] == (1, 256)
+    assert summary["output_shape"]["features"] == (1, 512)
 
     # Check layer info
     assert len(summary["layer_info"]) > 0
