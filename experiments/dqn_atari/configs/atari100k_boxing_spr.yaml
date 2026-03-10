@@ -1,0 +1,23 @@
+# Boxing - DQN + SPR (no augmentation)
+# ======================================
+# SPR auxiliary loss with dropout regularization.
+# EMA momentum 0.99 (slow update without augmentation).
+# Dropout 0.5 (replaces augmentation as regularizer).
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_boxing_spr.yaml --seed 42
+
+base_config: "experiments/dqn_atari/configs/atari100k_boxing.yaml"
+
+experiment:
+  name: "atari100k_boxing_spr"
+  notes: "DQN + SPR on Boxing under Atari-100K protocol"
+
+spr:
+  enabled: true
+
+ema:
+  momentum: 0.99
+
+network:
+  dropout: 0.5

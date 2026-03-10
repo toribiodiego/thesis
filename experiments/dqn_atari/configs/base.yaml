@@ -92,6 +92,10 @@ network:
 
   fc_hidden: 512
 
+  # Regularization
+  dropout: 0.0  # Dropout after FC layer. SPR uses 0.5 without aug, 0.0 with aug
+                # (Schwarzer et al. 2021, Table 3)
+
   # Initialization
   init_method: "kaiming_normal"  # Kaiming He initialization for ReLU
   init_mode: "fan_out"  # fan_out mode (paper default)

@@ -75,7 +75,8 @@ def init_target_network(online_net: nn.Module, num_actions: int) -> nn.Module:
         ... )
     """
     # Create target network with same class and parameters
-    target_net = type(online_net)(num_actions=num_actions)
+    dropout = getattr(online_net, "dropout", 0.0)
+    target_net = type(online_net)(num_actions=num_actions, dropout=dropout)
 
     # Copy weights from online to target
     hard_update_target(online_net, target_net)

@@ -135,6 +135,7 @@ KNOWN_STRUCTURE = {
         "conv3_kernel",
         "conv3_stride",
         "fc_hidden",
+        "dropout",
         "init_method",
         "init_mode",
         "dtype",

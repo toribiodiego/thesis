@@ -131,7 +131,8 @@ def initialize_components(config, paths, device, resuming=False):
         eval_env.reset(seed=config.seed.value + 1000)
 
     # Create networks
-    online_net = DQN(num_actions=num_actions).to(device)
+    dropout = config.network.get('dropout', 0.0)
+    online_net = DQN(num_actions=num_actions, dropout=dropout).to(device)
     target_net = init_target_network(online_net, num_actions=num_actions).to(device)
 
     # Create optimizer

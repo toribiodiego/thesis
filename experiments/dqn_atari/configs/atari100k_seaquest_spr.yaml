@@ -1,0 +1,23 @@
+# Seaquest - DQN + SPR (no augmentation)
+# ========================================
+# SPR auxiliary loss with dropout regularization.
+# EMA momentum 0.99 (slow update without augmentation).
+# Dropout 0.5 (replaces augmentation as regularizer).
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_seaquest_spr.yaml --seed 42
+
+base_config: "experiments/dqn_atari/configs/atari100k_seaquest.yaml"
+
+experiment:
+  name: "atari100k_seaquest_spr"
+  notes: "DQN + SPR on Seaquest under Atari-100K protocol"
+
+spr:
+  enabled: true
+
+ema:
+  momentum: 0.99
+
+network:
+  dropout: 0.5

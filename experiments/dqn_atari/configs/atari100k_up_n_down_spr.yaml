@@ -1,0 +1,23 @@
+# Up N Down - DQN + SPR (no augmentation)
+# =========================================
+# SPR auxiliary loss with dropout regularization.
+# EMA momentum 0.99 (slow update without augmentation).
+# Dropout 0.5 (replaces augmentation as regularizer).
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_up_n_down_spr.yaml --seed 42
+
+base_config: "experiments/dqn_atari/configs/atari100k_up_n_down.yaml"
+
+experiment:
+  name: "atari100k_up_n_down_spr"
+  notes: "DQN + SPR on Up N Down under Atari-100K protocol"
+
+spr:
+  enabled: true
+
+ema:
+  momentum: 0.99
+
+network:
+  dropout: 0.5
