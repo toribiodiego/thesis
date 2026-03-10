@@ -51,6 +51,7 @@ from src.training import (
     resume_from_checkpoint
 )
 from src.training.evaluation import EvaluationLogger
+from src.augmentation import random_shift
 
 
 def set_random_seeds(seed: int):
@@ -269,6 +270,19 @@ def run_training(config, paths, device):
     eval_scheduler = components['eval_scheduler']
     evaluation_logger = components['evaluation_logger']
 
+    # Setup augmentation
+    augment_fn = None
+    if config.get('augmentation', {}).get('enabled', False):
+        aug_type = config.augmentation.get('type', 'random_shift')
+        if aug_type == 'random_shift':
+            pad = config.augmentation.random_shift.get('pad', 4)
+            augment_fn = lambda x: random_shift(x, pad=pad)
+            print(f"Augmentation enabled: random_shift (pad={pad})")
+        else:
+            raise ValueError(f"Unknown augmentation type: {aug_type}")
+    else:
+        print("Augmentation: disabled")
+
     # Training state
     episode_count = 0
     episode_return = 0.0
@@ -311,7 +325,8 @@ def run_training(config, paths, device):
             loss_type=config.training.loss.type,
             max_grad_norm=config.training.gradient_clip.max_norm,
             batch_size=config.replay.batch_size,
-            device=device
+            device=device,
+            augment_fn=augment_fn
         )
 
         # Update episode tracking

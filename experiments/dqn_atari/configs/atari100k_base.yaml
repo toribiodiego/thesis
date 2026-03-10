@@ -52,6 +52,13 @@ evaluation:
   eval_every: 40000       # Evaluate every 10K env steps (40K frames)
   num_episodes: 30        # 30 episodes per eval checkpoint
 
+# Data augmentation (off by default for baseline)
+augmentation:
+  enabled: false          # Set true for +Aug condition
+  type: "random_shift"    # DrQ-style pad-and-crop
+  random_shift:
+    pad: 4                # Pixels to pad on each side (84 -> 92 -> 84)
+
 # Logging (adapted for shorter runs)
 logging:
   log_every_steps: 500    # More frequent logging for shorter runs

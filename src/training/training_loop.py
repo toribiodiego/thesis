@@ -147,6 +147,7 @@ def training_step(
     max_grad_norm: float = 10.0,
     batch_size: int = 32,
     device: str = "cpu",
+    augment_fn=None,
 ):
     """
     Execute one step of the DQN training loop.
@@ -257,6 +258,11 @@ def training_step(
             "next_states": to_tensor(batch["next_states"]),
             "dones": to_tensor(batch["dones"]),
         }
+
+        # Apply data augmentation if enabled
+        if augment_fn is not None:
+            batch_device["states"] = augment_fn(batch_device["states"])
+            batch_device["next_states"] = augment_fn(batch_device["next_states"])
 
         # Perform optimization step
         metrics = perform_update_step(
