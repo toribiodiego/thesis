@@ -101,6 +101,9 @@ KNOWN_STRUCTURE = {
         "conv2_channels",
         "conv2_kernel",
         "conv2_stride",
+        "conv3_channels",
+        "conv3_kernel",
+        "conv3_stride",
         "fc_hidden",
         "init_method",
         "init_mode",
@@ -463,6 +466,15 @@ def validate_network(config: Dict[str, Any], path: List[str] = None) -> None:
         _validate_positive_int(net["conv2_kernel"], path + ["network"], "conv2_kernel")
     if "conv2_stride" in net:
         _validate_positive_int(net["conv2_stride"], path + ["network"], "conv2_stride")
+
+    if "conv3_channels" in net:
+        _validate_positive_int(
+            net["conv3_channels"], path + ["network"], "conv3_channels"
+        )
+    if "conv3_kernel" in net:
+        _validate_positive_int(net["conv3_kernel"], path + ["network"], "conv3_kernel")
+    if "conv3_stride" in net:
+        _validate_positive_int(net["conv3_stride"], path + ["network"], "conv3_stride")
 
     if "fc_hidden" in net:
         _validate_positive_int(net["fc_hidden"], path + ["network"], "fc_hidden")
