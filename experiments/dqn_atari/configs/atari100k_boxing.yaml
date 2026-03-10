@@ -1,0 +1,20 @@
+# Boxing - Atari-100K Configuration
+# ===================================
+# Dense reward game. Continuous scoring from landing punches.
+#
+# Action space: 18 actions
+#
+# SPR paper reference (modified Rainbow): 35.8 mean return
+# Random agent: 0.1 | Human: 12.1
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_boxing.yaml --seed 42
+
+base_config: "experiments/dqn_atari/configs/atari100k_base.yaml"
+
+environment:
+  env_id: "BoxingNoFrameskip-v4"
+
+experiment:
+  name: "atari100k_boxing"
+  notes: "Vanilla DQN on Boxing under Atari-100K protocol"
