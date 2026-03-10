@@ -5,7 +5,7 @@ from typing import Dict
 import torch
 import torch.nn as nn
 
-from .loss import compute_dqn_loss, compute_td_targets, select_q_values
+from .loss import compute_combined_loss, compute_dqn_loss, compute_td_targets, select_q_values
 from .optimization import clip_gradients
 
 
@@ -203,6 +203,7 @@ def perform_update_step(
     # Compute SPR loss (if enabled)
     spr_loss_val = None
     cos_sim_val = None
+    spr_loss_tensor = None
     if spr_components is not None and spr_batch is not None:
         from .spr_loss import compute_spr_forward
 
@@ -218,12 +219,13 @@ def perform_update_step(
             dones=spr_batch["dones"],
         )
 
-        spr_loss = spr_result["loss"]
-        total_loss = td_loss + spr_weight * spr_loss
-        spr_loss_val = spr_loss.item()
+        spr_loss_tensor = spr_result["loss"]
+        spr_loss_val = spr_loss_tensor.item()
         cos_sim_val = spr_result["cosine_similarity"].item()
-    else:
-        total_loss = td_loss
+
+    # Combine TD + SPR into total training loss
+    combined = compute_combined_loss(td_loss, spr_loss_tensor, spr_weight)
+    total_loss = combined["total_loss"]
 
     # Backward pass
     optimizer.zero_grad()

@@ -4,6 +4,7 @@ Provides functions for:
 - TD target computation using target network
 - Q-value selection from online network
 - DQN loss computation (MSE or Huber)
+- Combined TD + SPR loss for joint optimization
 - TD error statistics for monitoring
 """
 
@@ -226,3 +227,49 @@ def compute_dqn_loss(
         std_td_error = td_errors.std()
 
     return {"loss": loss, "td_error": mean_td_error, "td_error_std": std_td_error}
+
+
+def compute_combined_loss(
+    td_loss: torch.Tensor,
+    spr_loss: torch.Tensor = None,
+    spr_weight: float = 2.0,
+) -> Dict[str, torch.Tensor]:
+    """
+    Combine TD and SPR losses into a single training objective.
+
+    Computes: total = td_loss + spr_weight * spr_loss
+
+    When spr_loss is None, total equals td_loss (vanilla DQN path).
+    Both component losses are returned detached for separate logging,
+    while the total retains gradients for backpropagation.
+
+    Args:
+        td_loss: TD (temporal difference) loss, scalar with gradients.
+        spr_loss: SPR auxiliary loss, scalar with gradients.
+            Pass None when SPR is disabled.
+        spr_weight: Multiplicative weight for SPR loss (default: 2.0,
+            from Schwarzer et al. 2021, Table 3).
+
+    Returns:
+        Dictionary containing:
+            - 'total_loss': Combined scalar loss (with gradients).
+            - 'td_loss': TD loss value (detached, for logging).
+            - 'spr_loss': SPR loss value (detached, for logging).
+              Only present when spr_loss is not None.
+            - 'weighted_spr_loss': spr_weight * spr_loss (detached).
+              Only present when spr_loss is not None.
+    """
+    if spr_loss is not None:
+        total_loss = td_loss + spr_weight * spr_loss
+    else:
+        total_loss = td_loss
+
+    result = {
+        "total_loss": total_loss,
+        "td_loss": td_loss.detach(),
+    }
+    if spr_loss is not None:
+        result["spr_loss"] = spr_loss.detach()
+        result["weighted_spr_loss"] = (spr_weight * spr_loss).detach()
+
+    return result

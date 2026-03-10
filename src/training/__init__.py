@@ -16,6 +16,7 @@ from .logging import CheckpointManager, EpisodeLogger, StepLogger
 
 # Loss computation
 from .loss import (
+    compute_combined_loss,
     compute_dqn_loss,
     compute_td_loss_components,
     compute_td_targets,
@@ -77,6 +78,7 @@ __all__ = [
     "select_q_values",
     "compute_td_loss_components",
     "compute_dqn_loss",
+    "compute_combined_loss",
     # SPR loss
     "compute_spr_loss",
     "compute_spr_forward",
