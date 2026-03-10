@@ -1,10 +1,11 @@
 """
-DQN model architecture from Mnih et al. 2013.
+DQN model architecture from Mnih et al. 2015 (Nature DQN).
 
 Implements the Nature DQN CNN architecture:
-- Conv1: 16 filters, 8×8, stride 4, ReLU
-- Conv2: 32 filters, 4×4, stride 2, ReLU
-- FC: 256 units, ReLU
+- Conv1: 32 filters, 8×8, stride 4, ReLU
+- Conv2: 64 filters, 4×4, stride 2, ReLU
+- Conv3: 64 filters, 3×3, stride 1, ReLU
+- FC: 512 units, ReLU
 - Output: Linear layer with |A| units (number of actions)
 
 Input: (batch, 4, 84, 84) - 4 stacked grayscale frames
@@ -17,43 +18,48 @@ import torch.nn as nn
 
 class DQN(nn.Module):
     """
-    Deep Q-Network with convolutional architecture.
+    Deep Q-Network with Nature CNN architecture (Mnih et al., 2015).
 
     Architecture:
-        Conv1(16, 8×8, stride=4) → ReLU
-        Conv2(32, 4×4, stride=2) → ReLU
+        Conv1(32, 8×8, stride=4) → ReLU
+        Conv2(64, 4×4, stride=2) → ReLU
+        Conv3(64, 3×3, stride=1) → ReLU
         Flatten
-        FC(256) → ReLU
+        FC(512) → ReLU
         Linear(num_actions)
 
     Args:
         num_actions: Number of discrete actions in the environment
 
     Input shape: (batch, 4, 84, 84) - channels-first format
-    Output: Dict with 'q_values' (batch, num_actions) and 'features' (batch, 256)
+    Output: Dict with 'q_values' (batch, num_actions) and 'features' (batch, 512)
     """
 
     def __init__(self, num_actions: int):
         super().__init__()
         self.num_actions = num_actions
 
-        # Convolutional layers
+        # Convolutional layers (Nature DQN, Mnih et al. 2015)
         self.conv1 = nn.Conv2d(
-            in_channels=4, out_channels=16, kernel_size=8, stride=4, padding=0
+            in_channels=4, out_channels=32, kernel_size=8, stride=4, padding=0
         )
         self.conv2 = nn.Conv2d(
-            in_channels=16, out_channels=32, kernel_size=4, stride=2, padding=0
+            in_channels=32, out_channels=64, kernel_size=4, stride=2, padding=0
+        )
+        self.conv3 = nn.Conv2d(
+            in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=0
         )
 
         # Compute size after convolutions to determine FC input size
         # Input: (4, 84, 84)
-        # After conv1: (16, 20, 20) -> (84 - 8) / 4 + 1 = 20
-        # After conv2: (32, 9, 9) -> (20 - 4) / 2 + 1 = 9
-        conv_output_size = 32 * 9 * 9
+        # After conv1: (32, 20, 20) -> (84 - 8) / 4 + 1 = 20
+        # After conv2: (64, 9, 9)  -> (20 - 4) / 2 + 1 = 9
+        # After conv3: (64, 7, 7)  -> (9 - 3)  / 1 + 1 = 7
+        conv_output_size = 64 * 7 * 7
 
         # Fully connected layers
-        self.fc = nn.Linear(conv_output_size, 256)
-        self.q_head = nn.Linear(256, num_actions)
+        self.fc = nn.Linear(conv_output_size, 512)
+        self.q_head = nn.Linear(512, num_actions)
 
         # Initialize weights with Kaiming normal (He initialization)
         # Suitable for ReLU activations
@@ -99,11 +105,12 @@ class DQN(nn.Module):
         Returns:
             Dict containing:
                 - 'q_values': Q-values for each action (batch, num_actions)
-                - 'features': Feature vector before Q-head (batch, 256)
+                - 'features': Feature vector before Q-head (batch, 512)
         """
         # Convolutional layers with ReLU
         x = torch.relu(self.conv1(x))
         x = torch.relu(self.conv2(x))
+        x = torch.relu(self.conv3(x))
 
         # Flatten spatial dimensions
         x = x.reshape(x.size(0), -1)
@@ -139,7 +146,7 @@ class DQN(nn.Module):
             ), f"Expected q_values shape {expected_q_shape}, got {actual_q_shape}"
 
             # Check features shape
-            expected_feat_shape = (batch_size, 256)
+            expected_feat_shape = (batch_size, 512)
             actual_feat_shape = output["features"].shape
             assert (
                 actual_feat_shape == expected_feat_shape

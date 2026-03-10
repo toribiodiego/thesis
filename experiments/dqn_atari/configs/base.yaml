@@ -72,20 +72,25 @@ network:
   # Model type
   architecture: "dqn"  # CNN architecture from DQN paper
 
-  # Layer configuration (DQN paper architecture)
-  # Conv1: 16 filters, 8x8 kernel, stride 4
-  # Conv2: 32 filters, 4x4 kernel, stride 2
-  # FC: 256 hidden units
+  # Layer configuration (Nature DQN, Mnih et al. 2015)
+  # Conv1: 32 filters, 8x8 kernel, stride 4
+  # Conv2: 64 filters, 4x4 kernel, stride 2
+  # Conv3: 64 filters, 3x3 kernel, stride 1
+  # FC: 512 hidden units
   # Output: Linear layer with |A| units (action space size)
-  conv1_channels: 16
+  conv1_channels: 32
   conv1_kernel: 8
   conv1_stride: 4
 
-  conv2_channels: 32
+  conv2_channels: 64
   conv2_kernel: 4
   conv2_stride: 2
 
-  fc_hidden: 256
+  conv3_channels: 64
+  conv3_kernel: 3
+  conv3_stride: 1
+
+  fc_hidden: 512
 
   # Initialization
   init_method: "kaiming_normal"  # Kaiming He initialization for ReLU

@@ -43,8 +43,8 @@ def test_dqn_output_shape():
         # Check features shape
         assert output["features"].shape == (
             batch_size,
-            256,
-        ), f"Expected features shape ({batch_size}, 256), got {output['features'].shape}"
+            512,
+        ), f"Expected features shape ({batch_size}, 512), got {output['features'].shape}"
 
 
 def test_dqn_no_nans():
