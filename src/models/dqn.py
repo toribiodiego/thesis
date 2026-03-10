@@ -32,7 +32,10 @@ class DQN(nn.Module):
         num_actions: Number of discrete actions in the environment
 
     Input shape: (batch, 4, 84, 84) - channels-first format
-    Output: Dict with 'q_values' (batch, num_actions) and 'features' (batch, 512)
+    Output: Dict with:
+        - 'q_values': (batch, num_actions)
+        - 'features': (batch, 512)
+        - 'conv_output': (batch, 64, 7, 7) - spatial conv features for SPR
     """
 
     def __init__(self, num_actions: int):
@@ -106,14 +109,15 @@ class DQN(nn.Module):
             Dict containing:
                 - 'q_values': Q-values for each action (batch, num_actions)
                 - 'features': Feature vector before Q-head (batch, 512)
+                - 'conv_output': Spatial conv features (batch, 64, 7, 7)
         """
         # Convolutional layers with ReLU
         x = torch.relu(self.conv1(x))
         x = torch.relu(self.conv2(x))
-        x = torch.relu(self.conv3(x))
+        conv_output = torch.relu(self.conv3(x))
 
         # Flatten spatial dimensions
-        x = x.reshape(x.size(0), -1)
+        x = conv_output.reshape(conv_output.size(0), -1)
 
         # Fully connected layer with ReLU
         features = torch.relu(self.fc(x))
@@ -121,7 +125,7 @@ class DQN(nn.Module):
         # Q-value head (no activation)
         q_values = self.q_head(features)
 
-        return {"q_values": q_values, "features": features}
+        return {"q_values": q_values, "features": features, "conv_output": conv_output}
 
     def validate_output_shape(self, batch_size: int = 2):
         """
@@ -151,6 +155,13 @@ class DQN(nn.Module):
             assert (
                 actual_feat_shape == expected_feat_shape
             ), f"Expected features shape {expected_feat_shape}, got {actual_feat_shape}"
+
+            # Check conv_output shape
+            expected_conv_shape = (batch_size, 64, 7, 7)
+            actual_conv_shape = output["conv_output"].shape
+            assert (
+                actual_conv_shape == expected_conv_shape
+            ), f"Expected conv_output shape {expected_conv_shape}, got {actual_conv_shape}"
 
     def save_checkpoint(self, path: str, meta: dict = None):
         """

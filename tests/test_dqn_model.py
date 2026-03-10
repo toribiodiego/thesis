@@ -33,6 +33,7 @@ def test_dqn_output_shape():
         assert isinstance(output, dict)
         assert "q_values" in output
         assert "features" in output
+        assert "conv_output" in output
 
         # Check q_values shape
         assert output["q_values"].shape == (
@@ -45,6 +46,14 @@ def test_dqn_output_shape():
             batch_size,
             512,
         ), f"Expected features shape ({batch_size}, 512), got {output['features'].shape}"
+
+        # Check conv_output shape (64 channels, 7x7 spatial)
+        assert output["conv_output"].shape == (
+            batch_size,
+            64,
+            7,
+            7,
+        ), f"Expected conv_output shape ({batch_size}, 64, 7, 7), got {output['conv_output'].shape}"
 
 
 def test_dqn_no_nans():
@@ -61,6 +70,8 @@ def test_dqn_no_nans():
     assert not torch.isinf(output["q_values"]).any(), "Q-values contain Infs"
     assert not torch.isnan(output["features"]).any(), "Features contain NaNs"
     assert not torch.isinf(output["features"]).any(), "Features contain Infs"
+    assert not torch.isnan(output["conv_output"]).any(), "Conv output contains NaNs"
+    assert not torch.isinf(output["conv_output"]).any(), "Conv output contains Infs"
 
 
 def test_dqn_gradient_flow():
@@ -314,6 +325,9 @@ def test_dqn_checkpoint_forward_equivalence(tmp_path):
     )
     assert torch.allclose(
         original_output["features"], loaded_output["features"], atol=1e-6
+    )
+    assert torch.allclose(
+        original_output["conv_output"], loaded_output["conv_output"], atol=1e-6
     )
 
 
