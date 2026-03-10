@@ -21,15 +21,18 @@ class DQN(nn.Module):
     Deep Q-Network with Nature CNN architecture (Mnih et al., 2015).
 
     Architecture:
-        Conv1(32, 8×8, stride=4) → ReLU
-        Conv2(64, 4×4, stride=2) → ReLU
-        Conv3(64, 3×3, stride=1) → ReLU
+        Conv1(32, 8x8, stride=4) -> ReLU
+        Conv2(64, 4x4, stride=2) -> ReLU
+        Conv3(64, 3x3, stride=1) -> ReLU
         Flatten
-        FC(512) → ReLU
+        FC(512) -> ReLU -> Dropout(p)
         Linear(num_actions)
 
     Args:
-        num_actions: Number of discrete actions in the environment
+        num_actions: Number of discrete actions in the environment.
+        dropout: Dropout probability after the FC layer. Default 0.0
+            (no dropout). SPR uses 0.5 without augmentation, 0.0 with
+            augmentation (Schwarzer et al. 2021, Table 3).
 
     Input shape: (batch, 4, 84, 84) - channels-first format
     Output: Dict with:
@@ -38,9 +41,10 @@ class DQN(nn.Module):
         - 'conv_output': (batch, 64, 7, 7) - spatial conv features for SPR
     """
 
-    def __init__(self, num_actions: int):
+    def __init__(self, num_actions: int, dropout: float = 0.0):
         super().__init__()
         self.num_actions = num_actions
+        self.dropout = dropout
 
         # Convolutional layers (Nature DQN, Mnih et al. 2015)
         self.conv1 = nn.Conv2d(
@@ -62,6 +66,7 @@ class DQN(nn.Module):
 
         # Fully connected layers
         self.fc = nn.Linear(conv_output_size, 512)
+        self.drop = nn.Dropout(p=dropout)
         self.q_head = nn.Linear(512, num_actions)
 
         # Initialize weights with Kaiming normal (He initialization)
@@ -119,8 +124,8 @@ class DQN(nn.Module):
         # Flatten spatial dimensions
         x = conv_output.reshape(conv_output.size(0), -1)
 
-        # Fully connected layer with ReLU
-        features = torch.relu(self.fc(x))
+        # Fully connected layer with ReLU + dropout
+        features = self.drop(torch.relu(self.fc(x)))
 
         # Q-value head (no activation)
         q_values = self.q_head(features)
@@ -178,6 +183,7 @@ class DQN(nn.Module):
         checkpoint = {
             "model_state_dict": self.state_dict(),
             "num_actions": self.num_actions,
+            "dropout": self.dropout,
         }
 
         # Add metadata if provided
@@ -205,9 +211,10 @@ class DQN(nn.Module):
         """
         checkpoint = torch.load(path, map_location=device)
 
-        # Create model with correct action space size
+        # Create model with correct action space size and dropout
         num_actions = checkpoint["num_actions"]
-        model = cls(num_actions)
+        dropout = checkpoint.get("dropout", 0.0)
+        model = cls(num_actions, dropout=dropout)
 
         # Load state dict with strict key matching
         model.load_state_dict(checkpoint["model_state_dict"], strict=strict)
@@ -221,15 +228,16 @@ class DQN(nn.Module):
         return model, meta
 
     @classmethod
-    def from_env(cls, env):
+    def from_env(cls, env, dropout: float = 0.0):
         """
         Create DQN model from environment.
 
         Args:
             env: Gymnasium environment with discrete action space
+            dropout: Dropout probability for the FC layer
 
         Returns:
             DQN model initialized for the environment
         """
         num_actions = env.action_space.n
-        return cls(num_actions)
+        return cls(num_actions, dropout=dropout)
