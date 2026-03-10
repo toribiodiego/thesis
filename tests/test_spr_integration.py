@@ -5,7 +5,11 @@ Tests end-to-end behavior that requires multiple components working together:
 - Combined TD + SPR loss decreases over multiple updates
 - EMA weights diverge from online weights after training
 - Sequence sampling respects episode boundaries under buffer wrap-around
+- Backward compatibility: vanilla DQN and DQN+aug paths unaffected by SPR code
 """
+
+import os
+import tempfile
 
 import numpy as np
 import pytest
@@ -524,4 +528,292 @@ class TestVanillaDQNPath:
         late_avg = np.mean(losses[-3:])
         assert late_avg < early_avg, (
             f"Vanilla loss should decrease: {early_avg:.4f} -> {late_avg:.4f}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Test: backward compatibility -- SPR-disabled paths unchanged
+# ---------------------------------------------------------------------------
+
+
+class TestBackwardCompatibility:
+    """Verify vanilla DQN and DQN+aug paths are unaffected by SPR additions.
+
+    These tests exercise the training_step function (the full loop
+    orchestrator) and checkpoint save/load without SPR, confirming
+    that the SPR code additions introduce no regressions.
+    """
+
+    def _fill_buffer(self, buf, n=100):
+        """Fill replay buffer with random transitions."""
+        for i in range(n):
+            obs = np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8)
+            next_obs = np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8)
+            done = (i + 1) % 20 == 0
+            buf.append(obs, np.random.randint(NUM_ACTIONS), 1.0, next_obs, done)
+
+    def test_training_step_without_spr(self):
+        """training_step works correctly with spr_components=None (default)."""
+        from unittest.mock import MagicMock
+
+        from src.training.training_loop import (
+            FrameCounter,
+            training_step,
+        )
+        from src.training.metrics import EpsilonScheduler
+        from src.training.schedulers import TargetNetworkUpdater, TrainingScheduler
+
+        torch.manual_seed(0)
+
+        online_net = DQN(num_actions=NUM_ACTIONS)
+        target_net = DQN(num_actions=NUM_ACTIONS)
+        target_net.load_state_dict(online_net.state_dict())
+        optimizer = torch.optim.Adam(online_net.parameters(), lr=1e-3)
+
+        buf = ReplayBuffer(capacity=200, obs_shape=OBS_SHAPE, min_size=10)
+        self._fill_buffer(buf, 50)
+
+        eps = EpsilonScheduler(1.0, 0.1, 100000)
+        target_up = TargetNetworkUpdater(update_interval=1000)
+        train_sched = TrainingScheduler(train_every=1)
+        fc = FrameCounter(frameskip=4)
+
+        # Mock environment
+        env = MagicMock()
+        env.step.return_value = (
+            np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8),
+            1.0,
+            False,
+            False,
+            {},
+        )
+
+        state = np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8)
+
+        # Run a training step without SPR -- should not raise
+        result = training_step(
+            env=env,
+            online_net=online_net,
+            target_net=target_net,
+            optimizer=optimizer,
+            replay_buffer=buf,
+            epsilon_scheduler=eps,
+            target_updater=target_up,
+            training_scheduler=train_sched,
+            frame_counter=fc,
+            state=state,
+            num_actions=NUM_ACTIONS,
+            device="cpu",
+            # spr_components not passed (default None)
+        )
+
+        assert "metrics" in result
+        assert "next_state" in result
+        assert "epsilon" in result
+        # When training happened, metrics should not have SPR fields
+        if result["metrics"] is not None:
+            assert result["metrics"].spr_loss is None
+            assert result["metrics"].cosine_similarity is None
+
+    def test_training_step_with_augmentation_no_spr(self):
+        """training_step with augmentation but no SPR works correctly."""
+        from unittest.mock import MagicMock
+
+        from src.augmentation import random_shift
+        from src.training.training_loop import (
+            FrameCounter,
+            training_step,
+        )
+        from src.training.metrics import EpsilonScheduler
+        from src.training.schedulers import TargetNetworkUpdater, TrainingScheduler
+
+        torch.manual_seed(0)
+
+        online_net = DQN(num_actions=NUM_ACTIONS)
+        target_net = DQN(num_actions=NUM_ACTIONS)
+        target_net.load_state_dict(online_net.state_dict())
+        optimizer = torch.optim.Adam(online_net.parameters(), lr=1e-3)
+
+        buf = ReplayBuffer(capacity=200, obs_shape=OBS_SHAPE, min_size=10)
+        self._fill_buffer(buf, 50)
+
+        eps = EpsilonScheduler(1.0, 0.1, 100000)
+        target_up = TargetNetworkUpdater(update_interval=1000)
+        train_sched = TrainingScheduler(train_every=1)
+        fc = FrameCounter(frameskip=4)
+
+        env = MagicMock()
+        env.step.return_value = (
+            np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8),
+            1.0,
+            False,
+            False,
+            {},
+        )
+
+        state = np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8)
+        augment_fn = lambda x: random_shift(x, pad=4)
+
+        # Run with augmentation, no SPR
+        result = training_step(
+            env=env,
+            online_net=online_net,
+            target_net=target_net,
+            optimizer=optimizer,
+            replay_buffer=buf,
+            epsilon_scheduler=eps,
+            target_updater=target_up,
+            training_scheduler=train_sched,
+            frame_counter=fc,
+            state=state,
+            num_actions=NUM_ACTIONS,
+            device="cpu",
+            augment_fn=augment_fn,
+            # spr_components not passed
+        )
+
+        assert "metrics" in result
+        if result["metrics"] is not None:
+            assert result["metrics"].spr_loss is None
+
+    def test_checkpoint_save_load_without_spr(self):
+        """Checkpoint save/load without SPR components works correctly."""
+        from src.training.logging import CheckpointManager
+
+        torch.manual_seed(0)
+
+        online_net = DQN(num_actions=NUM_ACTIONS)
+        target_net = DQN(num_actions=NUM_ACTIONS)
+        target_net.load_state_dict(online_net.state_dict())
+        optimizer = torch.optim.Adam(online_net.parameters(), lr=1e-3)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            manager = CheckpointManager(
+                checkpoint_dir=tmpdir, save_interval=1, keep_last_n=3
+            )
+
+            # Save without SPR (spr_components=None default)
+            path = manager.save_checkpoint(
+                step=1000,
+                episode=10,
+                epsilon=0.5,
+                online_model=online_net,
+                target_model=target_net,
+                optimizer=optimizer,
+            )
+
+            assert os.path.exists(path)
+
+            # Load without SPR
+            online_net2 = DQN(num_actions=NUM_ACTIONS)
+            target_net2 = DQN(num_actions=NUM_ACTIONS)
+            optimizer2 = torch.optim.Adam(online_net2.parameters(), lr=1e-3)
+
+            loaded = manager.load_checkpoint(
+                checkpoint_path=path,
+                online_model=online_net2,
+                target_model=target_net2,
+                optimizer=optimizer2,
+                device="cpu",
+            )
+
+            assert loaded["step"] == 1000
+            assert loaded["episode"] == 10
+
+            # No SPR state in checkpoint
+            checkpoint_data = torch.load(path, map_location="cpu",
+                                         weights_only=False)
+            assert "spr_state" not in checkpoint_data
+
+    def test_checkpoint_without_spr_ignores_spr_on_load(self):
+        """Loading a non-SPR checkpoint with spr_components=None is safe."""
+        from src.training.logging import CheckpointManager
+
+        torch.manual_seed(0)
+
+        online_net = DQN(num_actions=NUM_ACTIONS)
+        target_net = DQN(num_actions=NUM_ACTIONS)
+        target_net.load_state_dict(online_net.state_dict())
+        optimizer = torch.optim.Adam(online_net.parameters(), lr=1e-3)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            manager = CheckpointManager(
+                checkpoint_dir=tmpdir, save_interval=1, keep_last_n=3
+            )
+
+            # Save vanilla checkpoint
+            path = manager.save_checkpoint(
+                step=500,
+                episode=5,
+                epsilon=0.8,
+                online_model=online_net,
+                target_model=target_net,
+                optimizer=optimizer,
+            )
+
+            # Weights should restore correctly
+            online_net2 = DQN(num_actions=NUM_ACTIONS)
+            target_net2 = DQN(num_actions=NUM_ACTIONS)
+            optimizer2 = torch.optim.Adam(online_net2.parameters(), lr=1e-3)
+
+            manager.load_checkpoint(
+                checkpoint_path=path,
+                online_model=online_net2,
+                target_model=target_net2,
+                optimizer=optimizer2,
+                device="cpu",
+            )
+
+            # Verify weights match
+            for p1, p2 in zip(
+                online_net.parameters(), online_net2.parameters()
+            ):
+                assert torch.allclose(p1, p2), "Online weights should match"
+
+    def test_perform_update_with_augmented_batch(self):
+        """perform_update_step works with augmented observations, no SPR."""
+        from src.augmentation import random_shift
+
+        torch.manual_seed(42)
+
+        online_net = DQN(num_actions=NUM_ACTIONS)
+        target_net = DQN(num_actions=NUM_ACTIONS)
+        target_net.load_state_dict(online_net.state_dict())
+        optimizer = torch.optim.Adam(online_net.parameters(), lr=1e-3)
+
+        batch = _make_batch()
+        # Apply augmentation to batch states (as training_step does)
+        batch["states"] = random_shift(batch["states"], pad=4)
+        batch["next_states"] = random_shift(batch["next_states"], pad=4)
+
+        metrics = perform_update_step(
+            online_net=online_net,
+            target_net=target_net,
+            optimizer=optimizer,
+            batch=batch,
+            # No spr_components
+        )
+
+        assert metrics.loss > 0
+        assert metrics.spr_loss is None
+        assert metrics.cosine_similarity is None
+        assert metrics.grad_norm >= 0
+
+    def test_dqn_dropout_default_zero(self):
+        """DQN with default dropout=0.0 behaves identically in train/mode."""
+        torch.manual_seed(0)
+
+        model = DQN(num_actions=NUM_ACTIONS, dropout=0.0)
+        x = torch.rand(2, *OBS_SHAPE)
+
+        model.train()
+        out_train = model(x)["q_values"]
+
+        # Set to inference mode instead
+        model.train(False)
+        with torch.no_grad():
+            out_infer = model(x)["q_values"]
+
+        assert torch.allclose(out_train, out_infer, atol=1e-6), (
+            "dropout=0.0 should produce identical output in train and non-train"
         )
