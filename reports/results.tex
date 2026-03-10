@@ -228,6 +228,12 @@ scores from Schwarzer et al.\ \citelink{https://arxiv.org/abs/2007.05929}{3}.\pa
 
 \subsection{Augmentation}
 
+DrQ-style random shift augmentation
+\citelink{https://arxiv.org/abs/2004.14990}{5}: pad each 84$\times$84
+frame by 4 pixels on each side (zero-fill), then randomly crop back to
+84$\times$84. Applied independently to states and next-states at each
+training step.
+
 \begin{table}[h]
 \centering
 \renewcommand{\arraystretch}{1.4}
@@ -236,18 +242,19 @@ scores from Schwarzer et al.\ \citelink{https://arxiv.org/abs/2007.05929}{3}.\pa
 \toprule
 \textbf{Game} & \textbf{Baseline} & \textbf{+ Aug} \\
 \midrule
-Crazy Climber  & --  & -- \\
-Boxing         & --  & -- \\
-Kangaroo       & --  & -- \\
-Road Runner    & --  & -- \\
-Frostbite      & --  & -- \\
-Up N Down      & --  & -- \\
+Crazy Climber  & $3540 \pm 754$   & -- \\
+Road Runner    & $1440 \pm 859$   & -- \\
+Boxing         & $-3.0 \pm 5.3$   & -- \\
+Kangaroo       & $26.7 \pm 68.0$  & -- \\
+Frostbite      & $147 \pm 45$     & -- \\
+Up N Down      & $141 \pm 155$    & -- \\
 \bottomrule
 \end{tabular}
 
 \vspace{1.2em}
-{\raggedright\small \textbf{Table 5.} Effect of data augmentation
-compared to the vanilla DQN baseline.\par}
+{\raggedright\small \textbf{Table 5.} Effect of random-shift data
+augmentation compared to the vanilla DQN baseline. Seed 42, 30 eval
+episodes at 400K frames.\par}
 \end{table}
 
 \subsection{SPR}
