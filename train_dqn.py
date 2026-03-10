@@ -121,7 +121,7 @@ def initialize_components(config, paths, device, resuming=False):
         frame_skip=config.environment.action_repeat,
         noop_max=config.environment.episode.noop_max,
         episode_life=False,  # Full episodes for evaluation
-        clip_rewards=config.environment.preprocessing.clip_rewards,
+        clip_rewards=False,  # Raw returns for published baseline comparison
         render_mode='rgb_array'  # Enable frame capture for video recording
     )
 
