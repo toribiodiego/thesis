@@ -8,8 +8,10 @@ Features:
 - uint8 storage for memory efficiency
 - Configurable capacity (default ~1M transitions)
 - Sequence sampling for SPR (K consecutive transitions)
+- N-step return computation (optional, for Rainbow DQN)
 """
 
+from collections import deque
 from typing import Dict, Optional, Tuple, Union
 
 import numpy as np
@@ -34,6 +36,12 @@ class ReplayBuffer:
                   Used for warm-up phase to ensure sufficient exploration before training
         device: Target device for sampled tensors ('cpu', 'cuda', etc.). If None, returns NumPy arrays
         pin_memory: If True, use pinned memory for faster host-to-device transfer (only for GPU)
+        n_step: Number of steps for multi-step returns (default 1).
+                When n > 1, transitions are accumulated in a pending deque and
+                stored with discounted n-step returns R^(n) = sum gamma^k r_k.
+                Episode boundaries flush pending transitions with truncated returns.
+        gamma: Discount factor for n-step return computation (default 0.99).
+               Only used when n_step > 1.
 
     Memory layout:
         - observations: (capacity, *obs_shape) array in uint8
@@ -41,6 +49,7 @@ class ReplayBuffer:
         - rewards: (capacity,) array in float32
         - dones: (capacity,) array in bool
         - episode_starts: (capacity,) array in bool marking episode boundaries
+        - next_observations: (capacity, *obs_shape) array in uint8 (only when n_step > 1)
     """
 
     def __init__(
@@ -52,6 +61,8 @@ class ReplayBuffer:
         min_size: int = 50_000,
         device: Optional[Union[str, torch.device]] = None,
         pin_memory: bool = False,
+        n_step: int = 1,
+        gamma: float = 0.99,
     ):
         self.capacity = capacity
         self.obs_shape = obs_shape
@@ -60,6 +71,8 @@ class ReplayBuffer:
         self.min_size = min_size  # Minimum buffer size before sampling is allowed
         self.device = torch.device(device) if device is not None else None
         self.pin_memory = pin_memory  # Use pinned memory for faster GPU transfer
+        self.n_step = n_step
+        self.gamma = gamma
 
         # Circular buffer index
         self.index = 0
@@ -78,6 +91,59 @@ class ReplayBuffer:
         # episode_starts[i] = True means index i is the first transition of an episode
         self.episode_starts = np.zeros(capacity, dtype=bool)
 
+        # N-step return support
+        if n_step > 1:
+            # Pending deque accumulates raw transitions before computing
+            # n-step returns and committing to the main buffer
+            self._pending: deque = deque()
+            # Explicit next_state storage (consecutive observation trick
+            # breaks with n-step gaps between stored transitions)
+            self.next_observations = np.zeros(
+                (capacity, *obs_shape), dtype=dtype
+            )
+        else:
+            self._pending = None
+            self.next_observations = None
+
+    def _convert_obs(self, obs: np.ndarray) -> np.ndarray:
+        """Convert an observation to the storage dtype."""
+        if obs.dtype == np.float32 or obs.dtype == np.float64:
+            return (obs * 255).astype(self.dtype)
+        return obs.astype(self.dtype)
+
+    def _store(
+        self,
+        state: np.ndarray,
+        action: int,
+        reward: float,
+        next_state: np.ndarray,
+        done: bool,
+    ) -> None:
+        """
+        Write a single transition to the ring buffer.
+
+        Low-level storage method. State must already be in storage dtype.
+        For n_step > 1, next_state is stored in next_observations.
+        """
+        self.observations[self.index] = state
+        self.actions[self.index] = action
+        self.rewards[self.index] = reward
+        self.dones[self.index] = done
+
+        if self.next_observations is not None:
+            self.next_observations[self.index] = next_state
+
+        # Mark episode start
+        if self.size == 0:
+            self.episode_starts[self.index] = True
+        else:
+            prev_index = (self.index - 1) % self.capacity
+            self.episode_starts[self.index] = self.dones[prev_index]
+
+        # Advance index (circular)
+        self.index = (self.index + 1) % self.capacity
+        self.size = min(self.size + 1, self.capacity)
+
     def append(
         self,
         state: np.ndarray,
@@ -89,17 +155,17 @@ class ReplayBuffer:
         """
         Add a transition to the buffer.
 
+        When n_step == 1, stores the transition directly. When n_step > 1,
+        accumulates transitions in a pending deque and stores n-step
+        transitions with discounted returns. Episode boundaries flush
+        pending transitions with truncated returns.
+
         Args:
             state: Current observation, shape (*obs_shape,) in uint8 or float32
             action: Action taken (integer)
             reward: Reward received (float)
             next_state: Next observation, shape (*obs_shape,)
             done: Whether episode ended (bool)
-
-        Notes:
-            - If state/next_state are float32, they are converted to uint8
-            - Episode boundaries are tracked via done flags
-            - Buffer wraps around when full (circular buffer)
         """
         # Validate shapes
         assert (
@@ -109,44 +175,63 @@ class ReplayBuffer:
             next_state.shape == self.obs_shape
         ), f"Next state shape {next_state.shape} doesn't match expected {self.obs_shape}"
 
-        # Convert to uint8 if needed
+        # Convert to storage dtype
         if state.dtype != self.dtype:
-            if state.dtype == np.float32 or state.dtype == np.float64:
-                # Assume [0, 1] range, convert to [0, 255]
-                state = (state * 255).astype(self.dtype)
-            else:
-                state = state.astype(self.dtype)
+            state = self._convert_obs(state)
 
-        # Store current state at index
-        self.observations[self.index] = state
-        self.actions[self.index] = action
-        self.rewards[self.index] = reward
-        self.dones[self.index] = done
+        if self.n_step == 1:
+            self._store(state, action, reward, next_state, done)
+            return
 
-        # Mark episode start
-        # First transition in buffer is always an episode start
-        # After that, episode starts occur after done=True transitions
-        if self.size == 0:
-            self.episode_starts[self.index] = True
-        else:
-            # Check if previous transition was done
-            prev_index = (self.index - 1) % self.capacity
-            self.episode_starts[self.index] = self.dones[prev_index]
+        # N-step: convert next_state and push to pending deque
+        if next_state.dtype != self.dtype:
+            next_state = self._convert_obs(next_state)
 
-        # Advance index (circular)
-        self.index = (self.index + 1) % self.capacity
-        self.size = min(self.size + 1, self.capacity)
+        self._pending.append((state, action, reward, next_state, done))
+
+        # When deque has n transitions, commit the oldest as an n-step transition
+        if len(self._pending) == self.n_step:
+            self._commit_n_step()
+
+        # Episode boundary: flush all remaining pending with truncated returns
+        if done:
+            self._flush_pending()
+
+    def _compute_n_step_return(self, transitions) -> float:
+        """Compute discounted return R^(n) = sum_{k=0}^{n-1} gamma^k * r_k."""
+        R = 0.0
+        for k, (_, _, r, _, _) in enumerate(transitions):
+            R += (self.gamma ** k) * r
+        return R
+
+    def _commit_n_step(self) -> None:
+        """Store the oldest pending transition as an n-step transition."""
+        transitions = list(self._pending)
+        s_0, a_0, _, _, _ = transitions[0]
+        _, _, _, s_n, done_n = transitions[-1]
+        R = self._compute_n_step_return(transitions)
+        self._store(s_0, a_0, R, s_n, done_n)
+        self._pending.popleft()
+
+    def _flush_pending(self) -> None:
+        """Flush remaining pending transitions with truncated n-step returns."""
+        while self._pending:
+            transitions = list(self._pending)
+            s_0, a_0, _, _, _ = transitions[0]
+            _, _, _, s_n, done_n = transitions[-1]
+            R = self._compute_n_step_return(transitions)
+            self._store(s_0, a_0, R, s_n, done_n)
+            self._pending.popleft()
 
     def _is_valid_index(self, idx: int) -> bool:
         """
         Check if an index is valid for sampling.
 
-        An index is valid if:
-        1. It's within the current buffer size
-        2. It's not an episode start (we need previous states for frame stacking)
-        3. For non-terminal transitions: next index exists and is in same episode
-        4. For terminal transitions (done=True): always valid (next_state doesn't
-           matter since TD target = r when done=True)
+        For n_step == 1:
+            Valid if within buffer, not an episode start, and (terminal OR
+            next index is in the same episode).
+        For n_step > 1:
+            Valid if within buffer (next_state stored explicitly).
 
         Args:
             idx: Index to check
@@ -157,21 +242,21 @@ class ReplayBuffer:
         if idx >= self.size:
             return False
 
-        # Check if this is an episode start
-        # Episode starts can't be sampled because we need previous frames
+        # n-step: next_state stored explicitly, no boundary checks needed
+        if self.next_observations is not None:
+            return True
+
+        # n=1: original boundary-checking logic
         if self.episode_starts[idx]:
             return False
 
-        # Terminal transitions are valid - next_state doesn't matter for TD target
         if self.dones[idx]:
             return True
 
-        # For non-terminal transitions, check if next index exists and is in same episode
         next_idx = (idx + 1) % self.capacity
         if next_idx >= self.size:
             return False
 
-        # If next index is an episode start, we've crossed an episode boundary
         if self.episode_starts[next_idx]:
             return False
 
@@ -182,6 +267,8 @@ class ReplayBuffer:
         Get all valid indices for sampling.
 
         Uses vectorized numpy operations instead of per-index Python loop.
+        For n_step > 1 (explicit next_observations), all stored indices are
+        valid since next_state is stored alongside each transition.
 
         Returns:
             Array of valid indices that can be safely sampled
@@ -189,14 +276,19 @@ class ReplayBuffer:
         n = self.size if self.size < self.capacity else self.capacity
         indices = np.arange(n, dtype=np.int64)
 
-        # Start with all indices as valid
+        # n-step: next_state stored explicitly, all indices valid
+        if self.next_observations is not None:
+            if self.size < self.capacity:
+                return indices[indices < self.size]
+            return indices
+
+        # n=1: original episode-boundary logic
         valid_mask = np.ones(n, dtype=bool)
 
         # Exclude episode starts
         valid_mask &= ~self.episode_starts[:n]
 
         # Exclude indices beyond buffer size
-        # (only matters when buffer is not full)
         if self.size < self.capacity:
             valid_mask &= indices < self.size
 
@@ -204,8 +296,6 @@ class ReplayBuffer:
         next_indices = (indices + 1) % self.capacity
         is_terminal = self.dones[:n]
 
-        # Non-terminal transitions need a valid next index in the same episode
-        non_terminal = ~is_terminal & valid_mask
         next_out_of_bounds = next_indices >= self.size if self.size < self.capacity else np.zeros(n, dtype=bool)
         next_is_episode_start = self.episode_starts[next_indices]
 
@@ -268,9 +358,14 @@ class ReplayBuffer:
         rewards = self.rewards[sampled_indices]
         dones = self.dones[sampled_indices]
 
-        # Get next states (index + 1)
-        next_indices = (sampled_indices + 1) % self.capacity
-        next_states_uint8 = self.observations[next_indices]
+        # Get next states
+        if self.next_observations is not None:
+            # n-step: next_state stored explicitly
+            next_states_uint8 = self.next_observations[sampled_indices]
+        else:
+            # n=1: next state is the consecutive observation
+            next_indices = (sampled_indices + 1) % self.capacity
+            next_states_uint8 = self.observations[next_indices]
 
         # Convert observations to float32
         states = states_uint8.astype(np.float32)
