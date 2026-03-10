@@ -89,11 +89,21 @@ KNOWN_STRUCTURE = {
         "evaluation",
         "logging",
         "augmentation",
+        "spr",
+        "ema",
         "seed",
         "system",
     },
     "augmentation": {"enabled", "type", "random_shift"},
     "augmentation.random_shift": {"pad"},
+    "spr": {
+        "enabled",
+        "prediction_steps",
+        "loss_weight",
+        "projection_dim",
+        "transition_channels",
+    },
+    "ema": {"momentum"},
     "experiment": {"name", "run_id", "notes", "deterministic"},
     "experiment.deterministic": {"enabled", "strict", "warn_only"},
     "environment": {
@@ -906,6 +916,58 @@ def validate_system(config: Dict[str, Any], path: List[str] = None) -> None:
         )
 
 
+def validate_spr(config: Dict[str, Any], path: List[str] = None) -> None:
+    """Validate SPR (self-predictive representations) section."""
+    if path is None:
+        path = []
+
+    spr = config.get("spr", {})
+    if not isinstance(spr, dict):
+        raise ConfigValidationError(
+            f"{_format_path(path + ['spr'])}: must be a dict"
+        )
+
+    if "enabled" in spr:
+        _validate_bool(spr["enabled"], path + ["spr"], "enabled")
+
+    if "prediction_steps" in spr:
+        _validate_positive_int(
+            spr["prediction_steps"], path + ["spr"], "prediction_steps"
+        )
+
+    if "loss_weight" in spr:
+        _validate_positive_float(
+            spr["loss_weight"], path + ["spr"], "loss_weight"
+        )
+
+    if "projection_dim" in spr:
+        _validate_positive_int(
+            spr["projection_dim"], path + ["spr"], "projection_dim"
+        )
+
+    if "transition_channels" in spr:
+        _validate_positive_int(
+            spr["transition_channels"], path + ["spr"], "transition_channels"
+        )
+
+
+def validate_ema(config: Dict[str, Any], path: List[str] = None) -> None:
+    """Validate EMA (exponential moving average) section."""
+    if path is None:
+        path = []
+
+    ema = config.get("ema", {})
+    if not isinstance(ema, dict):
+        raise ConfigValidationError(
+            f"{_format_path(path + ['ema'])}: must be a dict"
+        )
+
+    if "momentum" in ema:
+        _validate_range(
+            ema["momentum"], path + ["ema"], "momentum", 0.0, 1.0
+        )
+
+
 # =============================================================================
 # Main Validation Entry Point
 # =============================================================================
@@ -952,6 +1014,8 @@ def validate_config(config: Dict[str, Any], strict: bool = True) -> None:
     validate_exploration(config)
     validate_evaluation(config)
     validate_logging(config)
+    validate_spr(config)
+    validate_ema(config)
     validate_system(config)
 
 

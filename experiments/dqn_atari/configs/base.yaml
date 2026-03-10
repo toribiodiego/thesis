@@ -294,6 +294,32 @@ logging:
     log_every: 10000  # Log reference Q-values every N steps
 
 # =============================================================================
+# SPR Configuration (Self-Predictive Representations)
+# =============================================================================
+# Auxiliary self-supervised objective that predicts future latent states.
+# When enabled, adds SPR loss alongside TD loss: total = td + lambda * spr.
+# Requires EMA target encoder (configured below).
+#
+# Reference: Schwarzer et al. (2021), "Data-Efficient Reinforcement Learning
+# with Self-Predictive Representations", ICLR 2021, Table 3
+spr:
+  enabled: false               # Enable SPR auxiliary loss
+  prediction_steps: 5          # Future steps K to predict (Table 3)
+  loss_weight: 2.0             # Lambda weighting for SPR loss (Table 3)
+  projection_dim: 512          # Projection head output dim (matches DQN FC width)
+  transition_channels: 64      # Transition model conv channels (Section 2.3)
+
+# =============================================================================
+# EMA Target Encoder (for SPR)
+# =============================================================================
+# Exponential moving average copy of the online encoder and projection head.
+# Updated every training step: theta_m <- tau * theta_m + (1-tau) * theta_o
+# Separate from the DQN target network (which uses hard copies every N steps).
+ema:
+  momentum: 0.99               # Decay coefficient tau (Table 3, without augmentation)
+  # Use 0.0 with augmentation (augmentation provides sufficient regularization)
+
+# =============================================================================
 # Seeding & Reproducibility
 # =============================================================================
 seed:
