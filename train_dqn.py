@@ -20,6 +20,9 @@ import time
 import json
 from pathlib import Path
 
+# Unbuffered stdout for real-time progress in non-TTY environments (Colab, CI)
+sys.stdout.reconfigure(line_buffering=True)
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -213,6 +216,33 @@ def initialize_components(config, paths, device, resuming=False):
     }
 
 
+def write_progress(run_dir, frame_counter, config, episode_count, epsilon, fps,
+                    start_time, latest_eval=None):
+    """Write progress.json for remote monitoring."""
+    elapsed = time.time() - start_time
+    total = config.training.total_frames
+    frames = frame_counter.frames
+    percent = (frames / total) * 100 if total > 0 else 0
+    eta = (elapsed / frames) * (total - frames) if frames > 0 else 0
+
+    progress = {
+        "frame": frames,
+        "total_frames": total,
+        "percent": round(percent, 1),
+        "episode": episode_count,
+        "epsilon": round(epsilon, 4),
+        "fps": round(fps, 1),
+        "elapsed_seconds": round(elapsed, 1),
+        "eta_seconds": round(eta, 1),
+        "status": "training",
+    }
+    if latest_eval is not None:
+        progress["latest_eval"] = latest_eval
+
+    progress_path = Path(run_dir) / "progress.json"
+    progress_path.write_text(json.dumps(progress, indent=2))
+
+
 def run_training(config, paths, device):
     """Main training loop."""
     # Set random seeds
@@ -261,6 +291,7 @@ def run_training(config, paths, device):
 
     start_time = time.time()
     last_log_time = start_time
+    latest_eval = None
 
     while frame_counter.frames < config.training.total_frames:
         # Execute training step
@@ -310,7 +341,7 @@ def run_training(config, paths, device):
             # Periodic flush and artifact upload
             metrics_logger.maybe_flush_and_upload(frame_counter.frames)
 
-            # Print progress
+            # Print progress and write progress.json
             if frame_counter.steps % (config.logging.log_every_steps * 10) == 0:
                 progress = (frame_counter.frames / config.training.total_frames) * 100
                 print(f"[{progress:5.1f}%] Frame {frame_counter.frames:>10,} | "
@@ -318,6 +349,9 @@ def run_training(config, paths, device):
                       f"ε={step_result['epsilon']:.3f} | "
                       f"FPS={fps:>6.0f} | "
                       f"Buffer={replay_buffer.size:>7,}")
+                write_progress(paths['run_dir'], frame_counter, config,
+                               episode_count, step_result['epsilon'], fps,
+                               start_time, latest_eval)
 
         # Handle episode end
         if step_result['terminated'] or step_result['truncated']:
@@ -365,6 +399,12 @@ def run_training(config, paths, device):
             if 'video_info' in eval_results and eval_results['video_info']:
                 print(f"  Video saved: {eval_results['video_info'].get('video_path', 'N/A')}")
             print(f"{'='*80}\n")
+
+            latest_eval = {
+                "step": frame_counter.frames,
+                "mean_return": round(eval_results['mean_return'], 2),
+                "std_return": round(eval_results['std_return'], 2),
+            }
 
             # Save evaluation results using EvaluationLogger (handles CSV, JSONL, per-episode data, and detailed JSON)
             evaluation_logger.log_evaluation(
@@ -453,6 +493,23 @@ def run_training(config, paths, device):
 
     # Close logger
     metrics_logger.close()
+
+    # Write final progress.json
+    final_progress = {
+        "frame": frame_counter.frames,
+        "total_frames": config.training.total_frames,
+        "percent": 100.0,
+        "episode": episode_count,
+        "fps": round(frame_counter.frames / total_time, 1),
+        "elapsed_seconds": round(total_time, 1),
+        "eta_seconds": 0,
+        "status": "complete",
+        "final_eval": {
+            "mean_return": round(float(mean_return), 2),
+            "std_return": round(float(std_return), 2),
+        },
+    }
+    (Path(paths['run_dir']) / "progress.json").write_text(json.dumps(final_progress, indent=2))
 
     print(f"\nResults saved to: {paths['run_dir']}")
 
