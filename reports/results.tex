@@ -61,6 +61,41 @@ actions. Moderate: regular scoring but requires learned behavior.
 Sparse: long stretches of zero reward. Published scores in Schwarzer et
 al.\ (2021), Table 4.}
 
+\subsection*{Selection Rationale}
+
+We select six games to maximize diversity across the expected interaction
+patterns between data augmentation and SPR. Using per-game scores from
+Schwarzer et al.\ (2021, Table 4), we compare SPR with and without
+augmentation against Rainbow baselines to identify games where (a)~SPR
+dominates and augmentation adds little, (b)~augmentation provides a
+large additional lift on top of SPR, or (c)~both components contribute
+substantially. The six selected games are:
+
+\begin{itemize}[nosep]
+  \item \textbf{Crazy Climber} -- SPR doubles the baseline; augmentation
+    adds negligible improvement on top. Confirmed vanilla DQN learning
+    signal at 100K steps.
+  \item \textbf{Boxing} -- Both SPR and augmentation contribute large
+    independent effects, with augmentation nearly tripling the SPR-only
+    score. Simple dynamics with dense reward.
+  \item \textbf{Kangaroo} -- Strong synergy: SPR doubles the baseline
+    and augmentation doubles the SPR-only score. Classic interaction
+    effect where both components are needed.
+  \item \textbf{Road Runner} -- SPR provides a large lift; augmentation
+    adds a moderate boost on top. Dense reward with fast-paced dynamics.
+  \item \textbf{Frostbite} -- SPR produces the largest relative
+    improvement in the benchmark ($6\times$ over baseline); augmentation
+    adds only 10\%. Tests whether SPR alone is sufficient.
+  \item \textbf{Up N Down} -- Augmentation produces the largest
+    interaction effect in the benchmark, boosting SPR scores by over
+    $4\times$. Tests the augmentation-dominant regime.
+\end{itemize}
+
+\noindent This selection spans the full range of augmentation--SPR
+interaction patterns observable in the Atari-100K benchmark, enabling a
+factorial analysis that can distinguish synergy from redundancy across
+game types.
+
 \newpage
 
 \section{Preliminary Results}
@@ -93,5 +128,157 @@ Mean       & --  & --  & --  & --  \\
 \vspace{0.8em}
 \noindent{\small \textbf{Table 2.} Atari-100K results across 3 games.}
 \end{table}
+
+\newpage
+
+\section{Initial Baseline Validation (March 10, 2026)}
+
+Three games were run with vanilla DQN (Nature CNN, seed 42) under
+the Atari-100K protocol to validate the training pipeline and assess
+baseline learning signal. All runs used the same hyperparameters:
+100K replay buffer, 2K warmup, epsilon decay 1.0$\to$0.1 over 200K
+frames, RMSProp (lr=0.00025), batch size 32, target network update
+every 2K steps.
+
+\subsection*{Results}
+
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{8pt}
+\begin{tabular}{l r r r r r}
+\toprule
+\textbf{Game}
+  & \textbf{Final Eval}
+  & \textbf{Best Eval}
+  & \textbf{Episodes}
+  & \textbf{Avg Length}
+  & \textbf{Time} \\
+\midrule
+Crazy Climber  & $152.7 \pm 37.4$   & $162.5$ (320K)  & 182 & $\sim$2200  & 43 min \\
+Kung Fu Master & $1.4 \pm 1.6$      & $3.7$ (320K)    & 458 & $\sim$870   & 16 min \\
+Boxing         & $-19.7 \pm 7.1$    & $-0.2$ (40K)    & 56  & $\sim$7100  & 29 min \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\noindent{\small \textbf{Table 3.} Vanilla DQN baseline at 100K env
+steps. Returns are in \textbf{clipped reward space} (see Known Issue
+below). 30 eval episodes per checkpoint, eval epsilon 0.05.}
+\end{table}
+
+\noindent Crazy Climber eval curve (clipped returns at each 40K
+checkpoint): 17.6, 34.5, 83.7, 100.4, 36.9, 131.0, 128.7, 162.5,
+96.4, 152.7. Clear upward trend with high variance (std 33--48).
+
+\subsection*{Observations}
+
+\begin{enumerate}[nosep]
+  \item \textbf{Crazy Climber shows clear learning.} Monotonic
+    improvement through 320K with variance-driven dips. Loss converged
+    from 0.87 to 0.055 (moving average). This game is a viable
+    baseline anchor for the 2$\times$2 factorial study.
+
+  \item \textbf{Kung Fu Master shows no learning.} Eval never exceeds
+    3.7 (clipped). 458 episodes in 400K frames indicates the agent
+    dies quickly ($\sim$870 frames per episode). Loss converged
+    normally (2.49$\to$0.024), suggesting the network is fitting
+    Q-values but they do not translate to useful behavior within the
+    100K budget.
+
+  \item \textbf{Boxing learned a losing policy.} Eval oscillates
+    wildly ($-0.2$ to $-42.5$), with the agent actively losing by
+    large margins in late training. Only 56 episodes in 400K frames
+    ($\sim$7100 frames each) meant the agent saw fewer than 28
+    episodes before epsilon reached 0.1 at 200K frames. The 18-action
+    space combined with minimal exploration likely caused premature
+    convergence to a degenerate policy.
+
+  \item \textbf{Epsilon decay may be too aggressive for long-episode
+    games.} By 200K frames, Crazy Climber had seen $\sim$90 episodes
+    (sufficient), Kung Fu Master $\sim$230 (sufficient but short-lived),
+    and Boxing only $\sim$28 (insufficient for an 18-action game).
+\end{enumerate}
+
+\subsection*{Known Issue: Reward Clipping in Evaluation}
+
+All returns above are reported in \textbf{clipped reward space}
+($\{-1, 0, +1\}$ per step) because the evaluation environment
+inherits the training reward clipper. Published baselines (Schwarzer et
+al., 2021; Kostrikov et al., 2020) report \textbf{raw Atari scores}.
+The two scales are not comparable. For example, the random agent scores
+10,780 raw on Crazy Climber, while our clipped-reward agent reports 153.
+
+This must be fixed before any quantitative comparison to published
+work. The training environment should retain reward clipping (standard
+practice for DQN stability), but the evaluation environment must report
+raw episode returns.
+
+\subsection*{Required Changes Before Next Run}
+
+\begin{enumerate}[nosep]
+  \item \textbf{Fix eval reward clipping.} Set
+    \texttt{clip\_rewards=False} on the evaluation environment in
+    \texttt{train\_dqn.py} so eval returns are in raw Atari scores.
+    Training environment keeps clipping. This is the highest priority
+    fix -- without it, no results are publishable.
+
+  \item \textbf{Create missing game configs.} Add Atari-100K configs
+    for Kangaroo, Frostbite, Road Runner, and Up N Down (the
+    remaining four of the six selected games).
+
+  \item \textbf{Verify frame counting semantics.} Confirm that
+    ``100K environment steps'' in our pipeline matches the benchmark
+    definition (100K agent decisions = 400K raw ALE frames with
+    frame\_skip=4). Current config uses \texttt{total\_frames=400000}
+    -- verify this counts raw frames, not agent steps.
+\end{enumerate}
+
+\subsection*{Next Run Plan}
+
+Re-run baselines on all six selected games with the eval fix applied.
+Single seed (42) per game. Purpose: determine whether vanilla DQN
+produces any learning signal, and obtain raw scores for comparison to
+published baselines.
+
+\vspace{0.5em}
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{8pt}
+\small
+\begin{tabular}{l l l}
+\toprule
+\textbf{Game} & \textbf{Expected Pattern} & \textbf{What We Look For} \\
+\midrule
+Crazy Climber  & DQN learns (confirmed)    & Raw score vs.\ published baselines \\
+Kung Fu Master & DQN flat (confirmed)      & Confirm; raw score for human-norm \\
+Boxing         & DQN degenerate (confirmed) & Confirm; still useful for study? \\
+Road Runner    & Dense reward               & Any learning curve? \\
+Kangaroo       & Moderate reward            & Partial learning or flat? \\
+Frostbite      & Moderate reward            & Partial learning or flat? \\
+\bottomrule
+\end{tabular}
+\normalsize
+
+\vspace{0.5em}
+\noindent{\small \textbf{Table 4.} Baseline validation plan for six
+selected games.}
+\end{table}
+
+\noindent After this run, the go/no-go decision for the thesis is:
+
+\begin{itemize}[nosep]
+  \item \textbf{Strong go:} 2+ games show DQN learning, raw scores
+    are in a plausible range relative to published baselines.
+    Proceed to augmentation implementation (Task 22).
+  \item \textbf{Conditional go:} Only 1 game shows DQN learning, but
+    raw scores are plausible. Proceed to augmentation to test whether
+    it lifts the non-learning games. If augmentation lifts 2+ games,
+    continue. If not, reassess game selection.
+  \item \textbf{Reassess:} 0 games show DQN learning, or raw scores
+    are implausibly low (suggesting a pipeline bug). Debug before
+    spending more compute.
+\end{itemize}
 
 \end{document}
