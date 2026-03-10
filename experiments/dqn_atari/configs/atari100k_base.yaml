@@ -1,0 +1,60 @@
+# Atari-100K Base Configuration
+# ==============================
+# Shared hyperparameters for DQN under the Atari-100K protocol
+# (100K environment steps = 400K raw ALE frames with frame_skip=4).
+#
+# Adapts Nature DQN defaults for the reduced 100K-step budget.
+# Per-game configs inherit this and only set env_id and experiment name.
+#
+# Key changes from standard DQN (base.yaml):
+#   - total_frames: 10M -> 400K (100K env steps * frame_skip 4)
+#   - replay capacity: 1M -> 100K (match generation budget)
+#   - warmup: 50K -> 2K (50K is half the budget; SPR uses 2K)
+#   - target update: 10K -> 2K steps (~50 updates across training)
+#   - epsilon decay: 1M -> 200K frames (first half of training)
+#   - eval every: 250K -> 40K frames (10 checkpoints across training)
+#   - checkpoint every: 1M -> 100K frames
+#
+# Reference: Schwarzer et al. (2021), "Data-Efficient Reinforcement
+# Learning with Self-Predictive Representations"
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_pong.yaml --seed 42
+
+# Inherit standard DQN base
+base_config: "experiments/dqn_atari/configs/base.yaml"
+
+# =============================================================================
+# Atari-100K Overrides
+# =============================================================================
+
+# Training budget
+training:
+  total_frames: 400000  # 100K env steps * frame_skip 4 = 400K raw frames
+
+# Replay buffer (scaled to 100K budget)
+replay:
+  capacity: 100000      # No need to store more transitions than we generate
+  min_size: 2000        # Minimum before training starts (SPR uses 2K)
+  warmup_steps: 2000    # Random actions during warm-up
+
+# Target network (scaled for ~50 updates across training)
+target_network:
+  update_interval: 2000  # Hard-copy online -> target every 2K steps
+
+# Exploration (decay over first half of training)
+exploration:
+  schedule:
+    decay_frames: 200000  # Decay epsilon 1.0 -> 0.1 over 50K env steps (200K frames)
+
+# Evaluation (10 checkpoints across training)
+evaluation:
+  eval_every: 40000       # Evaluate every 10K env steps (40K frames)
+  num_episodes: 30        # 30 episodes per eval checkpoint
+
+# Logging (adapted for shorter runs)
+logging:
+  log_every_steps: 500    # More frequent logging for shorter runs
+  checkpoint:
+    save_every: 100000    # Save checkpoint every 25K env steps (100K frames)
+    keep_last_n: 5        # Keep more checkpoints (run is short)

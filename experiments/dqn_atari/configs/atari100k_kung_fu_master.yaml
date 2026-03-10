@@ -1,0 +1,20 @@
+# Kung Fu Master - Atari-100K Configuration
+# ============================================
+# Dense reward game. Frequent scoring from defeating enemies.
+#
+# Action space: 14 actions
+#
+# SPR paper reference (modified Rainbow): 14346.1 mean return
+# Random agent: 258.5 | Human: 22736.3
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_kung_fu_master.yaml --seed 42
+
+base_config: "experiments/dqn_atari/configs/atari100k_base.yaml"
+
+environment:
+  env_id: "KungFuMasterNoFrameskip-v4"
+
+experiment:
+  name: "atari100k_kung_fu_master"
+  notes: "Vanilla DQN on Kung Fu Master under Atari-100K protocol"

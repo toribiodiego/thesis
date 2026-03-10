@@ -1,0 +1,20 @@
+# Crazy Climber - Atari-100K Configuration
+# ==========================================
+# Dense reward game. Frequent scoring from climbing buildings.
+#
+# Action space: 9 actions
+#
+# SPR paper reference (modified Rainbow): 42923.6 mean return
+# Random agent: 10780.5 | Human: 35829.4
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_crazy_climber.yaml --seed 42
+
+base_config: "experiments/dqn_atari/configs/atari100k_base.yaml"
+
+environment:
+  env_id: "CrazyClimberNoFrameskip-v4"
+
+experiment:
+  name: "atari100k_crazy_climber"
+  notes: "Vanilla DQN on Crazy Climber under Atari-100K protocol"

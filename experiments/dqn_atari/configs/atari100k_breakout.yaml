@@ -1,0 +1,20 @@
+# Breakout - Atari-100K Configuration
+# =====================================
+# Moderate reward density. Scores when bricks are hit.
+#
+# Action space: 4 actions (NOOP, FIRE, RIGHT, LEFT)
+#
+# SPR paper reference (modified Rainbow): 17.1 mean return
+# Random agent: 1.7 | Human: 30.5
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_breakout.yaml --seed 42
+
+base_config: "experiments/dqn_atari/configs/atari100k_base.yaml"
+
+environment:
+  env_id: "BreakoutNoFrameskip-v4"
+
+experiment:
+  name: "atari100k_breakout"
+  notes: "Vanilla DQN on Breakout under Atari-100K protocol"

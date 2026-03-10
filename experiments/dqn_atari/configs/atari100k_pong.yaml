@@ -1,0 +1,21 @@
+# Pong - Atari-100K Configuration
+# =================================
+# Sparse reward game. Scores only on rallies won/lost.
+#
+# Action space: 6 actions (NOOP, FIRE, RIGHT, LEFT, RIGHTFIRE, LEFTFIRE)
+# Effective actions: NOOP, RIGHT, LEFT
+#
+# SPR paper reference (modified Rainbow): -5.4 mean return
+# Random agent: -20.7 | Human: 14.6
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_pong.yaml --seed 42
+
+base_config: "experiments/dqn_atari/configs/atari100k_base.yaml"
+
+environment:
+  env_id: "PongNoFrameskip-v4"
+
+experiment:
+  name: "atari100k_pong"
+  notes: "Vanilla DQN on Pong under Atari-100K protocol"

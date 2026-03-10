@@ -1,0 +1,20 @@
+# Seaquest - Atari-100K Configuration
+# =====================================
+# Moderate reward density. Scores when enemies are shot.
+#
+# Action space: 18 actions (full action set)
+#
+# SPR paper reference (modified Rainbow): 583.1 mean return
+# Random agent: 68.4 | Human: 42054.7
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_seaquest.yaml --seed 42
+
+base_config: "experiments/dqn_atari/configs/atari100k_base.yaml"
+
+environment:
+  env_id: "SeaquestNoFrameskip-v4"
+
+experiment:
+  name: "atari100k_seaquest"
+  notes: "Vanilla DQN on Seaquest under Atari-100K protocol"
