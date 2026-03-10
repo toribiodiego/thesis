@@ -1,12 +1,16 @@
 """
 SPR (Self-Predictive Representations) model components.
 
-Implements the transition model from Schwarzer et al. (2021) that
-predicts future latent states given current state and action.
-Operates on the 64x7x7 spatial output of the DQN convolutional
-encoder, not the post-FC features.
+Implements the transition model, projection head, and prediction head
+from Schwarzer et al. (2021). The transition model predicts future
+latent states given current state and action. Projection and prediction
+heads map representations to a space where cosine similarity loss is
+computed.
 
-Reference: https://arxiv.org/abs/2007.05929, Section 2.3
+All components operate on the 64x7x7 spatial output of the DQN
+convolutional encoder, not the post-FC features.
+
+Reference: https://arxiv.org/abs/2007.05929, Sections 2.2-2.3
 """
 
 import torch
@@ -95,3 +99,85 @@ class TransitionModel(nn.Module):
         x = torch.relu(self.conv2(x))
 
         return x
+
+
+class ProjectionHead(nn.Module):
+    """
+    Projection head for SPR (g_o / g_m).
+
+    Flattens the 64x7x7 conv output and projects to a representation
+    space for the self-predictive loss. Mirrors the FC layer of the
+    DQN encoder (Schwarzer et al. 2021, Section 2.3).
+
+    The online projection (g_o) is trained via backpropagation.
+    The target projection (g_m) is an EMA copy, handled by the EMA
+    module (separate component).
+
+    Args:
+        input_dim: Flattened conv output size. Default 3136 (64*7*7
+            from the Nature CNN).
+        output_dim: Projection output dimension. Default 512,
+            matching the DQN FC layer width.
+
+    Input: conv_output (B, 64, 7, 7)
+    Output: projected representation (B, output_dim)
+    """
+
+    def __init__(self, input_dim: int = 3136, output_dim: int = 512):
+        super().__init__()
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.fc = nn.Linear(input_dim, output_dim)
+
+    def forward(self, conv_output: torch.Tensor) -> torch.Tensor:
+        """
+        Project conv features to representation space.
+
+        Args:
+            conv_output: Spatial conv features (B, C, H, W).
+                Typically (B, 64, 7, 7) from the Nature CNN or
+                transition model.
+
+        Returns:
+            Projected representation (B, output_dim).
+        """
+        x = conv_output.reshape(conv_output.size(0), -1)
+        return torch.relu(self.fc(x))
+
+
+class PredictionHead(nn.Module):
+    """
+    Prediction head for SPR (q).
+
+    Single linear layer that maps online projected representations
+    to match target projected representations. Applied only on the
+    online side (Schwarzer et al. 2021, Section 2.2).
+
+    This asymmetry (prediction head on online side only) is critical
+    for preventing representational collapse, following the BYOL
+    design pattern.
+
+    Args:
+        dim: Input and output dimension. Default 512, matching the
+            projection head output.
+
+    Input: projected representation (B, dim)
+    Output: predicted target representation (B, dim)
+    """
+
+    def __init__(self, dim: int = 512):
+        super().__init__()
+        self.dim = dim
+        self.fc = nn.Linear(dim, dim)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Predict target representation from online projection.
+
+        Args:
+            x: Online projected representation (B, dim).
+
+        Returns:
+            Predicted target representation (B, dim).
+        """
+        return self.fc(x)
