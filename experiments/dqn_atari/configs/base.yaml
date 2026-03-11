@@ -298,6 +298,44 @@ logging:
     log_every: 10000  # Log reference Q-values every N steps
 
 # =============================================================================
+# Rainbow DQN Configuration
+# =============================================================================
+# Combined improvements from Hessel et al. (2018), "Rainbow: Combining
+# Improvements in Deep Reinforcement Learning". Integrates Double DQN,
+# Dueling architecture, NoisyNets, C51 distributional RL, multi-step
+# returns, and prioritized experience replay.
+#
+# When enabled, replaces the vanilla DQN model and training loop with
+# RainbowDQN and perform_rainbow_update_step. Optimizer defaults
+# switch to Adam lr=6.25e-5, eps=1.5e-4 (Hessel et al. 2018, App. B)
+# unless explicitly overridden in training.optimizer.
+#
+# Reference: Hessel et al. (2018), "Rainbow: Combining Improvements
+# in Deep Reinforcement Learning", AAAI 2018
+rainbow:
+  enabled: false              # Master switch: use Rainbow instead of vanilla DQN
+  double_dqn: true            # Use online net for action selection (van Hasselt 2016)
+  dueling: true               # Dueling value/advantage streams (Wang et al. 2016)
+  noisy_nets: true            # NoisyLinear exploration (Fortunato et al. 2018)
+
+  # C51 distributional RL (Bellemare et al. 2017)
+  distributional:
+    num_atoms: 51             # Number of support atoms
+    v_min: -10.0              # Minimum support value
+    v_max: 10.0               # Maximum support value
+
+  # Multi-step returns (Sutton 1988)
+  multi_step:
+    n: 3                      # N-step return horizon
+
+  # Prioritized experience replay (Schaul et al. 2016)
+  priority:
+    alpha: 0.5                # Priority exponent (0 = uniform, 1 = full priority)
+    beta_start: 0.4           # IS correction start value
+    beta_end: 1.0             # IS correction end value (linearly annealed)
+    epsilon: 0.000001         # Small constant added to priorities (1e-6)
+
+# =============================================================================
 # SPR Configuration (Self-Predictive Representations)
 # =============================================================================
 # Auxiliary self-supervised objective that predicts future latent states.
