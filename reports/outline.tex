@@ -323,6 +323,20 @@ representations.
   correlation analysis
 \end{itemize}
 
+\subsection{Representation-Informed Modification}
+
+Using the interpretability findings to motivate a targeted change and
+test whether it improves performance.
+
+\begin{itemize}
+\item What the probes and visualizations reveal about the bottleneck
+  on vanilla DQN -- which missing property to address
+\item The specific modification: a change to SPR, the training
+  configuration, or the addition of a single Rainbow component
+\item Experimental setup: same six games, same evaluation protocol,
+  controlled comparison against the unmodified conditions
+\end{itemize}
+
 \section{Results}
 
 We present results with minimal interpretation -- the Discussion
@@ -386,6 +400,19 @@ Whether the findings hold across different types of games.
   reward games?
 \item Game-specific patterns vs universal findings
 \item Whether reward structure predicts where SPR helps
+\end{itemize}
+
+\subsection{Representation-Informed Modification}
+
+Whether the interpretability-motivated change improves performance.
+
+\begin{itemize}
+\item Performance comparison: modified condition vs the unmodified
+  DQN+SPR baseline across six games
+\item Whether the modification closes part of the gap between DQN+SPR
+  and Rainbow+SPR
+\item Probe and visualization comparison: does the modification change
+  what the representations encode?
 \end{itemize}
 
 % ================================================================
@@ -492,6 +519,8 @@ actual findings.
   capability matters
 \item Component attribution (if applicable): which Rainbow property
   enables useful representations
+\item Representation-informed modification: whether understanding the
+  capability gap leads to a concrete improvement on the simple agent
 \end{itemize}
 
 \subsection{Implications}
