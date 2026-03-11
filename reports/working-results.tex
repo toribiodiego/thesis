@@ -236,28 +236,31 @@ evaluation episodes at the final checkpoint (400K frames), seed 42.
 \centering
 \renewcommand{\arraystretch}{1.4}
 \setlength{\tabcolsep}{8pt}
-\begin{tabular}{l rrrr r}
+\begin{tabular}{l rrrr rr}
 \toprule
 \textbf{Game}
   & \textbf{Baseline}
   & \textbf{+ Aug}
   & \textbf{+ SPR}
   & \textbf{+ Both}
-  & \textbf{Rainbow} \\
+  & \textbf{Rainbow}
+  & \textbf{Rainbow + SPR} \\
 \midrule
-Crazy Climber  & $3540 \pm 754$   & $110 \pm 40$      & $3400 \pm 0$      & $3.3 \pm 18$     & $9137 \pm 3857$  \\
-Road Runner    & $1440 \pm 859$   & $3.3 \pm 18$      & $2290 \pm 1238$   & $1033 \pm 539$   & $180 \pm 464$    \\
-Boxing         & $-3.0 \pm 5.3$   & $-18.2 \pm 4.0$   & $-18.2 \pm 11.7$  & $-39.6 \pm 10$   & $-3.0 \pm 6.5$   \\
-Kangaroo       & $26.7 \pm 68$    & $460 \pm 128$     & $13.3 \pm 49.9$   & $320 \pm 98$     & $33.3 \pm 90.7$  \\
-Frostbite      & $147 \pm 45$     & $0.0 \pm 0.0$     & $161 \pm 31$      & $173 \pm 15$     & $43 \pm 18$      \\
-Up N Down      & $141 \pm 155$    & $981 \pm 671$     & $901 \pm 682$     & $491 \pm 467$    & $1794 \pm 637$   \\
+Crazy Climber  & $3540 \pm 754$   & $110 \pm 40$      & $3400 \pm 0$      & $3.3 \pm 18$     & --  & -- \\
+Road Runner    & $1440 \pm 859$   & $3.3 \pm 18$      & $2290 \pm 1238$   & $1033 \pm 539$   & --  & -- \\
+Boxing         & $-3.0 \pm 5.3$   & $-18.2 \pm 4.0$   & $-18.2 \pm 11.7$  & $-39.6 \pm 10$   & --  & -- \\
+Kangaroo       & $26.7 \pm 68$    & $460 \pm 128$     & $13.3 \pm 49.9$   & $320 \pm 98$     & --  & -- \\
+Frostbite      & $147 \pm 45$     & $0.0 \pm 0.0$     & $161 \pm 31$      & $173 \pm 15$     & --  & -- \\
+Up N Down      & $141 \pm 155$    & $981 \pm 671$     & $901 \pm 682$     & $491 \pm 467$    & --  & -- \\
 \midrule
-Mean           & $982$  & $256$  & $1125$  & $330$  & $1864$ \\
+Mean           & $982$  & $256$  & $1125$  & $330$  & --  & -- \\
 \bottomrule
 \end{tabular}
 \caption{Summary of all conditions. Mean raw episode return ($\pm$
 std) over 30 eval episodes at 400K frames, seed 42. The first four
-columns are DQN variants; Rainbow is a separate base agent.}
+columns are DQN isolation study results. Rainbow and Rainbow+SPR
+columns are pending -- see Appendix~\ref{app:invalid-rainbow} for
+details on the original Rainbow runs.}
 \label{tab:summary}
 \end{table}
 
@@ -325,90 +328,65 @@ combined condition that does not sustain.}
 \label{fig:minimal-learning}
 \end{figure}
 
-\subsection{Rainbow Baseline}
+\subsection{Rainbow}
 
-Rainbow is not uniformly better under the 100K budget. Crazy Climber
-($9137$ vs $3540$, roughly $3\times$) and Up N Down ($1794$ vs $141$,
-$12\times$) see large gains. Both are dense reward games where
-Rainbow's components (distributional targets, prioritized replay,
-n-step returns) appear to calibrate within 100K steps.
+\textit{Pending.} Rainbow runs require completing the training script
+integration (Task 42). The original Rainbow runs used vanilla DQN with
+Rainbow hyperparameters due to a bug in the training entry point --
+see Appendix~\ref{app:invalid-rainbow} for details. Results will be
+added once actual Rainbow training is operational.
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{../output/plots/rainbow_helps.pdf}
-\caption{Games where Rainbow improves over DQN. Crazy Climber shows
-Rainbow consistently above baseline, peaking higher before both
-collapse at the final checkpoint. Up N Down shows Rainbow pulling
-ahead in the second half of training.}
-\label{fig:rainbow-helps}
-\end{figure}
+\subsection{Rainbow + SPR}
 
-\noindent Road Runner ($180$ vs $1440$) and Frostbite ($43$ vs $147$)
-regress substantially. Both games performed reasonably under vanilla
-DQN, so the regression is not a floor effect -- the added complexity
-hurts more than it helps with so little data.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{../output/plots/rainbow_hurts.pdf}
-\caption{Games where Rainbow regresses from DQN. Road Runner shows
-DQN peaking mid-training while Rainbow stays near zero throughout.
-Frostbite shows both agents oscillating at similar levels, with
-Rainbow dipping to zero at 200K before recovering.}
-\label{fig:rainbow-hurts}
-\end{figure}
-
-\noindent Boxing and Kangaroo are effectively unchanged -- both agents
-score near zero regardless of the base agent. These games appear too
-difficult for either architecture within 100K steps.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{../output/plots/rainbow_flat.pdf}
-\caption{Games where neither agent learns. Kangaroo shows both agents
-near zero with high variance. Boxing shows Rainbow recovering to
-near-zero while DQN declines steadily.}
-\label{fig:rainbow-flat}
-\end{figure}
+\textit{Pending.} Requires Rainbow integration (Task 42) and
+Rainbow+SPR runs on the same six games. This is the core capability
+comparison: does SPR help Rainbow where it did not help vanilla DQN?
 
 \subsection{Summary}
 
-Three patterns emerge from the single-seed results. First, SPR's
-effect on vanilla DQN is modest and game-dependent -- it helps on two
-of six games and is flat or slightly harmful on the rest. This
+Two patterns emerge from the single-seed DQN isolation study. First,
+SPR's effect on vanilla DQN is modest and game-dependent -- it helps
+on two of six games and is flat or slightly harmful on the rest. This
 contrasts with the large improvements reported when SPR is paired with
 Rainbow. Second, augmentation is similarly game-dependent but in
 different directions: it helps games where spatial invariance aids
 generalization and collapses games where precise spatial information is
-critical. Third, Rainbow improves the same two games where SPR and
-augmentation also showed their strongest effects (Crazy Climber, Up N
-Down), suggesting that dense reward games with relatively simple visual
-dynamics are most responsive to additional capability under the 100K
-budget. The key open question is whether adding SPR to Rainbow produces
-the large improvements seen in published results, and if so, what
-Rainbow provides at the representation level that vanilla DQN does not.
+critical. The key open question is whether adding SPR to Rainbow
+produces the large improvements seen in published results, and if so,
+what Rainbow provides at the representation level that vanilla DQN does
+not. This requires completing the Rainbow training integration first.
 
 \section{Next Steps}
 
-All results so far use a single seed (42). Three areas of work remain
-before the thesis experiments are complete.
+All results so far use a single seed (42) from the DQN isolation study.
+Four areas of work remain before the thesis experiments are complete.
+
+\subsection{Rainbow Training Integration}
+
+The original Rainbow runs used vanilla DQN with Rainbow hyperparameters
+due to a bug in the training script -- \texttt{train\_dqn.py} ignored
+\texttt{config.rainbow.enabled} and always created a vanilla DQN model.
+The Rainbow components (RainbowDQN model, PrioritizedReplayBuffer,
+distributional C51 loss) exist and are individually tested but were
+never wired into the training entry point. This must be fixed before
+Rainbow and Rainbow+SPR runs can proceed (Task 42).
+
+\subsection{Rainbow and Rainbow+SPR Runs}
+
+Once Rainbow training works, we run Rainbow (6 games, seed 42) followed
+by Rainbow+SPR (6 games, seed 42). Comparing DQN+SPR (modest effects)
+against Rainbow+SPR (large effects in published results) directly tests
+whether the base agent's capability determines whether self-supervised
+representations are useful.
 
 \subsection{Multi-Seed Evaluation}
 
-Each condition will be run with seeds 42, 13, and 23 to produce
-confidence intervals. The current single-seed results show high
-variance between adjacent checkpoints, so multi-seed aggregation is
-necessary to distinguish real effects from noise. Learning curves will
-be re-plotted with shaded confidence bands across seeds.
-
-\subsection{Rainbow + SPR}
-
-The Rainbow baseline establishes that a more capable agent improves on
-some games but regresses on others. The next step adds SPR to Rainbow
-on the same six games. Comparing DQN+SPR (modest effects) against
-Rainbow+SPR (large effects in published results) directly tests whether
-the base agent's capability determines whether self-supervised
-representations are useful.
+Each condition will be run with seeds 13 and 23 to produce confidence
+intervals alongside the existing seed 42 data. The current single-seed
+results show high variance between adjacent checkpoints, so multi-seed
+aggregation is necessary to distinguish real effects from noise.
+Learning curves will be re-plotted with shaded confidence bands across
+seeds.
 
 \subsection{Interpretability Analysis}
 
@@ -480,5 +458,52 @@ Chopper Command & BattleZone  &             \\
 receives non-zero reward. Dense games yield reward on most steps; sparse
 games have long stretches of zero reward.}
 \end{table}
+
+\section{Invalid Rainbow Runs}
+\label{app:invalid-rainbow}
+
+The initial Rainbow runs (seed 42, six games) were discovered to be
+invalid. The training script (\texttt{train\_dqn.py}) ignored the
+\texttt{config.rainbow.enabled} flag and always created a vanilla DQN
+model, regardless of configuration. As a result, these runs trained
+vanilla DQN with Rainbow hyperparameters -- Adam optimizer at a lower
+learning rate ($6.25 \times 10^{-5}$), 20K warmup, 3-step returns in
+config -- but without the actual Rainbow components: no distributional
+C51 heads, no dueling streams, no noisy layers, no prioritized replay.
+
+\medskip
+\noindent The data is preserved below for reference. These numbers
+should not be compared to actual Rainbow results.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\setlength{\tabcolsep}{10pt}
+\begin{tabular}{l rr}
+\toprule
+\textbf{Game}
+  & \textbf{DQN Baseline}
+  & \textbf{``Rainbow'' (invalid)} \\
+\midrule
+Crazy Climber  & $3540 \pm 754$   & $9423 \pm 3712$ \\
+Road Runner    & $1440 \pm 859$   & $90.0 \pm 187$  \\
+Boxing         & $-3.0 \pm 5.3$   & $-1.9 \pm 4.5$  \\
+Kangaroo       & $26.7 \pm 68$    & $40.0 \pm 120$  \\
+Frostbite      & $147 \pm 45$     & $42.3 \pm 15$   \\
+Up N Down      & $141 \pm 155$    & $1712 \pm 657$   \\
+\bottomrule
+\end{tabular}
+\caption{Invalid ``Rainbow'' results. These runs used vanilla DQN with
+Rainbow hyperparameters (Adam at lower lr, 20K warmup) but no actual
+Rainbow components. The modest differences from DQN Baseline are
+consistent with optimizer and hyperparameter changes alone.}
+\label{tab:invalid-rainbow}
+\end{table}
+
+\noindent The run directories have been moved to
+\texttt{experiments/dqn\_atari/runs/invalid/} locally and
+\texttt{thesis-runs/invalid/} on Google Drive. Corrected Rainbow runs
+using the actual RainbowDQN model will replace the placeholder columns
+in Table~\ref{tab:summary}.
 
 \end{document}

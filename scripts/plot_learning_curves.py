@@ -52,13 +52,16 @@ RUN_NAMES = {
     ("Up N Down", "+ Both"): "atari100k_up_n_down_both_42_20260311_030203",
 }
 
+# INVALID: These runs used vanilla DQN with Rainbow hyperparameters,
+# not actual Rainbow (train_dqn.py ignored config.rainbow.enabled).
+# Moved to invalid/ subfolder. Will be replaced after Task 42.
 RAINBOW_RUN_NAMES = {
-    ("Crazy Climber", "Rainbow"): "atari100k_crazy_climber_rainbow_42_20260311_035227",
-    ("Road Runner", "Rainbow"): "atari100k_road_runner_rainbow_42_20260311_033324",
-    ("Boxing", "Rainbow"): "atari100k_boxing_rainbow_42_20260311_034322",
-    ("Kangaroo", "Rainbow"): "atari100k_kangaroo_rainbow_42_20260311_041254",
-    ("Frostbite", "Rainbow"): "atari100k_frostbite_rainbow_42_20260311_041254",
-    ("Up N Down", "Rainbow"): "atari100k_up_n_down_rainbow_42_20260311_042140",
+    ("Crazy Climber", "Rainbow"): "invalid/atari100k_crazy_climber_rainbow_42_20260311_035227",
+    ("Road Runner", "Rainbow"): "invalid/atari100k_road_runner_rainbow_42_20260311_033324",
+    ("Boxing", "Rainbow"): "invalid/atari100k_boxing_rainbow_42_20260311_034322",
+    ("Kangaroo", "Rainbow"): "invalid/atari100k_kangaroo_rainbow_42_20260311_041254",
+    ("Frostbite", "Rainbow"): "invalid/atari100k_frostbite_rainbow_42_20260311_041254",
+    ("Up N Down", "Rainbow"): "invalid/atari100k_up_n_down_rainbow_42_20260311_042140",
 }
 
 GAMES = [

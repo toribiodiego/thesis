@@ -25,13 +25,16 @@ from src.training.evaluation import evaluate
 
 RUNS_DIR = "experiments/dqn_atari/runs"
 
+# INVALID: These runs used vanilla DQN with Rainbow hyperparameters,
+# not actual Rainbow (train_dqn.py ignored config.rainbow.enabled).
+# Moved to invalid/ subfolder. Will be replaced after Task 42.
 RAINBOW_RUNS = [
-    "atari100k_boxing_rainbow_42_20260311_034322",
-    "atari100k_crazy_climber_rainbow_42_20260311_035227",
-    "atari100k_frostbite_rainbow_42_20260311_041254",
-    "atari100k_kangaroo_rainbow_42_20260311_041254",
-    "atari100k_road_runner_rainbow_42_20260311_033324",
-    "atari100k_up_n_down_rainbow_42_20260311_042140",
+    "invalid/atari100k_boxing_rainbow_42_20260311_034322",
+    "invalid/atari100k_crazy_climber_rainbow_42_20260311_035227",
+    "invalid/atari100k_frostbite_rainbow_42_20260311_041254",
+    "invalid/atari100k_kangaroo_rainbow_42_20260311_041254",
+    "invalid/atari100k_road_runner_rainbow_42_20260311_033324",
+    "invalid/atari100k_up_n_down_rainbow_42_20260311_042140",
 ]
 
 EVAL_EPISODES = 30
