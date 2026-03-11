@@ -1,0 +1,36 @@
+{
+  "created_at": "2026-03-11T00:02:06.426081",
+  "python_version": "3.12.12",
+  "git": {
+    "commit_hash": "d7334c5",
+    "commit_hash_full": "d7334c53652fd0f24ef883a5cd93688dc0170676",
+    "branch": "main",
+    "dirty": false,
+    "available": true
+  },
+  "seed": 42,
+  "experiment": {
+    "name": "atari100k_frostbite_spr",
+    "notes": "DQN + SPR on Frostbite under Atari-100K protocol"
+  },
+  "environment": {
+    "env_id": "FrostbiteNoFrameskip-v4"
+  },
+  "training": {
+    "total_frames": 400000,
+    "optimizer_lr": 0.00025
+  },
+  "pytorch_version": "2.4.1+cu121",
+  "cli": {
+    "args": {
+      "config_file": "experiments/dqn_atari/configs/atari100k_frostbite_spr.yaml",
+      "seed": 42,
+      "resume": null,
+      "overrides": [],
+      "dry_run": false,
+      "device": null,
+      "tags": [],
+      "dev_run": false
+    }
+  }
+}

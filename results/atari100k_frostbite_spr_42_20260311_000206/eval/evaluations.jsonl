@@ -1,0 +1,10 @@
+{"step": 40000, "mean_return": 137.33333333333334, "median_return": 130.0, "std_return": 37.67698973585278, "min_return": 60.0, "max_return": 210.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.8200000000000001}
+{"step": 80000, "mean_return": 95.66666666666667, "median_return": 90.0, "std_return": 27.77088803445475, "min_return": 30.0, "max_return": 150.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.64}
+{"step": 120000, "mean_return": 207.0, "median_return": 205.0, "std_return": 35.13308032799477, "min_return": 150.0, "max_return": 280.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.45999999999999996}
+{"step": 160000, "mean_return": 0.0, "median_return": 0.0, "std_return": 0.0, "min_return": 0.0, "max_return": 0.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.28}
+{"step": 200000, "mean_return": 0.0, "median_return": 0.0, "std_return": 0.0, "min_return": 0.0, "max_return": 0.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.1}
+{"step": 240000, "mean_return": 72.0, "median_return": 65.0, "std_return": 32.08322510804257, "min_return": 20.0, "max_return": 140.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.1}
+{"step": 280000, "mean_return": 166.0, "median_return": 160.0, "std_return": 42.63019274332844, "min_return": 90.0, "max_return": 250.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.1}
+{"step": 320000, "mean_return": 186.33333333333334, "median_return": 200.0, "std_return": 36.64999621039848, "min_return": 110.0, "max_return": 240.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.1}
+{"step": 360000, "mean_return": 44.0, "median_return": 40.0, "std_return": 32.31098884280702, "min_return": 0.0, "max_return": 110.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.1}
+{"step": 400000, "mean_return": 157.33333333333334, "median_return": 170.0, "std_return": 46.038631121652124, "min_return": 90.0, "max_return": 240.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.1}

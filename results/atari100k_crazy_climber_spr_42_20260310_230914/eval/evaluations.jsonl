@@ -1,0 +1,10 @@
+{"step": 40000, "mean_return": 206.66666666666666, "median_return": 200.0, "std_return": 123.64824660660938, "min_return": 0.0, "max_return": 400.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.8200000000000001}
+{"step": 80000, "mean_return": 3436.6666666666665, "median_return": 3400.0, "std_return": 162.24124698183942, "min_return": 3400.0, "max_return": 4300.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.64}
+{"step": 120000, "mean_return": 3370.0, "median_return": 3400.0, "std_return": 161.55494421403512, "min_return": 2500.0, "max_return": 3400.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.45999999999999996}
+{"step": 160000, "mean_return": 4686.666666666667, "median_return": 3400.0, "std_return": 1887.2790525574699, "min_return": 3400.0, "max_return": 11000.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.28}
+{"step": 200000, "mean_return": 9390.0, "median_return": 10700.0, "std_return": 2782.0076683335483, "min_return": 4700.0, "max_return": 15400.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.1}
+{"step": 240000, "mean_return": 4966.666666666667, "median_return": 3400.0, "std_return": 1809.849594733097, "min_return": 3400.0, "max_return": 8900.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.1}
+{"step": 280000, "mean_return": 16433.333333333332, "median_return": 16700.0, "std_return": 4720.334263116919, "min_return": 11000.0, "max_return": 28300.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.1}
+{"step": 320000, "mean_return": 6063.333333333333, "median_return": 4500.0, "std_return": 4256.718872036954, "min_return": 3400.0, "max_return": 24100.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.1}
+{"step": 360000, "mean_return": 12800.0, "median_return": 11250.0, "std_return": 2558.645474986065, "min_return": 10600.0, "max_return": 18500.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.1}
+{"step": 400000, "mean_return": 3400.0, "median_return": 3400.0, "std_return": 0.0, "min_return": 3400.0, "max_return": 3400.0, "episodes": 30, "eval_epsilon": 0.05, "training_epsilon": 0.1}
