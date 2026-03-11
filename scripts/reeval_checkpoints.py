@@ -40,7 +40,19 @@ RAINBOW_RUNS = [
 
 EVAL_EPISODES = 30
 EVAL_EPSILON = 0.05
-CHECKPOINT_STEPS = [100000, 200000, 300000, 400000]
+
+
+def discover_checkpoint_steps(checkpoint_dir):
+    """Scan checkpoint directory and return sorted list of step numbers."""
+    import re
+    steps = []
+    if not os.path.isdir(checkpoint_dir):
+        return steps
+    for fname in os.listdir(checkpoint_dir):
+        m = re.match(r"checkpoint_(\d+)\.pt$", fname)
+        if m:
+            steps.append(int(m.group(1)))
+    return sorted(steps)
 
 
 def get_existing_eval_steps(run_dir):
@@ -130,11 +142,8 @@ def main():
 
         # Find checkpoints that need evaluation
         checkpoint_dir = os.path.join(run_dir, "checkpoints")
-        missing_steps = []
-        for step in CHECKPOINT_STEPS:
-            cp_path = os.path.join(checkpoint_dir, f"checkpoint_{step}.pt")
-            if os.path.exists(cp_path) and step not in existing_steps:
-                missing_steps.append(step)
+        all_steps = discover_checkpoint_steps(checkpoint_dir)
+        missing_steps = [s for s in all_steps if s not in existing_steps]
 
         if not missing_steps:
             print(f"SKIP {run_name}: all checkpoints already evaluated")
