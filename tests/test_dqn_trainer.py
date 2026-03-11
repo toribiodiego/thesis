@@ -2710,6 +2710,60 @@ def test_epsilon_scheduler_edge_cases():
     assert scheduler_short.get_epsilon(10) == 0.1
 
 
+def test_epsilon_scheduler_noisy_nets_always_zero():
+    """When noisy_nets=True, epsilon is always 0.0."""
+    from src.training import EpsilonScheduler
+
+    scheduler = EpsilonScheduler(
+        epsilon_start=1.0, epsilon_end=0.1, decay_frames=1_000_000,
+        noisy_nets=True,
+    )
+    assert scheduler.get_epsilon(0) == 0.0
+    assert scheduler.get_epsilon(500_000) == 0.0
+    assert scheduler.get_epsilon(1_000_000) == 0.0
+    assert scheduler.get_epsilon(2_000_000) == 0.0
+
+
+def test_epsilon_scheduler_noisy_nets_eval_zero():
+    """When noisy_nets=True, eval epsilon is also 0.0."""
+    from src.training import EpsilonScheduler
+
+    scheduler = EpsilonScheduler(
+        eval_epsilon=0.05, noisy_nets=True,
+    )
+    assert scheduler.get_eval_epsilon() == 0.0
+
+
+def test_epsilon_scheduler_noisy_nets_current_epsilon():
+    """When noisy_nets=True, current_epsilon starts at 0.0."""
+    from src.training import EpsilonScheduler
+
+    scheduler = EpsilonScheduler(noisy_nets=True)
+    assert scheduler.current_epsilon == 0.0
+
+
+def test_epsilon_scheduler_noisy_nets_to_dict():
+    """to_dict includes noisy_nets flag when enabled."""
+    from src.training import EpsilonScheduler
+
+    scheduler = EpsilonScheduler(noisy_nets=True)
+    d = scheduler.to_dict()
+    assert d["noisy_nets"] is True
+
+    scheduler_normal = EpsilonScheduler(noisy_nets=False)
+    d_normal = scheduler_normal.to_dict()
+    assert "noisy_nets" not in d_normal
+
+
+def test_epsilon_scheduler_noisy_nets_default_false():
+    """By default noisy_nets is False (backward compat)."""
+    from src.training import EpsilonScheduler
+
+    scheduler = EpsilonScheduler()
+    assert scheduler.noisy_nets is False
+    assert scheduler.get_epsilon(0) == 1.0
+
+
 # ============================================================================
 # Frame Counter Tests
 # ============================================================================

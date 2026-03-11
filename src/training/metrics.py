@@ -492,6 +492,10 @@ class EpsilonScheduler:
     Supports linear decay from epsilon_start to epsilon_end over a specified
     number of frames, with separate epsilon for training and evaluation.
 
+    When noisy_nets=True, epsilon is always 0.0 (both training and
+    evaluation). Exploration is handled entirely by NoisyLinear noise
+    injection, so epsilon-greedy randomness is disabled.
+
     Parameters
     ----------
     epsilon_start : float
@@ -502,12 +506,19 @@ class EpsilonScheduler:
         Number of frames over which to decay epsilon (default: 1,000,000)
     eval_epsilon : float
         Fixed epsilon for evaluation mode (default: 0.05)
+    noisy_nets : bool
+        If True, always return 0.0 for all epsilon queries. Exploration
+        is provided by NoisyLinear layers instead (default: False).
 
     Usage
     -----
     >>> scheduler = EpsilonScheduler(epsilon_start=1.0, epsilon_end=0.1, decay_frames=1000000)
     >>> epsilon = scheduler.get_epsilon(current_frame=500000)  # Returns 0.55
     >>> eval_eps = scheduler.get_eval_epsilon()  # Returns 0.05
+    >>> # With noisy nets:
+    >>> scheduler = EpsilonScheduler(noisy_nets=True)
+    >>> scheduler.get_epsilon(0)  # Returns 0.0
+    >>> scheduler.get_eval_epsilon()  # Returns 0.0
     """
 
     def __init__(
@@ -516,6 +527,7 @@ class EpsilonScheduler:
         epsilon_end: float = 0.1,
         decay_frames: int = 1_000_000,
         eval_epsilon: float = 0.05,
+        noisy_nets: bool = False,
     ):
         assert (
             0.0 <= epsilon_start <= 1.0
@@ -533,17 +545,20 @@ class EpsilonScheduler:
         self.epsilon_end = epsilon_end
         self.decay_frames = decay_frames
         self.eval_epsilon = eval_epsilon
+        self.noisy_nets = noisy_nets
 
         # Precompute slope for efficiency
         self.slope = (epsilon_end - epsilon_start) / decay_frames
 
         # State for resume (can be set when loading checkpoint)
         self.frame_counter = 0
-        self.current_epsilon = epsilon_start
+        self.current_epsilon = 0.0 if noisy_nets else epsilon_start
 
     def get_epsilon(self, current_frame: int) -> float:
         """
         Get epsilon for current training frame with linear decay.
+
+        Returns 0.0 immediately when noisy_nets is enabled.
 
         Parameters
         ----------
@@ -553,7 +568,7 @@ class EpsilonScheduler:
         Returns
         -------
         float
-            Epsilon value in [epsilon_end, epsilon_start]
+            Epsilon value in [epsilon_end, epsilon_start], or 0.0 if noisy_nets
 
         Examples
         --------
@@ -567,6 +582,9 @@ class EpsilonScheduler:
         >>> scheduler.get_epsilon(2000000)  # Clamps to epsilon_end
         0.1
         """
+        if self.noisy_nets:
+            return 0.0
+
         if current_frame >= self.decay_frames:
             return self.epsilon_end
 
@@ -580,18 +598,25 @@ class EpsilonScheduler:
         """
         Get fixed epsilon for evaluation mode.
 
+        Returns 0.0 when noisy_nets is enabled.
+
         Returns
         -------
         float
-            Fixed epsilon for evaluation (no decay)
+            Fixed epsilon for evaluation (no decay), or 0.0 if noisy_nets
         """
+        if self.noisy_nets:
+            return 0.0
         return self.eval_epsilon
 
     def to_dict(self) -> dict:
         """Export scheduler configuration as dictionary."""
-        return {
+        d = {
             "epsilon_start": self.epsilon_start,
             "epsilon_end": self.epsilon_end,
             "decay_frames": self.decay_frames,
             "eval_epsilon": self.eval_epsilon,
         }
+        if self.noisy_nets:
+            d["noisy_nets"] = True
+        return d
