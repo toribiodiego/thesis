@@ -41,7 +41,7 @@
 results. DQN isolation study is complete across six games, seed 42.
 Rainbow capability comparison is pending.}
 
-\section{Atari-100K Benchmark}
+\section{Introduction}
 
 Atari-100K \citelink{https://arxiv.org/abs/1903.00374}{1} is a
 data-efficiency benchmark for reinforcement learning. The agent gets
@@ -65,7 +65,14 @@ future internal states, encouraging richer representations even when
 reward is scarce. However, SPR was only evaluated on top of Rainbow
 \citelink{https://arxiv.org/abs/1710.02298}{4} -- a complex agent with
 many components -- so it is unclear whether the representation learning
-is what helped or whether Rainbow did the heavy lifting.
+is what helped or whether Rainbow did the heavy lifting. This leads to
+our central question:
+
+\begin{quote}
+When does self-supervised representation learning improve data-efficient
+reinforcement learning, and what determines whether the learned
+representations are useful?
+\end{quote}
 
 \medskip
 We first isolate SPR on vanilla DQN, using \textit{data augmentation}
@@ -77,9 +84,28 @@ produce large improvements. Comparing representations across these two
 base agents -- one simple, one capable -- reveals what the base agent
 provides that makes self-supervised representations useful.
 
-\section{Experimental Design}
+\section{Methods}
 
-\subsection{What We Compare}
+\subsection{Game Selection}
+
+We selected six games to cover a range of expected interactions between
+augmentation and SPR, based on published results in Schwarzer et al.\
+\citelink{https://arxiv.org/abs/2007.05929}{3}:
+
+\begin{itemize}[itemsep=2pt]
+  \item \textbf{Crazy Climber} -- SPR dominates; augmentation adds little
+  \item \textbf{Boxing} -- both SPR and augmentation contribute
+    independently
+  \item \textbf{Kangaroo} -- strong synergy; both components needed
+  \item \textbf{Road Runner} -- SPR large lift; augmentation moderate
+    boost
+  \item \textbf{Frostbite} -- SPR dominant ($6\times$ over baseline);
+    augmentation adds only 10\%
+  \item \textbf{Up N Down} -- augmentation dominant; boosts SPR by
+    $4\times$
+\end{itemize}
+
+\subsection{Experimental Conditions}
 
 We start with a vanilla DQN baseline and progressively add augmentation
 and SPR. Each condition is run across six games with three seeds
@@ -104,25 +130,6 @@ Baseline  & Vanilla DQN, no modifications \\
 {\raggedright\small \textbf{Table 1.} The four experimental conditions.
 Each builds on the same DQN architecture and hyperparameters.\par}
 \end{table}
-
-\subsection{Game Selection}
-
-We selected six games to cover a range of expected interactions between
-augmentation and SPR, based on published results in Schwarzer et al.\
-\citelink{https://arxiv.org/abs/2007.05929}{3}:
-
-\begin{itemize}[itemsep=2pt]
-  \item \textbf{Crazy Climber} -- SPR dominates; augmentation adds little
-  \item \textbf{Boxing} -- both SPR and augmentation contribute
-    independently
-  \item \textbf{Kangaroo} -- strong synergy; both components needed
-  \item \textbf{Road Runner} -- SPR large lift; augmentation moderate
-    boost
-  \item \textbf{Frostbite} -- SPR dominant ($6\times$ over baseline);
-    augmentation adds only 10\%
-  \item \textbf{Up N Down} -- augmentation dominant; boosts SPR by
-    $4\times$
-\end{itemize}
 
 \subsection{Training Setup}
 
@@ -160,6 +167,38 @@ can retrain on earlier experience; training begins after 2K transitions
 have been collected. The target network is a frozen copy of the main
 network used to compute stable learning targets, refreshed every 2K
 steps.
+
+\subsection{Rainbow Comparison}
+
+To test whether SPR needs a capable base agent, we run the same six
+games with Rainbow DQN -- a stronger agent that combines six
+improvements over vanilla DQN: distributional value estimates (C51,
+51 atoms), double Q-learning, dueling network streams, noisy
+exploration, 3-step returns, and prioritized experience replay.
+
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{12pt}
+\begin{tabular}{l l}
+\toprule
+\textbf{Condition} & \textbf{What changes} \\
+\midrule
+Rainbow       & Rainbow DQN, no SPR \\
+Rainbow + SPR & Add self-predictive representation learning \\
+\bottomrule
+\end{tabular}
+
+\vspace{1.2em}
+{\raggedright\small \textbf{Table 3.} Rainbow conditions. Both share the
+same architecture and hyperparameters; SPR is the only difference.\par}
+\end{table}
+
+\noindent Rainbow uses Adam (lr = $6.25 \times 10^{-5}$) instead of
+RMSProp, updates the target network every 8K steps, and requires 20K
+warmup transitions for prioritized replay to stabilize. All other
+settings (100K environment steps, 6 games, 3 seeds) match the DQN
+conditions. Results for these conditions are pending.
 
 \section{Results}
 
