@@ -38,8 +38,8 @@
 \thispagestyle{empty}
 
 \noindent{\small This document is a working snapshot of experimental
-results. All four conditions (Baseline, +Aug, +SPR, +Both) are
-complete across six games, seed 42.}
+results. DQN isolation study is complete across six games, seed 42.
+Rainbow capability comparison is pending.}
 
 \section{Atari-100K Benchmark}
 
@@ -65,11 +65,17 @@ future internal states, encouraging richer representations even when
 reward is scarce. However, SPR was only evaluated on top of Rainbow
 \citelink{https://arxiv.org/abs/1710.02298}{4} -- a complex agent with
 many components -- so it is unclear whether the representation learning
-is what helped or whether Rainbow did the heavy lifting. We isolate SPR
-on vanilla DQN to answer that question, using \textit{data
-augmentation} (small random shifts to each game frame) as a second
-factor. By testing each method alone and in combination across six
-games, we can isolate their individual and combined effects.
+is what helped or whether Rainbow did the heavy lifting.
+
+\medskip
+We first isolate SPR on vanilla DQN, using \textit{data augmentation}
+(small random shifts to each game frame) as a second factor. By testing
+each method alone and in combination across six games, we can separate
+their individual and combined effects. We then add Rainbow+SPR runs on
+the same games to provide the contrasting case where SPR is known to
+produce large improvements. Comparing representations across these two
+base agents -- one simple, one capable -- reveals what the base agent
+provides that makes self-supervised representations useful.
 
 \section{Experimental Design}
 
