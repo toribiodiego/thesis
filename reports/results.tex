@@ -38,8 +38,8 @@
 \thispagestyle{empty}
 
 \noindent{\small This document is a working snapshot of experimental
-results. Baseline, augmentation, and SPR conditions are complete.
-Combined (+Both) runs are pending.}
+results. All four conditions (Baseline, +Aug, +SPR, +Both) are
+complete across six games, seed 42.}
 
 \section{Atari-100K Benchmark}
 
@@ -257,7 +257,22 @@ augmentation compared to the vanilla DQN baseline. Seed 42, 30 eval
 episodes at 400K frames.\par}
 \end{table}
 
+\noindent Augmentation is strongly game-dependent. Kangaroo
+($460$ vs $27$) and Up N Down ($981$ vs $141$) improve substantially,
+while Crazy Climber, Road Runner, and Frostbite collapse to near-zero
+returns. Boxing worsens slightly. The pattern suggests that random
+shifts help in games where spatial invariance aids generalization but
+hurt when precise spatial information (e.g.\ climber position, road
+layout) is critical for the policy.
+
 \subsection{SPR}
+
+Self-predictive representations
+\citelink{https://arxiv.org/abs/2007.05929}{3}: an auxiliary loss
+trains the encoder to predict its own future latent states through a
+learned transition model. An EMA target encoder (momentum 0.99)
+provides stable prediction targets. Dropout (0.5) regularizes the
+encoder during training.
 
 \begin{table}[h]
 \centering
@@ -278,8 +293,17 @@ Up N Down      & $141 \pm 155$    & $901 \pm 682$ \\
 
 \vspace{1.2em}
 {\raggedright\small \textbf{Table 6.} Effect of self-predictive
-representations compared to the vanilla DQN baseline.\par}
+representations compared to the vanilla DQN baseline. Seed 42, 30 eval
+episodes at 400K frames.\par}
 \end{table}
+
+\noindent SPR's effect on vanilla DQN is modest. Up N Down shows a
+strong lift ($901$ vs $141$, roughly $6\times$) and Road Runner
+improves ($2290$ vs $1440$). The remaining four games are flat or
+slightly worse: Crazy Climber holds steady, Frostbite gains marginally,
+and both Boxing and Kangaroo decline. This contrasts with the large
+improvements reported in the original SPR paper, which used Rainbow as
+the base agent rather than vanilla DQN.
 
 \subsection{Combined}
 
@@ -301,20 +325,20 @@ strategy. Results appear in the summary table below.
   & \textbf{+ SPR}
   & \textbf{+ Both} \\
 \midrule
-Crazy Climber  & $3540 \pm 754$   & $110 \pm 40$      & $3400 \pm 0$      & --  \\
-Road Runner    & $1440 \pm 859$   & $3.3 \pm 18.0$    & $2290 \pm 1238$   & --  \\
-Boxing         & $-3.0 \pm 5.3$   & $-18.2 \pm 4.0$   & $-18.2 \pm 11.7$  & --  \\
-Kangaroo       & $26.7 \pm 68.0$  & $460 \pm 128$     & $13.3 \pm 49.9$   & --  \\
-Frostbite      & $147 \pm 45$     & $0.0 \pm 0.0$     & $161 \pm 31$      & --  \\
-Up N Down      & $141 \pm 155$    & $981 \pm 671$     & $901 \pm 682$     & --  \\
+Crazy Climber  & $3540 \pm 754$   & $110 \pm 40$      & $3400 \pm 0$      & $3.3 \pm 18.0$    \\
+Road Runner    & $1440 \pm 859$   & $3.3 \pm 18.0$    & $2290 \pm 1238$   & $1033 \pm 539$    \\
+Boxing         & $-3.0 \pm 5.3$   & $-18.2 \pm 4.0$   & $-18.2 \pm 11.7$  & $-39.6 \pm 10.3$  \\
+Kangaroo       & $26.7 \pm 68.0$  & $460 \pm 128$     & $13.3 \pm 49.9$   & $320 \pm 98$      \\
+Frostbite      & $147 \pm 45$     & $0.0 \pm 0.0$     & $161 \pm 31$      & $173 \pm 15$      \\
+Up N Down      & $141 \pm 155$    & $981 \pm 671$     & $901 \pm 682$     & $491 \pm 467$     \\
 \midrule
-Mean           & --  & --  & --  & --  \\
+Mean           & $982$  & $256$  & $1125$  & $330$  \\
 \bottomrule
 \end{tabular}
 
 \vspace{1.2em}
 {\raggedright\small \textbf{Table 7.} All conditions. Mean raw episode
-return ($\pm$ std) across 3 seeds per condition.\par}
+return ($\pm$ std) over 30 eval episodes, seed 42.\par}
 \end{table}
 
 \clearpage
