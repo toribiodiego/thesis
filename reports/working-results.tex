@@ -123,8 +123,8 @@ dynamics.}
 \subsection{Experimental Conditions}
 
 We start with a vanilla DQN baseline and progressively add augmentation
-and SPR. Each condition is run across six games with three seeds
-(72 runs total).
+and SPR. Each condition will be run across six games with three seeds
+(72 runs total); results reported here use seed 42.
 
 \begin{table}[H]
 \centering
@@ -177,6 +177,30 @@ can retrain on earlier experience; training begins after 2K transitions
 have been collected. The target network is a frozen copy of the main
 network used to compute stable learning targets, refreshed every 2K
 steps.
+
+\subsection{Data Augmentation}
+
+The augmentation condition uses DrQ-style random shifts
+\citelink{https://arxiv.org/abs/2004.14990}{5}: each 84$\times$84
+grayscale frame is zero-padded to 92$\times$92 and randomly cropped
+back to 84$\times$84, shifting the image by up to 4 pixels in any
+direction. The shift is applied independently to each frame in a
+sampled training batch, so the agent sees slightly different views of
+the same transition on each update. No augmentation is applied during
+evaluation.
+
+\subsection{Self-Predictive Representations (SPR)}
+
+SPR adds a self-supervised auxiliary loss that trains the encoder to
+predict its own future representations. A transition model (two
+convolutional layers with action conditioning) predicts the next latent
+state, and a cosine similarity loss compares the prediction against
+targets produced by an exponential moving average (EMA) copy of the
+encoder (momentum 0.99). Predictions are made over 5 future steps.
+Projection and prediction heads (MLPs) sit on top of the encoder to
+avoid representational collapse. The SPR loss is added to the standard
+TD loss with weight $\lambda = 2.0$. Encoder dropout (0.5) is used for
+regularization when augmentation is not present.
 
 \subsection{Rainbow Comparison}
 
@@ -351,6 +375,23 @@ near-zero while DQN declines steadily.}
 \label{fig:rainbow-flat}
 \end{figure}
 
+\subsection{Summary}
+
+Three patterns emerge from the single-seed results. First, SPR's
+effect on vanilla DQN is modest and game-dependent -- it helps on two
+of six games and is flat or slightly harmful on the rest. This
+contrasts with the large improvements reported when SPR is paired with
+Rainbow. Second, augmentation is similarly game-dependent but in
+different directions: it helps games where spatial invariance aids
+generalization and collapses games where precise spatial information is
+critical. Third, Rainbow improves the same two games where SPR and
+augmentation also showed their strongest effects (Crazy Climber, Up N
+Down), suggesting that dense reward games with relatively simple visual
+dynamics are most responsive to additional capability under the 100K
+budget. The key open question is whether adding SPR to Rainbow produces
+the large improvements seen in published results, and if so, what
+Rainbow provides at the representation level that vanilla DQN does not.
+
 \section{Next Steps}
 
 All results so far use a single seed (42). Three areas of work remain
@@ -379,23 +420,25 @@ The performance comparison alone cannot explain why SPR helps Rainbow
 but not vanilla DQN. Four analyses are planned to investigate the
 representation-level differences:
 
-\begin{enumerate}[nosep]
+\medskip
+\begin{enumerate}[leftmargin=*, itemsep=0.6em]
   \item \textbf{Linear probes.} Train classifiers on frozen encoder
     outputs across all conditions (DQN, DQN+SPR, Rainbow, Rainbow+SPR)
     to measure what game-relevant information the representations
     encode.
   \item \textbf{Latent space visualization.} t-SNE or PCA projections
     of encoder outputs across conditions, testing whether SPR produces
-    structured representations only when paired with a capable agent.
-  \item \textbf{Transition model predictions.} Compare SPR's
-    predicted next-states to actuals for DQN+SPR and Rainbow+SPR.
-    If prediction quality differs, the bottleneck is in the
-    representations; if not, it is downstream.
-  \item \textbf{Component attribution.} Correlate Rainbow metrics
-    (distributional loss, importance sampling weights, priority
-    entropy) with probe accuracy to identify which components
-    drive representation quality, then run targeted ablations on
-    the strongest candidates.
+    structured representations only when paired with a capable base
+    agent.
+  \item \textbf{Transition model predictions.} Compare SPR's predicted
+    next-states to actuals for DQN+SPR and Rainbow+SPR. If prediction
+    quality differs, the bottleneck is in the representations; if
+    not, it is downstream.
+  \item \textbf{Component attribution.} Correlate Rainbow training
+    metrics (distributional loss, importance sampling weights,
+    priority entropy) with probe accuracy to identify which
+    components drive representation quality, then run targeted
+    ablations on the strongest candidates.
 \end{enumerate}
 
 \clearpage
@@ -425,7 +468,8 @@ environment.
 Detailed per-game analysis from the initial three-game validation run
 (clipped rewards):
 
-\begin{enumerate}[nosep]
+\medskip
+\begin{enumerate}[leftmargin=*, itemsep=0.6em]
   \item \textbf{Crazy Climber shows clear learning.} Monotonic
     improvement through 320K with variance-driven dips. Loss converged
     from 0.87 to 0.055 (moving average). Viable baseline anchor for the
