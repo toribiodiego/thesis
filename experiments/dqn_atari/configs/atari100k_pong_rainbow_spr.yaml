@@ -1,0 +1,23 @@
+# Pong - Rainbow + SPR
+# ====================
+# Rainbow agent with SPR auxiliary loss.
+# Dropout 0.5 (regularizer without augmentation).
+# EMA momentum 0.99.
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_pong_rainbow_spr.yaml --seed 42
+
+base_config: "experiments/dqn_atari/configs/atari100k_pong_rainbow.yaml"
+
+experiment:
+  name: "atari100k_pong_rainbow_spr"
+  notes: "Rainbow + SPR on Pong under Atari-100K protocol"
+
+spr:
+  enabled: true
+
+ema:
+  momentum: 0.99
+
+network:
+  dropout: 0.5

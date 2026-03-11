@@ -1,0 +1,30 @@
+# Pong - Rainbow DQN
+# ==================
+# Rainbow base agent: C51 + Double DQN + Dueling + NoisyNets + PER + 3-step.
+# Adam lr=6.25e-5, eps=1.5e-4 (Hessel et al. 2018).
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_pong_rainbow.yaml --seed 42
+
+base_config: "experiments/dqn_atari/configs/atari100k_pong.yaml"
+
+experiment:
+  name: "atari100k_pong_rainbow"
+  notes: "Rainbow DQN on Pong under Atari-100K protocol"
+
+rainbow:
+  enabled: true
+
+training:
+  optimizer:
+    type: "adam"
+    lr: 0.0000625
+    adam:
+      eps: 0.00015
+
+target_network:
+  update_interval: 8000
+
+replay:
+  warmup_steps: 20000
+  min_size: 20000
