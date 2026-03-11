@@ -804,3 +804,122 @@ class TestConditionalReplayBuffer:
         batch = buf.sample(batch_size=8)
         assert "weights" not in batch
         assert "indices" not in batch
+
+
+# ---------------------------------------------------------------------------
+# Test: Rainbow training step integration
+# ---------------------------------------------------------------------------
+
+
+class TestRainbowTrainingStep:
+    """training_step with rainbow_config should use perform_rainbow_update_step."""
+
+    def test_rainbow_training_step_produces_rainbow_metrics(self):
+        """training_step with rainbow_config should produce distributional metrics."""
+        from src.training.training_loop import FrameCounter, training_step
+        from src.training.schedulers import TargetNetworkUpdater, TrainingScheduler
+
+        torch.manual_seed(42)
+        online = RainbowDQN(num_actions=NUM_ACTIONS)
+        target = RainbowDQN(num_actions=NUM_ACTIONS)
+        target.load_state_dict(online.state_dict())
+        for p in target.parameters():
+            p.requires_grad = False
+        optimizer = torch.optim.Adam(online.parameters(), lr=1e-3)
+
+        buf = PrioritizedReplayBuffer(
+            capacity=200, obs_shape=OBS_SHAPE, min_size=10,
+            n_step=3, alpha=0.5, beta_start=0.4,
+        )
+        _fill_buffer(buf, 50)
+
+        eps = EpsilonScheduler(1.0, 0.1, 100_000)
+        target_up = TargetNetworkUpdater(update_interval=1000)
+        train_sched = TrainingScheduler(train_every=1)
+        fc = FrameCounter(frameskip=4)
+
+        env = MagicMock()
+        env.step.return_value = (
+            np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8),
+            1.0, False, False, {},
+        )
+
+        state = np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8)
+
+        rainbow_cfg = {
+            "support": online.support,
+            "n_step": 3,
+            "double_dqn": True,
+            "buffer": buf,
+        }
+
+        result = training_step(
+            env=env,
+            online_net=online,
+            target_net=target,
+            optimizer=optimizer,
+            replay_buffer=buf,
+            epsilon_scheduler=eps,
+            target_updater=target_up,
+            training_scheduler=train_sched,
+            frame_counter=fc,
+            state=state,
+            num_actions=NUM_ACTIONS,
+            device="cpu",
+            rainbow_config=rainbow_cfg,
+        )
+
+        assert "metrics" in result
+        m = result["metrics"]
+        assert m is not None, "Rainbow training step should produce metrics"
+        assert m.distributional_loss is not None
+        assert m.mean_is_weight is not None
+        assert m.mean_priority is not None
+        assert m.loss is not None
+
+    def test_vanilla_dqn_unaffected_by_rainbow_param(self):
+        """training_step with rainbow_config=None should still work for DQN."""
+        from src.training.training_loop import FrameCounter, training_step
+        from src.training.schedulers import TargetNetworkUpdater, TrainingScheduler
+
+        torch.manual_seed(42)
+        online = DQN(num_actions=NUM_ACTIONS)
+        target = DQN(num_actions=NUM_ACTIONS)
+        target.load_state_dict(online.state_dict())
+        optimizer = torch.optim.Adam(online.parameters(), lr=1e-3)
+
+        buf = ReplayBuffer(capacity=200, obs_shape=OBS_SHAPE, min_size=10)
+        _fill_buffer(buf, 50)
+
+        eps = EpsilonScheduler(1.0, 0.1, 100_000)
+        target_up = TargetNetworkUpdater(update_interval=1000)
+        train_sched = TrainingScheduler(train_every=1)
+        fc = FrameCounter(frameskip=4)
+
+        env = MagicMock()
+        env.step.return_value = (
+            np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8),
+            1.0, False, False, {},
+        )
+
+        state = np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8)
+
+        result = training_step(
+            env=env,
+            online_net=online,
+            target_net=target,
+            optimizer=optimizer,
+            replay_buffer=buf,
+            epsilon_scheduler=eps,
+            target_updater=target_up,
+            training_scheduler=train_sched,
+            frame_counter=fc,
+            state=state,
+            num_actions=NUM_ACTIONS,
+            device="cpu",
+            rainbow_config=None,
+        )
+
+        assert "metrics" in result
+        if result["metrics"] is not None:
+            assert result["metrics"].distributional_loss is None

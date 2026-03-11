@@ -3,7 +3,7 @@
 import numpy as np
 import torch
 
-from .metrics import EpsilonScheduler, perform_update_step
+from .metrics import EpsilonScheduler, perform_rainbow_update_step, perform_update_step
 from .schedulers import TargetNetworkUpdater, TrainingScheduler
 
 
@@ -151,6 +151,7 @@ def training_step(
     spr_components=None,
     spr_weight: float = 2.0,
     spr_prediction_steps: int = 5,
+    rainbow_config=None,
 ):
     """
     Execute one step of the DQN training loop.
@@ -207,6 +208,11 @@ def training_step(
         Weight for SPR loss in combined objective (default: 2.0)
     spr_prediction_steps : int
         Number of future steps K for SPR prediction (default: 5)
+    rainbow_config : dict, optional
+        Rainbow configuration dict with keys: 'support' (Tensor),
+        'n_step' (int), 'double_dqn' (bool), 'buffer' (PrioritizedReplayBuffer).
+        When provided, uses perform_rainbow_update_step instead of
+        perform_update_step. Pass None for vanilla DQN.
 
     Returns
     -------
@@ -273,6 +279,11 @@ def training_step(
             "dones": to_tensor(batch["dones"]),
         }
 
+        # Include PER fields when using Rainbow
+        if rainbow_config is not None and "weights" in batch:
+            batch_device["weights"] = to_tensor(batch["weights"])
+            batch_device["indices"] = batch["indices"]  # int array, stays on CPU
+
         # Apply data augmentation if enabled
         if augment_fn is not None:
             batch_device["states"] = augment_fn(batch_device["states"])
@@ -299,19 +310,37 @@ def training_step(
                 )
 
         # Perform optimization step
-        metrics = perform_update_step(
-            online_net=online_net,
-            target_net=target_net,
-            optimizer=optimizer,
-            batch=batch_device,
-            gamma=gamma,
-            loss_type=loss_type,
-            max_grad_norm=max_grad_norm,
-            update_count=training_scheduler.training_step_count,
-            spr_components=spr_components,
-            spr_batch=spr_batch_device,
-            spr_weight=spr_weight,
-        )
+        if rainbow_config is not None:
+            metrics = perform_rainbow_update_step(
+                online_net=online_net,
+                target_net=target_net,
+                optimizer=optimizer,
+                batch=batch_device,
+                support=rainbow_config["support"],
+                gamma=gamma,
+                n_step=rainbow_config["n_step"],
+                max_grad_norm=max_grad_norm,
+                update_count=training_scheduler.training_step_count,
+                double_dqn=rainbow_config["double_dqn"],
+                buffer=rainbow_config["buffer"],
+                spr_components=spr_components,
+                spr_batch=spr_batch_device,
+                spr_weight=spr_weight,
+            )
+        else:
+            metrics = perform_update_step(
+                online_net=online_net,
+                target_net=target_net,
+                optimizer=optimizer,
+                batch=batch_device,
+                gamma=gamma,
+                loss_type=loss_type,
+                max_grad_norm=max_grad_norm,
+                update_count=training_scheduler.training_step_count,
+                spr_components=spr_components,
+                spr_batch=spr_batch_device,
+                spr_weight=spr_weight,
+            )
 
         training_scheduler.mark_trained(frame_counter.steps)
         trained = True

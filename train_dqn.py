@@ -325,6 +325,17 @@ def run_training(config, paths, device):
     else:
         print("Augmentation: disabled")
 
+    # Build Rainbow config dict for training_step (None for vanilla DQN)
+    rainbow_enabled = config.get('rainbow', {}).get('enabled', False)
+    rainbow_config = None
+    if rainbow_enabled:
+        rainbow_config = {
+            "support": online_net.support,
+            "n_step": config.rainbow.multi_step.n,
+            "double_dqn": config.rainbow.double_dqn,
+            "buffer": replay_buffer,
+        }
+
     # Training state
     episode_count = 0
     episode_return = 0.0
@@ -368,7 +379,8 @@ def run_training(config, paths, device):
             max_grad_norm=config.training.gradient_clip.max_norm,
             batch_size=config.replay.batch_size,
             device=device,
-            augment_fn=augment_fn
+            augment_fn=augment_fn,
+            rainbow_config=rainbow_config,
         )
 
         # Update episode tracking
