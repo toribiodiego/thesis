@@ -447,52 +447,6 @@ representation-level differences:
 \section*{Appendix}
 \addcontentsline{toc}{section}{Appendix}
 
-\section{Known Issue: Reward Clipping in Evaluation}
-\label{app:clipping}
-
-An early three-game validation run (Crazy Climber, Kung Fu Master,
-Boxing) reported returns in \textbf{clipped reward space} ($\{-1, 0,
-+1\}$ per step) because the evaluation environment inherited the
-training reward clipper. Published baselines
-\citelink{https://arxiv.org/abs/2007.05929}{3}%
-\citelink{https://arxiv.org/abs/2004.14990}{5}
-report \textbf{raw Atari scores}. The two scales are not comparable --
-for example, the random agent scores 10,780 raw on Crazy Climber while
-the clipped-reward agent reported 153. This was fixed for all runs in
-Table~\ref{tab:summary} by disabling reward clipping in the evaluation
-environment.
-
-\section{Early Baseline Observations}
-\label{app:observations}
-
-Detailed per-game analysis from the initial three-game validation run
-(clipped rewards):
-
-\medskip
-\begin{enumerate}[leftmargin=*, itemsep=0.6em]
-  \item \textbf{Crazy Climber shows clear learning.} Monotonic
-    improvement through 320K with variance-driven dips. Loss converged
-    from 0.87 to 0.055 (moving average). Viable baseline anchor for the
-    comparative study.
-
-  \item \textbf{Kung Fu Master shows no learning.} Eval never exceeds
-    3.7 (clipped). 458 episodes in 400K frames indicates the agent
-    dies quickly ($\sim$870 frames per episode). Loss converged normally
-    (2.49$\to$0.024), suggesting the network fits Q-values but they do
-    not translate to useful behavior within the 100K budget.
-
-  \item \textbf{Boxing learned a losing policy.} Eval oscillates
-    wildly ($-0.2$ to $-42.5$), with the agent actively losing by large
-    margins in late training. Only 56 episodes in 400K frames
-    ($\sim$7100 frames each) meant the agent saw fewer than 28 episodes
-    before epsilon reached 0.1 at 200K frames.
-
-  \item \textbf{Epsilon decay may be too aggressive for long-episode
-    games.} By 200K frames, Crazy Climber had seen $\sim$90 episodes
-    (sufficient), Kung Fu Master $\sim$230 (sufficient but short-lived),
-    and Boxing only $\sim$28 (insufficient for an 18-action game).
-\end{enumerate}
-
 \section{Game Selection Reference}
 \label{app:games}
 
