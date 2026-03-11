@@ -42,8 +42,8 @@
 \thispagestyle{empty}
 
 \noindent{\small This document is a working snapshot of experimental
-results. DQN isolation study is complete across six games, seed 42.
-Rainbow capability comparison is pending.}
+results. DQN isolation study and Rainbow baseline are complete across
+six games, seed 42. Rainbow+SPR runs are pending.}
 
 \section{Introduction}
 
@@ -205,8 +205,7 @@ hyperparameters; SPR is the only difference.}
 \noindent Rainbow uses Adam (lr = $6.25 \times 10^{-5}$) instead of
 RMSProp, updates the target network every 8K steps, and requires 20K
 warmup transitions for prioritized replay to stabilize. All other
-settings (100K environment steps, 6 games, 3 seeds) match the DQN
-conditions. Results for these conditions are pending.
+settings (100K environment steps, 6 games) match the DQN conditions.
 
 \section{Results}
 
@@ -240,21 +239,10 @@ std) over 30 eval episodes at 400K frames, seed 42.}
 \label{tab:summary}
 \end{table}
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{../output/plots/dqn_learning_curves.pdf}
-\caption{Learning curves for all four conditions across six games.
-Each point is the mean return over 30 evaluation episodes at that
-checkpoint. The high variance between adjacent checkpoints reflects the
-difficulty of the 100K-step regime -- final scores can misrepresent
-conditions that peaked earlier or collapsed late in training.}
-\label{fig:learning-curves}
-\end{figure}
-
-\noindent The learning curves (Figure~\ref{fig:learning-curves}) reveal
-instability that the summary table obscures. Most conditions swing
-between high and near-zero performance across checkpoints, making
-final-checkpoint comparisons fragile. Several patterns stand out:
+\noindent The learning curves below reveal instability that the summary
+table obscures. Most conditions swing between high and near-zero
+performance across checkpoints, making final-checkpoint comparisons
+fragile. Several patterns stand out:
 
 \subsection{Augmentation}
 
@@ -304,6 +292,78 @@ addition. Augmentation does not rescue SPR on this base agent -- the
 games where augmentation helps (Kangaroo, Up N Down) see reduced gains
 when combined with SPR, and the games where augmentation hurts (Crazy
 Climber, Road Runner) still collapse.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{../output/plots/minimal_learning.pdf}
+\caption{Games with minimal learning across conditions. Boxing shows all
+conditions declining, with the combined condition performing worst.
+Frostbite shows flat performance except for a brief spike in the
+combined condition that does not sustain.}
+\label{fig:minimal-learning}
+\end{figure}
+
+\subsection{Rainbow Baseline}
+
+Table~\ref{tab:rainbow} compares vanilla DQN against Rainbow DQN on
+the same six games. Rainbow dramatically improves two games while
+performing comparably or worse on the remaining four.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\setlength{\tabcolsep}{14pt}
+\begin{tabular}{l rrr}
+\toprule
+\textbf{Game}
+  & \textbf{DQN}
+  & \textbf{Rainbow}
+  & \textbf{$\Delta$} \\
+\midrule
+Crazy Climber  & $3540 \pm 754$   & $9137 \pm 3857$   & $+158\%$  \\
+Up N Down      & $141 \pm 155$    & $1794 \pm 637$    & $+1172\%$ \\
+Road Runner    & $1440 \pm 859$   & $180 \pm 464$     & $-88\%$   \\
+Frostbite      & $147 \pm 45$     & $43 \pm 18$       & $-71\%$   \\
+Kangaroo       & $26.7 \pm 68.0$  & $33.3 \pm 90.7$   & $+25\%$   \\
+Boxing         & $-3.0 \pm 5.3$   & $-3.0 \pm 6.5$    & $\approx 0$ \\
+\midrule
+Mean           & $982$  & $1864$  & $+90\%$ \\
+\bottomrule
+\end{tabular}
+\caption{Rainbow baseline results. Mean raw episode return ($\pm$ std)
+over 30 eval episodes at 400K frames, seed 42. Games sorted by
+Rainbow's relative improvement over vanilla DQN.}
+\label{tab:rainbow}
+\end{table}
+
+\noindent Crazy Climber and Up N Down see large gains under Rainbow --
+nearly $3\times$ and $12\times$ respectively. These are the two games
+where the DQN isolation study also showed the strongest SPR and
+augmentation effects, suggesting that dense reward games with
+relatively simple visual dynamics benefit most from additional agent
+capability under the 100K budget.
+
+\medskip
+\noindent Road Runner and Frostbite decline substantially. Both games
+performed reasonably under vanilla DQN, so the regression is not
+simply a floor effect. One possible explanation: Rainbow's additional
+components (prioritized replay warmup of 20K steps, distributional
+targets across 51 atoms, noisy exploration) require more data to
+calibrate than the 100K budget provides. Vanilla DQN's simpler
+learning signal may be easier to fit with limited experience.
+
+\medskip
+\noindent Boxing and Kangaroo are effectively unchanged -- both agents
+score near zero. These games appear too difficult for either agent
+to make progress within 100K steps.
+
+\medskip
+\noindent The overall picture is that Rainbow is not uniformly better
+under severe data constraints. Its advantage is concentrated in games
+where its components align with the reward structure. This sets up
+the key comparison: does adding SPR to Rainbow amplify gains in the
+games where Rainbow already helps, and can it rescue the games where
+Rainbow alone regresses?
 
 \clearpage
 
