@@ -38,8 +38,8 @@
 \thispagestyle{empty}
 
 \noindent{\small This document is a working snapshot of experimental
-results. Baseline runs are in progress; augmentation and SPR conditions
-have not yet been run.}
+results. Baseline, augmentation, and SPR conditions are complete.
+Combined (+Both) runs are pending.}
 
 \section{Atari-100K Benchmark}
 
@@ -267,12 +267,12 @@ episodes at 400K frames.\par}
 \toprule
 \textbf{Game} & \textbf{Baseline} & \textbf{+ SPR} \\
 \midrule
-Crazy Climber  & --  & -- \\
-Boxing         & --  & -- \\
-Kangaroo       & --  & -- \\
-Road Runner    & --  & -- \\
-Frostbite      & --  & -- \\
-Up N Down      & --  & -- \\
+Crazy Climber  & $3540 \pm 754$   & $3400 \pm 0$ \\
+Road Runner    & $1440 \pm 859$   & $2290 \pm 1238$ \\
+Boxing         & $-3.0 \pm 5.3$   & $-18.2 \pm 11.7$ \\
+Kangaroo       & $26.7 \pm 68.0$  & $13.3 \pm 49.9$ \\
+Frostbite      & $147 \pm 45$     & $161 \pm 31$ \\
+Up N Down      & $141 \pm 155$    & $901 \pm 682$ \\
 \bottomrule
 \end{tabular}
 
@@ -287,31 +287,7 @@ representations compared to the vanilla DQN baseline.\par}
 (0.99) and dropout (0.5) as the SPR-only condition, with augmentation
 as the sole addition. This isolates augmentation's contribution on top
 of SPR rather than conflating it with changes to regularization
-strategy.
-
-\begin{table}[h]
-\centering
-\renewcommand{\arraystretch}{1.4}
-\setlength{\tabcolsep}{12pt}
-\begin{tabular}{l r r r}
-\toprule
-\textbf{Game} & \textbf{Baseline} & \textbf{+ Aug} & \textbf{+ Both} \\
-\midrule
-Crazy Climber  & --  & --  & -- \\
-Boxing         & --  & --  & -- \\
-Kangaroo       & --  & --  & -- \\
-Road Runner    & --  & --  & -- \\
-Frostbite      & --  & --  & -- \\
-Up N Down      & --  & --  & -- \\
-\bottomrule
-\end{tabular}
-
-\vspace{1.2em}
-{\raggedright\small \textbf{Table 7.} Effect of combining augmentation
-and SPR, compared to augmentation alone and the baseline.\par}
-\end{table}
-
-\subsection{Summary}
+strategy. Results appear in the summary table below.
 
 \begin{table}[h]
 \centering
@@ -325,19 +301,19 @@ and SPR, compared to augmentation alone and the baseline.\par}
   & \textbf{+ SPR}
   & \textbf{+ Both} \\
 \midrule
-Crazy Climber  & --  & --  & --  & --  \\
-Boxing         & --  & --  & --  & --  \\
-Kangaroo       & --  & --  & --  & --  \\
-Road Runner    & --  & --  & --  & --  \\
-Frostbite      & --  & --  & --  & --  \\
-Up N Down      & --  & --  & --  & --  \\
+Crazy Climber  & $3540 \pm 754$   & $110 \pm 40$      & $3400 \pm 0$      & --  \\
+Road Runner    & $1440 \pm 859$   & $3.3 \pm 18.0$    & $2290 \pm 1238$   & --  \\
+Boxing         & $-3.0 \pm 5.3$   & $-18.2 \pm 4.0$   & $-18.2 \pm 11.7$  & --  \\
+Kangaroo       & $26.7 \pm 68.0$  & $460 \pm 128$     & $13.3 \pm 49.9$   & --  \\
+Frostbite      & $147 \pm 45$     & $0.0 \pm 0.0$     & $161 \pm 31$      & --  \\
+Up N Down      & $141 \pm 155$    & $981 \pm 671$     & $901 \pm 682$     & --  \\
 \midrule
 Mean           & --  & --  & --  & --  \\
 \bottomrule
 \end{tabular}
 
 \vspace{1.2em}
-{\raggedright\small \textbf{Table 8.} All conditions. Mean raw episode
+{\raggedright\small \textbf{Table 7.} All conditions. Mean raw episode
 return ($\pm$ std) across 3 seeds per condition.\par}
 \end{table}
 
@@ -427,7 +403,7 @@ Chopper Command & BattleZone  &             \\
 \end{tabular}
 
 \vspace{1.2em}
-{\raggedright\small \textbf{Table 9.} Atari-100K benchmark games grouped by
+{\raggedright\small \textbf{Table 8.} Atari-100K benchmark games grouped by
 how frequently the agent receives non-zero reward. Dense games yield
 reward on most steps; sparse games have long stretches of zero reward.\par}
 \end{table}
