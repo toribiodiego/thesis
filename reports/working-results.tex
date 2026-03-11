@@ -9,6 +9,7 @@
 \usepackage{tabularx}
 \usepackage{multirow}
 \usepackage{float}
+\usepackage{graphicx}
 \usepackage[font=small,labelfont=bf,labelsep=period,
   justification=raggedright,singlelinecheck=false]{caption}
 \usepackage[colorlinks=true,linkcolor=black,urlcolor=blue!60!black,citecolor=black]{hyperref}
@@ -238,6 +239,22 @@ Mean           & $982$  & $256$  & $1125$  & $330$  \\
 std) over 30 eval episodes at 400K frames, seed 42.}
 \label{tab:summary}
 \end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{../output/plots/dqn_learning_curves.pdf}
+\caption{Learning curves for all four conditions across six games.
+Each point is the mean return over 30 evaluation episodes at that
+checkpoint. The high variance between adjacent checkpoints reflects the
+difficulty of the 100K-step regime -- final scores can misrepresent
+conditions that peaked earlier or collapsed late in training.}
+\label{fig:learning-curves}
+\end{figure}
+
+\noindent The learning curves (Figure~\ref{fig:learning-curves}) reveal
+instability that the summary table obscures. Most conditions swing
+between high and near-zero performance across checkpoints, making
+final-checkpoint comparisons fragile. Several patterns stand out:
 
 \subsection{Augmentation}
 
