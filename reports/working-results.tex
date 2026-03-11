@@ -8,6 +8,7 @@
 \usepackage{titlesec}
 \usepackage{tabularx}
 \usepackage{multirow}
+\usepackage{float}
 \usepackage[colorlinks=true,linkcolor=black,urlcolor=blue!60!black,citecolor=black]{hyperref}
 
 % Inline references as clickable [N] links (no bibliography section)
@@ -95,7 +96,7 @@ type. The selection was guided by published Rainbow+SPR results in
 Schwarzer et al.\ \citelink{https://arxiv.org/abs/2007.05929}{3}, which
 show diverse interaction patterns across these games.
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \setlength{\tabcolsep}{10pt}
@@ -111,11 +112,9 @@ Frostbite     & Platform assembly over ice; delayed reward structure \\
 Up N Down     & Vertical driving; dense reward from jumping on cars \\
 \bottomrule
 \end{tabular}
-
-\vspace{1.2em}
-{\raggedright\small \textbf{Table 0.} The six games and their primary
-challenges. Games were chosen to span dense to moderate reward
-structures and a variety of visual dynamics.\par}
+\caption{The six games and their primary challenges. Games were chosen
+to span dense to moderate reward structures and a variety of visual
+dynamics.}
 \end{table}
 
 \subsection{Experimental Conditions}
@@ -124,7 +123,7 @@ We start with a vanilla DQN baseline and progressively add augmentation
 and SPR. Each condition is run across six games with three seeds
 (72 runs total).
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \setlength{\tabcolsep}{12pt}
@@ -138,10 +137,8 @@ Baseline  & Vanilla DQN, no modifications \\
 + Both    & Augmentation and SPR combined \\
 \bottomrule
 \end{tabular}
-
-\vspace{1.2em}
-{\raggedright\small \textbf{Table 1.} The four experimental conditions.
-Each builds on the same DQN architecture and hyperparameters.\par}
+\caption{The four experimental conditions. Each builds on the same DQN
+architecture and hyperparameters.}
 \end{table}
 
 \subsection{Training Setup}
@@ -152,7 +149,7 @@ encoder and are trained with the same configuration. Augmentation and
 SPR add their own components on top of this base. Results report mean
 raw episode return ($\pm$ std) across three seeds.
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \renewcommand{\arraystretch}{1.2}
 \setlength{\tabcolsep}{12pt}
@@ -167,10 +164,7 @@ Replay buffer   & 100K capacity, 2K warmup \\
 Target network  & Hard copy every 2K steps \\
 \bottomrule
 \end{tabular}
-
-\vspace{1.2em}
-{\raggedright\small \textbf{Table 2.} Training configuration shared
-across all four conditions.\par}
+\caption{Training configuration shared across all four DQN conditions.}
 \end{table}
 
 \noindent The agent explores by choosing random actions with probability
@@ -189,7 +183,7 @@ improvements over vanilla DQN: distributional value estimates (C51,
 51 atoms), double Q-learning, dueling network streams, noisy
 exploration, 3-step returns, and prioritized experience replay.
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \setlength{\tabcolsep}{12pt}
@@ -201,10 +195,8 @@ Rainbow       & Rainbow DQN, no SPR \\
 Rainbow + SPR & Add self-predictive representation learning \\
 \bottomrule
 \end{tabular}
-
-\vspace{1.2em}
-{\raggedright\small \textbf{Table 3.} Rainbow conditions. Both share the
-same architecture and hyperparameters; SPR is the only difference.\par}
+\caption{Rainbow conditions. Both share the same architecture and
+hyperparameters; SPR is the only difference.}
 \end{table}
 
 \noindent Rainbow uses Adam (lr = $6.25 \times 10^{-5}$) instead of
@@ -222,7 +214,7 @@ pipeline. These runs used clipped rewards in evaluation (see
 Appendix~\ref{app:clipping}), so scores are not comparable to published
 baselines.
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \setlength{\tabcolsep}{8pt}
@@ -240,11 +232,9 @@ Kung Fu Master & $1.4 \pm 1.6$      & $3.7$ (320K)    & 458 & $\sim$870   & 16 m
 Boxing         & $-19.7 \pm 7.1$    & $-0.2$ (40K)    & 56  & $\sim$7100  & 29 min \\
 \bottomrule
 \end{tabular}
-
-\vspace{1.2em}
-{\raggedright\small \textbf{Table 3.} Vanilla DQN baseline at 100K env
-steps in clipped reward space. 30 eval episodes per checkpoint,
-eval epsilon 0.05.\par}
+\caption{Vanilla DQN baseline at 100K env steps in clipped reward space.
+30 eval episodes per checkpoint, eval epsilon 0.05.}
+\label{tab:baseline-clipped}
 \end{table}
 
 \noindent Only Crazy Climber shows clear learning (monotonic improvement
@@ -257,7 +247,7 @@ steps, which is precisely why augmentation and SPR are needed.
 Six-game baseline with the eval clipping fix applied. Single seed (42)
 per game; 30 evaluation episodes per checkpoint.
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \renewcommand{\arraystretch}{1.4}
 \setlength{\tabcolsep}{8pt}
@@ -277,11 +267,9 @@ Frostbite      & $147 \pm 45$      & $168$ (360K)   & 65    & 4335  \\
 Up N Down      & $141 \pm 155$     & $1312$ (120K)  & 533   & 11693 \\
 \bottomrule
 \end{tabular}
-
-\vspace{1.2em}
-{\raggedright\small \textbf{Table 4.} Vanilla DQN baseline on the six
-selected games with raw (unclipped) evaluation scores. Random and human
-scores from Schwarzer et al.\ \citelink{https://arxiv.org/abs/2007.05929}{3}.\par}
+\caption{Vanilla DQN baseline on the six selected games with raw
+(unclipped) evaluation scores. Random and human scores from Schwarzer
+et al.\ \citelink{https://arxiv.org/abs/2007.05929}{3}.}
 \end{table}
 
 \subsection{Augmentation}
@@ -292,7 +280,7 @@ frame by 4 pixels on each side (zero-fill), then randomly crop back to
 84$\times$84. Applied independently to states and next-states at each
 training step.
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \renewcommand{\arraystretch}{1.4}
 \setlength{\tabcolsep}{12pt}
@@ -308,11 +296,8 @@ Frostbite      & $147 \pm 45$     & $0.0 \pm 0.0$ \\
 Up N Down      & $141 \pm 155$    & $981 \pm 671$ \\
 \bottomrule
 \end{tabular}
-
-\vspace{1.2em}
-{\raggedright\small \textbf{Table 5.} Effect of random-shift data
-augmentation compared to the vanilla DQN baseline. Seed 42, 30 eval
-episodes at 400K frames.\par}
+\caption{Effect of random-shift data augmentation compared to the
+vanilla DQN baseline. Seed 42, 30 eval episodes at 400K frames.}
 \end{table}
 
 \noindent Augmentation is strongly game-dependent. Kangaroo
@@ -332,7 +317,7 @@ learned transition model. An EMA target encoder (momentum 0.99)
 provides stable prediction targets. Dropout (0.5) regularizes the
 encoder during training.
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \renewcommand{\arraystretch}{1.4}
 \setlength{\tabcolsep}{12pt}
@@ -348,11 +333,8 @@ Frostbite      & $147 \pm 45$     & $161 \pm 31$ \\
 Up N Down      & $141 \pm 155$    & $901 \pm 682$ \\
 \bottomrule
 \end{tabular}
-
-\vspace{1.2em}
-{\raggedright\small \textbf{Table 6.} Effect of self-predictive
-representations compared to the vanilla DQN baseline. Seed 42, 30 eval
-episodes at 400K frames.\par}
+\caption{Effect of self-predictive representations compared to the
+vanilla DQN baseline. Seed 42, 30 eval episodes at 400K frames.}
 \end{table}
 
 \noindent SPR's effect on vanilla DQN is modest. Up N Down shows a
@@ -371,7 +353,7 @@ as the sole addition. This isolates augmentation's contribution on top
 of SPR rather than conflating it with changes to regularization
 strategy. Results appear in the summary table below.
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \renewcommand{\arraystretch}{1.4}
 \setlength{\tabcolsep}{14pt}
@@ -393,10 +375,8 @@ Up N Down      & $141 \pm 155$    & $981 \pm 671$     & $901 \pm 682$     & $491
 Mean           & $982$  & $256$  & $1125$  & $330$  \\
 \bottomrule
 \end{tabular}
-
-\vspace{1.2em}
-{\raggedright\small \textbf{Table 7.} All conditions. Mean raw episode
-return ($\pm$ std) over 30 eval episodes, seed 42.\par}
+\caption{All conditions. Mean raw episode return ($\pm$ std) over 30
+eval episodes, seed 42.}
 \end{table}
 
 \clearpage
@@ -408,7 +388,7 @@ return ($\pm$ std) over 30 eval episodes, seed 42.\par}
 \section{Known Issue: Reward Clipping in Evaluation}
 \label{app:clipping}
 
-The initial baseline validation (Table 3) reported returns in
+The initial baseline validation (Table~\ref{tab:baseline-clipped}) reported returns in
 \textbf{clipped reward space} ($\{-1, 0, +1\}$ per step) because the
 evaluation environment inherited the training reward clipper. Published
 baselines
@@ -417,14 +397,14 @@ baselines
 report \textbf{raw Atari scores}. The two scales are not comparable --
 for example, the random agent scores 10,780 raw on Crazy Climber while
 our clipped-reward agent reports 153. This was fixed for all subsequent
-runs (Table 3 onward) by disabling reward clipping in the evaluation
+runs (Table~\ref{tab:baseline-clipped} onward) by disabling reward clipping in the evaluation
 environment.
 
 \section{Early Baseline Observations}
 \label{app:observations}
 
 Detailed per-game analysis from the initial three-game validation run
-(Table 3):
+(Table~\ref{tab:baseline-clipped}):
 
 \begin{enumerate}[nosep]
   \item \textbf{Crazy Climber shows clear learning.} Monotonic
@@ -461,7 +441,7 @@ with no reward. Of the 26 games, 7 are dense, 12 moderate, and
 \citelink{https://arxiv.org/abs/2007.05929}{3}, Table 4.
 
 \vspace{0.3em}
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \renewcommand{\arraystretch}{1.15}
 \setlength{\tabcolsep}{14pt}
@@ -483,11 +463,9 @@ Chopper Command & BattleZone  &             \\
                 & Gopher      &             \\
 \bottomrule
 \end{tabular}
-
-\vspace{1.2em}
-{\raggedright\small \textbf{Table 8.} Atari-100K benchmark games grouped by
-how frequently the agent receives non-zero reward. Dense games yield
-reward on most steps; sparse games have long stretches of zero reward.\par}
+\caption{Atari-100K benchmark games grouped by how frequently the agent
+receives non-zero reward. Dense games yield reward on most steps; sparse
+games have long stretches of zero reward.}
 \end{table}
 
 \end{document}
