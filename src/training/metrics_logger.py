@@ -303,6 +303,11 @@ class CSVBackend:
                 "spr_loss",
                 "cosine_similarity",
                 "ema_update_count",
+                "distributional_loss",
+                "mean_is_weight",
+                "mean_priority",
+                "priority_entropy",
+                "beta",
             ]
             with open(self.step_csv_path, "w", newline="") as f:
                 writer = csv.DictWriter(f, fieldnames=self._step_fieldnames)
