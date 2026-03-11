@@ -1,12 +1,14 @@
-"""Tests for perform_rainbow_update_step."""
+"""Tests for perform_rainbow_update_step and init_target_network with Rainbow."""
 
 import numpy as np
 import pytest
 import torch
 import torch.nn as nn
 
+from src.models.dqn import DQN
 from src.models.rainbow import RainbowDQN
 from src.training.metrics import UpdateMetrics, perform_rainbow_update_step
+from src.training.target_network import init_target_network
 
 
 # ---------------------------------------------------------------------------
@@ -474,3 +476,80 @@ class TestMetricsDict:
         assert "grad_norm" in d
         assert "learning_rate" in d
         assert "update_count" in d
+
+
+# ---------------------------------------------------------------------------
+# init_target_network with RainbowDQN
+# ---------------------------------------------------------------------------
+
+
+class TestInitTargetNetworkRainbow:
+    """Verify init_target_network works with RainbowDQN."""
+
+    def test_creates_rainbow_copy(self):
+        online = RainbowDQN(
+            num_actions=6, num_atoms=51, v_min=-10.0, v_max=10.0,
+            noisy=True, dueling=True, dropout=0.0,
+        )
+        target = init_target_network(online, num_actions=6)
+
+        assert type(target) is RainbowDQN
+        assert target.num_actions == 6
+        assert target.num_atoms == 51
+        assert target.v_min == -10.0
+        assert target.v_max == 10.0
+        assert target.noisy is True
+        assert target.dueling is True
+
+    def test_rainbow_weights_match(self):
+        online = RainbowDQN(
+            num_actions=4, num_atoms=11, v_min=-5.0, v_max=5.0,
+            noisy=False, dueling=True,
+        )
+        target = init_target_network(online, num_actions=4)
+
+        for p_online, p_target in zip(online.parameters(), target.parameters()):
+            assert torch.allclose(p_online, p_target), \
+                "Target params should match online params"
+
+    def test_rainbow_target_frozen(self):
+        online = RainbowDQN(
+            num_actions=4, num_atoms=11, v_min=-5.0, v_max=5.0,
+            noisy=True, dueling=True,
+        )
+        target = init_target_network(online, num_actions=4)
+
+        for param in target.parameters():
+            assert not param.requires_grad, "Target gradients not frozen"
+
+    def test_rainbow_target_in_evaluation_mode(self):
+        online = RainbowDQN(
+            num_actions=4, num_atoms=11, v_min=-5.0, v_max=5.0,
+            noisy=True, dueling=True,
+        )
+        online.train()
+        target = init_target_network(online, num_actions=4)
+
+        assert not target.training, "Target should be in evaluation mode"
+
+    def test_dqn_still_works(self):
+        """Backward compatibility: DQN should still work."""
+        online = DQN(num_actions=6, dropout=0.1)
+        target = init_target_network(online, num_actions=6)
+
+        assert type(target) is DQN
+        assert target.num_actions == 6
+        assert target.dropout == 0.1
+        for p_online, p_target in zip(online.parameters(), target.parameters()):
+            assert torch.allclose(p_online, p_target)
+
+    def test_rainbow_non_dueling(self):
+        """Non-dueling Rainbow should also work."""
+        online = RainbowDQN(
+            num_actions=4, num_atoms=11, v_min=-5.0, v_max=5.0,
+            noisy=False, dueling=False,
+        )
+        target = init_target_network(online, num_actions=4)
+
+        assert type(target) is RainbowDQN
+        assert target.dueling is False

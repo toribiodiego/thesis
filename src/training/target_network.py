@@ -19,6 +19,8 @@ Target Network Note:
     correlations between Q-values and targets.
 """
 
+import inspect
+
 import torch.nn as nn
 
 
@@ -54,11 +56,16 @@ def init_target_network(online_net: nn.Module, num_actions: int) -> nn.Module:
     """
     Initialize target network as a copy of online network.
 
-    Creates a new network with the same architecture, copies weights from online network,
-    and freezes gradients for the target network.
+    Creates a new network with the same architecture, copies weights
+    from online network, and freezes gradients for the target network.
+
+    Constructor arguments are inferred by introspecting the online
+    network's ``__init__`` signature and reading matching instance
+    attributes. This allows the factory to work with any model class
+    (DQN, RainbowDQN, etc.) without hardcoding constructor parameters.
 
     Args:
-        online_net: The online Q-network
+        online_net: The online Q-network (DQN, RainbowDQN, etc.)
         num_actions: Number of actions in the environment
 
     Returns:
@@ -68,15 +75,33 @@ def init_target_network(online_net: nn.Module, num_actions: int) -> nn.Module:
         >>> from src.models import DQN
         >>> online_net = DQN(num_actions=6)
         >>> target_net = init_target_network(online_net, num_actions=6)
-        >>> # Verify target is a copy
         >>> assert torch.allclose(
         ...     list(online_net.parameters())[0],
         ...     list(target_net.parameters())[0]
         ... )
     """
-    # Create target network with same class and parameters
-    dropout = getattr(online_net, "dropout", 0.0)
-    target_net = type(online_net)(num_actions=num_actions, dropout=dropout)
+    # Introspect the constructor to discover required kwargs
+    net_cls = type(online_net)
+    sig = inspect.signature(net_cls.__init__)
+    kwargs = {}
+    for name, param in sig.parameters.items():
+        if name == "self":
+            continue
+        if name == "num_actions":
+            kwargs["num_actions"] = num_actions
+        elif hasattr(online_net, name):
+            kwargs[name] = getattr(online_net, name)
+        elif param.default is not inspect.Parameter.empty:
+            # Use the default from the signature
+            pass
+        else:
+            raise ValueError(
+                f"Cannot infer constructor arg '{name}' for "
+                f"{net_cls.__name__}: not found as an attribute on "
+                f"online_net and no default exists."
+            )
+
+    target_net = net_cls(**kwargs)
 
     # Copy weights from online to target
     hard_update_target(online_net, target_net)
@@ -85,7 +110,7 @@ def init_target_network(online_net: nn.Module, num_actions: int) -> nn.Module:
     for param in target_net.parameters():
         param.requires_grad = False
 
-    # Set to eval mode
+    # Set to evaluation mode
     target_net.eval()
 
     return target_net
