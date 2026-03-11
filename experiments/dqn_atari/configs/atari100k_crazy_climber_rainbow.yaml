@@ -32,3 +32,6 @@ replay:
 logging:
   checkpoint:
     save_every: 40000
+
+evaluation:
+  eval_every: 999999
