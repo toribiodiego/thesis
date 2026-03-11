@@ -1,8 +1,8 @@
 # Road Runner - DQN + SPR + Augmentation
-# ========================================
+# ==========================================
 # Combined condition: SPR loss with random shift augmentation.
-# EMA momentum 0.0 (augmentation provides sufficient regularization).
-# No dropout (augmentation replaces it).
+# EMA and dropout match SPR-only config to isolate augmentation
+# as the only difference between +SPR and +Both conditions.
 #
 # Usage:
 #   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_road_runner_both.yaml --seed 42
@@ -17,7 +17,10 @@ spr:
   enabled: true
 
 ema:
-  momentum: 0.0
+  momentum: 0.99
+
+network:
+  dropout: 0.5
 
 augmentation:
   enabled: true
