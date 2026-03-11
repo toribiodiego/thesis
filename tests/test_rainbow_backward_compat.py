@@ -20,6 +20,7 @@ from src.models.dqn import DQN
 from src.models.ema import EMAEncoder
 from src.models.rainbow import RainbowDQN
 from src.models.spr import PredictionHead, ProjectionHead, TransitionModel
+from src.replay.prioritized_buffer import PrioritizedReplayBuffer
 from src.replay.replay_buffer import ReplayBuffer
 from src.training.logging import CheckpointManager
 from src.training.metrics import (
@@ -692,3 +693,114 @@ class TestConditionalModelCreation:
         assert "conv_output" in out
         assert out["q_values"].shape == (2, 4)
         assert out["conv_output"].shape == (2, 64, 7, 7)
+
+
+# ---------------------------------------------------------------------------
+# Test: Conditional replay buffer creation
+# ---------------------------------------------------------------------------
+
+
+class TestConditionalReplayBuffer:
+    """train_dqn.py should create PrioritizedReplayBuffer when rainbow enabled."""
+
+    def _make_config(self, rainbow_enabled=False):
+        """Build a minimal OmegaConf config for replay buffer tests."""
+        return OmegaConf.create({
+            "replay": {"capacity": 1000, "min_size": 50},
+            "environment": {"preprocessing": {"frame_stack": 4}},
+            "training": {"total_frames": 400000, "gamma": 0.99},
+            "rainbow": {
+                "enabled": rainbow_enabled,
+                "multi_step": {"n": 3},
+                "priority": {
+                    "alpha": 0.5,
+                    "beta_start": 0.4,
+                    "beta_end": 1.0,
+                    "epsilon": 1e-6,
+                },
+            },
+        })
+
+    def test_uniform_buffer_when_disabled(self):
+        """With rainbow.enabled=false, should create vanilla ReplayBuffer."""
+        config = self._make_config(rainbow_enabled=False)
+        buf = ReplayBuffer(
+            capacity=config.replay.capacity,
+            obs_shape=(4, 84, 84),
+            min_size=config.replay.min_size,
+        )
+        assert type(buf) is ReplayBuffer
+        assert not isinstance(buf, PrioritizedReplayBuffer)
+
+    def test_prioritized_buffer_when_enabled(self):
+        """With rainbow.enabled=true, should create PrioritizedReplayBuffer."""
+        config = self._make_config(rainbow_enabled=True)
+        buf = PrioritizedReplayBuffer(
+            capacity=config.replay.capacity,
+            obs_shape=(4, 84, 84),
+            min_size=config.replay.min_size,
+            n_step=config.rainbow.multi_step.n,
+            gamma=config.training.get("gamma", 0.99),
+            alpha=config.rainbow.priority.alpha,
+            beta_start=config.rainbow.priority.beta_start,
+            beta_end=config.rainbow.priority.beta_end,
+            beta_frames=config.training.total_frames,
+            epsilon=config.rainbow.priority.epsilon,
+        )
+        assert isinstance(buf, PrioritizedReplayBuffer)
+        assert buf.alpha == 0.5
+        assert buf.n_step == 3
+        assert buf.gamma == 0.99
+
+    def test_prioritized_buffer_config_propagation(self):
+        """Priority parameters from config should reach the buffer."""
+        config = self._make_config(rainbow_enabled=True)
+        config.rainbow.priority.alpha = 0.7
+        config.rainbow.priority.beta_start = 0.5
+        config.rainbow.multi_step.n = 5
+
+        buf = PrioritizedReplayBuffer(
+            capacity=config.replay.capacity,
+            obs_shape=(4, 84, 84),
+            min_size=config.replay.min_size,
+            n_step=config.rainbow.multi_step.n,
+            gamma=0.99,
+            alpha=config.rainbow.priority.alpha,
+            beta_start=config.rainbow.priority.beta_start,
+            beta_end=config.rainbow.priority.beta_end,
+            beta_frames=config.training.total_frames,
+            epsilon=config.rainbow.priority.epsilon,
+        )
+        assert buf.alpha == 0.7
+        assert buf.beta_start == 0.5
+        assert buf.n_step == 5
+
+    def test_prioritized_buffer_sample_returns_weights(self):
+        """PrioritizedReplayBuffer.sample() should include IS weights and indices."""
+        buf = PrioritizedReplayBuffer(
+            capacity=200, obs_shape=OBS_SHAPE, min_size=10,
+            n_step=3, alpha=0.5, beta_start=0.4,
+        )
+        for i in range(50):
+            obs = np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8)
+            next_obs = np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8)
+            buf.append(obs, np.random.randint(NUM_ACTIONS), 1.0, next_obs, False)
+
+        batch = buf.sample(batch_size=8)
+        assert "weights" in batch
+        assert "indices" in batch
+        assert batch["weights"].shape == (8,)
+
+    def test_uniform_buffer_no_weights(self):
+        """Vanilla ReplayBuffer.sample() should NOT include weights or indices."""
+        buf = ReplayBuffer(
+            capacity=200, obs_shape=OBS_SHAPE, min_size=10,
+        )
+        for i in range(50):
+            obs = np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8)
+            next_obs = np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8)
+            buf.append(obs, np.random.randint(NUM_ACTIONS), 1.0, next_obs, False)
+
+        batch = buf.sample(batch_size=8)
+        assert "weights" not in batch
+        assert "indices" not in batch

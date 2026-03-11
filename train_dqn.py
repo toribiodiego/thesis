@@ -36,6 +36,7 @@ from src.envs import make_atari_env
 from src.models import DQN
 from src.models.rainbow import RainbowDQN
 from src.replay import ReplayBuffer
+from src.replay.prioritized_buffer import PrioritizedReplayBuffer
 from src.training import (
     init_target_network,
     configure_optimizer,
@@ -164,12 +165,34 @@ def initialize_components(config, paths, device, resuming=False):
     )
 
     # Create replay buffer
-    replay_buffer = ReplayBuffer(
-        capacity=config.replay.capacity,
-        obs_shape=(config.environment.preprocessing.frame_stack, 84, 84),
-        min_size=config.replay.min_size,
-        device=str(device) if device is not None else None
-    )
+    obs_shape = (config.environment.preprocessing.frame_stack, 84, 84)
+    device_str = str(device) if device is not None else None
+
+    if rainbow_enabled:
+        n_step = config.rainbow.multi_step.n
+        replay_buffer = PrioritizedReplayBuffer(
+            capacity=config.replay.capacity,
+            obs_shape=obs_shape,
+            min_size=config.replay.min_size,
+            device=device_str,
+            n_step=n_step,
+            gamma=config.training.get('gamma', 0.99),
+            alpha=config.rainbow.priority.alpha,
+            beta_start=config.rainbow.priority.beta_start,
+            beta_end=config.rainbow.priority.beta_end,
+            beta_frames=config.training.total_frames,
+            epsilon=config.rainbow.priority.epsilon,
+        )
+        print(f"Replay: PrioritizedReplayBuffer (alpha={config.rainbow.priority.alpha}, "
+              f"n_step={n_step})")
+    else:
+        replay_buffer = ReplayBuffer(
+            capacity=config.replay.capacity,
+            obs_shape=obs_shape,
+            min_size=config.replay.min_size,
+            device=device_str,
+        )
+        print(f"Replay: ReplayBuffer (capacity={config.replay.capacity})")
 
     # Create schedulers
     epsilon_scheduler = EpsilonScheduler(
