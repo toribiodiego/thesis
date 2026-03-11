@@ -155,14 +155,23 @@ def initialize_components(config, paths, device, resuming=False):
     target_net = init_target_network(online_net, num_actions=num_actions).to(device)
 
     # Create optimizer
-    optimizer = configure_optimizer(
-        network=online_net,
-        optimizer_type=config.training.optimizer.type,
-        learning_rate=config.training.optimizer.lr,
-        alpha=config.training.optimizer.rmsprop.alpha,
-        eps=config.training.optimizer.rmsprop.eps,
-        momentum=config.training.optimizer.rmsprop.momentum
-    )
+    opt_type = config.training.optimizer.type
+    if opt_type == "adam":
+        optimizer = configure_optimizer(
+            network=online_net,
+            optimizer_type=opt_type,
+            learning_rate=config.training.optimizer.lr,
+            eps=config.training.optimizer.adam.eps,
+        )
+    else:
+        optimizer = configure_optimizer(
+            network=online_net,
+            optimizer_type=opt_type,
+            learning_rate=config.training.optimizer.lr,
+            alpha=config.training.optimizer.rmsprop.alpha,
+            eps=config.training.optimizer.rmsprop.eps,
+            momentum=config.training.optimizer.rmsprop.momentum,
+        )
 
     # Create replay buffer
     obs_shape = (config.environment.preprocessing.frame_stack, 84, 84)
