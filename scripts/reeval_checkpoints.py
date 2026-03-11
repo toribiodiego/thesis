@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.envs.atari_wrappers import make_atari_env
 from src.models.dqn import DQN
+from src.models.rainbow import RainbowDQN
 from src.training.evaluation import evaluate
 
 RUNS_DIR = "experiments/dqn_atari/runs"
@@ -60,11 +61,27 @@ def load_config(run_dir):
 
 
 def create_model(config, num_actions, device):
-    """Create a DQN model matching the run config."""
-    model = DQN(
-        num_actions=num_actions,
-        dropout=config["network"]["dropout"],
-    )
+    """Create a model matching the run config (DQN or RainbowDQN)."""
+    rainbow_cfg = config.get("rainbow", {})
+    dropout = config.get("network", {}).get("dropout", 0.0)
+
+    if rainbow_cfg.get("enabled", False):
+        dist = rainbow_cfg.get("distributional", {})
+        model = RainbowDQN(
+            num_actions=num_actions,
+            num_atoms=dist.get("num_atoms", 51),
+            v_min=dist.get("v_min", -10.0),
+            v_max=dist.get("v_max", 10.0),
+            noisy=rainbow_cfg.get("noisy_nets", True),
+            dueling=rainbow_cfg.get("dueling", True),
+            dropout=dropout,
+        )
+    else:
+        model = DQN(
+            num_actions=num_actions,
+            dropout=dropout,
+        )
+
     return model.to(device)
 
 
@@ -123,8 +140,14 @@ def main():
             print(f"SKIP {run_name}: all checkpoints already evaluated")
             continue
 
+        rainbow_enabled = config.get("rainbow", {}).get("enabled", False)
+        spr_enabled = config.get("spr", {}).get("enabled", False)
+        model_type = "RainbowDQN" if rainbow_enabled else "DQN"
+        if spr_enabled:
+            model_type += "+SPR"
+
         print(f"RUN  {run_name}")
-        print(f"     env={env_id}, missing steps: {missing_steps}")
+        print(f"     env={env_id}, model={model_type}, missing steps: {missing_steps}")
 
         # Create environment
         env = make_atari_env(
