@@ -266,6 +266,16 @@ spatial invariance aids generalization but hurt when precise spatial
 information (e.g.\ climber position, road layout) is critical for the
 policy.
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{../output/plots/aug_helps.pdf}
+\caption{Games where augmentation helps. Kangaroo shows augmentation
+building steadily while SPR peaks early then collapses. Up N Down shows
+both augmentation and SPR improving over baseline, with SPR climbing
+late in training.}
+\label{fig:aug-helps}
+\end{figure}
+
 \subsection{SPR}
 
 SPR's effect on vanilla DQN is modest. Up N Down shows a strong lift
@@ -275,6 +285,16 @@ Climber holds steady, Frostbite gains marginally, and both Boxing and
 Kangaroo decline. This contrasts with the large improvements reported in
 the original SPR paper, which used Rainbow as the base agent rather than
 vanilla DQN.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{../output/plots/aug_hurts_spr_holds.pdf}
+\caption{Games where augmentation hurts but SPR holds. Crazy Climber
+shows baseline and SPR both learning while augmentation flatlines.
+Road Runner shows SPR emerging as the strongest condition late in
+training while augmentation collapses early.}
+\label{fig:aug-hurts}
+\end{figure}
 
 \subsection{Combined}
 
