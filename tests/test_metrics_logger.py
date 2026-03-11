@@ -211,6 +211,34 @@ def test_csv_backend_multiple_writes(temp_log_dir):
         assert rows[4]["step"] == "500"
 
 
+def test_csv_backend_rainbow_metrics_not_filtered(temp_log_dir):
+    """Rainbow metrics should survive the CSV fieldname filter."""
+    backend = CSVBackend(temp_log_dir)
+
+    metrics = {
+        "loss": 0.5,
+        "epsilon": 0.0,
+        "distributional_loss": 1.23,
+        "mean_is_weight": 0.87,
+        "mean_priority": 0.45,
+        "priority_entropy": 3.12,
+        "beta": 0.4,
+    }
+    backend.log_step_metrics(metrics, step=100)
+
+    with open(backend.step_csv_path, "r") as f:
+        reader = csv.DictReader(f)
+        rows = list(reader)
+        assert len(rows) == 1
+
+        row = rows[0]
+        assert row["distributional_loss"] == "1.23"
+        assert row["mean_is_weight"] == "0.87"
+        assert row["mean_priority"] == "0.45"
+        assert row["priority_entropy"] == "3.12"
+        assert row["beta"] == "0.4"
+
+
 # ============================================================================
 # MetricsLogger Integration Tests
 # ============================================================================
