@@ -215,27 +215,29 @@ evaluation episodes at the final checkpoint (400K frames), seed 42.
 \begin{table}[H]
 \centering
 \renewcommand{\arraystretch}{1.4}
-\setlength{\tabcolsep}{14pt}
-\begin{tabular}{l rrrr}
+\setlength{\tabcolsep}{8pt}
+\begin{tabular}{l rrrr r}
 \toprule
 \textbf{Game}
   & \textbf{Baseline}
   & \textbf{+ Aug}
   & \textbf{+ SPR}
-  & \textbf{+ Both} \\
+  & \textbf{+ Both}
+  & \textbf{Rainbow} \\
 \midrule
-Crazy Climber  & $3540 \pm 754$   & $110 \pm 40$      & $3400 \pm 0$      & $3.3 \pm 18.0$    \\
-Road Runner    & $1440 \pm 859$   & $3.3 \pm 18.0$    & $2290 \pm 1238$   & $1033 \pm 539$    \\
-Boxing         & $-3.0 \pm 5.3$   & $-18.2 \pm 4.0$   & $-18.2 \pm 11.7$  & $-39.6 \pm 10.3$  \\
-Kangaroo       & $26.7 \pm 68.0$  & $460 \pm 128$     & $13.3 \pm 49.9$   & $320 \pm 98$      \\
-Frostbite      & $147 \pm 45$     & $0.0 \pm 0.0$     & $161 \pm 31$      & $173 \pm 15$      \\
-Up N Down      & $141 \pm 155$    & $981 \pm 671$     & $901 \pm 682$     & $491 \pm 467$     \\
+Crazy Climber  & $3540 \pm 754$   & $110 \pm 40$      & $3400 \pm 0$      & $3.3 \pm 18$     & $9137 \pm 3857$  \\
+Road Runner    & $1440 \pm 859$   & $3.3 \pm 18$      & $2290 \pm 1238$   & $1033 \pm 539$   & $180 \pm 464$    \\
+Boxing         & $-3.0 \pm 5.3$   & $-18.2 \pm 4.0$   & $-18.2 \pm 11.7$  & $-39.6 \pm 10$   & $-3.0 \pm 6.5$   \\
+Kangaroo       & $26.7 \pm 68$    & $460 \pm 128$     & $13.3 \pm 49.9$   & $320 \pm 98$     & $33.3 \pm 90.7$  \\
+Frostbite      & $147 \pm 45$     & $0.0 \pm 0.0$     & $161 \pm 31$      & $173 \pm 15$     & $43 \pm 18$      \\
+Up N Down      & $141 \pm 155$    & $981 \pm 671$     & $901 \pm 682$     & $491 \pm 467$    & $1794 \pm 637$   \\
 \midrule
-Mean           & $982$  & $256$  & $1125$  & $330$  \\
+Mean           & $982$  & $256$  & $1125$  & $330$  & $1864$ \\
 \bottomrule
 \end{tabular}
-\caption{DQN isolation study results. Mean raw episode return ($\pm$
-std) over 30 eval episodes at 400K frames, seed 42.}
+\caption{Summary of all conditions. Mean raw episode return ($\pm$
+std) over 30 eval episodes at 400K frames, seed 42. The first four
+columns are DQN variants; Rainbow is a separate base agent.}
 \label{tab:summary}
 \end{table}
 
@@ -305,65 +307,48 @@ combined condition that does not sustain.}
 
 \subsection{Rainbow Baseline}
 
-Table~\ref{tab:rainbow} compares vanilla DQN against Rainbow DQN on
-the same six games. Rainbow dramatically improves two games while
-performing comparably or worse on the remaining four.
+Rainbow is not uniformly better under the 100K budget. Crazy Climber
+($9137$ vs $3540$, roughly $3\times$) and Up N Down ($1794$ vs $141$,
+$12\times$) see large gains, while Road Runner and Frostbite regress
+substantially. Boxing and Kangaroo are unchanged -- both agents score
+near zero.
 
-\begin{table}[H]
+\begin{figure}[H]
 \centering
-\renewcommand{\arraystretch}{1.4}
-\setlength{\tabcolsep}{14pt}
-\begin{tabular}{l rrr}
-\toprule
-\textbf{Game}
-  & \textbf{DQN}
-  & \textbf{Rainbow}
-  & \textbf{$\Delta$} \\
-\midrule
-Crazy Climber  & $3540 \pm 754$   & $9137 \pm 3857$   & $+158\%$  \\
-Up N Down      & $141 \pm 155$    & $1794 \pm 637$    & $+1172\%$ \\
-Road Runner    & $1440 \pm 859$   & $180 \pm 464$     & $-88\%$   \\
-Frostbite      & $147 \pm 45$     & $43 \pm 18$       & $-71\%$   \\
-Kangaroo       & $26.7 \pm 68.0$  & $33.3 \pm 90.7$   & $+25\%$   \\
-Boxing         & $-3.0 \pm 5.3$   & $-3.0 \pm 6.5$    & $\approx 0$ \\
-\midrule
-Mean           & $982$  & $1864$  & $+90\%$ \\
-\bottomrule
-\end{tabular}
-\caption{Rainbow baseline results. Mean raw episode return ($\pm$ std)
-over 30 eval episodes at 400K frames, seed 42. Games sorted by
-Rainbow's relative improvement over vanilla DQN.}
-\label{tab:rainbow}
-\end{table}
+\includegraphics[width=\textwidth]{../output/plots/rainbow_helps.pdf}
+\caption{Games where Rainbow improves over DQN. Crazy Climber shows
+Rainbow consistently above baseline, peaking higher before both
+collapse at the final checkpoint. Up N Down shows Rainbow pulling
+ahead in the second half of training.}
+\label{fig:rainbow-helps}
+\end{figure}
 
-\noindent Crazy Climber and Up N Down see large gains under Rainbow --
-nearly $3\times$ and $12\times$ respectively. These are the two games
-where the DQN isolation study also showed the strongest SPR and
-augmentation effects, suggesting that dense reward games with
-relatively simple visual dynamics benefit most from additional agent
-capability under the 100K budget.
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{../output/plots/rainbow_hurts.pdf}
+\caption{Games where Rainbow regresses from DQN. Road Runner shows
+DQN peaking mid-training while Rainbow stays near zero throughout.
+Frostbite shows both agents oscillating at similar levels, with
+Rainbow dipping to zero at 200K before recovering.}
+\label{fig:rainbow-hurts}
+\end{figure}
 
-\medskip
-\noindent Road Runner and Frostbite decline substantially. Both games
-performed reasonably under vanilla DQN, so the regression is not
-simply a floor effect. One possible explanation: Rainbow's additional
-components (prioritized replay warmup of 20K steps, distributional
-targets across 51 atoms, noisy exploration) require more data to
-calibrate than the 100K budget provides. Vanilla DQN's simpler
-learning signal may be easier to fit with limited experience.
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{../output/plots/rainbow_flat.pdf}
+\caption{Games where neither agent learns. Kangaroo shows both agents
+near zero with high variance. Boxing shows an interesting divergence:
+Rainbow recovers to near-zero while DQN declines steadily.}
+\label{fig:rainbow-flat}
+\end{figure}
 
-\medskip
-\noindent Boxing and Kangaroo are effectively unchanged -- both agents
-score near zero. These games appear too difficult for either agent
-to make progress within 100K steps.
-
-\medskip
-\noindent The overall picture is that Rainbow is not uniformly better
-under severe data constraints. Its advantage is concentrated in games
-where its components align with the reward structure. This sets up
-the key comparison: does adding SPR to Rainbow amplify gains in the
-games where Rainbow already helps, and can it rescue the games where
-Rainbow alone regresses?
+\noindent The advantage appears concentrated in dense reward games where
+Rainbow's components (distributional targets, prioritized replay,
+n-step returns) can calibrate within 100K steps. In other games, the
+added complexity may hurt more than it helps with so little data. This
+sets up the key comparison: does adding SPR to Rainbow amplify gains in
+the games where Rainbow already helps, and can it rescue the games
+where Rainbow alone regresses?
 
 \clearpage
 

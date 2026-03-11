@@ -52,6 +52,15 @@ RUN_NAMES = {
     ("Up N Down", "+ Both"): "atari100k_up_n_down_both_42_20260311_030203",
 }
 
+RAINBOW_RUN_NAMES = {
+    ("Crazy Climber", "Rainbow"): "atari100k_crazy_climber_rainbow_42_20260311_035227",
+    ("Road Runner", "Rainbow"): "atari100k_road_runner_rainbow_42_20260311_033324",
+    ("Boxing", "Rainbow"): "atari100k_boxing_rainbow_42_20260311_034322",
+    ("Kangaroo", "Rainbow"): "atari100k_kangaroo_rainbow_42_20260311_041254",
+    ("Frostbite", "Rainbow"): "atari100k_frostbite_rainbow_42_20260311_041254",
+    ("Up N Down", "Rainbow"): "atari100k_up_n_down_rainbow_42_20260311_042140",
+}
+
 GAMES = [
     "Crazy Climber", "Road Runner", "Boxing",
     "Kangaroo", "Frostbite", "Up N Down",
@@ -62,6 +71,7 @@ COLORS = {
     "+ Aug": "#DD8452",
     "+ SPR": "#55A868",
     "+ Both": "#C44E52",
+    "Rainbow": "#8172B3",
 }
 
 
@@ -155,5 +165,89 @@ def main():
     print(f"Saved to {OUTPUT_DIR}/dqn_learning_curves.{{png,pdf}}")
 
 
+def plot_rainbow_comparison():
+    """Generate paired figures comparing DQN Baseline vs Rainbow."""
+    plt.rcParams.update({
+        "font.size": 12,
+        "axes.titlesize": 14,
+        "axes.labelsize": 12,
+        "xtick.labelsize": 11,
+        "ytick.labelsize": 11,
+        "axes.linewidth": 0.8,
+        "grid.linewidth": 0.5,
+        "lines.linewidth": 2.0,
+        "figure.facecolor": "white",
+        "axes.facecolor": "white",
+        "axes.grid": True,
+        "grid.alpha": 0.3,
+        "legend.frameon": False,
+        "legend.fontsize": 12,
+    })
+
+    conditions = ["Baseline", "Rainbow"]
+    all_runs = {**RUN_NAMES, **RAINBOW_RUN_NAMES}
+
+    # Pair 1: Games where Rainbow helps (Crazy Climber, Up N Down)
+    pairs = [
+        (["Crazy Climber", "Up N Down"], "rainbow_helps",
+         "Games where Rainbow improves over DQN."),
+        (["Road Runner", "Frostbite"], "rainbow_hurts",
+         "Games where Rainbow regresses from DQN."),
+        (["Kangaroo", "Boxing"], "rainbow_flat",
+         "Games where neither agent learns."),
+    ]
+
+    for games, filename, _desc in pairs:
+        fig, axes = plt.subplots(1, 2, figsize=(12, 4.5))
+        for i, game in enumerate(games):
+            ax = axes[i]
+            for cond in conditions:
+                run_name = all_runs.get((game, cond))
+                if run_name is None:
+                    continue
+                run_dir = os.path.join(RUNS_DIR, run_name)
+                data = load_eval_csv(run_dir)
+                if data is None:
+                    print(f"  WARNING: missing eval data for {game} / {cond}")
+                    continue
+                steps, means, stds = data
+                smoothed_means = smooth(means)
+                smoothed_stds = smooth(stds)
+                ax.plot(steps, smoothed_means, label=cond,
+                        color=COLORS[cond], linewidth=2.0,
+                        marker="o" if cond == "Rainbow" else None,
+                        markersize=5)
+                ax.fill_between(steps,
+                                smoothed_means - smoothed_stds,
+                                smoothed_means + smoothed_stds,
+                                color=COLORS[cond], alpha=0.12)
+
+            ax.set_title(game, fontsize=13, fontweight="bold")
+            ax.set_xlabel("Env Steps (K)")
+            if i == 0:
+                ax.set_ylabel("Mean Return")
+            ax.yaxis.set_major_formatter(
+                plt.FuncFormatter(
+                    lambda x, _: f"{int(x):,}" if x == int(x) else f"{x:.0f}"
+                )
+            )
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
+
+        handles, labels = axes[0].get_legend_handles_labels()
+        fig.legend(handles, labels, loc="lower center", ncol=2, fontsize=13,
+                   bbox_to_anchor=(0.5, -0.03))
+        plt.tight_layout(rect=[0, 0.08, 1, 1.0])
+
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+        plt.savefig(os.path.join(OUTPUT_DIR, f"{filename}.png"),
+                    dpi=150, bbox_inches="tight")
+        plt.savefig(os.path.join(OUTPUT_DIR, f"{filename}.pdf"),
+                    bbox_inches="tight")
+        plt.close()
+        print(f"Saved {filename}.{{png,pdf}}")
+
+
 if __name__ == "__main__":
     main()
+    plot_rainbow_comparison()
