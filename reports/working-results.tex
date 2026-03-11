@@ -351,6 +351,53 @@ near-zero while DQN declines steadily.}
 \label{fig:rainbow-flat}
 \end{figure}
 
+\section{Next Steps}
+
+All results so far use a single seed (42). Three areas of work remain
+before the thesis experiments are complete.
+
+\subsection{Multi-Seed Evaluation}
+
+Each condition will be run with seeds 42, 13, and 23 to produce
+confidence intervals. The current single-seed results show high
+variance between adjacent checkpoints, so multi-seed aggregation is
+necessary to distinguish real effects from noise. Learning curves will
+be re-plotted with shaded confidence bands across seeds.
+
+\subsection{Rainbow + SPR}
+
+The Rainbow baseline establishes that a more capable agent improves on
+some games but regresses on others. The next step adds SPR to Rainbow
+on the same six games. Comparing DQN+SPR (modest effects) against
+Rainbow+SPR (large effects in published results) directly tests whether
+the base agent's capability determines whether self-supervised
+representations are useful.
+
+\subsection{Interpretability Analysis}
+
+The performance comparison alone cannot explain why SPR helps Rainbow
+but not vanilla DQN. Four analyses are planned to investigate the
+representation-level differences:
+
+\begin{enumerate}[nosep]
+  \item \textbf{Linear probes.} Train classifiers on frozen encoder
+    outputs across all conditions (DQN, DQN+SPR, Rainbow, Rainbow+SPR)
+    to measure what game-relevant information the representations
+    encode.
+  \item \textbf{Latent space visualization.} t-SNE or PCA projections
+    of encoder outputs across conditions, testing whether SPR produces
+    structured representations only when paired with a capable agent.
+  \item \textbf{Transition model predictions.} Compare SPR's
+    predicted next-states to actuals for DQN+SPR and Rainbow+SPR.
+    If prediction quality differs, the bottleneck is in the
+    representations; if not, it is downstream.
+  \item \textbf{Component attribution.} Correlate Rainbow metrics
+    (distributional loss, importance sampling weights, priority
+    entropy) with probe accuracy to identify which components
+    drive representation quality, then run targeted ablations on
+    the strongest candidates.
+\end{enumerate}
+
 \clearpage
 
 \appendix
