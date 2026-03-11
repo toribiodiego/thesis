@@ -309,9 +309,9 @@ combined condition that does not sustain.}
 
 Rainbow is not uniformly better under the 100K budget. Crazy Climber
 ($9137$ vs $3540$, roughly $3\times$) and Up N Down ($1794$ vs $141$,
-$12\times$) see large gains, while Road Runner and Frostbite regress
-substantially. Boxing and Kangaroo are unchanged -- both agents score
-near zero.
+$12\times$) see large gains. Both are dense reward games where
+Rainbow's components (distributional targets, prioritized replay,
+n-step returns) appear to calibrate within 100K steps.
 
 \begin{figure}[H]
 \centering
@@ -323,6 +323,11 @@ ahead in the second half of training.}
 \label{fig:rainbow-helps}
 \end{figure}
 
+\noindent Road Runner ($180$ vs $1440$) and Frostbite ($43$ vs $147$)
+regress substantially. Both games performed reasonably under vanilla
+DQN, so the regression is not a floor effect -- the added complexity
+hurts more than it helps with so little data.
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{../output/plots/rainbow_hurts.pdf}
@@ -333,22 +338,18 @@ Rainbow dipping to zero at 200K before recovering.}
 \label{fig:rainbow-hurts}
 \end{figure}
 
+\noindent Boxing and Kangaroo are effectively unchanged -- both agents
+score near zero regardless of the base agent. These games appear too
+difficult for either architecture within 100K steps.
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{../output/plots/rainbow_flat.pdf}
 \caption{Games where neither agent learns. Kangaroo shows both agents
-near zero with high variance. Boxing shows an interesting divergence:
-Rainbow recovers to near-zero while DQN declines steadily.}
+near zero with high variance. Boxing shows Rainbow recovering to
+near-zero while DQN declines steadily.}
 \label{fig:rainbow-flat}
 \end{figure}
-
-\noindent The advantage appears concentrated in dense reward games where
-Rainbow's components (distributional targets, prioritized replay,
-n-step returns) can calibrate within 100K steps. In other games, the
-added complexity may hurt more than it helps with so little data. This
-sets up the key comparison: does adding SPR to Rainbow amplify gains in
-the games where Rainbow already helps, and can it rescue the games
-where Rainbow alone regresses?
 
 \clearpage
 
