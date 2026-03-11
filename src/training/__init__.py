@@ -14,6 +14,9 @@ from .evaluation import EvaluationLogger, EvaluationScheduler, VideoRecorder, ev
 # Logging
 from .logging import CheckpointManager, EpisodeLogger, StepLogger
 
+# Distributional RL loss
+from .distributional import compute_distributional_loss, project_distribution
+
 # Loss computation
 from .loss import (
     compute_combined_loss,
@@ -73,6 +76,9 @@ __all__ = [
     # Target network
     "hard_update_target",
     "init_target_network",
+    # Distributional loss
+    "project_distribution",
+    "compute_distributional_loss",
     # Loss
     "compute_td_targets",
     "select_q_values",
