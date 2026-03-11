@@ -246,14 +246,14 @@ evaluation episodes at the final checkpoint (400K frames), seed 42.
   & \textbf{Rainbow}
   & \textbf{Rainbow + SPR} \\
 \midrule
-Crazy Climber  & $3540 \pm 754$   & $110 \pm 40$      & $3400 \pm 0$      & $3.3 \pm 18$     & --  & -- \\
-Road Runner    & $1440 \pm 859$   & $3.3 \pm 18$      & $2290 \pm 1238$   & $1033 \pm 539$   & --  & -- \\
-Boxing         & $-3.0 \pm 5.3$   & $-18.2 \pm 4.0$   & $-18.2 \pm 11.7$  & $-39.6 \pm 10$   & --  & -- \\
-Kangaroo       & $26.7 \pm 68$    & $460 \pm 128$     & $13.3 \pm 49.9$   & $320 \pm 98$     & --  & -- \\
-Frostbite      & $147 \pm 45$     & $0.0 \pm 0.0$     & $161 \pm 31$      & $173 \pm 15$     & --  & -- \\
-Up N Down      & $141 \pm 155$    & $981 \pm 671$     & $901 \pm 682$     & $491 \pm 467$    & --  & -- \\
+Crazy Climber  & $3540 \pm 754$  & $100 \pm 58$    & $3400 \pm 0$     & $3 \pm 18$      & --  & -- \\
+Road Runner    & $1440 \pm 859$  & $3 \pm 18$      & $2003 \pm 956$   & $1033 \pm 539$  & --  & -- \\
+Boxing         & $-3 \pm 5$      & $-16 \pm 7$     & $-17 \pm 12$     & $-40 \pm 10$    & --  & -- \\
+Kangaroo       & $27 \pm 68$     & $467 \pm 174$   & $20 \pm 60$      & $320 \pm 98$    & --  & -- \\
+Frostbite      & $147 \pm 45$    & $2 \pm 11$      & $157 \pm 46$     & $173 \pm 15$    & --  & -- \\
+Up N Down      & $141 \pm 155$   & $1085 \pm 637$  & $989 \pm 589$    & $491 \pm 467$   & --  & -- \\
 \midrule
-Mean           & $982$  & $256$  & $1125$  & $330$  & --  & -- \\
+Mean           & $882$  & $274$  & $1092$  & $330$  & --  & -- \\
 \bottomrule
 \end{tabular}
 \caption{Summary of all conditions. Mean raw episode return ($\pm$
@@ -271,8 +271,8 @@ fragile. Several patterns stand out:
 
 \subsection{Augmentation}
 
-Augmentation is strongly game-dependent. Kangaroo ($460$ vs $27$) and
-Up N Down ($981$ vs $141$) improve substantially, while Crazy Climber,
+Augmentation is strongly game-dependent. Kangaroo ($467$ vs $27$) and
+Up N Down ($1085$ vs $141$) improve substantially, while Crazy Climber,
 Road Runner, and Frostbite collapse to near-zero returns. Boxing worsens
 slightly. The pattern suggests that random shifts help in games where
 spatial invariance aids generalization but hurt when precise spatial
@@ -292,7 +292,7 @@ late in training.}
 \subsection{SPR}
 
 SPR's effect on vanilla DQN is modest. Up N Down shows a strong lift
-($901$ vs $141$, roughly $6\times$) and Road Runner improves ($2290$ vs
+($989$ vs $141$, roughly $7\times$) and Road Runner improves ($2003$ vs
 $1440$). The remaining four games are flat or slightly worse: Crazy
 Climber holds steady, Frostbite gains marginally, and both Boxing and
 Kangaroo decline. This contrasts with the large improvements reported in

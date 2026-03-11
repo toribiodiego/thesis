@@ -297,6 +297,13 @@ def setup_run_directory(
     experiment_name = config.get("experiment", {}).get("name", "experiment")
     seed = config.get("seed", {}).get("value")
 
+    # Append _aug suffix when augmentation is enabled but not already
+    # reflected in the experiment name (SPR-only and Both configs already
+    # have _spr / _both suffixes in their YAML experiment.name)
+    aug_enabled = config.get("augmentation", {}).get("enabled", False)
+    if aug_enabled and "_aug" not in experiment_name and "_both" not in experiment_name:
+        experiment_name = f"{experiment_name}_aug"
+
     # Create run directory
     run_dir = create_run_dir(base_dir, experiment_name, seed, timestamp)
 
