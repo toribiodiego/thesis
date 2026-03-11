@@ -224,7 +224,7 @@ pytest tests/test_save_resume_determinism.py -v -s
 # Checksum Match: DONE PASS
 ```
 
-See [docs/design/checkpointing.md](../../../docs/design/checkpointing.md) for complete checkpoint/resume documentation.
+See [docs/reference/checkpointing.md](../../../docs/reference/checkpointing.md) for complete checkpoint/resume documentation.
 
 ## `setup_roms.sh`
 
@@ -640,7 +640,7 @@ print(df[['step', 'mean_return', 'median_return', 'std_return']])
 "
 ```
 
-See [docs/design/eval_harness.md](../../../docs/design/eval_harness.md) for complete evaluation harness documentation.
+See [docs/reference/eval-harness.md](../../../docs/reference/eval-harness.md) for complete evaluation harness documentation.
 
 <br><br>
 
@@ -873,6 +873,6 @@ wc -l experiments/dqn_atari/runs/pong/pong_seed42/csv/episodes.csv
 
 ### See Also
 
-- **[docs/design/logging_pipeline.md](../../../docs/design/logging_pipeline.md)** - Complete logging architecture and API reference
+- **[docs/reference/logging-pipeline.md](../../../docs/reference/logging-pipeline.md)** - Complete logging architecture and API reference
 - **[scripts/plot_results.py](../../../scripts/plot_results.py)** - Run with `--help` for full CLI reference
 - **[scripts/export_results_table.py](../../../scripts/export_results_table.py)** - Results table generator
