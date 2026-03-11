@@ -204,10 +204,12 @@ def initialize_components(config, paths, device, resuming=False):
         print(f"Replay: ReplayBuffer (capacity={config.replay.capacity})")
 
     # Create schedulers
+    use_noisy = rainbow_enabled and config.rainbow.noisy_nets
     epsilon_scheduler = EpsilonScheduler(
         epsilon_start=config.exploration.schedule.start_epsilon,
         epsilon_end=config.exploration.schedule.end_epsilon,
-        decay_frames=config.exploration.schedule.decay_frames
+        decay_frames=config.exploration.schedule.decay_frames,
+        noisy_nets=use_noisy,
     )
 
     target_updater = TargetNetworkUpdater(
