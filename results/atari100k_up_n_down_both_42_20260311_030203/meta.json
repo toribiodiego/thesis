@@ -1,0 +1,36 @@
+{
+  "created_at": "2026-03-11T03:02:03.643933",
+  "python_version": "3.12.12",
+  "git": {
+    "commit_hash": "eb18032",
+    "commit_hash_full": "eb180325ffa849af82a10aadcf4303b276cb8aec",
+    "branch": "main",
+    "dirty": false,
+    "available": true
+  },
+  "seed": 42,
+  "experiment": {
+    "name": "atari100k_up_n_down_both",
+    "notes": "DQN + SPR + augmentation on Up N Down under Atari-100K protocol"
+  },
+  "environment": {
+    "env_id": "UpNDownNoFrameskip-v4"
+  },
+  "training": {
+    "total_frames": 400000,
+    "optimizer_lr": 0.00025
+  },
+  "pytorch_version": "2.4.1+cu121",
+  "cli": {
+    "args": {
+      "config_file": "experiments/dqn_atari/configs/atari100k_up_n_down_both.yaml",
+      "seed": 42,
+      "resume": null,
+      "overrides": [],
+      "dry_run": false,
+      "device": null,
+      "tags": [],
+      "dev_run": false
+    }
+  }
+}

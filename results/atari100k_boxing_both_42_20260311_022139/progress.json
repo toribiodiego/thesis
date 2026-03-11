@@ -1,0 +1,14 @@
+{
+  "frame": 400000,
+  "total_frames": 400000,
+  "percent": 100.0,
+  "episode": 56,
+  "fps": 235.6,
+  "elapsed_seconds": 1698.0,
+  "eta_seconds": 0,
+  "status": "complete",
+  "final_eval": {
+    "mean_return": -41.0,
+    "std_return": 12.21
+  }
+}
