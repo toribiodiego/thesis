@@ -2,7 +2,7 @@
 
 Complete reference for the DQN Atari reproduction thesis project.
 
-> **Last Updated**: February 2026
+> **Last Updated**: March 2026
 > **When to Read**: Start here when joining the project, setting up your environment, or looking for specific component documentation. Revisit after major milestones or when workflow changes.
 
 ## Quick Start
@@ -26,7 +26,6 @@ High-level task-oriented guides:
 - **[troubleshooting.md](guides/troubleshooting.md)** - Problem diagnosis and fixes
 - **[testing.md](guides/testing.md)** - Test suite documentation
 - **[git-commit-guide.md](guides/git-commit-guide.md)** - Commit message conventions
-- **[colab-guide.md](guides/colab-guide.md)** - Google Colab setup for GPU training
 
 ### reference/
 Detailed technical specifications for each component:
@@ -42,6 +41,9 @@ Detailed technical specifications for each component:
 - **[config-cli.md](reference/config-cli.md)** - Configuration system and command-line interface
 - **[eval-harness.md](reference/eval-harness.md)** - Periodic evaluation, metrics, and video capture
 - **[logging-pipeline.md](reference/logging-pipeline.md)** - Multi-backend logging, plotting, and results analysis
+- **[spr-architecture.md](reference/spr-architecture.md)** - SPR components (transition model, projection/prediction heads, EMA)
+- **[spr-training-integration.md](reference/spr-training-integration.md)** - SPR training loop integration
+- **[rainbow-architecture.md](reference/rainbow-architecture.md)** - Rainbow components (C51, dueling, noisy, PER)
 - **[environment-notes.md](reference/environment-notes.md)** - Toolchain differences and compatibility
 - **[stability-notes.md](reference/stability-notes.md)** - Hyperparameter choices and stability observations
 
@@ -76,7 +78,6 @@ All documentation files use **kebab-case** with descriptive names:
 **Top-level guides:**
 - `quick-start.md` - Getting started guide
 - `git-commit-guide.md` - Commit message conventions
-- `colab-guide.md` - Platform-specific setup
 
 **Design/reference docs:**
 - `dqn-model.md` - Component specification
