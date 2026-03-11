@@ -28,3 +28,7 @@ target_network:
 replay:
   warmup_steps: 20000
   min_size: 20000
+
+logging:
+  checkpoint:
+    save_every: 40000
