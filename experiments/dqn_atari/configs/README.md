@@ -223,7 +223,7 @@ training:
 - QbertNoFrameskip-v4
 - SpaceInvadersNoFrameskip-v4
 - SeaquestNoFrameskip-v4
-- And 10 more (see docs/design/config_cli.md)
+- And 10 more (see docs/reference/config-cli.md)
 
 ## Run Artifacts
 
@@ -331,7 +331,7 @@ Fix: environment.action_repeat: 4
 | `environment.env_id` | Valid Atari ID | "unknown environment" |
 | `replay.capacity` | > 0 | "must be positive" |
 
-**See [docs/design/config_cli.md](../../../docs/design/config_cli.md) for complete validation reference.**
+**See [docs/reference/config-cli.md](../../../docs/reference/config-cli.md) for complete validation reference.**
 
 ## Debugging Config Issues
 
@@ -368,7 +368,7 @@ For comprehensive documentation on:
 - Advanced usage patterns
 - Reproducibility best practices
 
-**See: [docs/design/config_cli.md](../../../docs/design/config_cli.md)**
+**See: [docs/reference/config-cli.md](../../../docs/reference/config-cli.md)**
 
 ## Example Command Summary
 
