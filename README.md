@@ -4,13 +4,19 @@
 ![PyTorch 2.4](https://img.shields.io/badge/pytorch-2.4-ee4c2c)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-Masters thesis investigating how self-supervised representation learning
-(SPR) and data augmentation interact to improve data efficiency for DQN
-on the Atari-100K benchmark. Includes a 2x2 factorial study isolating
-SPR on vanilla DQN, augmentation interaction analysis, and
-interpretability probes into learned representations.
+Masters thesis investigating when self-supervised representation
+learning (SPR) improves data-efficient reinforcement learning and what
+determines whether the learned representations are useful. A DQN
+isolation study (augmentation x SPR, four conditions) reveals that SPR
+barely helps vanilla DQN, while published results show large gains on
+Rainbow -- suggesting the base agent's capability determines whether
+self-supervised representations are exploitable. Interpretability
+probes (linear probing, latent visualization, transition model
+analysis) compare representations across agent capability levels to
+explain why.
 
-**Status:** Infrastructure validated -- baseline experiments in progress.
+**Status:** DQN isolation study complete (24 runs, seed 42). Rainbow
+training integrated. Rainbow and multi-seed runs next.
 
 > **Quick links:** [Quick Start](#quick-start) ·
 > [Documentation](docs/README.md) ·
