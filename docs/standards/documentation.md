@@ -136,6 +136,57 @@ cells.
 
 <br><br>
 
+## LaTeX Conventions
+
+LaTeX documents in `reports/` and `writing/` follow these conventions.
+
+**Table placement and numbering:** Use the `float` and `caption`
+packages. All tables use `[H]` for exact placement (no float
+reordering). Captions are auto-numbered via `\caption{}` -- never
+hardcode table numbers.
+
+```latex
+\usepackage{float}
+\usepackage[font=small,labelfont=bf,labelsep=period,
+  justification=raggedright,singlelinecheck=false]{caption}
+```
+
+**Table structure:** Use `booktabs` rules (`\toprule`, `\midrule`,
+`\bottomrule`) and `\renewcommand{\arraystretch}` for row spacing.
+Place `\caption{}` after `\end{tabular}`. Add `\label{tab:name}` for
+cross-references.
+
+```latex
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{12pt}
+\begin{tabular}{l l}
+\toprule
+\textbf{Column A} & \textbf{Column B} \\
+\midrule
+Row 1 & Value 1 \\
+Row 2 & Value 2 \\
+\bottomrule
+\end{tabular}
+\caption{Description of what this table shows.}
+\label{tab:example}
+\end{table}
+```
+
+**Cross-references:** Always use `\ref{}` or `\label{}` for table and
+section references. Never hardcode numbers.
+
+```latex
+Good:  Table~\ref{tab:baseline} shows the results.
+Bad:   Table 3 shows the results.
+```
+
+**Inline references:** Use `\citelink{url}{N}` for numbered hyperlinks
+to papers (defined in document preamble).
+
+<br><br>
+
 ## Cross-References
 
 Use relative markdown links with descriptive text:
