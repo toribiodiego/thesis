@@ -27,134 +27,81 @@ training integrated. Rainbow and multi-seed runs next.
 
 ## Quick Start
 
-### Environment Setup
-
-**1. Create and activate virtual environment:**
+### Setup
 
 ```bash
 bash setup/setup_env.sh
 source .venv/bin/activate
-```
-
-The `setup_env.sh` script creates a Python virtual environment at
-`.venv/`, installs all pinned dependencies from
-`setup/requirements.txt`, and sets up Atari ROM tooling (`AutoROM`).
-
-**2. Verify installation:**
-
-```bash
 python -c "import torch, gymnasium, ale_py"
-pytest --version
-```
-
-**3. Capture system info (optional):**
-
-```bash
-./setup/capture_env.sh
 ```
 
 <br><br>
 
-### Run a Training Job
+### Training
 
 ```bash
-# Smoke test (~5-10 min)
-./experiments/dqn_atari/scripts/smoke_test.sh
+# Vanilla DQN (100K steps)
+python train_dqn.py \
+  --cfg experiments/dqn_atari/configs/atari100k_boxing.yaml --seed 42
 
-# Dry run (3 episodes, real environment)
-./experiments/dqn_atari/scripts/run_dqn.sh \
-  experiments/dqn_atari/configs/pong.yaml --dry-run
+# DQN + augmentation + SPR
+python train_dqn.py \
+  --cfg experiments/dqn_atari/configs/atari100k_boxing_both.yaml --seed 42
 
-# Full training (100K interaction steps)
-./experiments/dqn_atari/scripts/run_dqn.sh \
-  experiments/dqn_atari/configs/pong.yaml --seed 123
+# Rainbow DQN
+python train_dqn.py \
+  --cfg experiments/dqn_atari/configs/atari100k_boxing_rainbow.yaml --seed 42
+
+# Config overrides (without editing YAML)
+python train_dqn.py \
+  --cfg experiments/dqn_atari/configs/atari100k_boxing.yaml --seed 7 \
+  --set training.optimizer.lr=0.001
 ```
 
-**Config overrides** (adjust runs without editing YAML):
-
-```bash
-python train_dqn.py --cfg experiments/dqn_atari/configs/pong.yaml \
-  --seed 7 \
-  --set training.optimizer.lr=0.001 \
-  --set training.total_frames=2000000
-```
-
-Use one `--set` flag per override. See
-[`experiments/dqn_atari/configs/README.md`](experiments/dqn_atari/configs/README.md)
-for the complete CLI reference.
+See [`experiments/dqn_atari/configs/README.md`](experiments/dqn_atari/configs/README.md)
+for the full config and CLI reference.
 
 <br><br>
 
-### Logging and Plots
-
-Training metrics log to TensorBoard, Weights & Biases, and CSV files
-simultaneously.
+### Plotting
 
 ```bash
-# TensorBoard
-tensorboard --logdir experiments/dqn_atari/runs/
+# Learning curves across conditions (used in working results)
+python scripts/plot_learning_curves.py
 
-# CSV logs
-tail -f experiments/dqn_atari/runs/<run_dir>/csv/episodes.csv
-
-# Generate plots from CSV
+# Per-run plots from CSV
 python scripts/plot_results.py \
   --episodes experiments/dqn_atari/runs/<run_dir>/csv/episodes.csv \
-  --steps experiments/dqn_atari/runs/<run_dir>/csv/training_steps.csv \
-  --output plots/pong --game-name pong
+  --output output/plots/run_name --game-name boxing
 
-# Multi-seed aggregation (with 95% CI)
-python scripts/plot_results.py \
-  --multi-seed runs/pong_42/csv/episodes.csv \
-               runs/pong_43/csv/episodes.csv \
-               runs/pong_44/csv/episodes.csv \
-  --output plots/pong_multi_seed --game-name pong
-
-# Results summary table
-python scripts/export_results_table.py \
-  --runs-dir experiments/dqn_atari/runs/ --output output/summary
+# Re-evaluate checkpoints (auto-discovers runs)
+python scripts/reeval_checkpoints.py
+python scripts/reeval_checkpoints.py run_name_1 run_name_2
 ```
-
-Enable W&B by setting `WANDB_API_KEY` and
-`logging.wandb.enabled=true` in the config. See
-[`docs/reference/logging-pipeline.md`](docs/reference/logging-pipeline.md)
-for logging documentation.
 
 <br><br>
 
 ### Testing
 
 ```bash
-source .venv/bin/activate
-
-# All tests
 pytest tests/ -x
-
-# Specific component
-pytest tests/test_dqn_trainer.py -k "training_step" -v
+pytest tests/test_rainbow_model.py -v
 ```
-
-See [`tests/README.md`](tests/README.md) for the full test suite
-documentation.
 
 <br><br>
 
 ## Reproducibility
 
-- **Seeded RNG with checkpoint persistence** -- Centralised seeding
-  across Python, NumPy, and PyTorch; full RNG state saved in
-  checkpoints and restored on resume
-- **Deterministic mode** -- Optional strict determinism via
-  `torch.use_deterministic_algorithms` with configurable strictness
-- **Pinned dependencies** -- All packages pinned to exact versions in
+- **Seeded RNG** -- Centralized seeding across Python, NumPy, and
+  PyTorch; full RNG state saved in checkpoints and restored on resume
+- **Pinned dependencies** -- All packages pinned in
   `setup/requirements.txt`
-- **Metadata tracking** -- Every run records git commit, merged
-  config, environment settings, and system info
-- **Multi-backend logging** -- TensorBoard, Weights & Biases, and CSV
-  backends operate in parallel with a unified metric interface
+- **Metadata tracking** -- Every run records git commit, merged config,
+  and system info
+- **Provenance** -- [`reports/provenance.md`](reports/provenance.md)
+  documents how each figure and table was produced
 
-See [Engineering Standards](docs/standards/engineering.md) and
-[Config Reference](docs/reference/config-cli.md) for details.
+See [Engineering Standards](docs/standards/engineering.md) for details.
 
 <br><br>
 
@@ -165,13 +112,12 @@ entry points:
 
 | Category | Document | Description |
 |----------|----------|-------------|
-| Getting started | [`docs/guides/quick-start.md`](docs/guides/quick-start.md) | Detailed environment and dependency setup |
-| Workflows | [`docs/guides/workflows.md`](docs/guides/workflows.md) | Training, debugging, testing procedures |
-| Troubleshooting | [`docs/guides/troubleshooting.md`](docs/guides/troubleshooting.md) | Problem diagnosis and fixes |
+| Getting started | [`docs/guides/quick-start.md`](docs/guides/quick-start.md) | Environment and dependency setup |
+| Workflows | [`docs/guides/workflows.md`](docs/guides/workflows.md) | Training, debugging, testing |
 | Architecture | [`docs/guides/architecture.md`](docs/guides/architecture.md) | System design overview |
-| Config & CLI | [`docs/reference/config-cli.md`](docs/reference/config-cli.md) | Configuration system and CLI reference |
-| Training loop | [`docs/reference/training-loop-runtime.md`](docs/reference/training-loop-runtime.md) | Loop orchestration, logging, evaluation |
-| Results | [`docs/reports/`](docs/reports/) | Validation reports and analysis |
+| Config & CLI | [`docs/reference/config-cli.md`](docs/reference/config-cli.md) | Configuration and CLI reference |
+| SPR | [`docs/reference/spr-architecture.md`](docs/reference/spr-architecture.md) | SPR components and integration |
+| Rainbow | [`docs/reference/rainbow-architecture.md`](docs/reference/rainbow-architecture.md) | Rainbow components and integration |
 | Standards | [`docs/standards/`](docs/standards/) | Documentation and engineering conventions |
 
 <br><br>
@@ -179,29 +125,23 @@ entry points:
 ## Structure
 
 ```text
-train_dqn.py                     # Main training entry point
-src/                             # Core implementation
-  models/                        # Neural network architectures
-  replay/                        # Experience replay buffers
+train_dqn.py                     # Training entry point
+src/
+  models/                        # DQN, RainbowDQN, SPR, NoisyLinear, EMA
+  replay/                        # Uniform and prioritized replay buffers
   envs/                          # Atari wrappers and preprocessing
-  training/                      # DQN trainer and update logic
-  config/                        # Configuration system
-experiments/dqn_atari/           # DQN experiment
-  configs/                       # YAML configs per game
+  training/                      # Training loop, losses, evaluation, logging
+  config/                        # Configuration loading and validation
+experiments/dqn_atari/
+  configs/                       # YAML configs (baseline, aug, spr, rainbow)
   scripts/                       # Training and validation scripts
-reports/                         # Working results, provenance records
+  runs/                          # Run data (Google Drive, gitignored)
+scripts/                         # Plotting, analysis, checkpoint re-evaluation
+tests/                           # Unit and integration tests
+reports/                         # Working results and provenance records
 writing/                         # Thesis manuscript (LaTeX)
-  chapters/                      # Chapter .tex files
-  figures/                       # Thesis figures
-  tables/                        # Thesis tables
 presentation/                    # Defense slides (LaTeX/Beamer)
 docs/                            # Project documentation
-  guides/                        # Task-oriented guides
-  reference/                     # Technical component specs
-  reports/                       # Results and analysis
-  standards/                     # Documentation and engineering standards
-scripts/                         # Analysis utilities (plotting, export)
-tests/                           # Unit and integration tests
 setup/                           # Environment setup and dependencies
 ```
 
@@ -209,11 +149,9 @@ setup/                           # Environment setup and dependencies
 
 ## Dependencies
 
-See `setup/requirements.txt` for pinned versions. Core dependencies:
+See `setup/requirements.txt` for pinned versions. Core:
 
 - **PyTorch 2.4.1** (CUDA 12.1)
 - **Gymnasium 0.29.1** with **ALE-py 0.8.1**
-- **NumPy 1.26.4**, **SciPy 1.13.1**
-- **OpenCV 4.10.0**, **matplotlib 3.9.1**
+- **NumPy 1.26.4**, **matplotlib 3.9.1**
 - **OmegaConf 2.3.0**
-- **pytest** (testing)
