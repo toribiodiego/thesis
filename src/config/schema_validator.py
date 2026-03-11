@@ -91,9 +91,11 @@ KNOWN_STRUCTURE = {
         "augmentation",
         "spr",
         "ema",
+        "rainbow",
         "seed",
         "system",
     },
+    "rainbow": {"enabled"},
     "augmentation": {"enabled", "type", "random_shift"},
     "augmentation.random_shift": {"pad"},
     "spr": {
