@@ -5,13 +5,14 @@ Loads each checkpoint, creates the matching model and environment,
 runs 30 evaluation episodes, and appends results to evaluations.csv.
 
 Usage:
-    python scripts/reeval_checkpoints.py
-
-Processes all Rainbow runs that have checkpoints but incomplete eval CSVs.
+    python scripts/reeval_checkpoints.py                  # all runs with checkpoints
+    python scripts/reeval_checkpoints.py run_name_1 ...   # specific runs only
 """
 
+import argparse
 import csv
 import os
+import re
 import sys
 
 import torch
@@ -26,25 +27,28 @@ from src.training.evaluation import evaluate
 
 RUNS_DIR = "experiments/dqn_atari/runs"
 
-# INVALID: These runs used vanilla DQN with Rainbow hyperparameters,
-# not actual Rainbow (train_dqn.py ignored config.rainbow.enabled).
-# Moved to invalid/ subfolder. Will be replaced after Task 42.
-RAINBOW_RUNS = [
-    "invalid/atari100k_boxing_rainbow_42_20260311_034322",
-    "invalid/atari100k_crazy_climber_rainbow_42_20260311_035227",
-    "invalid/atari100k_frostbite_rainbow_42_20260311_041254",
-    "invalid/atari100k_kangaroo_rainbow_42_20260311_041254",
-    "invalid/atari100k_road_runner_rainbow_42_20260311_033324",
-    "invalid/atari100k_up_n_down_rainbow_42_20260311_042140",
-]
-
 EVAL_EPISODES = 30
 EVAL_EPSILON = 0.05
 
 
+def discover_runs(runs_dir):
+    """Auto-discover run directories that have checkpoints and a config."""
+    run_names = []
+    if not os.path.isdir(runs_dir):
+        return run_names
+    for entry in sorted(os.listdir(runs_dir)):
+        run_dir = os.path.join(runs_dir, entry)
+        if not os.path.isdir(run_dir):
+            continue
+        config_path = os.path.join(run_dir, "config.yaml")
+        checkpoint_dir = os.path.join(run_dir, "checkpoints")
+        if os.path.isfile(config_path) and os.path.isdir(checkpoint_dir):
+            run_names.append(entry)
+    return run_names
+
+
 def discover_checkpoint_steps(checkpoint_dir):
     """Scan checkpoint directory and return sorted list of step numbers."""
-    import re
     steps = []
     if not os.path.isdir(checkpoint_dir):
         return steps
@@ -124,14 +128,43 @@ def append_eval_row(run_dir, step, results, training_epsilon):
         ])
 
 
+def parse_args():
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Re-evaluate checkpoints that are missing eval data.",
+    )
+    parser.add_argument(
+        "runs",
+        nargs="*",
+        help="Run names to evaluate (default: auto-discover all runs with checkpoints)",
+    )
+    parser.add_argument(
+        "--runs-dir",
+        default=RUNS_DIR,
+        help=f"Base directory containing run folders (default: {RUNS_DIR})",
+    )
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
+
+    if args.runs:
+        run_names = args.runs
+    else:
+        run_names = discover_runs(args.runs_dir)
+        if not run_names:
+            print(f"No runs with checkpoints found in {args.runs_dir}")
+            return
+
     device = "cpu"
     print(f"Device: {device}")
     print(f"Evaluation episodes: {EVAL_EPISODES}, epsilon: {EVAL_EPSILON}")
+    print(f"Runs to process: {len(run_names)}")
     print()
 
-    for run_name in RAINBOW_RUNS:
-        run_dir = os.path.join(RUNS_DIR, run_name)
+    for run_name in run_names:
+        run_dir = os.path.join(args.runs_dir, run_name)
         if not os.path.exists(run_dir):
             print(f"SKIP {run_name}: directory not found")
             continue
@@ -200,8 +233,8 @@ def main():
 
     # Sort all eval CSVs by step
     print("Sorting eval CSVs by step...")
-    for run_name in RAINBOW_RUNS:
-        csv_path = os.path.join(RUNS_DIR, run_name, "eval", "evaluations.csv")
+    for run_name in run_names:
+        csv_path = os.path.join(args.runs_dir, run_name, "eval", "evaluations.csv")
         if not os.path.exists(csv_path):
             continue
         with open(csv_path) as f:
