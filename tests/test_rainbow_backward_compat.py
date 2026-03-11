@@ -14,9 +14,11 @@ from unittest.mock import MagicMock
 import numpy as np
 import pytest
 import torch
+from omegaconf import OmegaConf
 
 from src.models.dqn import DQN
 from src.models.ema import EMAEncoder
+from src.models.rainbow import RainbowDQN
 from src.models.spr import PredictionHead, ProjectionHead, TransitionModel
 from src.replay.replay_buffer import ReplayBuffer
 from src.training.logging import CheckpointManager
@@ -567,3 +569,126 @@ class TestTrainingStepCompat:
             assert result["metrics"].mean_is_weight is None
             assert result["metrics"].mean_priority is None
             assert result["metrics"].beta is None
+
+
+# ---------------------------------------------------------------------------
+# Test: Conditional model creation in initialize_components
+# ---------------------------------------------------------------------------
+
+
+class TestConditionalModelCreation:
+    """train_dqn.py should create RainbowDQN when rainbow.enabled is true."""
+
+    def _make_config(self, rainbow_enabled=False, **rainbow_overrides):
+        """Build a minimal OmegaConf config for model creation tests."""
+        cfg = {
+            "network": {"dropout": 0.0},
+            "rainbow": {
+                "enabled": rainbow_enabled,
+                "noisy_nets": True,
+                "dueling": True,
+                "distributional": {
+                    "num_atoms": 51,
+                    "v_min": -10.0,
+                    "v_max": 10.0,
+                },
+            },
+        }
+        cfg["rainbow"].update(rainbow_overrides)
+        return OmegaConf.create(cfg)
+
+    def test_dqn_when_rainbow_disabled(self):
+        """With rainbow.enabled=false, should create vanilla DQN."""
+        config = self._make_config(rainbow_enabled=False)
+        dropout = config.network.get("dropout", 0.0)
+        rainbow_enabled = config.get("rainbow", {}).get("enabled", False)
+
+        assert rainbow_enabled is False
+        model = DQN(num_actions=4, dropout=dropout)
+        assert type(model) is DQN
+
+    def test_rainbow_when_enabled(self):
+        """With rainbow.enabled=true, should create RainbowDQN."""
+        config = self._make_config(rainbow_enabled=True)
+        rainbow_enabled = config.get("rainbow", {}).get("enabled", False)
+
+        assert rainbow_enabled is True
+        model = RainbowDQN(
+            num_actions=4,
+            num_atoms=config.rainbow.distributional.num_atoms,
+            v_min=config.rainbow.distributional.v_min,
+            v_max=config.rainbow.distributional.v_max,
+            noisy=config.rainbow.noisy_nets,
+            dueling=config.rainbow.dueling,
+            dropout=config.network.get("dropout", 0.0),
+        )
+        assert type(model) is RainbowDQN
+        assert model.num_atoms == 51
+        assert model.v_min == -10.0
+        assert model.v_max == 10.0
+        assert model.noisy is True
+        assert model.dueling is True
+
+    def test_rainbow_config_params_propagate(self):
+        """RainbowDQN parameters should match config values."""
+        config = self._make_config(
+            rainbow_enabled=True,
+            noisy_nets=False,
+            dueling=False,
+        )
+        config.rainbow.distributional.num_atoms = 21
+        config.rainbow.distributional.v_min = -5.0
+        config.rainbow.distributional.v_max = 5.0
+
+        model = RainbowDQN(
+            num_actions=6,
+            num_atoms=config.rainbow.distributional.num_atoms,
+            v_min=config.rainbow.distributional.v_min,
+            v_max=config.rainbow.distributional.v_max,
+            noisy=config.rainbow.noisy_nets,
+            dueling=config.rainbow.dueling,
+        )
+        assert model.num_atoms == 21
+        assert model.v_min == -5.0
+        assert model.v_max == 5.0
+        assert model.noisy is False
+        assert model.dueling is False
+        assert model.num_actions == 6
+
+    def test_rainbow_target_network_creation(self):
+        """init_target_network should work with RainbowDQN via introspection."""
+        online = RainbowDQN(num_actions=4, num_atoms=51, noisy=True, dueling=True)
+        target = init_target_network(online, num_actions=4)
+
+        assert type(target) is RainbowDQN
+        assert target.num_atoms == 51
+        assert target.noisy is True
+        assert target.dueling is True
+        for p in target.parameters():
+            assert not p.requires_grad
+        for p_o, p_t in zip(online.parameters(), target.parameters()):
+            assert torch.allclose(p_o, p_t)
+
+    def test_rainbow_output_interface(self):
+        """RainbowDQN forward should return same dict keys as DQN plus log_probs."""
+        model = RainbowDQN(num_actions=4)
+        x = torch.rand(2, 4, 84, 84)
+        out = model(x)
+
+        assert "q_values" in out
+        assert "conv_output" in out
+        assert "log_probs" in out
+        assert out["q_values"].shape == (2, 4)
+        assert out["conv_output"].shape == (2, 64, 7, 7)
+        assert out["log_probs"].shape == (2, 4, 51)
+
+    def test_dqn_output_unchanged(self):
+        """Vanilla DQN output should be unaffected by Rainbow additions."""
+        model = DQN(num_actions=4)
+        x = torch.rand(2, 4, 84, 84)
+        out = model(x)
+
+        assert "q_values" in out
+        assert "conv_output" in out
+        assert out["q_values"].shape == (2, 4)
+        assert out["conv_output"].shape == (2, 64, 7, 7)

@@ -34,6 +34,7 @@ from src.config.cli import main
 from src.config.run_manager import setup_run_directory, print_run_info
 from src.envs import make_atari_env
 from src.models import DQN
+from src.models.rainbow import RainbowDQN
 from src.replay import ReplayBuffer
 from src.training import (
     init_target_network,
@@ -132,7 +133,24 @@ def initialize_components(config, paths, device, resuming=False):
 
     # Create networks
     dropout = config.network.get('dropout', 0.0)
-    online_net = DQN(num_actions=num_actions, dropout=dropout).to(device)
+    rainbow_enabled = config.get('rainbow', {}).get('enabled', False)
+
+    if rainbow_enabled:
+        online_net = RainbowDQN(
+            num_actions=num_actions,
+            num_atoms=config.rainbow.distributional.num_atoms,
+            v_min=config.rainbow.distributional.v_min,
+            v_max=config.rainbow.distributional.v_max,
+            noisy=config.rainbow.noisy_nets,
+            dueling=config.rainbow.dueling,
+            dropout=dropout,
+        ).to(device)
+        print(f"Model: RainbowDQN (atoms={config.rainbow.distributional.num_atoms}, "
+              f"noisy={config.rainbow.noisy_nets}, dueling={config.rainbow.dueling})")
+    else:
+        online_net = DQN(num_actions=num_actions, dropout=dropout).to(device)
+        print(f"Model: DQN (dropout={dropout})")
+
     target_net = init_target_network(online_net, num_actions=num_actions).to(device)
 
     # Create optimizer
