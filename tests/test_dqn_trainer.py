@@ -911,6 +911,54 @@ def test_configure_optimizer_invalid_type():
         configure_optimizer(online_net, optimizer_type="sgd")
 
 
+def test_configure_optimizer_rainbow_defaults():
+    """Test Rainbow defaults produce Adam with correct hyperparameters."""
+    from src.training.optimization import RAINBOW_OPTIMIZER_DEFAULTS
+
+    online_net = DQN(num_actions=6)
+    optimizer = configure_optimizer(online_net, **RAINBOW_OPTIMIZER_DEFAULTS)
+
+    assert isinstance(optimizer, torch.optim.Adam)
+    assert optimizer.defaults["lr"] == 6.25e-5
+    assert optimizer.defaults["eps"] == 1.5e-4
+
+
+def test_configure_optimizer_eps_overrides_adam_default():
+    """Explicit eps= should override Adam's default 1e-8."""
+    online_net = DQN(num_actions=6)
+    optimizer = configure_optimizer(
+        online_net, optimizer_type="adam", eps=1.5e-4,
+    )
+    assert optimizer.defaults["eps"] == 1.5e-4
+
+
+def test_configure_optimizer_eps_none_uses_adam_default():
+    """When eps=None, Adam uses its standard default 1e-8."""
+    online_net = DQN(num_actions=6)
+    optimizer = configure_optimizer(
+        online_net, optimizer_type="adam",
+    )
+    assert optimizer.defaults["eps"] == 1e-8
+
+
+def test_configure_optimizer_eps_none_uses_rmsprop_default():
+    """When eps=None, RMSProp uses its paper default 1e-2."""
+    online_net = DQN(num_actions=6)
+    optimizer = configure_optimizer(
+        online_net, optimizer_type="rmsprop",
+    )
+    assert optimizer.defaults["eps"] == 1e-2
+
+
+def test_rainbow_optimizer_defaults_dict():
+    """RAINBOW_OPTIMIZER_DEFAULTS contains the expected keys and values."""
+    from src.training.optimization import RAINBOW_OPTIMIZER_DEFAULTS
+
+    assert RAINBOW_OPTIMIZER_DEFAULTS["optimizer_type"] == "adam"
+    assert RAINBOW_OPTIMIZER_DEFAULTS["learning_rate"] == 6.25e-5
+    assert RAINBOW_OPTIMIZER_DEFAULTS["eps"] == 1.5e-4
+
+
 def test_configure_optimizer_parameters_linked():
     """Test that optimizer is linked to network parameters."""
     online_net = DQN(num_actions=6)
