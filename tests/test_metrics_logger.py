@@ -239,6 +239,37 @@ def test_csv_backend_rainbow_metrics_not_filtered(temp_log_dir):
         assert row["beta"] == "0.4"
 
 
+def test_csv_backend_dqn_only_leaves_rainbow_columns_empty(temp_log_dir):
+    """DQN-only metrics should produce valid CSV with empty Rainbow columns."""
+    backend = CSVBackend(temp_log_dir)
+
+    # Log only DQN metrics (no Rainbow fields)
+    metrics = {"loss": 0.5, "epsilon": 0.95, "td_error": 0.12, "fps": 120.0}
+    backend.log_step_metrics(metrics, step=100)
+
+    with open(backend.step_csv_path, "r") as f:
+        reader = csv.DictReader(f)
+        fieldnames = reader.fieldnames
+        rows = list(reader)
+
+    assert len(rows) == 1
+    row = rows[0]
+
+    # DQN values are correct
+    assert row["loss"] == "0.5"
+    assert row["epsilon"] == "0.95"
+    assert row["td_error"] == "0.12"
+
+    # Rainbow columns exist in header but are empty
+    rainbow_fields = [
+        "distributional_loss", "mean_is_weight",
+        "mean_priority", "priority_entropy", "beta",
+    ]
+    for field in rainbow_fields:
+        assert field in fieldnames, f"{field} missing from CSV header"
+        assert row[field] == "", f"{field} should be empty for DQN, got '{row[field]}'"
+
+
 # ============================================================================
 # MetricsLogger Integration Tests
 # ============================================================================
