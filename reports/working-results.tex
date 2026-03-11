@@ -209,151 +209,8 @@ conditions. Results for these conditions are pending.
 
 \section{Results}
 
-\subsection{Baseline Validation (seed 42)}
-
-Initial single-seed runs on three games to validate the training
-pipeline. These runs used clipped rewards in evaluation (see
-Appendix~\ref{app:clipping}), so scores are not comparable to published
-baselines.
-
-\begin{table}[H]
-\centering
-\renewcommand{\arraystretch}{1.3}
-\setlength{\tabcolsep}{8pt}
-\begin{tabular}{l r r r r r}
-\toprule
-\textbf{Game}
-  & \textbf{Final Eval}
-  & \textbf{Best Eval}
-  & \textbf{Episodes}
-  & \textbf{Avg Length}
-  & \textbf{Time} \\
-\midrule
-Crazy Climber  & $152.7 \pm 37.4$   & $162.5$ (320K)  & 182 & $\sim$2200  & 43 min \\
-Kung Fu Master & $1.4 \pm 1.6$      & $3.7$ (320K)    & 458 & $\sim$870   & 16 min \\
-Boxing         & $-19.7 \pm 7.1$    & $-0.2$ (40K)    & 56  & $\sim$7100  & 29 min \\
-\bottomrule
-\end{tabular}
-\caption{Vanilla DQN baseline at 100K env steps in clipped reward space.
-30 eval episodes per checkpoint, eval epsilon 0.05.}
-\label{tab:baseline-clipped}
-\end{table}
-
-\noindent Only Crazy Climber shows clear learning (monotonic improvement
-with high variance). Kung Fu Master remains flat and Boxing converges to
-a losing policy. This is expected -- vanilla DQN struggles at 100K
-steps, which is precisely why augmentation and SPR are needed.
-
-\subsection{Baseline (seed 42, raw scores)}
-
-Six-game baseline with the eval clipping fix applied. Single seed (42)
-per game; 30 evaluation episodes per checkpoint.
-
-\begin{table}[H]
-\centering
-\renewcommand{\arraystretch}{1.4}
-\setlength{\tabcolsep}{8pt}
-\begin{tabular}{l r r r r}
-\toprule
-\textbf{Game}
-  & \textbf{Final Eval (400K)}
-  & \textbf{Best Eval}
-  & \textbf{Random}
-  & \textbf{Human} \\
-\midrule
-Crazy Climber  & $3540 \pm 754$    & $17460$ (320K) & 10780 & 35829 \\
-Road Runner    & $1440 \pm 859$    & $1633$ (160K)  & 11500 & 7845  \\
-Boxing         & $-3.0 \pm 5.3$    & $-3.0$ (400K)  & 0.1   & 12.1  \\
-Kangaroo       & $26.7 \pm 68.0$   & $293$ (120K)   & 52    & 3035  \\
-Frostbite      & $147 \pm 45$      & $168$ (360K)   & 65    & 4335  \\
-Up N Down      & $141 \pm 155$     & $1312$ (120K)  & 533   & 11693 \\
-\bottomrule
-\end{tabular}
-\caption{Vanilla DQN baseline on the six selected games with raw
-(unclipped) evaluation scores. Random and human scores from Schwarzer
-et al.\ \citelink{https://arxiv.org/abs/2007.05929}{3}.}
-\end{table}
-
-\subsection{Augmentation}
-
-DrQ-style random shift augmentation
-\citelink{https://arxiv.org/abs/2004.14990}{5}: pad each 84$\times$84
-frame by 4 pixels on each side (zero-fill), then randomly crop back to
-84$\times$84. Applied independently to states and next-states at each
-training step.
-
-\begin{table}[H]
-\centering
-\renewcommand{\arraystretch}{1.4}
-\setlength{\tabcolsep}{12pt}
-\begin{tabular}{l r r}
-\toprule
-\textbf{Game} & \textbf{Baseline} & \textbf{+ Aug} \\
-\midrule
-Crazy Climber  & $3540 \pm 754$   & $110 \pm 40$ \\
-Road Runner    & $1440 \pm 859$   & $3.3 \pm 18.0$ \\
-Boxing         & $-3.0 \pm 5.3$   & $-18.2 \pm 4.0$ \\
-Kangaroo       & $26.7 \pm 68.0$  & $460 \pm 128$ \\
-Frostbite      & $147 \pm 45$     & $0.0 \pm 0.0$ \\
-Up N Down      & $141 \pm 155$    & $981 \pm 671$ \\
-\bottomrule
-\end{tabular}
-\caption{Effect of random-shift data augmentation compared to the
-vanilla DQN baseline. Seed 42, 30 eval episodes at 400K frames.}
-\end{table}
-
-\noindent Augmentation is strongly game-dependent. Kangaroo
-($460$ vs $27$) and Up N Down ($981$ vs $141$) improve substantially,
-while Crazy Climber, Road Runner, and Frostbite collapse to near-zero
-returns. Boxing worsens slightly. The pattern suggests that random
-shifts help in games where spatial invariance aids generalization but
-hurt when precise spatial information (e.g.\ climber position, road
-layout) is critical for the policy.
-
-\subsection{SPR}
-
-Self-predictive representations
-\citelink{https://arxiv.org/abs/2007.05929}{3}: an auxiliary loss
-trains the encoder to predict its own future latent states through a
-learned transition model. An EMA target encoder (momentum 0.99)
-provides stable prediction targets. Dropout (0.5) regularizes the
-encoder during training.
-
-\begin{table}[H]
-\centering
-\renewcommand{\arraystretch}{1.4}
-\setlength{\tabcolsep}{12pt}
-\begin{tabular}{l r r}
-\toprule
-\textbf{Game} & \textbf{Baseline} & \textbf{+ SPR} \\
-\midrule
-Crazy Climber  & $3540 \pm 754$   & $3400 \pm 0$ \\
-Road Runner    & $1440 \pm 859$   & $2290 \pm 1238$ \\
-Boxing         & $-3.0 \pm 5.3$   & $-18.2 \pm 11.7$ \\
-Kangaroo       & $26.7 \pm 68.0$  & $13.3 \pm 49.9$ \\
-Frostbite      & $147 \pm 45$     & $161 \pm 31$ \\
-Up N Down      & $141 \pm 155$    & $901 \pm 682$ \\
-\bottomrule
-\end{tabular}
-\caption{Effect of self-predictive representations compared to the
-vanilla DQN baseline. Seed 42, 30 eval episodes at 400K frames.}
-\end{table}
-
-\noindent SPR's effect on vanilla DQN is modest. Up N Down shows a
-strong lift ($901$ vs $141$, roughly $6\times$) and Road Runner
-improves ($2290$ vs $1440$). The remaining four games are flat or
-slightly worse: Crazy Climber holds steady, Frostbite gains marginally,
-and both Boxing and Kangaroo decline. This contrasts with the large
-improvements reported in the original SPR paper, which used Rainbow as
-the base agent rather than vanilla DQN.
-
-\subsection{Combined}
-
-\noindent The combined condition (+Both) uses the same EMA momentum
-(0.99) and dropout (0.5) as the SPR-only condition, with augmentation
-as the sole addition. This isolates augmentation's contribution on top
-of SPR rather than conflating it with changes to regularization
-strategy. Results appear in the summary table below.
+All results report mean raw episode return ($\pm$ std) over 30
+evaluation episodes at the final checkpoint (400K frames), seed 42.
 
 \begin{table}[H]
 \centering
@@ -377,9 +234,39 @@ Up N Down      & $141 \pm 155$    & $981 \pm 671$     & $901 \pm 682$     & $491
 Mean           & $982$  & $256$  & $1125$  & $330$  \\
 \bottomrule
 \end{tabular}
-\caption{All conditions. Mean raw episode return ($\pm$ std) over 30
-eval episodes, seed 42.}
+\caption{DQN isolation study results. Mean raw episode return ($\pm$
+std) over 30 eval episodes at 400K frames, seed 42.}
+\label{tab:summary}
 \end{table}
+
+\subsection{Augmentation}
+
+Augmentation is strongly game-dependent. Kangaroo ($460$ vs $27$) and
+Up N Down ($981$ vs $141$) improve substantially, while Crazy Climber,
+Road Runner, and Frostbite collapse to near-zero returns. Boxing worsens
+slightly. The pattern suggests that random shifts help in games where
+spatial invariance aids generalization but hurt when precise spatial
+information (e.g.\ climber position, road layout) is critical for the
+policy.
+
+\subsection{SPR}
+
+SPR's effect on vanilla DQN is modest. Up N Down shows a strong lift
+($901$ vs $141$, roughly $6\times$) and Road Runner improves ($2290$ vs
+$1440$). The remaining four games are flat or slightly worse: Crazy
+Climber holds steady, Frostbite gains marginally, and both Boxing and
+Kangaroo decline. This contrasts with the large improvements reported in
+the original SPR paper, which used Rainbow as the base agent rather than
+vanilla DQN.
+
+\subsection{Combined}
+
+The combined condition (+Both) uses the same EMA momentum (0.99) and
+dropout (0.5) as the SPR-only condition, with augmentation as the sole
+addition. Augmentation does not rescue SPR on this base agent -- the
+games where augmentation helps (Kangaroo, Up N Down) see reduced gains
+when combined with SPR, and the games where augmentation hurts (Crazy
+Climber, Road Runner) still collapse.
 
 \clearpage
 
@@ -390,23 +277,23 @@ eval episodes, seed 42.}
 \section{Known Issue: Reward Clipping in Evaluation}
 \label{app:clipping}
 
-The initial baseline validation (Table~\ref{tab:baseline-clipped}) reported returns in
-\textbf{clipped reward space} ($\{-1, 0, +1\}$ per step) because the
-evaluation environment inherited the training reward clipper. Published
-baselines
+An early three-game validation run (Crazy Climber, Kung Fu Master,
+Boxing) reported returns in \textbf{clipped reward space} ($\{-1, 0,
++1\}$ per step) because the evaluation environment inherited the
+training reward clipper. Published baselines
 \citelink{https://arxiv.org/abs/2007.05929}{3}%
 \citelink{https://arxiv.org/abs/2004.14990}{5}
 report \textbf{raw Atari scores}. The two scales are not comparable --
 for example, the random agent scores 10,780 raw on Crazy Climber while
-our clipped-reward agent reports 153. This was fixed for all subsequent
-runs (Table~\ref{tab:baseline-clipped} onward) by disabling reward clipping in the evaluation
+the clipped-reward agent reported 153. This was fixed for all runs in
+Table~\ref{tab:summary} by disabling reward clipping in the evaluation
 environment.
 
 \section{Early Baseline Observations}
 \label{app:observations}
 
 Detailed per-game analysis from the initial three-game validation run
-(Table~\ref{tab:baseline-clipped}):
+(clipped rewards):
 
 \begin{enumerate}[nosep]
   \item \textbf{Crazy Climber shows clear learning.} Monotonic
