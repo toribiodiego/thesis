@@ -31,6 +31,4 @@ python scripts/analyze_results.py --metrics output/summary/metrics.csv --output 
 
 ## See Also
 
-- [Reporting Pipeline](../docs/reference/reporting-pipeline.md) - How to generate outputs
-- [Archive Plan](../docs/reference/archive-plan.md) - Retention policies
-- [Thesis Artifact Index](../docs/thesis/README.md) - Thesis-ready outputs
+- [Provenance](../reports/provenance.md) - How each figure and table was produced

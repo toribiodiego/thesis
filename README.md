@@ -15,8 +15,10 @@ probes (linear probing, latent visualization, transition model
 analysis) compare representations across agent capability levels to
 explain why.
 
-**Status:** DQN isolation study complete (24 runs, seed 42). Rainbow
-training integrated. Rainbow and multi-seed runs next.
+**Status:**
+- DQN isolation study complete (24 runs, single seed)
+- Rainbow training integrated
+- Next: Rainbow runs, DQN + Rainbow multi-seed runs, interpretability
 
 > **Quick links:** [Quick Start](#quick-start) ·
 > [Documentation](docs/README.md) ·
