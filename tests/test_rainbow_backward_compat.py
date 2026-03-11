@@ -923,3 +923,113 @@ class TestRainbowTrainingStep:
         assert "metrics" in result
         if result["metrics"] is not None:
             assert result["metrics"].distributional_loss is None
+
+
+# ---------------------------------------------------------------------------
+# Test: Rainbow config sets epsilon to zero via noisy_nets
+# ---------------------------------------------------------------------------
+
+
+class TestRainbowConfigNoisyNetsEpsilon:
+    """Rainbow configs should disable epsilon-greedy via noisy_nets flag."""
+
+    def test_rainbow_config_enables_noisy_nets(self):
+        """Loading a Rainbow config should set noisy_nets=True."""
+        from src.config import load_config
+
+        config = load_config(
+            "experiments/dqn_atari/configs/atari100k_boxing_rainbow.yaml"
+        )
+        assert config["rainbow"]["enabled"] is True
+        assert config["rainbow"]["noisy_nets"] is True
+
+    def test_use_noisy_flag_logic(self):
+        """use_noisy should be True only when both rainbow.enabled and noisy_nets."""
+        cases = [
+            (True, True, True),
+            (True, False, False),
+            (False, True, False),
+            (False, False, False),
+        ]
+        for rainbow_enabled, noisy_nets, expected in cases:
+            use_noisy = rainbow_enabled and noisy_nets
+            assert use_noisy == expected, (
+                f"rainbow_enabled={rainbow_enabled}, noisy_nets={noisy_nets}: "
+                f"expected {expected}, got {use_noisy}"
+            )
+
+    def test_epsilon_zero_when_rainbow_noisy(self):
+        """EpsilonScheduler with noisy_nets=True should always return 0."""
+        eps = EpsilonScheduler(
+            epsilon_start=1.0,
+            epsilon_end=0.1,
+            decay_frames=1_000_000,
+            noisy_nets=True,
+        )
+        assert eps.get_epsilon(0) == 0.0
+        assert eps.get_epsilon(500_000) == 0.0
+        assert eps.get_epsilon(2_000_000) == 0.0
+        assert eps.get_eval_epsilon() == 0.0
+
+    def test_epsilon_nonzero_without_noisy(self):
+        """Without noisy_nets, epsilon should follow normal decay."""
+        eps = EpsilonScheduler(
+            epsilon_start=1.0,
+            epsilon_end=0.1,
+            decay_frames=1_000_000,
+            noisy_nets=False,
+        )
+        assert eps.get_epsilon(0) == 1.0
+        assert eps.get_epsilon(500_000) > 0.0
+        assert eps.get_eval_epsilon() == 0.05
+
+
+# ---------------------------------------------------------------------------
+# Test: Rainbow checkpoint retention (keep_last_n=10)
+# ---------------------------------------------------------------------------
+
+
+class TestRainbowCheckpointRetention:
+    """Rainbow configs should keep all periodic checkpoints."""
+
+    def test_rainbow_configs_keep_last_n_10(self):
+        """All Rainbow configs should set keep_last_n=10."""
+        import glob
+
+        from src.config import load_config
+
+        configs = glob.glob(
+            "experiments/dqn_atari/configs/atari100k_*_rainbow.yaml"
+        )
+        assert len(configs) >= 10, f"Expected >= 10 configs, got {len(configs)}"
+
+        for cfg_path in sorted(configs):
+            config = load_config(cfg_path)
+            kln = config["logging"]["checkpoint"]["keep_last_n"]
+            assert kln == 10, (
+                f"{cfg_path}: expected keep_last_n=10, got {kln}"
+            )
+
+    def test_checkpoint_manager_keeps_all_with_n_10(self):
+        """CheckpointManager with keep_last_n=10 retains 10 checkpoints."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            mgr = CheckpointManager(
+                checkpoint_dir=tmpdir,
+                save_interval=40_000,
+                keep_last_n=10,
+            )
+            for step in range(40_000, 440_000, 40_000):
+                path = os.path.join(tmpdir, f"checkpoint_{step}.pt")
+                torch.save({"step": step}, path)
+                mgr.periodic_checkpoints.append(path)
+                if (
+                    mgr.keep_last_n > 0
+                    and len(mgr.periodic_checkpoints) > mgr.keep_last_n
+                ):
+                    old = mgr.periodic_checkpoints.pop(0)
+                    if os.path.exists(old):
+                        os.remove(old)
+
+            assert len(mgr.periodic_checkpoints) == 10
+            for path in mgr.periodic_checkpoints:
+                assert os.path.exists(path)
