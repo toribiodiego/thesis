@@ -65,6 +65,12 @@ class FakeBuffer:
         self.updated_priorities = priorities
         self.call_count += 1
 
+    def get_priority_stats(self):
+        return {"mean_priority": 1.0, "priority_entropy": 2.5}
+
+    def compute_beta(self, frame):
+        return 0.6
+
 
 # ---------------------------------------------------------------------------
 # Tests
@@ -553,3 +559,139 @@ class TestInitTargetNetworkRainbow:
 
         assert type(target) is RainbowDQN
         assert target.dueling is False
+
+
+# ---------------------------------------------------------------------------
+# Rainbow Metrics Tests
+# ---------------------------------------------------------------------------
+
+
+class TestRainbowMetrics:
+    """Test that Rainbow metrics are populated in UpdateMetrics."""
+
+    def test_metrics_include_distributional_loss(self):
+        """distributional_loss should be set by Rainbow update step."""
+        online, target = _make_nets()
+        optimizer = torch.optim.Adam(online.parameters(), lr=1e-4)
+        support = online.support
+        buf = FakeBuffer()
+
+        metrics = perform_rainbow_update_step(
+            online, target, optimizer, _make_batch(),
+            support=support, buffer=buf,
+        )
+
+        assert metrics.distributional_loss is not None
+        assert isinstance(metrics.distributional_loss, float)
+        assert metrics.distributional_loss >= 0
+
+    def test_metrics_include_mean_is_weight(self):
+        """mean_is_weight should reflect IS weights from batch."""
+        online, target = _make_nets()
+        optimizer = torch.optim.Adam(online.parameters(), lr=1e-4)
+        support = online.support
+
+        batch = _make_batch()
+        # Set non-uniform IS weights
+        batch["weights"] = torch.tensor([0.5, 0.8, 1.0, 0.7])
+
+        metrics = perform_rainbow_update_step(
+            online, target, optimizer, batch,
+            support=support, buffer=FakeBuffer(),
+        )
+
+        assert metrics.mean_is_weight is not None
+        expected = batch["weights"].mean().item()
+        assert abs(metrics.mean_is_weight - expected) < 1e-5
+
+    def test_metrics_include_priority_stats(self):
+        """mean_priority and priority_entropy from buffer stats."""
+        online, target = _make_nets()
+        optimizer = torch.optim.Adam(online.parameters(), lr=1e-4)
+        support = online.support
+        buf = FakeBuffer()
+
+        metrics = perform_rainbow_update_step(
+            online, target, optimizer, _make_batch(),
+            support=support, buffer=buf,
+        )
+
+        assert metrics.mean_priority == 1.0
+        assert metrics.priority_entropy == 2.5
+
+    def test_metrics_include_beta(self):
+        """beta should be set from buffer.compute_beta."""
+        online, target = _make_nets()
+        optimizer = torch.optim.Adam(online.parameters(), lr=1e-4)
+        support = online.support
+
+        metrics = perform_rainbow_update_step(
+            online, target, optimizer, _make_batch(),
+            support=support, buffer=FakeBuffer(),
+        )
+
+        assert metrics.beta == 0.6
+
+    def test_metrics_to_dict_includes_rainbow_fields(self):
+        """to_dict should include Rainbow fields when populated."""
+        online, target = _make_nets()
+        optimizer = torch.optim.Adam(online.parameters(), lr=1e-4)
+        support = online.support
+
+        metrics = perform_rainbow_update_step(
+            online, target, optimizer, _make_batch(),
+            support=support, buffer=FakeBuffer(),
+        )
+
+        d = metrics.to_dict()
+        assert "distributional_loss" in d
+        assert "mean_is_weight" in d
+        assert "mean_priority" in d
+        assert "priority_entropy" in d
+        assert "beta" in d
+
+    def test_rainbow_fields_absent_without_buffer(self):
+        """Priority stats and beta should be None without a buffer."""
+        online, target = _make_nets()
+        optimizer = torch.optim.Adam(online.parameters(), lr=1e-4)
+        support = online.support
+
+        metrics = perform_rainbow_update_step(
+            online, target, optimizer, _make_batch(),
+            support=support, buffer=None,
+        )
+
+        # distributional_loss and mean_is_weight are always computed
+        assert metrics.distributional_loss is not None
+        assert metrics.mean_is_weight is not None
+        # Priority stats require buffer
+        assert metrics.mean_priority is None
+        assert metrics.priority_entropy is None
+        assert metrics.beta is None
+
+    def test_vanilla_metrics_no_rainbow_fields(self):
+        """Vanilla DQN UpdateMetrics should have None for Rainbow fields."""
+        from src.training.metrics import perform_update_step
+
+        online = DQN(num_actions=4)
+        target = DQN(num_actions=4)
+        target.load_state_dict(online.state_dict())
+        optimizer = torch.optim.RMSprop(online.parameters(), lr=2.5e-4)
+
+        batch = {
+            "states": torch.randn(4, 4, 84, 84),
+            "actions": torch.randint(0, 4, (4,)),
+            "rewards": torch.randn(4),
+            "next_states": torch.randn(4, 4, 84, 84),
+            "dones": torch.zeros(4, dtype=torch.bool),
+        }
+
+        metrics = perform_update_step(
+            online, target, optimizer, batch,
+        )
+
+        assert metrics.distributional_loss is None
+        assert metrics.mean_is_weight is None
+        assert metrics.mean_priority is None
+        assert metrics.priority_entropy is None
+        assert metrics.beta is None

@@ -229,6 +229,34 @@ class PrioritizedReplayBuffer(ReplayBuffer):
             return self.size >= batch_size
         return True
 
+    def get_priority_stats(self) -> dict:
+        """
+        Compute summary statistics of stored priorities for logging.
+
+        Returns:
+            Dict with 'mean_priority' and 'priority_entropy'.
+            Entropy is computed over normalized priorities (probability
+            distribution). Higher entropy means more uniform sampling.
+        """
+        if self.size == 0:
+            return {"mean_priority": 0.0, "priority_entropy": 0.0}
+
+        # Leaf priorities: tree[capacity : capacity + size]
+        leaves = self.tree.tree[self.tree.capacity:self.tree.capacity + self.size]
+        mean_p = float(leaves.mean())
+
+        # Entropy of normalized priority distribution
+        total = leaves.sum()
+        if total > 0:
+            probs = leaves / total
+            # Avoid log(0) by masking zeros
+            nonzero = probs > 0
+            entropy = -float((probs[nonzero] * np.log(probs[nonzero])).sum())
+        else:
+            entropy = 0.0
+
+        return {"mean_priority": mean_p, "priority_entropy": entropy}
+
     def get_priority_state(self) -> dict:
         """
         Export sum-tree priority state for checkpointing.

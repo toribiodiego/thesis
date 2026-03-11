@@ -39,6 +39,13 @@ class MetricKeys:
     SPR_COSINE_SIMILARITY = "spr/cosine_similarity"
     SPR_EMA_UPDATE_COUNT = "spr/ema_update_count"
 
+    # Rainbow metrics (logged only when Rainbow is enabled)
+    DISTRIBUTIONAL_LOSS = "rainbow/distributional_loss"
+    MEAN_IS_WEIGHT = "rainbow/mean_is_weight"
+    MEAN_PRIORITY = "rainbow/mean_priority"
+    PRIORITY_ENTROPY = "rainbow/priority_entropy"
+    BETA = "rainbow/beta"
+
     # Per-episode metrics
     EPISODE = "episode/number"
     EPISODE_RETURN = "episode/return"
@@ -510,6 +517,11 @@ class MetricsLogger:
         spr_loss: Optional[float] = None,
         cosine_similarity: Optional[float] = None,
         ema_update_count: Optional[int] = None,
+        distributional_loss: Optional[float] = None,
+        mean_is_weight: Optional[float] = None,
+        mean_priority: Optional[float] = None,
+        priority_entropy: Optional[float] = None,
+        beta: Optional[float] = None,
         extra_metrics: Optional[Dict[str, float]] = None,
     ):
         """
@@ -531,6 +543,16 @@ class MetricsLogger:
                 and target representations (None when SPR disabled)
             ema_update_count: Number of EMA encoder updates performed
                 (None when SPR disabled)
+            distributional_loss: C51 cross-entropy before IS weighting
+                (None when Rainbow disabled)
+            mean_is_weight: Mean IS weight from PER batch
+                (None when Rainbow disabled)
+            mean_priority: Mean priority in sum-tree
+                (None when Rainbow disabled)
+            priority_entropy: Entropy of priority distribution
+                (None when Rainbow disabled)
+            beta: Current IS correction exponent
+                (None when Rainbow disabled)
             extra_metrics: Additional custom metrics to log
         """
         import numpy as np
@@ -573,6 +595,18 @@ class MetricsLogger:
         if ema_update_count is not None:
             metrics[MetricKeys.SPR_EMA_UPDATE_COUNT] = ema_update_count
 
+        # Rainbow metrics (only logged when Rainbow is enabled)
+        if distributional_loss is not None:
+            metrics[MetricKeys.DISTRIBUTIONAL_LOSS] = distributional_loss
+        if mean_is_weight is not None:
+            metrics[MetricKeys.MEAN_IS_WEIGHT] = mean_is_weight
+        if mean_priority is not None:
+            metrics[MetricKeys.MEAN_PRIORITY] = mean_priority
+        if priority_entropy is not None:
+            metrics[MetricKeys.PRIORITY_ENTROPY] = priority_entropy
+        if beta is not None:
+            metrics[MetricKeys.BETA] = beta
+
         # Add extra metrics
         if extra_metrics is not None:
             metrics.update(extra_metrics)
@@ -599,6 +633,11 @@ class MetricsLogger:
                 "spr_loss": spr_loss,
                 "cosine_similarity": cosine_similarity,
                 "ema_update_count": ema_update_count,
+                "distributional_loss": distributional_loss,
+                "mean_is_weight": mean_is_weight,
+                "mean_priority": mean_priority,
+                "priority_entropy": priority_entropy,
+                "beta": beta,
             }
             # Remove None values
             csv_metrics = {k: v for k, v in csv_metrics.items() if v is not None}

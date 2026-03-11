@@ -354,6 +354,11 @@ def run_training(config, paths, device):
                 spr_loss=m.spr_loss if m else None,
                 cosine_similarity=m.cosine_similarity if m else None,
                 ema_update_count=m.update_count if m and m.spr_loss is not None else None,
+                distributional_loss=m.distributional_loss if m else None,
+                mean_is_weight=m.mean_is_weight if m else None,
+                mean_priority=m.mean_priority if m else None,
+                priority_entropy=m.priority_entropy if m else None,
+                beta=m.beta if m else None,
             )
 
             last_log_time = current_time

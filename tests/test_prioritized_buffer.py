@@ -635,3 +635,54 @@ class TestBufferWrapping:
         # Index 0 now has max_priority (10.0) from the new write
         assert buf.tree.get(0) == 10.0
         assert buf.size == 4
+
+
+class TestPriorityStats:
+    """Test get_priority_stats for logging."""
+
+    def test_empty_buffer(self):
+        """Empty buffer returns zero stats."""
+        buf = PrioritizedReplayBuffer(
+            capacity=10, obs_shape=OBS_SHAPE, min_size=1,
+        )
+        stats = buf.get_priority_stats()
+        assert stats["mean_priority"] == 0.0
+        assert stats["priority_entropy"] == 0.0
+
+    def test_uniform_priorities_max_entropy(self):
+        """Uniform priorities should give maximum entropy."""
+        buf = PrioritizedReplayBuffer(
+            capacity=10, obs_shape=OBS_SHAPE, min_size=1,
+            alpha=1.0, epsilon=0.0,
+        )
+        _fill_buffer(buf, 4)
+        # Set all priorities equal
+        for i in range(4):
+            buf.update_priorities(np.array([i]), np.array([1.0]))
+
+        stats = buf.get_priority_stats()
+        assert stats["mean_priority"] == 1.0
+        # Entropy of uniform distribution over 4 items = ln(4)
+        import math
+        expected_entropy = math.log(4)
+        assert abs(stats["priority_entropy"] - expected_entropy) < 1e-6
+
+    def test_skewed_priorities_lower_entropy(self):
+        """Skewed priorities should have lower entropy than uniform."""
+        buf = PrioritizedReplayBuffer(
+            capacity=10, obs_shape=OBS_SHAPE, min_size=1,
+            alpha=1.0, epsilon=0.0,
+        )
+        _fill_buffer(buf, 4)
+
+        # Uniform baseline
+        for i in range(4):
+            buf.update_priorities(np.array([i]), np.array([1.0]))
+        uniform_stats = buf.get_priority_stats()
+
+        # Skewed: one very high priority
+        buf.update_priorities(np.array([0]), np.array([100.0]))
+        skewed_stats = buf.get_priority_stats()
+
+        assert skewed_stats["priority_entropy"] < uniform_stats["priority_entropy"]
+        assert skewed_stats["mean_priority"] > uniform_stats["mean_priority"]

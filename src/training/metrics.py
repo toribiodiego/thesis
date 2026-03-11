@@ -61,6 +61,11 @@ class UpdateMetrics:
         update_count: int,
         spr_loss: float = None,
         cosine_similarity: float = None,
+        distributional_loss: float = None,
+        mean_is_weight: float = None,
+        mean_priority: float = None,
+        priority_entropy: float = None,
+        beta: float = None,
     ):
         """
         Initialize update metrics.
@@ -75,6 +80,16 @@ class UpdateMetrics:
             spr_loss: SPR auxiliary loss value (None when SPR disabled)
             cosine_similarity: Mean cosine similarity between predicted
                 and target representations (None when SPR disabled)
+            distributional_loss: C51 cross-entropy loss before IS weighting
+                (None when Rainbow disabled)
+            mean_is_weight: Mean importance sampling weight from PER batch
+                (None when Rainbow disabled)
+            mean_priority: Mean priority in sum-tree
+                (None when Rainbow disabled)
+            priority_entropy: Entropy of priority distribution, measures
+                how uniform priorities are (None when Rainbow disabled)
+            beta: Current IS correction exponent
+                (None when Rainbow disabled)
         """
         self.loss = loss
         self.td_error = td_error
@@ -84,6 +99,11 @@ class UpdateMetrics:
         self.update_count = update_count
         self.spr_loss = spr_loss
         self.cosine_similarity = cosine_similarity
+        self.distributional_loss = distributional_loss
+        self.mean_is_weight = mean_is_weight
+        self.mean_priority = mean_priority
+        self.priority_entropy = priority_entropy
+        self.beta = beta
 
     def to_dict(self) -> Dict[str, float]:
         """
@@ -110,6 +130,16 @@ class UpdateMetrics:
             d["spr_loss"] = self.spr_loss
         if self.cosine_similarity is not None:
             d["cosine_similarity"] = self.cosine_similarity
+        if self.distributional_loss is not None:
+            d["distributional_loss"] = self.distributional_loss
+        if self.mean_is_weight is not None:
+            d["mean_is_weight"] = self.mean_is_weight
+        if self.mean_priority is not None:
+            d["mean_priority"] = self.mean_priority
+        if self.priority_entropy is not None:
+            d["priority_entropy"] = self.priority_entropy
+        if self.beta is not None:
+            d["beta"] = self.beta
         return d
 
     def __repr__(self) -> str:
@@ -123,6 +153,12 @@ class UpdateMetrics:
             base += f", spr_loss={self.spr_loss:.4f}"
         if self.cosine_similarity is not None:
             base += f", cos_sim={self.cosine_similarity:.4f}"
+        if self.distributional_loss is not None:
+            base += f", dist_loss={self.distributional_loss:.4f}"
+        if self.mean_is_weight is not None:
+            base += f", is_weight={self.mean_is_weight:.4f}"
+        if self.beta is not None:
+            base += f", beta={self.beta:.4f}"
         return base + ")"
 
 
@@ -401,6 +437,8 @@ def perform_rainbow_update_step(
     with torch.no_grad():
         td_error = per_sample_loss.mean().item()
         td_error_std = per_sample_loss.std().item()
+        dist_loss_val = td_error  # C51 cross-entropy before IS weighting
+        mean_is_weight_val = is_weights.mean().item()
 
     # Compute SPR loss (if enabled)
     spr_loss_val = None
@@ -451,9 +489,20 @@ def perform_rainbow_update_step(
     optimizer.step()
 
     # Update priorities in replay buffer
+    mean_priority_val = None
+    priority_entropy_val = None
+    beta_val = None
     if buffer is not None:
         new_priorities = per_sample_loss.detach().cpu().numpy()
         buffer.update_priorities(indices, new_priorities)
+
+        # Collect priority distribution stats for monitoring
+        if hasattr(buffer, "get_priority_stats"):
+            pstats = buffer.get_priority_stats()
+            mean_priority_val = pstats["mean_priority"]
+            priority_entropy_val = pstats["priority_entropy"]
+        if hasattr(buffer, "compute_beta"):
+            beta_val = buffer.compute_beta(update_count)
 
     # Update EMA after gradient step (SPR only)
     if spr_components is not None:
@@ -475,6 +524,11 @@ def perform_rainbow_update_step(
         update_count=update_count,
         spr_loss=spr_loss_val,
         cosine_similarity=cos_sim_val,
+        distributional_loss=dist_loss_val,
+        mean_is_weight=mean_is_weight_val,
+        mean_priority=mean_priority_val,
+        priority_entropy=priority_entropy_val,
+        beta=beta_val,
     )
 
     return metrics
