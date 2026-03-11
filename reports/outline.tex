@@ -1,0 +1,412 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{enumitem}
+\setlist{nosep, before=\vspace{0.5em}, after=\vspace{0.5em}}
+\usepackage{xcolor}
+\usepackage{titling}
+\usepackage{titlesec}
+\usepackage[colorlinks=true,linkcolor=black,urlcolor=black,citecolor=black]{hyperref}
+
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.5em}{}
+\titlespacing{\section}{0pt}{1.2em}{0.6em}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.5em}{}
+\titlespacing{\subsection}{0pt}{0.8em}{0.4em}
+\titleformat{\subsubsection}{\normalsize\itshape}{\thesubsubsection}{0.5em}{}
+\titlespacing{\subsubsection}{0pt}{0.6em}{0.3em}
+
+\setlength{\droptitle}{-4em}
+\pretitle{\begin{center}\large\bfseries}
+\posttitle{\end{center}\vspace{-1em}}
+\preauthor{\begin{center}\normalsize}
+\postauthor{\end{center}\vspace{-1em}}
+\predate{\begin{center}\normalsize}
+\postdate{\end{center}\vspace{-0.5em}}
+
+\title{Thesis Outline}
+\author{Diego Toribio\\[0.3em]{\normalsize March 11, 2026}}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\section{Introduction}
+
+Establishes the data efficiency problem, identifies why existing
+evaluations of self-supervised representation learning are
+inconclusive, and states the research question.
+
+\subsection{The Data Efficiency Problem}
+
+Deep RL agents typically require hundreds of millions of training
+interactions. The Atari-100K benchmark limits agents to 100K
+interactions -- roughly two hours of real-time play -- exposing how
+dependent these methods are on massive data.
+
+\begin{itemize}[nosep]
+\item The gap between human and agent data requirements
+\item Why data efficiency matters beyond games: sim-to-real,
+  costly environments, safety-critical domains
+\item Four families of approaches: data augmentation, representation
+  learning, world models, algorithmic improvements
+\item This thesis focuses on the first two
+\end{itemize}
+
+\subsection{The Attribution Problem}
+
+SPR adds a self-supervised objective that trains the encoder to predict
+its own future representations. It achieved strong Atari-100K results,
+but was only evaluated on top of Rainbow -- a complex agent with six
+extensions that each change learning dynamics. We cannot attribute
+SPR's gains to representation learning alone.
+
+\begin{itemize}[nosep]
+\item Rainbow's components (distributional values, prioritized replay,
+  n-step returns, etc.) confound the result
+\item Our early DQN+SPR results confirm this: only 1 of 6 games shows
+  a strong lift, 4 games show flat or negative effects
+\item This is not a failure of SPR -- it shows the base agent matters,
+  and nobody has studied when or why
+\end{itemize}
+
+\subsection{Research Question and Approach}
+
+\vspace{0.5em}
+\begin{quote}
+When does self-supervised representation learning improve
+data-efficient reinforcement learning, and what determines whether
+the learned representations are useful?
+\end{quote}
+\vspace{0.5em}
+
+Three sub-questions:
+
+\begin{itemize}[nosep]
+\item \textbf{Isolation} -- Does SPR improve vanilla DQN? How does it
+  interact with data augmentation? (each method alone and in
+  combination, 6 games, 3 seeds)
+\item \textbf{Capability} -- Does SPR need a capable base agent?
+  (Rainbow+SPR on the same games as an experimental control)
+\item \textbf{Interpretability} -- What do the representations encode,
+  and why do they differ across capability levels? (linear probing,
+  latent visualization, transition model analysis)
+\end{itemize}
+
+\subsection{Contributions}
+
+\begin{itemize}[nosep]
+\item \textbf{Isolation study} -- first evaluation of SPR on vanilla
+  DQN, separating representation learning from algorithmic
+  improvements
+\item \textbf{Interaction study} -- testing augmentation and SPR alone
+  and in combination to reveal whether they are independent or
+  redundant
+\item \textbf{Interpretability analysis} -- probing and visualization
+  across capability levels, producing a finding about when and why
+  self-supervised representations become useful
+\item \textbf{Component attribution} (if investigation paths yield
+  clean results) -- identifying which Rainbow component enables useful
+  representations
+\end{itemize}
+
+\subsection{Thesis Outline}
+
+\begin{itemize}[nosep]
+\item Chapter 2 -- Background: RL, DQN, Rainbow, Atari-100K, SPR,
+  augmentation, related work
+\item Chapter 3 -- Methods: implementations, experiment design,
+  interpretability methods
+\item Chapter 4 -- Results: DQN isolation study, capability
+  comparison, interpretability findings, cross-game generalization
+\item Chapter 5 -- Discussion: interpretation, limitations, broader
+  positioning
+\item Chapter 6 -- Conclusion: contributions, implications, future work
+\end{itemize}
+
+\section{Background and Related Work}
+
+Gives the reader the foundations needed to follow the experiment
+design and interpret the results. Builds from RL basics through the
+two agents that define the capability axis, then the benchmark, the
+two methods under study, and positioning against the field.
+
+\subsection{Reinforcement Learning Foundations}
+
+\begin{itemize}[nosep]
+\item Markov decision processes: states, actions, rewards, transitions,
+  discount factor
+\item Value functions and the Bellman equation
+\item Q-learning and temporal difference updates
+\item Why function approximation is needed for large state spaces
+\end{itemize}
+
+\subsection{Deep Q-Networks}
+
+The ``simple agent'' in our comparison. This section covers what DQN
+adds to tabular Q-learning and why it became the foundation for
+deep RL.
+
+\begin{itemize}[nosep]
+\item Nature CNN architecture: convolutional layers over stacked frames
+\item Experience replay: breaking correlation between consecutive samples
+\item Target network: stabilizing learning with a frozen copy
+\item Frame stacking and preprocessing pipeline
+\end{itemize}
+
+\subsection{Rainbow DQN}
+
+The ``capable agent'' in our comparison -- not a contribution, but the
+instrument that lets us test whether SPR needs a strong base agent.
+
+\begin{itemize}[nosep]
+\item Six extensions over vanilla DQN: distributional values (C51),
+  prioritized replay, dueling architecture, n-step returns, noisy
+  exploration, Double DQN
+\item What each extension changes about learning dynamics
+\item Why Rainbow became the standard base agent for SPR and other
+  representation learning methods
+\end{itemize}
+
+\subsection{The Atari-100K Benchmark}
+
+The testbed where both agents are evaluated. This section explains the
+protocol and why it is the standard for data-efficient RL.
+
+\begin{itemize}[nosep]
+\item 100K environment steps vs the standard 200M -- what the constraint
+  means in practice
+\item Evaluation protocol: sticky actions, frame skip, evaluation
+  schedule
+\item Metrics: human-normalized score, IQM
+\item Why Atari-100K rather than other benchmarks
+\end{itemize}
+
+\subsection{Self-Predictive Representations}
+
+The representation learning method under study. This section explains
+how SPR works and what questions remain about it.
+
+\begin{itemize}[nosep]
+\item Core idea: train the encoder to predict its own future
+  representations
+\item Architecture: transition model, EMA target encoder, projection
+  and prediction heads
+\item Training objective: cosine similarity loss over multi-step
+  predictions
+\item Originally evaluated only on Rainbow -- the attribution problem
+  introduced in Chapter 1
+\end{itemize}
+
+\subsection{Data Augmentation for RL}
+
+The second method under study. This section covers how augmentation
+works as implicit regularization under limited data.
+
+\begin{itemize}[nosep]
+\item DrQ random shift: pad and crop game frames as a regularizer
+\item Why augmentation helps in low-data regimes
+\item The CURL finding: gains attributed to contrastive learning
+  actually came from the augmentation
+\end{itemize}
+
+\subsection{Related Work and Positioning}
+
+Where this thesis sits in the landscape of data-efficient RL methods.
+
+\begin{itemize}[nosep]
+\item World models: SimPLe, Dreamer -- learn a model of the environment
+\item Planning methods: EfficientZero, MuZero -- combine model learning
+  with search
+\item Training efficiency: BBF, SR-SPR -- scale up existing methods
+\item Why no prior work has isolated SPR from its base agent or compared
+  representations across capability levels
+\end{itemize}
+
+\section{Methods}
+
+Describes what we built, how the experiments are structured, and
+how the interpretability analyses work. Enough detail that someone
+could reproduce the setup.
+
+\subsection{DQN Implementation}
+
+All components implemented from scratch in PyTorch.
+
+\begin{itemize}[nosep]
+\item Nature CNN encoder: three convolutional layers over 4 stacked
+  grayscale frames
+\item Training procedure: RMSProp, epsilon-greedy exploration with
+  linear decay, periodic target network updates
+\item Replay buffer with circular storage
+\item Atari preprocessing: frame skipping, grayscale conversion,
+  84x84 resizing
+\item Hyperparameter table and any deviations from Mnih 2015
+\end{itemize}
+
+\subsection{Data Augmentation}
+
+DrQ-style random shift applied to sampled batches during training.
+
+\begin{itemize}[nosep]
+\item Pad frames to 92x92, random crop back to 84x84
+\item Applied independently to both observations and next-observations
+\item Configurable via YAML -- same toggle for DQN and Rainbow
+  conditions
+\end{itemize}
+
+\subsection{Self-Predictive Representations}
+
+SPR integrated identically on both DQN and Rainbow so the comparison
+is controlled.
+
+\begin{itemize}[nosep]
+\item Transition model: two convolutional layers with action
+  conditioning via one-hot broadcast
+\item EMA target encoder with momentum 0.99
+\item Projection and prediction heads (MLP)
+\item Cosine similarity loss over K-step predicted representations
+\item Combined loss: TD loss + weighted SPR loss
+\item Encoder dropout (0.5) for regularization
+\end{itemize}
+
+\subsection{Rainbow Implementation}
+
+Rainbow serves as infrastructure for the capability comparison.
+
+\begin{itemize}[nosep]
+\item Distributional value estimates (C51, 51 atoms)
+\item Prioritized experience replay with importance sampling weights
+\item Dueling network architecture
+\item N-step returns (n=3)
+\item Noisy exploration (factorised Gaussian)
+\item Double DQN target computation
+\item Per-game configs for all six games
+\end{itemize}
+
+\subsection{Experiment Design}
+
+Two-part design testing SPR across two agents of different capability.
+
+\begin{itemize}[nosep]
+\item Part 1: DQN isolation study -- four conditions (baseline,
+  +augmentation, +SPR, +both) across 6 games, 3 seeds each
+\item Part 2: Rainbow comparison -- Rainbow and Rainbow+SPR on the
+  same 6 games, 3 seeds each
+\item Game selection rationale: six games spanning dense to moderate
+  reward, chosen for diverse interaction patterns in published results
+\item Evaluation: 30 episodes at final checkpoint, mean return with
+  standard deviation
+\item Compute: Google Colab Pro with automated Drive sync
+\end{itemize}
+
+\subsection{Interpretability Methods}
+
+Three analyses on saved checkpoints, plus two investigation paths
+for identifying which agent properties enable useful representations.
+
+\begin{itemize}[nosep]
+\item Linear probing: train classifiers on frozen encoder outputs to
+  decode game-relevant features across all conditions
+\item Latent space visualization: t-SNE/PCA of encoder outputs,
+  comparing structure across DQN and Rainbow conditions
+\item Transition model analysis: cosine similarity between predicted
+  and actual next-states over K steps
+\item Path B (correlational): correlate Rainbow training metrics with
+  probe accuracy to narrow down which components matter
+\item Path A (interventional): targeted ablations on the strongest
+  candidates from Path B
+\end{itemize}
+
+% ================================================================
+% CHAPTER 4: RESULTS
+% ================================================================
+% Question this chapter answers:
+%   What happened when we ran the experiments?
+%
+% Minimal interpretation here -- present the data clearly.
+% Discussion chapter handles the ``why.''
+% ================================================================
+
+\section{Results}
+
+\subsection{DQN Isolation Study}
+% Four conditions on vanilla DQN: baseline, +augmentation, +SPR,
+% +both. Results per game, learning curves, and whether augmentation
+% and SPR provide independent or redundant improvements.
+
+\subsection{Rainbow Capability Comparison}
+% Rainbow+SPR vs DQN+SPR across the same 6 games.
+% The capability gap and its magnitude per game.
+
+\subsection{Interpretability Analysis}
+% Linear probe accuracy across conditions (DQN, DQN+SPR,
+% Rainbow, Rainbow+SPR). Latent space visualizations.
+% Transition model prediction quality comparison.
+% Path B metric correlations. Path A ablation results.
+
+\subsection{Cross-Game Generalization}
+% Does the capability-representation relationship hold across
+% dense, moderate, and sparse reward games?
+% Game-specific vs universal findings.
+
+% ================================================================
+% CHAPTER 5: DISCUSSION
+% ================================================================
+% Question this chapter answers:
+%   What do the results mean, why did they turn out this way,
+%   and what are the limits of our claims?
+% ================================================================
+
+\section{Discussion}
+
+\subsection{The Capability Threshold}
+% What the DQN vs Rainbow comparison reveals about when
+% self-supervised representation learning works. What the
+% base agent provides that makes representations exploitable.
+
+\subsection{Augmentation and Representation Learning}
+% Are they independent or redundant? Why? Connection to
+% CURL finding. Practical implications for practitioners.
+
+\subsection{What Representations Encode}
+% Synthesis of interpretability findings. What SPR learns
+% on capable vs simple agents. Broader implications for
+% understanding learned representations in RL.
+
+\subsection{Limitations}
+% Scale (6 games, 3 seeds), algorithm scope (DQN and Rainbow
+% only), compute constraints, interpretability scope,
+% augmentation scope (single type). Honest assessment of
+% what the findings do and do not establish.
+
+\subsection{Broader Context}
+% Connection to self-supervised pre-training in NLP/vision.
+% Positioning against published baselines (honest about not
+% competing with SOTA). Implications for the field.
+
+% ================================================================
+% CHAPTER 6: CONCLUSION
+% ================================================================
+% Question this chapter answers:
+%   What did we contribute, what does it imply, and what
+%   should come next?
+% ================================================================
+
+\section{Conclusion}
+
+\subsection{Summary of Contributions}
+% Restate research question. Summarize each contribution
+% with the actual findings (filled after experiments).
+
+\subsection{Implications}
+% For practitioners: when to use SPR, whether augmentation
+% is worth adding, what to expect on simple agents.
+% For researchers: what interpretability reveals, SPR
+% isolation as a reference point for future work.
+
+\subsection{Future Work}
+% Concrete directions motivated by findings: expanded game
+% set, additional DQN extensions, contrastive comparison,
+% world model bridge, cross-game transfer.
+
+\end{document}
