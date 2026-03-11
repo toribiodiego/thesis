@@ -4,12 +4,20 @@ import torch
 import torch.nn as nn
 
 
+# Rainbow DQN optimizer defaults (Hessel et al. 2018, Appendix B)
+RAINBOW_OPTIMIZER_DEFAULTS = {
+    "optimizer_type": "adam",
+    "learning_rate": 6.25e-5,
+    "eps": 1.5e-4,
+}
+
+
 def configure_optimizer(
     network: nn.Module,
     optimizer_type: str = "rmsprop",
     learning_rate: float = 2.5e-4,
     alpha: float = 0.95,
-    eps: float = 1e-2,
+    eps: float = None,
     momentum: float = 0.0,
     weight_decay: float = 0.0,
     **kwargs,
@@ -17,54 +25,55 @@ def configure_optimizer(
     """
     Configure optimizer for DQN training.
 
-    Supports RMSProp (DQN default) or Adam. Uses paper-default hyperparameters
-    for RMSProp: ρ=0.95, ε=0.01, LR=2.5e-4.
+    Supports RMSProp (DQN default) or Adam. Uses paper-default
+    hyperparameters for RMSProp: rho=0.95, eps=0.01, LR=2.5e-4.
+    For Rainbow, use Adam with lr=6.25e-5, eps=1.5e-4 (see
+    RAINBOW_OPTIMIZER_DEFAULTS).
 
     Args:
         network: Neural network to optimize
         optimizer_type: Optimizer type, 'rmsprop' or 'adam' (default: 'rmsprop')
         learning_rate: Learning rate (default: 2.5e-4)
-        alpha: RMSProp smoothing constant ρ (default: 0.95)
-        eps: RMSProp epsilon for numerical stability (default: 1e-2)
+        alpha: RMSProp smoothing constant rho (default: 0.95)
+        eps: Epsilon for numerical stability. Default depends on optimizer:
+            RMSProp=1e-2, Adam=1e-8. Pass explicitly to override.
         momentum: Momentum factor (default: 0.0)
         weight_decay: L2 regularization (default: 0.0)
-        **kwargs: Additional optimizer-specific arguments
+        **kwargs: Additional optimizer-specific arguments (beta1, beta2)
 
     Returns:
         Configured optimizer
 
     Notes:
-        - DQN paper uses RMSProp with ρ=0.95, ε=0.01, LR=2.5e-4
-        - Adam is a common alternative with default β1=0.9, β2=0.999
-        - Gamma (discount) is 0.99, batch size is 32 (not optimizer params)
+        - DQN paper uses RMSProp with rho=0.95, eps=0.01, LR=2.5e-4
+        - Rainbow uses Adam with lr=6.25e-5, eps=1.5e-4
         - Use with gradient clipping (max_norm=10.0) before optimizer.step()
 
     Example:
         >>> optimizer = configure_optimizer(online_net, optimizer_type='rmsprop')
-        >>> # Training loop:
-        >>> optimizer.zero_grad()
-        >>> loss.backward()
-        >>> clip_gradients(online_net, max_norm=10.0)
-        >>> optimizer.step()
+        >>> # Rainbow optimizer:
+        >>> optimizer = configure_optimizer(
+        ...     online_net, **RAINBOW_OPTIMIZER_DEFAULTS
+        ... )
     """
     # Get network parameters
     params = network.parameters()
 
     if optimizer_type.lower() == "rmsprop":
-        # DQN paper defaults: alpha (ρ) = 0.95, eps = 0.01
+        # DQN paper defaults: alpha (rho) = 0.95, eps = 0.01
+        rmsprop_eps = eps if eps is not None else 1e-2
         optimizer = torch.optim.RMSprop(
             params,
             lr=learning_rate,
             alpha=alpha,
-            eps=eps,
+            eps=rmsprop_eps,
             momentum=momentum,
             weight_decay=weight_decay,
             **kwargs,
         )
     elif optimizer_type.lower() == "adam":
         # Adam defaults: beta1=0.9, beta2=0.999, eps=1e-8
-        # Override eps if specified
-        adam_eps = kwargs.pop("adam_eps", 1e-8)
+        adam_eps = eps if eps is not None else kwargs.pop("adam_eps", 1e-8)
         beta1 = kwargs.pop("beta1", 0.9)
         beta2 = kwargs.pop("beta2", 0.999)
 

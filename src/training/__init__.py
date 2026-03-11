@@ -51,7 +51,7 @@ from .metrics_logger import (
 )
 
 # Optimization
-from .optimization import clip_gradients, configure_optimizer
+from .optimization import RAINBOW_OPTIMIZER_DEFAULTS, clip_gradients, configure_optimizer
 
 # Q-value tracking
 from .q_tracking import ReferenceQLogger, ReferenceStateQTracker
@@ -98,6 +98,7 @@ __all__ = [
     # Optimization
     "configure_optimizer",
     "clip_gradients",
+    "RAINBOW_OPTIMIZER_DEFAULTS",
     # Schedulers
     "TargetNetworkUpdater",
     "TrainingScheduler",
