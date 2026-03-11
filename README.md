@@ -183,6 +183,7 @@ src/                             # Core implementation
 experiments/dqn_atari/           # DQN experiment
   configs/                       # YAML configs per game
   scripts/                       # Training and validation scripts
+reports/                         # Working results, provenance records
 writing/                         # Thesis manuscript (LaTeX)
   chapters/                      # Chapter .tex files
   figures/                       # Thesis figures
