@@ -34,7 +34,12 @@ from .spr_loss import compute_spr_forward, compute_spr_loss
 from .metadata import MetadataWriter, get_git_commit_hash, get_git_status
 
 # Metrics
-from .metrics import EpsilonScheduler, UpdateMetrics, perform_update_step
+from .metrics import (
+    EpsilonScheduler,
+    UpdateMetrics,
+    perform_rainbow_update_step,
+    perform_update_step,
+)
 
 # Multi-backend metrics logging
 from .metrics_logger import (
@@ -104,6 +109,7 @@ __all__ = [
     # Metrics
     "UpdateMetrics",
     "perform_update_step",
+    "perform_rainbow_update_step",
     # Training loop
     "select_epsilon_greedy_action",
     "FrameCounter",

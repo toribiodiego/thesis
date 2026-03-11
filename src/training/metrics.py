@@ -5,7 +5,16 @@ from typing import Dict
 import torch
 import torch.nn as nn
 
-from .loss import compute_combined_loss, compute_dqn_loss, compute_td_targets, select_q_values
+import numpy as np
+
+from .distributional import compute_distributional_loss
+from .loss import (
+    compute_combined_loss,
+    compute_dqn_loss,
+    compute_td_targets,
+    select_next_actions,
+    select_q_values,
+)
 from .optimization import clip_gradients
 
 
@@ -247,6 +256,204 @@ def perform_update_step(
 
     # Update parameters
     optimizer.step()
+
+    # Update EMA after gradient step (SPR only)
+    if spr_components is not None:
+        spr_components["target_encoder"].update(online_net)
+        spr_components["target_projection"].update(
+            spr_components["projection_head"]
+        )
+
+    # Get current learning rate
+    learning_rate = optimizer.param_groups[0]["lr"]
+
+    # Create and return metrics
+    metrics = UpdateMetrics(
+        loss=total_loss.item(),
+        td_error=td_error,
+        td_error_std=td_error_std,
+        grad_norm=grad_norm,
+        learning_rate=learning_rate,
+        update_count=update_count,
+        spr_loss=spr_loss_val,
+        cosine_similarity=cos_sim_val,
+    )
+
+    return metrics
+
+
+def perform_rainbow_update_step(
+    online_net: nn.Module,
+    target_net: nn.Module,
+    optimizer: torch.optim.Optimizer,
+    batch: Dict[str, torch.Tensor],
+    support: torch.Tensor,
+    gamma: float = 0.99,
+    n_step: int = 1,
+    max_grad_norm: float = 10.0,
+    update_count: int = 0,
+    double_dqn: bool = True,
+    buffer=None,
+    spr_components: Dict[str, nn.Module] = None,
+    spr_batch: Dict[str, torch.Tensor] = None,
+    spr_weight: float = 2.0,
+) -> UpdateMetrics:
+    """
+    Perform a single Rainbow DQN training update.
+
+    Combines distributional C51 loss with importance sampling weights
+    from prioritized experience replay, noisy net noise resampling,
+    Double DQN action selection, and optional SPR auxiliary loss.
+
+    Steps:
+    1. Reset noise on online and target networks (NoisyNet)
+    2. Forward pass through online net (log_probs with gradients)
+    3. Forward pass through target net (log_probs, no gradients)
+    4. Select next actions (Double DQN: online selects, target evaluates)
+    5. Compute distributional cross-entropy loss with C51 projection
+    6. Weight per-sample loss by IS weights from prioritized replay
+    7. Add SPR loss if enabled
+    8. Backprop, clip gradients, optimizer step
+    9. Update priorities in replay buffer
+    10. Update EMA encoder/projection (SPR only)
+
+    Args:
+        online_net: Online Rainbow network (must have reset_noise()).
+        target_net: Target Rainbow network (must have reset_noise()).
+        optimizer: Optimizer for online net (and SPR modules if enabled).
+        batch: Dict from PrioritizedReplayBuffer.sample() with keys:
+            'states', 'actions', 'rewards', 'next_states', 'dones',
+            'indices' (int array), 'weights' (IS weights tensor).
+        support: C51 support atoms, shape (num_atoms,).
+        gamma: Base discount factor (default: 0.99).
+        n_step: Number of multi-step returns (default: 1).
+            The effective discount is gamma^n_step.
+        max_grad_norm: Maximum gradient norm for clipping (default: 10.0).
+        update_count: Current update count for metrics (default: 0).
+        double_dqn: Use online net for action selection (default: True).
+        buffer: PrioritizedReplayBuffer for priority updates.
+            Pass None to skip priority updates.
+        spr_components: Optional SPR module dict (same as perform_update_step).
+        spr_batch: Optional SPR sequence data dict.
+        spr_weight: Weight for SPR loss (default: 2.0).
+
+    Returns:
+        UpdateMetrics with loss, td_error, grad_norm, learning_rate,
+        update_count, and optionally spr_loss and cosine_similarity.
+    """
+    # Set training mode
+    online_net.train()
+    if spr_components is not None:
+        spr_components["transition_model"].train()
+        spr_components["projection_head"].train()
+        spr_components["prediction_head"].train()
+
+    # Reset noise before forward passes (NoisyNet exploration)
+    if hasattr(online_net, "reset_noise"):
+        online_net.reset_noise()
+    if hasattr(target_net, "reset_noise"):
+        target_net.reset_noise()
+
+    # Extract batch data
+    states = batch["states"]
+    actions = batch["actions"]
+    rewards = batch["rewards"]
+    next_states = batch["next_states"]
+    dones = batch["dones"]
+    is_weights = batch["weights"]  # (B,) IS weights from PER
+    indices = batch["indices"]  # buffer indices for priority update
+
+    # Effective discount for n-step returns
+    gamma_n = gamma ** n_step
+
+    # Online forward pass (with gradients for loss)
+    online_output = online_net(states)
+    online_log_probs = online_output["log_probs"]  # (B, A, atoms)
+
+    # Target forward pass (no gradients)
+    with torch.no_grad():
+        target_output = target_net(next_states)
+        target_log_probs = target_output["log_probs"]  # (B, A, atoms)
+
+    # Select next actions (Double DQN: online selects, target evaluates)
+    next_actions = select_next_actions(
+        online_net, target_net, next_states, double_dqn=double_dqn,
+    )
+
+    # Distributional cross-entropy loss with C51 projection
+    dist_result = compute_distributional_loss(
+        online_log_probs=online_log_probs,
+        actions=actions,
+        rewards=rewards,
+        dones=dones,
+        target_log_probs=target_log_probs,
+        next_actions=next_actions,
+        support=support,
+        gamma=gamma_n,
+    )
+
+    per_sample_loss = dist_result["per_sample_loss"]  # (B,) with gradients
+
+    # Apply IS weights: weighted mean of per-sample losses
+    weighted_loss = (is_weights * per_sample_loss).mean()
+
+    # TD error proxy for monitoring (mean per-sample cross-entropy)
+    with torch.no_grad():
+        td_error = per_sample_loss.mean().item()
+        td_error_std = per_sample_loss.std().item()
+
+    # Compute SPR loss (if enabled)
+    spr_loss_val = None
+    cos_sim_val = None
+    spr_loss_tensor = None
+    if spr_components is not None and spr_batch is not None:
+        from .spr_loss import compute_spr_forward
+
+        spr_result = compute_spr_forward(
+            online_encoder=online_net,
+            transition_model=spr_components["transition_model"],
+            projection_head=spr_components["projection_head"],
+            prediction_head=spr_components["prediction_head"],
+            target_encoder=spr_components["target_encoder"],
+            target_projection=spr_components["target_projection"],
+            states=spr_batch["states"],
+            actions=spr_batch["actions"],
+            dones=spr_batch["dones"],
+        )
+
+        spr_loss_tensor = spr_result["loss"]
+        spr_loss_val = spr_loss_tensor.item()
+        cos_sim_val = spr_result["cosine_similarity"].item()
+
+    # Combine distributional + SPR loss
+    combined = compute_combined_loss(weighted_loss, spr_loss_tensor, spr_weight)
+    total_loss = combined["total_loss"]
+
+    # Backward pass
+    optimizer.zero_grad()
+    total_loss.backward()
+
+    # Clip gradients across all trainable parameters
+    if spr_components is not None:
+        all_params = (
+            list(online_net.parameters())
+            + list(spr_components["transition_model"].parameters())
+            + list(spr_components["projection_head"].parameters())
+            + list(spr_components["prediction_head"].parameters())
+        )
+        grad_norm = torch.nn.utils.clip_grad_norm_(
+            all_params, max_norm=max_grad_norm
+        ).item()
+    else:
+        grad_norm = clip_gradients(online_net, max_norm=max_grad_norm)
+
+    # Update parameters
+    optimizer.step()
+
+    # Update priorities in replay buffer
+    if buffer is not None:
+        new_priorities = per_sample_loss.detach().cpu().numpy()
+        buffer.update_priorities(indices, new_priorities)
 
     # Update EMA after gradient step (SPR only)
     if spr_components is not None:
