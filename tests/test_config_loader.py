@@ -526,3 +526,41 @@ def test_full_workflow_with_real_configs(temp_config_dir):
     assert config["training"]["lr"] == 0.0001
     assert config["training"]["gamma"] == 0.95
     assert config["training"]["optimizer"]["type"] == "adam"
+
+
+# ============================================================================
+# Rainbow config parsing after checkpoint/eval changes
+# ============================================================================
+
+import glob
+import os
+
+_CONFIG_DIR = os.path.join(
+    os.path.dirname(__file__), "..", "experiments", "dqn_atari", "configs"
+)
+_RAINBOW_CONFIGS = sorted(glob.glob(os.path.join(_CONFIG_DIR, "*_rainbow.yaml")))
+_RAINBOW_SPR_CONFIGS = sorted(glob.glob(os.path.join(_CONFIG_DIR, "*_rainbow_spr.yaml")))
+_ALL_RAINBOW = _RAINBOW_CONFIGS + _RAINBOW_SPR_CONFIGS
+
+
+@pytest.mark.parametrize(
+    "config_path",
+    _ALL_RAINBOW,
+    ids=[os.path.basename(p) for p in _ALL_RAINBOW],
+)
+def test_rainbow_config_parses_with_expected_fields(config_path):
+    """Each Rainbow config should parse and contain required fields."""
+    config = load_config(config_path)
+
+    # Rainbow must be enabled
+    assert config["rainbow"]["enabled"] is True
+
+    # Optimizer should be Adam for Rainbow
+    assert config["training"]["optimizer"]["type"] == "adam"
+    assert config["training"]["optimizer"]["adam"]["eps"] > 0
+
+    # Checkpoint interval should be overridden
+    assert config["logging"]["checkpoint"]["save_every"] == 40000
+
+    # Inline eval should be disabled (eval_every > total_frames)
+    assert config["evaluation"]["eval_every"] > config["training"]["total_frames"]
