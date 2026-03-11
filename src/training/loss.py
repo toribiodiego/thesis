@@ -1,8 +1,9 @@
 """DQN loss computation utilities.
 
 Provides functions for:
-- TD target computation using target network
+- TD target computation using target network (with optional Double DQN)
 - Q-value selection from online network
+- Next-action selection for distributional Double DQN
 - DQN loss computation (MSE or Huber)
 - Combined TD + SPR loss for joint optimization
 - TD error statistics for monitoring
@@ -21,14 +22,21 @@ def compute_td_targets(
     dones: torch.Tensor,
     target_net: nn.Module,
     gamma: float = 0.99,
+    online_net: nn.Module = None,
+    double_dqn: bool = False,
 ) -> torch.Tensor:
     """
     Compute TD targets using the target network.
 
-    Computes y = r + γ * (1 - done) * max_a' Q_target(s', a')
+    Standard DQN:
+        y = r + gamma * (1 - done) * max_a' Q_target(s', a')
 
-    The target network is used under no_grad for stability. The max Q-value
-    over all actions is selected for the next state.
+    Double DQN (van Hasselt et al. 2016):
+        a* = argmax_a' Q_online(s', a')
+        y  = r + gamma * (1 - done) * Q_target(s', a*)
+
+    Double DQN decouples action selection (online net) from value
+    estimation (target net), reducing overestimation bias.
 
     Args:
         rewards: Reward tensor, shape (B,) in float32
@@ -36,39 +44,67 @@ def compute_td_targets(
         dones: Done flags, shape (B,) in bool
         target_net: Target Q-network (frozen, eval mode)
         gamma: Discount factor (default 0.99)
+        online_net: Online Q-network, required when double_dqn=True.
+        double_dqn: If True, use online net for action selection and
+            target net for evaluation. Default False.
 
     Returns:
         TD targets, shape (B,) in float32
-
-    Notes:
-        - Uses torch.no_grad() for target network forward pass
-        - Masks out terminal states with (1 - done)
-        - Uses max over actions for Q-learning (not double DQN)
-        - Returned targets are detached (no gradient flow to target network)
-
-    Example:
-        >>> rewards = torch.tensor([1.0, 0.0, -1.0])
-        >>> next_states = torch.randn(3, 4, 84, 84)
-        >>> dones = torch.tensor([False, False, True])
-        >>> targets = compute_td_targets(rewards, next_states, dones, target_net)
-        >>> # targets[2] should be -1.0 (terminal state, no future value)
     """
     with torch.no_grad():
-        # Forward pass through target network
         target_output = target_net(next_states)
         target_q_values = target_output["q_values"]  # (B, num_actions)
 
-        # Get max Q-value over actions
-        max_target_q, _ = target_q_values.max(dim=1)  # (B,)
+        if double_dqn:
+            # Double DQN: online selects, target evaluates
+            online_output = online_net(next_states)
+            online_q_values = online_output["q_values"]  # (B, num_actions)
+            best_actions = online_q_values.argmax(dim=1, keepdim=True)  # (B, 1)
+            max_target_q = target_q_values.gather(1, best_actions).squeeze(1)
+        else:
+            # Standard DQN: target selects and evaluates
+            max_target_q, _ = target_q_values.max(dim=1)  # (B,)
 
-        # Compute TD targets: r + γ * (1 - done) * max_a' Q(s', a')
-        # Convert done from bool to float: True -> 1.0, False -> 0.0
         done_mask = dones.float()
-
-        # TD target equation
         td_targets = rewards + gamma * (1.0 - done_mask) * max_target_q
 
     return td_targets
+
+
+def select_next_actions(
+    online_net: nn.Module,
+    target_net: nn.Module,
+    next_states: torch.Tensor,
+    double_dqn: bool = False,
+) -> torch.Tensor:
+    """
+    Select best next actions for distributional target computation.
+
+    For distributional RL (C51/Rainbow), the caller needs next-action
+    indices to select the target distribution. This function provides
+    those indices from either the target net (standard) or the online
+    net (Double DQN).
+
+    Both models must return a dict with 'q_values' (B, num_actions).
+    For distributional models, q_values = sum(z * p) which is already
+    the expected value used for action selection.
+
+    Args:
+        online_net: Online Q-network.
+        target_net: Target Q-network.
+        next_states: Next state tensor, shape (B, C, H, W).
+        double_dqn: If True, select actions from online net.
+            If False, select from target net.
+
+    Returns:
+        Best action indices, shape (B,) int64.
+    """
+    with torch.no_grad():
+        if double_dqn:
+            output = online_net(next_states)
+        else:
+            output = target_net(next_states)
+        return output["q_values"].argmax(dim=1)
 
 
 def select_q_values(
@@ -123,11 +159,14 @@ def compute_td_loss_components(
     online_net: nn.Module,
     target_net: nn.Module,
     gamma: float = 0.99,
+    double_dqn: bool = False,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """
     Compute Q-values and TD targets for loss computation.
 
-    This is a convenience function that combines select_q_values and compute_td_targets.
+    Combines select_q_values and compute_td_targets. When
+    double_dqn=True, the online net selects the best next action
+    and the target net evaluates it.
 
     Args:
         states: State tensor, shape (B, C, H, W)
@@ -138,27 +177,19 @@ def compute_td_loss_components(
         online_net: Online Q-network
         target_net: Target Q-network
         gamma: Discount factor
+        double_dqn: Use Double DQN target computation (default False)
 
     Returns:
         Tuple of (q_selected, td_targets), both shape (B,)
         - q_selected: Q-values for actions taken (with gradients)
         - td_targets: TD target values (detached, no gradients)
-
-    Example:
-        >>> # After sampling a batch from replay buffer
-        >>> q_selected, td_targets = compute_td_loss_components(
-        ...     batch['states'], batch['actions'], batch['rewards'],
-        ...     batch['next_states'], batch['dones'],
-        ...     online_net, target_net, gamma=0.99
-        ... )
-        >>> # Now compute loss
-        >>> loss = F.mse_loss(q_selected, td_targets)
     """
-    # Get Q-values for actions taken (with gradients)
     q_selected = select_q_values(online_net, states, actions)
 
-    # Get TD targets (no gradients)
-    td_targets = compute_td_targets(rewards, next_states, dones, target_net, gamma)
+    td_targets = compute_td_targets(
+        rewards, next_states, dones, target_net, gamma,
+        online_net=online_net, double_dqn=double_dqn,
+    )
 
     return q_selected, td_targets
 

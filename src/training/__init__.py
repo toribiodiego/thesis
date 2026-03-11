@@ -23,6 +23,7 @@ from .loss import (
     compute_dqn_loss,
     compute_td_loss_components,
     compute_td_targets,
+    select_next_actions,
     select_q_values,
 )
 
@@ -81,6 +82,7 @@ __all__ = [
     "compute_distributional_loss",
     # Loss
     "compute_td_targets",
+    "select_next_actions",
     "select_q_values",
     "compute_td_loss_components",
     "compute_dqn_loss",
