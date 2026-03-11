@@ -228,3 +228,27 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         if batch_size is not None:
             return self.size >= batch_size
         return True
+
+    def get_priority_state(self) -> dict:
+        """
+        Export sum-tree priority state for checkpointing.
+
+        Returns:
+            Dict with tree array, max priority, and count.
+        """
+        return {
+            "tree_data": self.tree.tree.copy(),
+            "max_priority": self.tree._max_priority,
+            "count": self.tree._count,
+        }
+
+    def set_priority_state(self, state: dict) -> None:
+        """
+        Restore sum-tree priority state from checkpoint.
+
+        Args:
+            state: Dict from get_priority_state().
+        """
+        self.tree.tree[:] = state["tree_data"]
+        self.tree._max_priority = state["max_priority"]
+        self.tree._count = state["count"]

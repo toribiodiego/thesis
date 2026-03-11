@@ -348,6 +348,7 @@ class CheckpointManager:
         rng_states: Dict = None,
         extra_metadata: Dict = None,
         spr_components: Dict[str, nn.Module] = None,
+        rainbow_enabled: bool = False,
     ) -> str:
         """
         Save complete checkpoint with all training state.
@@ -367,6 +368,9 @@ class CheckpointManager:
             spr_components: Optional dict with SPR modules. When provided,
                 saves state dicts for transition_model, projection_head,
                 prediction_head, target_encoder, and target_projection.
+            rainbow_enabled: If True and replay_buffer has
+                get_priority_state(), save sum-tree priorities for
+                PrioritizedReplayBuffer resume.
 
         Returns:
             str: Path to saved checkpoint
@@ -430,6 +434,13 @@ class CheckpointManager:
                 "target_projection": spr_components["target_projection"].state_dict(),
             }
 
+        # Add Rainbow priority state (sum-tree priorities for PER resume)
+        if rainbow_enabled and replay_buffer is not None:
+            if hasattr(replay_buffer, "get_priority_state"):
+                checkpoint["rainbow_state"] = {
+                    "priority_state": replay_buffer.get_priority_state(),
+                }
+
         # Atomic write: save to temp file, then rename
         # This prevents corruption if process is killed during write
         temp_fd, temp_path = tempfile.mkstemp(dir=self.checkpoint_dir, suffix=".pt.tmp")
@@ -474,6 +485,7 @@ class CheckpointManager:
         rng_states: Dict = None,
         extra_metadata: Dict = None,
         spr_components: Dict[str, nn.Module] = None,
+        rainbow_enabled: bool = False,
     ) -> bool:
         """
         Save checkpoint if it's the best model so far.
@@ -492,6 +504,7 @@ class CheckpointManager:
             rng_states: RNG states
             extra_metadata: Additional metadata
             spr_components: Optional dict with SPR modules to save
+            rainbow_enabled: If True, save sum-tree priority state
 
         Returns:
             bool: True if checkpoint was saved (new best), False otherwise
@@ -554,6 +567,13 @@ class CheckpointManager:
                 "target_encoder": spr_components["target_encoder"].state_dict(),
                 "target_projection": spr_components["target_projection"].state_dict(),
             }
+
+        # Add Rainbow priority state (sum-tree priorities for PER resume)
+        if rainbow_enabled and replay_buffer is not None:
+            if hasattr(replay_buffer, "get_priority_state"):
+                checkpoint["rainbow_state"] = {
+                    "priority_state": replay_buffer.get_priority_state(),
+                }
 
         # Atomic write
         temp_fd, temp_path = tempfile.mkstemp(dir=self.checkpoint_dir, suffix=".pt.tmp")
@@ -661,6 +681,18 @@ class CheckpointManager:
             )
             spr_restored = True
 
+        # Restore Rainbow priority state
+        rainbow_restored = False
+        if "rainbow_state" in checkpoint:
+            rainbow_state = checkpoint["rainbow_state"]
+            if (
+                replay_buffer is not None
+                and "priority_state" in rainbow_state
+                and hasattr(replay_buffer, "set_priority_state")
+            ):
+                replay_buffer.set_priority_state(rainbow_state["priority_state"])
+                rainbow_restored = True
+
         # Return all state for manual restoration
         return {
             "step": checkpoint.get("step", 0),
@@ -673,6 +705,7 @@ class CheckpointManager:
             "commit_hash": checkpoint.get("commit_hash", "unknown"),
             "schema_version": schema_version,
             "spr_restored": spr_restored,
+            "rainbow_restored": rainbow_restored,
         }
 
 

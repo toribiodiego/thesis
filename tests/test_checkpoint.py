@@ -526,5 +526,228 @@ class TestCheckpointIntegrity:
         assert verify_checkpoint_integrity(incomplete_path) is False
 
 
+class TestRainbowCheckpoint:
+    """Test Rainbow-specific checkpoint save/load."""
+
+    @pytest.fixture
+    def rainbow_models(self):
+        """Create online and target RainbowDQN models."""
+        from src.models.rainbow import RainbowDQN
+
+        online = RainbowDQN(num_actions=6, num_atoms=51, v_min=-10, v_max=10)
+        target = RainbowDQN(num_actions=6, num_atoms=51, v_min=-10, v_max=10)
+        target.load_state_dict(online.state_dict())
+        return online, target
+
+    @pytest.fixture
+    def prioritized_buffer(self):
+        """Create a small PrioritizedReplayBuffer with data."""
+        from src.replay.prioritized_buffer import PrioritizedReplayBuffer
+
+        buf = PrioritizedReplayBuffer(
+            capacity=500,
+            obs_shape=(4, 84, 84),
+            min_size=10,
+            alpha=0.5,
+            beta_start=0.4,
+            beta_end=1.0,
+            beta_frames=100_000,
+        )
+        # Add transitions so the tree has non-trivial priorities
+        for i in range(50):
+            state = np.random.randint(0, 255, (4, 84, 84), dtype=np.uint8)
+            action = np.random.randint(0, 6)
+            reward = float(np.random.randn())
+            next_state = np.random.randint(0, 255, (4, 84, 84), dtype=np.uint8)
+            done = i % 25 == 24
+            buf.append(state, action, reward, next_state, done)
+        return buf
+
+    def test_save_rainbow_state(
+        self, temp_checkpoint_dir, rainbow_models, prioritized_buffer
+    ):
+        """Test that rainbow_enabled=True saves priority state."""
+        manager = CheckpointManager(checkpoint_dir=temp_checkpoint_dir)
+        online, target = rainbow_models
+        opt = configure_optimizer(online, optimizer_type="adam", learning_rate=6.25e-5)
+
+        path = manager.save_checkpoint(
+            step=1000,
+            episode=10,
+            epsilon=0.0,
+            online_model=online,
+            target_model=target,
+            optimizer=opt,
+            replay_buffer=prioritized_buffer,
+            rainbow_enabled=True,
+        )
+
+        checkpoint = torch.load(path, map_location="cpu", weights_only=False)
+        assert "rainbow_state" in checkpoint
+        assert "priority_state" in checkpoint["rainbow_state"]
+
+        ps = checkpoint["rainbow_state"]["priority_state"]
+        assert "tree_data" in ps
+        assert "max_priority" in ps
+        assert "count" in ps
+
+    def test_skip_rainbow_state_when_disabled(
+        self, temp_checkpoint_dir, rainbow_models, prioritized_buffer
+    ):
+        """Test that rainbow_enabled=False omits rainbow_state."""
+        manager = CheckpointManager(checkpoint_dir=temp_checkpoint_dir)
+        online, target = rainbow_models
+        opt = configure_optimizer(online, optimizer_type="adam", learning_rate=6.25e-5)
+
+        path = manager.save_checkpoint(
+            step=1000,
+            episode=10,
+            epsilon=0.0,
+            online_model=online,
+            target_model=target,
+            optimizer=opt,
+            replay_buffer=prioritized_buffer,
+            rainbow_enabled=False,
+        )
+
+        checkpoint = torch.load(path, map_location="cpu", weights_only=False)
+        assert "rainbow_state" not in checkpoint
+
+    def test_load_restores_priority_state(
+        self, temp_checkpoint_dir, rainbow_models, prioritized_buffer
+    ):
+        """Test roundtrip: save then load restores sum-tree priorities."""
+        manager = CheckpointManager(checkpoint_dir=temp_checkpoint_dir)
+        online, target = rainbow_models
+        opt = configure_optimizer(online, optimizer_type="adam", learning_rate=6.25e-5)
+
+        # Capture original priority state
+        orig_state = prioritized_buffer.get_priority_state()
+
+        path = manager.save_checkpoint(
+            step=2000,
+            episode=20,
+            epsilon=0.0,
+            online_model=online,
+            target_model=target,
+            optimizer=opt,
+            replay_buffer=prioritized_buffer,
+            rainbow_enabled=True,
+        )
+
+        # Create a fresh buffer with same capacity
+        from src.replay.prioritized_buffer import PrioritizedReplayBuffer
+
+        new_buffer = PrioritizedReplayBuffer(
+            capacity=500,
+            obs_shape=(4, 84, 84),
+            min_size=10,
+            alpha=0.5,
+            beta_start=0.4,
+            beta_end=1.0,
+            beta_frames=100_000,
+        )
+        # Pre-fill so arrays are allocated at same size
+        for i in range(50):
+            state = np.random.randint(0, 255, (4, 84, 84), dtype=np.uint8)
+            new_buffer.append(state, 0, 0.0, state, False)
+
+        from src.models.rainbow import RainbowDQN
+
+        new_online = RainbowDQN(num_actions=6, num_atoms=51, v_min=-10, v_max=10)
+        new_target = RainbowDQN(num_actions=6, num_atoms=51, v_min=-10, v_max=10)
+        new_opt = configure_optimizer(new_online, optimizer_type="adam", learning_rate=6.25e-5)
+
+        result = manager.load_checkpoint(
+            checkpoint_path=path,
+            online_model=new_online,
+            target_model=new_target,
+            optimizer=new_opt,
+            replay_buffer=new_buffer,
+        )
+
+        assert result["rainbow_restored"] is True
+
+        # Verify tree data matches
+        restored_state = new_buffer.get_priority_state()
+        assert np.allclose(orig_state["tree_data"], restored_state["tree_data"])
+        assert orig_state["max_priority"] == restored_state["max_priority"]
+        assert orig_state["count"] == restored_state["count"]
+
+    def test_load_without_rainbow_state(
+        self, temp_checkpoint_dir, rainbow_models
+    ):
+        """Test loading a non-Rainbow checkpoint returns rainbow_restored=False."""
+        manager = CheckpointManager(checkpoint_dir=temp_checkpoint_dir)
+        online, target = rainbow_models
+        opt = configure_optimizer(online, optimizer_type="adam", learning_rate=6.25e-5)
+
+        # Save without rainbow
+        path = manager.save_checkpoint(
+            step=1000,
+            episode=10,
+            epsilon=0.0,
+            online_model=online,
+            target_model=target,
+            optimizer=opt,
+        )
+
+        from src.models.rainbow import RainbowDQN
+
+        new_online = RainbowDQN(num_actions=6, num_atoms=51, v_min=-10, v_max=10)
+        new_target = RainbowDQN(num_actions=6, num_atoms=51, v_min=-10, v_max=10)
+        new_opt = configure_optimizer(new_online, optimizer_type="adam", learning_rate=6.25e-5)
+
+        result = manager.load_checkpoint(
+            checkpoint_path=path,
+            online_model=new_online,
+            target_model=new_target,
+            optimizer=new_opt,
+        )
+
+        assert result["rainbow_restored"] is False
+
+    def test_noisy_linear_params_in_state_dict(self, rainbow_models):
+        """Test that NoisyLinear sigma params are captured by state_dict."""
+        online, _ = rainbow_models
+        sd = online.state_dict()
+
+        # NoisyLinear stores sigma_weight and sigma_bias as nn.Parameters
+        sigma_keys = [k for k in sd.keys() if "sigma" in k]
+        assert len(sigma_keys) > 0, "No sigma parameters found in state_dict"
+
+        # Verify they are non-zero (initialized to some value)
+        for key in sigma_keys:
+            assert sd[key].abs().sum() > 0, f"{key} is all zeros"
+
+    def test_save_best_with_rainbow(
+        self, temp_checkpoint_dir, rainbow_models, prioritized_buffer
+    ):
+        """Test save_best also stores rainbow state when enabled."""
+        manager = CheckpointManager(
+            checkpoint_dir=temp_checkpoint_dir, save_best=True
+        )
+        online, target = rainbow_models
+        opt = configure_optimizer(online, optimizer_type="adam", learning_rate=6.25e-5)
+
+        saved = manager.save_best(
+            step=1000,
+            episode=10,
+            epsilon=0.0,
+            eval_return=15.0,
+            online_model=online,
+            target_model=target,
+            optimizer=opt,
+            replay_buffer=prioritized_buffer,
+            rainbow_enabled=True,
+        )
+
+        assert saved is True
+        best_path = os.path.join(temp_checkpoint_dir, "best_model.pt")
+        checkpoint = torch.load(best_path, map_location="cpu", weights_only=False)
+        assert "rainbow_state" in checkpoint
+        assert "priority_state" in checkpoint["rainbow_state"]
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
