@@ -125,15 +125,16 @@
 \draw[arr] (2.4, 0) -- (3.2, 0);
 \node[box, fill=outfront] (repr) at (3.8, 0) {$h_t$};
 
-% Linear probe
-\draw[arr] (repr) -- (5.2, 0);
-\node[box, fill=black!10, minimum width=1.6cm] (probe)
-    at (6.3, 0) {Linear probe};
-\node[lbl, text=black!30] at (6.3, -0.75) {trainable};
+% Linear probe (thin to convey single linear layer)
+\draw[arr] (repr) -- (5.1, 0);
+\fill[black!12, draw=black!35, thick, rounded corners=1pt]
+    (5.1, -0.55) rectangle (5.35, 0.55);
+\node[lbl, text=black!45] at (5.225, -0.85) {linear};
+\node[lbl, text=black!30] at (5.225, -1.2) {trainable};
 
-% Prediction
-\draw[arr] (probe) -- (8.0, 0);
-\node[box, fill=black!8] (loss) at (9.2, 0)
+% Loss (plain math, not a box)
+\draw[arr] (5.35, 0) -- (6.3, 0);
+\node[font=\small, text=black!55] (loss) at (7.3, 0)
     {$\mathcal{L}(\hat{y}, y)$};
 
 % Annotation
