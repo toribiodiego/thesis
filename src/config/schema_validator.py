@@ -168,6 +168,7 @@ KNOWN_STRUCTURE = {
     "training": {
         "total_frames",
         "train_every",
+        "updates_per_step",
         "gamma",
         "loss",
         "gradient_clip",
