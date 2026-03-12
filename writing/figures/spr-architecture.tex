@@ -11,11 +11,11 @@
 \begin{subfigure}[t]{\textwidth}
 \centering
 \begin{tikzpicture}[
-    box/.style={draw=black!40, thick, minimum height=0.7cm,
+    box/.style={draw=black!70, thick, minimum height=0.7cm,
                 font=\small, inner sep=5pt, rounded corners=2pt},
-    arr/.style={->, thick, >=stealth, black!40},
-    lbl/.style={font=\scriptsize, text=black!55},
-    mathlbl/.style={font=\small, text=black!55},
+    arr/.style={->, thick, >=stealth, black!55},
+    lbl/.style={font=\scriptsize, text=black!65},
+    mathlbl/.style={font=\small, text=black!65},
 ]
 
 % s_t
@@ -23,9 +23,9 @@
 \draw[arr] (0.1, 0) -- (0.8, 0);
 
 % Encoder (trapezoid)
-\fill[encfade, draw=black!30, thick, line join=round]
+\fill[encfade, draw=black!70, thick, line join=round]
     (0.8, -0.8) -- (0.8, 0.8) -- (2.1, 0.45) -- (2.1, -0.45) -- cycle;
-\node[font=\scriptsize, text=black!45] at (1.35, 0) {$f_\theta$};
+\node[font=\scriptsize, text=black!55] at (1.35, 0) {$f_\theta$};
 
 % z_t
 \draw[arr] (2.1, 0) -- (2.8, 0);
@@ -59,7 +59,7 @@
 \node[mathlbl] at (10.35, 0.3) {$\hat{z}_{t\!+\!K}$};
 
 % Brace under transition models
-\draw[decorate, decoration={brace, amplitude=4pt, mirror}, black!30]
+\draw[decorate, decoration={brace, amplitude=4pt, mirror}, black!45]
     (3.1, -0.7) -- (9.1, -0.7)
     node[midway, below=5pt, lbl]
     {transition model applied $K$ times};
@@ -77,12 +77,12 @@
 \begin{subfigure}[t]{\textwidth}
 \centering
 \begin{tikzpicture}[
-    box/.style={draw=black!40, thick, minimum height=0.7cm,
+    box/.style={draw=black!70, thick, minimum height=0.7cm,
                 font=\small, inner sep=5pt, rounded corners=2pt},
-    arr/.style={->, thick, >=stealth, black!40},
-    lbl/.style={font=\scriptsize, text=black!55},
-    mathlbl/.style={font=\small, text=black!55},
-    pathlbl/.style={font=\small\bfseries, text=black!45},
+    arr/.style={->, thick, >=stealth, black!55},
+    lbl/.style={font=\scriptsize, text=black!65},
+    mathlbl/.style={font=\small, text=black!65},
+    pathlbl/.style={font=\small\bfseries, text=black!55},
 ]
 
 % === Online path (top) ===
@@ -107,47 +107,47 @@
 \node[mathlbl] at (5.85, 0) {$\tilde{y}$};
 
 % === Target path (bottom) ===
-\node[pathlbl, text=black!35] at (-0.5, -2.6) {Target};
+\node[pathlbl, text=black!45] at (-0.5, -2.6) {Target};
 
 % s_{t+k}
-\node[mathlbl, text=black!40] at (-0.5, -3.6) {$s_{t\!+\!k}$};
-\draw[arr, black!25] (0.1, -3.6) -- (0.8, -3.6);
+\node[mathlbl, text=black!50] at (-0.5, -3.6) {$s_{t\!+\!k}$};
+\draw[arr, black!40] (0.1, -3.6) -- (0.8, -3.6);
 
 % EMA Encoder (trapezoid)
-\fill[targetfade, draw=black!20, thick, line join=round]
+\fill[targetfade, draw=black!55, thick, line join=round]
     (0.8, -4.4) -- (0.8, -2.8) -- (2.1, -3.15) -- (2.1, -4.05) -- cycle;
-\node[font=\scriptsize, text=black!35] at (1.35, -3.6) {$\bar{f}_\theta$};
-\node[lbl, text=black!30] at (1.45, -4.7) {EMA};
+\node[font=\scriptsize, text=black!45] at (1.35, -3.6) {$\bar{f}_\theta$};
+\node[lbl, text=black!40] at (1.45, -4.7) {EMA};
 
-\draw[arr, black!25] (2.1, -3.6) -- (2.8, -3.6);
+\draw[arr, black!40] (2.1, -3.6) -- (2.8, -3.6);
 
 % EMA Projection
-\node[box, fill=targetfade, draw=black!20, text=black!40]
+\node[box, fill=targetfade, draw=black!55, text=black!50]
     (tproj) at (3.6, -3.6) {$\bar{g}$};
-\node[lbl, text=black!30] at (3.6, -4.3) {EMA};
+\node[lbl, text=black!40] at (3.6, -4.3) {EMA};
 
 % Target output
-\draw[arr, black!25] (tproj.east) -- (5.1, -3.6);
-\node[mathlbl, text=black!40] at (5.45, -3.6) {$\bar{y}$};
+\draw[arr, black!40] (tproj.east) -- (5.1, -3.6);
+\node[mathlbl, text=black!50] at (5.45, -3.6) {$\bar{y}$};
 
 % === Cosine similarity ===
-\draw[<->, thick, black!45]
+\draw[<->, thick, black!60]
     (5.85, -0.4) -- (5.85, -1.5);
-\draw[->, thick, dashed, black!30]
+\draw[->, thick, dashed, black!45]
     (5.45, -3.2) -- (5.85, -1.9);
-\node[font=\small, text=black!45] at (6.9, -1.0)
+\node[font=\small, text=black!60] at (6.9, -1.0)
     {$\mathcal{L}_{\text{SPR}} = -\cos(\tilde{y},\, \bar{y})$};
 
 % No prediction head annotation
-\draw[decorate, decoration={brace, amplitude=3pt, mirror}, black!25]
+\draw[decorate, decoration={brace, amplitude=3pt, mirror}, black!40]
     (2.5, -4.5) -- (4.2, -4.5)
-    node[midway, below=4pt, lbl, text=black!30]
+    node[midway, below=4pt, lbl, text=black!40]
     {no prediction head (asymmetry)};
 
 % EMA update arrow (connecting to where online encoder would be)
-\node[lbl, text=black!30, align=center] at (-0.5, -1.0)
+\node[lbl, text=black!40, align=center] at (-0.5, -1.0)
     {EMA\\update};
-\draw[->, thick, dashed, black!25]
+\draw[->, thick, dashed, black!40]
     (-0.5, -0.4) -- (-0.5, -2.4);
 
 \end{tikzpicture}
