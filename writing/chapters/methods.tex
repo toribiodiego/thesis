@@ -126,11 +126,8 @@ Prediction $q$
     & 512 \\
 \bottomrule
 \end{tabular}
-\caption{SPR component architectures. The transition model operates
-  on spatial feature maps; projection and prediction heads operate
-  on flattened vectors. The EMA target components
-  ($\bar{f}_\theta$, $\bar{g}$) mirror their online counterparts
-  but receive no gradient updates.}
+\caption{SPR component architectures. EMA target components
+  ($\bar{f}_\theta$, $\bar{g}$) mirror their online counterparts.}
 \label{tab:spr-components}
 \end{table}
 
@@ -306,9 +303,8 @@ B & After FC    & 512                     & 512  \\
 C & Final $h_t$ & 512                     & 512  \\
 \bottomrule
 \end{tabular}
-\caption{Probe attachment points in the Nature CNN encoder. Probe
-  labels correspond to \cref{fig:linear-probe-layers}. The Conv3
-  output is flattened before input to the probe.}
+\caption{Probe attachment points in the Nature CNN encoder.
+  Labels correspond to \cref{fig:linear-probe-layers}.}
 \label{tab:probe-attachments}
 \end{table}
 
@@ -365,9 +361,8 @@ Representations     & Same states as probe training set \\
 Coloring            & Game-state properties (per-game) \\
 \bottomrule
 \end{tabular}
-\caption{Dimensionality reduction parameters for latent space
-  visualization. Italicized values are placeholders to be finalized
-  during experiment design.}
+\caption{Dimensionality reduction parameters. Italicized values
+  to be finalized during experiment design.}
 \label{tab:viz-params}
 \end{table}
 
