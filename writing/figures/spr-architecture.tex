@@ -19,44 +19,44 @@
 ]
 
 % s_t
-\node[mathlbl] at (-0.3, 0) {$s_t$};
+\node[font=\small, text=black!90] at (-0.3, 0) {$s_t$};
 \draw[arr] (0.1, 0) -- (0.8, 0);
 
 % Encoder (trapezoid)
 \fill[encfade, draw=black!70, thick, line join=round]
     (0.8, -0.8) -- (0.8, 0.8) -- (2.1, 0.45) -- (2.1, -0.45) -- cycle;
-\node[font=\scriptsize, text=black!55] at (1.35, 0) {$f_\theta$};
+\node[font=\small, text=black!85] at (1.35, 0) {$f_\theta$};
 
 % z_t
 \draw[arr] (2.1, 0) -- (2.8, 0);
-\node[mathlbl] at (2.45, 0.3) {$z_t$};
+\node[font=\small, text=black!90] at (2.45, 0.45) {$z_t$};
 
 % Transition model - step 1
 \node[box, fill=sprcomp] (h1) at (3.6, 0) {$h$};
-\node[mathlbl] at (3.6, 1.1) {$a_t$};
-\draw[arr] (3.6, 0.8) -- (h1.north);
+\node[font=\small, text=black!90] at (3.6, 1.2) {$a_t$};
+\draw[arr] (3.6, 0.9) -- (h1.north);
 
 \draw[arr] (h1.east) -- (4.7, 0);
-\node[mathlbl] at (4.95, 0.3) {$\hat{z}_{t\!+\!1}$};
+\node[font=\small, text=black!90] at (4.95, 0.45) {$\hat{z}_{t\!+\!1}$};
 
 % Transition model - step 2
 \node[box, fill=sprcomp] (h2) at (5.8, 0) {$h$};
-\node[mathlbl] at (5.8, 1.1) {$a_{t\!+\!1}$};
-\draw[arr] (5.8, 0.8) -- (h2.north);
+\node[font=\small, text=black!90] at (5.8, 1.2) {$a_{t\!+\!1}$};
+\draw[arr] (5.8, 0.9) -- (h2.north);
 
 \draw[arr] (h2.east) -- (6.9, 0);
-\node[mathlbl] at (7.15, 0.3) {$\hat{z}_{t\!+\!2}$};
+\node[font=\small, text=black!90] at (7.15, 0.45) {$\hat{z}_{t\!+\!2}$};
 
 % Dots
-\node[mathlbl] at (7.7, 0) {$\cdots$};
+\node[font=\small, text=black!90] at (7.7, 0) {$\cdots$};
 
 % Step K
 \node[box, fill=sprcomp] (hk) at (8.6, 0) {$h$};
-\node[mathlbl] at (8.6, 1.1) {$a_{t\!+\!K\!-\!1}$};
-\draw[arr] (8.6, 0.8) -- (hk.north);
+\node[font=\small, text=black!90] at (8.6, 1.2) {$a_{t\!+\!K\!-\!1}$};
+\draw[arr] (8.6, 0.9) -- (hk.north);
 
 \draw[arr] (hk.east) -- (10.0, 0);
-\node[mathlbl] at (10.35, 0.3) {$\hat{z}_{t\!+\!K}$};
+\node[font=\small, text=black!90] at (10.35, 0.45) {$\hat{z}_{t\!+\!K}$};
 
 % Brace under transition models
 \draw[decorate, decoration={brace, amplitude=4pt, mirror}, black!45]
@@ -86,68 +86,70 @@
 ]
 
 % === Online path (top) ===
-\node[pathlbl] at (-0.5, 1.6) {Online};
+\node[font=\small\bfseries, text=black!80] at (-0.5, 1.6) {Online};
 
 % z_hat_{t+k} input
-\node[mathlbl] at (-0.3, 0) {$\hat{z}_{t\!+\!k}$};
+\node[font=\small, text=black!90] at (-0.3, 0) {$\hat{z}_{t\!+\!k}$};
 \draw[arr] (0.3, 0) -- (1.0, 0);
 
 % Projection
 \node[box, fill=sprcomp] (proj) at (1.8, 0) {$g$};
-\node[lbl] at (1.8, -0.65) {project};
+\node[lbl] at (1.8, -0.75) {project};
 
 \draw[arr] (proj.east) -- (3.2, 0);
 
 % Prediction head
 \node[box, fill=sprcomp] (pred) at (4.0, 0) {$q$};
-\node[lbl] at (4.0, -0.65) {predict};
+\node[lbl] at (4.0, -0.75) {predict};
 
 % Online output
 \draw[arr] (pred.east) -- (5.5, 0);
-\node[mathlbl] at (5.85, 0) {$\tilde{y}$};
+\node[font=\small, text=black!90] at (5.85, 0) {$\tilde{y}$};
 
 % === Target path (bottom) ===
-\node[pathlbl, text=black!45] at (-0.5, -2.6) {Target};
+\node[font=\small\bfseries, text=black!65] at (-0.5, -2.6) {Target};
 
 % s_{t+k}
-\node[mathlbl, text=black!50] at (-0.5, -3.6) {$s_{t\!+\!k}$};
-\draw[arr, black!40] (0.1, -3.6) -- (0.8, -3.6);
+\node[font=\small, text=black!70] at (-0.5, -3.6) {$s_{t\!+\!k}$};
+\draw[arr, black!50] (0.1, -3.6) -- (0.8, -3.6);
 
 % EMA Encoder (trapezoid)
 \fill[targetfade, draw=black!55, thick, line join=round]
     (0.8, -4.4) -- (0.8, -2.8) -- (2.1, -3.15) -- (2.1, -4.05) -- cycle;
-\node[font=\scriptsize, text=black!45] at (1.35, -3.6) {$\bar{f}_\theta$};
-\node[lbl, text=black!40] at (1.45, -4.7) {EMA};
+\node[font=\small, text=black!70] at (1.35, -3.6) {$\bar{f}_\theta$};
 
-\draw[arr, black!40] (2.1, -3.6) -- (2.8, -3.6);
+\draw[arr, black!50] (2.1, -3.6) -- (2.8, -3.6);
 
 % EMA Projection
-\node[box, fill=targetfade, draw=black!55, text=black!50]
+\node[box, fill=targetfade, draw=black!55, text=black!70]
     (tproj) at (3.6, -3.6) {$\bar{g}$};
-\node[lbl, text=black!40] at (3.6, -4.3) {EMA};
 
 % Target output
-\draw[arr, black!40] (tproj.east) -- (5.1, -3.6);
-\node[mathlbl, text=black!50] at (5.45, -3.6) {$\bar{y}$};
+\draw[arr, black!50] (tproj.east) -- (5.1, -3.6);
+\node[font=\small, text=black!70] at (5.45, -3.6) {$\bar{y}$};
 
 % === Cosine similarity ===
-\draw[<->, thick, black!60]
+\draw[<->, thick, black!75]
     (5.85, -0.4) -- (5.85, -1.5);
-\draw[->, thick, dashed, black!45]
+\draw[->, thick, dashed, black!55]
     (5.45, -3.2) -- (5.85, -1.9);
-\node[font=\small, text=black!60] at (6.9, -1.0)
+\node[font=\small, text=black!85, anchor=west] at (6.2, -1.0)
     {$\mathcal{L}_{\text{SPR}} = -\cos(\tilde{y},\, \bar{y})$};
 
 % No prediction head annotation
-\draw[decorate, decoration={brace, amplitude=3pt, mirror}, black!40]
+\draw[decorate, decoration={brace, amplitude=3pt, mirror}, black!45]
     (2.5, -4.5) -- (4.2, -4.5)
-    node[midway, below=4pt, lbl, text=black!40]
+    node[midway, below=4pt, font=\scriptsize, text=black!50]
     {no prediction head (asymmetry)};
 
-% EMA update arrow (connecting to where online encoder would be)
-\node[lbl, text=black!40, align=center] at (-0.5, -1.0)
-    {EMA\\update};
-\draw[->, thick, dashed, black!40]
+% EMA labels (under encoder and projection)
+\node[font=\scriptsize, text=black!50] at (1.45, -4.65) {EMA};
+\node[font=\scriptsize, text=black!50] at (3.6, -4.25) {EMA};
+
+% EMA update arrow -- label offset left to avoid overlap
+\node[font=\scriptsize, text=black!50, align=center, anchor=east]
+    at (-0.75, -1.4) {EMA\\update};
+\draw[->, thick, dashed, black!45]
     (-0.5, -0.4) -- (-0.5, -2.4);
 
 \end{tikzpicture}
