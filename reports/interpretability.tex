@@ -1,0 +1,55 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{lineno}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{titling}
+\usepackage{titlesec}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage[font=small,labelfont=bf,labelsep=period,
+  justification=raggedright,singlelinecheck=false]{caption}
+\usepackage[colorlinks=true,linkcolor=black,urlcolor=blue!60!black,citecolor=black]{hyperref}
+
+\newcommand{\citelink}[2]{\href{#1}{\small[#2]}}
+
+\renewcommand\linenumberfont{\normalfont\scriptsize\sffamily\color[rgb]{0.5,0.5,0.5}}
+\leftlinenumbers
+\linenumbers
+
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.5em}{}
+\titlespacing{\section}{0pt}{2.0em}{0.6em}
+\titlespacing{\subsection}{0pt}{1.8em}{0.5em}
+
+\setlength{\droptitle}{-4em}
+\pretitle{\begin{center}\large\bfseries}
+\posttitle{\end{center}\vspace{-1em}}
+\preauthor{\begin{center}\normalsize}
+\postauthor{\end{center}\vspace{-1em}}
+\predate{\begin{center}\normalsize}
+\postdate{\end{center}\vspace{-0.5em}}
+
+\title{Interpretability Analysis}
+\author{Diego Toribio\\[0.3em]{\normalsize March 2026}}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+% Working document for interpretability results:
+% linear probes, latent space visualization, and transition model analysis.
+%
+% Planned content:
+% - Linear probe accuracy per game feature per condition
+% - Probe accuracy tables (DQN vs Aug vs SPR vs Aug+SPR)
+% - t-SNE / PCA latent space plots colored by game state
+% - Transition model prediction quality over K steps
+% - Comparison of representation structure across conditions
+%
+% This feeds into: writing/chapters/results.tex (Section 4.5)
+%                   writing/chapters/discussion.tex (Sections 5.2-5.3)
+
+\end{document}
