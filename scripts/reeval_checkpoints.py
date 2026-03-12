@@ -83,6 +83,7 @@ def create_model(config, num_actions, device):
 
     if rainbow_cfg.get("enabled", False):
         dist = rainbow_cfg.get("distributional", {})
+        fc_hidden = config.get("network", {}).get("fc_hidden", 512)
         model = RainbowDQN(
             num_actions=num_actions,
             num_atoms=dist.get("num_atoms", 51),
@@ -91,6 +92,7 @@ def create_model(config, num_actions, device):
             noisy=rainbow_cfg.get("noisy_nets", True),
             dueling=rainbow_cfg.get("dueling", True),
             dropout=dropout,
+            fc_hidden=fc_hidden,
         )
     else:
         model = DQN(

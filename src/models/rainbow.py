@@ -63,6 +63,7 @@ class RainbowDQN(nn.Module):
         noisy: bool = True,
         dueling: bool = True,
         dropout: float = 0.0,
+        fc_hidden: int = 512,
     ):
         super().__init__()
         self.num_actions = num_actions
@@ -72,6 +73,7 @@ class RainbowDQN(nn.Module):
         self.noisy = noisy
         self.dueling = dueling
         self.dropout = dropout
+        self.fc_hidden = fc_hidden
 
         # Support atoms z_i = v_min + i * delta_z
         support = torch.linspace(v_min, v_max, num_atoms)
@@ -90,15 +92,15 @@ class RainbowDQN(nn.Module):
 
         if dueling:
             # Value stream: V(s) distribution over atoms
-            self.value_fc = Linear(conv_output_size, 512)
-            self.value_head = Linear(512, num_atoms)
+            self.value_fc = Linear(conv_output_size, fc_hidden)
+            self.value_head = Linear(fc_hidden, num_atoms)
             # Advantage stream: A(s,a) distribution over atoms
-            self.advantage_fc = Linear(conv_output_size, 512)
-            self.advantage_head = Linear(512, num_atoms * num_actions)
+            self.advantage_fc = Linear(conv_output_size, fc_hidden)
+            self.advantage_head = Linear(fc_hidden, num_atoms * num_actions)
         else:
             # Single stream: Q(s,a) distribution over atoms
-            self.fc = Linear(conv_output_size, 512)
-            self.q_head = Linear(512, num_atoms * num_actions)
+            self.fc = Linear(conv_output_size, fc_hidden)
+            self.q_head = Linear(fc_hidden, num_atoms * num_actions)
 
         self._initialize_weights()
 

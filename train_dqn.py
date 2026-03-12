@@ -146,6 +146,7 @@ def initialize_components(config, paths, device, resuming=False):
     rainbow_enabled = config.get('rainbow', {}).get('enabled', False)
 
     if rainbow_enabled:
+        fc_hidden = config.network.get('fc_hidden', 512)
         online_net = RainbowDQN(
             num_actions=num_actions,
             num_atoms=config.rainbow.distributional.num_atoms,
@@ -154,6 +155,7 @@ def initialize_components(config, paths, device, resuming=False):
             noisy=config.rainbow.noisy_nets,
             dueling=config.rainbow.dueling,
             dropout=dropout,
+            fc_hidden=fc_hidden,
         ).to(device)
         print(f"Model: RainbowDQN (atoms={config.rainbow.distributional.num_atoms}, "
               f"noisy={config.rainbow.noisy_nets}, dueling={config.rainbow.dueling})")
