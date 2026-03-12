@@ -67,7 +67,7 @@
 \label{fig:spr-forward}
 \end{subfigure}
 
-\vspace{0.4em}
+\vspace{1.2em}
 
 %% --- (b) Self-predictive loss ---
 \begin{subfigure}[t]{\textwidth}
@@ -76,13 +76,11 @@
     box/.style={draw=black!70, thick, minimum height=0.7cm,
                 font=\small, inner sep=5pt, rounded corners=2pt},
     arr/.style={->, thick, >=stealth, black!55},
-    lbl/.style={font=\scriptsize, text=black!65},
-    mathlbl/.style={font=\small, text=black!65},
-    pathlbl/.style={font=\small\bfseries, text=black!55},
+    lbl/.style={font=\scriptsize, text=black!55},
 ]
 
 % === Online path (top) ===
-\node[font=\small\bfseries, text=black!80] at (-0.5, 1.6) {Online};
+\node[font=\small\bfseries, text=black!80, anchor=east] at (-1.2, 0) {Online};
 
 % z_hat_{t+k} input
 \node[font=\small, text=black!90] at (-0.3, 0) {$\hat{z}_{t\!+\!k}$};
@@ -90,68 +88,66 @@
 
 % Projection
 \node[box, fill=sprcomp] (proj) at (1.8, 0) {$g$};
-\node[lbl] at (1.8, -0.75) {project};
+\node[lbl] at (1.8, -0.7) {project};
 
 \draw[arr] (proj.east) -- (3.2, 0);
 
 % Prediction head
 \node[box, fill=sprcomp] (pred) at (4.0, 0) {$q$};
-\node[lbl] at (4.0, -0.75) {predict};
+\node[lbl] at (4.0, -0.7) {predict};
 
 % Online output
 \draw[arr] (pred.east) -- (5.5, 0);
-\node[font=\small, text=black!90] at (5.85, 0) {$\tilde{y}$};
+\node[font=\small, text=black!90] (ytilde) at (5.85, 0) {$\tilde{y}$};
 
 % === Target path (bottom) ===
-\node[font=\small\bfseries, text=black!65] at (-0.5, -2.6) {Target};
+\node[font=\small\bfseries, text=black!65, anchor=east] at (-1.2, -3.2) {Target};
 
 % s_{t+k}
-\node[font=\small, text=black!70] at (-0.5, -3.6) {$s_{t\!+\!k}$};
-\draw[arr, black!50] (0.1, -3.6) -- (0.8, -3.6);
+\node[font=\small, text=black!70] at (-0.5, -3.2) {$s_{t\!+\!k}$};
+\draw[arr, black!50] (0.1, -3.2) -- (0.6, -3.2);
 
 % EMA Encoder (trapezoid)
 \fill[targetfade, draw=black!55, thick, line join=round]
-    (0.8, -4.4) -- (0.8, -2.8) -- (2.1, -3.15) -- (2.1, -4.05) -- cycle;
-\node[font=\small, text=black!70] at (1.35, -3.6) {$\bar{f}_\theta$};
+    (0.8, -4.0) -- (0.8, -2.4) -- (2.1, -2.75) -- (2.1, -3.65) -- cycle;
+\node[font=\small, text=black!70] at (1.35, -3.2) {$\bar{f}_\theta$};
 
-\draw[arr, black!50] (2.1, -3.6) -- (2.8, -3.6);
+\draw[arr, black!50] (2.1, -3.2) -- (2.8, -3.2);
 
 % EMA Projection
 \node[box, fill=targetfade, draw=black!55, text=black!70]
-    (tproj) at (3.6, -3.6) {$\bar{g}$};
+    (tproj) at (3.6, -3.2) {$\bar{g}$};
 
 % Target output
-\draw[arr, black!50] (tproj.east) -- (5.1, -3.6);
-\node[font=\small, text=black!70] at (5.45, -3.6) {$\bar{y}$};
+\draw[arr, black!50] (tproj.east) -- (5.1, -3.2);
+\node[font=\small, text=black!70] (ybar) at (5.45, -3.2) {$\bar{y}$};
 
 % === Cosine similarity ===
-\draw[<->, thick, black!75]
-    (5.85, -0.4) -- (5.85, -1.5);
-\draw[->, thick, dashed, black!55]
-    (5.45, -3.2) -- (5.85, -1.9);
-\node[font=\small, text=black!85, anchor=west] at (6.2, -1.0)
+% Single vertical connection between y_tilde and y_bar
+\coordinate (lmid) at (5.65, -1.6);
+\draw[->, thick, black!65] (ytilde.south) -- (5.85, -1.3);
+\draw[->, thick, dashed, black!55] (ybar.north) -- (5.45, -1.9);
+\node[font=\small, text=black!85, anchor=west] at (6.2, -1.6)
     {$\mathcal{L}_{\text{SPR}} = -\cos(\tilde{y},\, \bar{y})$};
 
 % No prediction head annotation
 \draw[decorate, decoration={brace, amplitude=3pt, mirror}, black!45]
-    (2.5, -4.5) -- (4.2, -4.5)
-    node[midway, below=4pt, font=\scriptsize, text=black!50]
+    (2.5, -4.1) -- (4.2, -4.1)
+    node[midway, below=4pt, font=\scriptsize, text=black!55]
     {no prediction head (asymmetry)};
 
-% EMA labels (under encoder and projection)
-\node[font=\scriptsize, text=black!50] at (1.45, -4.65) {EMA};
-\node[font=\scriptsize, text=black!50] at (3.6, -4.25) {EMA};
-
-% EMA update arrow -- label offset left to avoid overlap
-\node[font=\scriptsize, text=black!50, align=center, anchor=east]
-    at (-0.75, -1.4) {EMA\\update};
+% EMA update arrow (between the two paths)
+\node[font=\scriptsize, text=black!55, align=center, anchor=east]
+    at (-0.75, -1.6) {EMA\\update};
 \draw[->, thick, dashed, black!45]
-    (-0.5, -0.4) -- (-0.5, -2.4);
+    (-0.5, -0.5) -- (-0.5, -2.7);
 
 \end{tikzpicture}
-\caption{Online predictions are compared to EMA targets via cosine
-  similarity. The prediction head $q$ exists only on the online
-  side, preventing representation collapse.}
+\caption{The predicted representation $\tilde{y}$ from the online
+  path is compared to the target $\bar{y}$ from an EMA copy of
+  the encoder via cosine similarity. The prediction head $q$
+  appears only on the online side, creating the asymmetry that
+  prevents both paths from collapsing to a trivial constant.}
 \label{fig:spr-loss}
 \end{subfigure}
 
