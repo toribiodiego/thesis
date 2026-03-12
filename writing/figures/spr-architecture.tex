@@ -38,7 +38,7 @@
 
 % Action input from above
 \node[font=\small, text=black!90] at (4.75, 2.0) {$a_{t+k}$};
-\draw[arr] (4.75, 1.7) -- (h-north);
+\draw[arr] (4.75, 1.7) -- (4.75, 0.9);
 
 % z_hat output as plain text node
 \node[font=\small, text=black!90, inner sep=2pt] (zout) at (6.8, 0)
@@ -60,9 +60,10 @@
 
 \end{tikzpicture}
 \caption{The encoder compresses the observation into a latent
-  representation $z_t$. The transition model $h$ predicts the
-  next latent state from $z_t$ and the agent's action, then feeds
-  its output back as input to predict $K$ steps into the future.}
+  representation $z_t$. At each step $k$, the transition model
+  $h$ takes $z_t$ and the agent's action $a_{t+k}$ to predict
+  the next latent state, then feeds its output back as input to
+  predict $K$ steps into the future.}
 \label{fig:spr-forward}
 \end{subfigure}
 
