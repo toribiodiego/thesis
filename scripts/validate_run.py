@@ -63,9 +63,10 @@ def detect_features(config: dict) -> Dict[str, bool]:
     spr_cfg = config.get("spr", {})
     aug_cfg = config.get("augmentation", {})
 
+    rainbow_enabled = rainbow_cfg.get("enabled", False)
     return {
-        "rainbow": rainbow_cfg.get("enabled", False),
-        "noisy_nets": rainbow_cfg.get("noisy_nets", False),
+        "rainbow": rainbow_enabled,
+        "noisy_nets": rainbow_enabled and rainbow_cfg.get("noisy_nets", False),
         "spr": spr_cfg.get("enabled", False),
         "augmentation": aug_cfg.get("enabled", False),
     }
