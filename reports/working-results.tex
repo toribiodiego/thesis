@@ -130,10 +130,10 @@ and SPR. Each condition will be run across six games with three seeds
 \toprule
 \textbf{Condition} & \textbf{What changes} \\
 \midrule
-Baseline  & Vanilla DQN, no modifications \\
+DQN       & Vanilla DQN, no modifications \\
 + Aug     & Add random-shift data augmentation \\
 + SPR     & Add self-predictive representation learning \\
-+ Both    & Augmentation and SPR combined \\
+Aug + SPR & Augmentation and SPR combined \\
 \bottomrule
 \end{tabular}
 \caption{The four experimental conditions. Each builds on the same DQN
@@ -214,12 +214,12 @@ exploration, 3-step returns, and prioritized experience replay.
 \toprule
 \textbf{Condition} & \textbf{What changes} \\
 \midrule
-Rainbow       & Rainbow DQN, no SPR \\
-Rainbow + SPR & Add self-predictive representation learning \\
+Rb       & Rainbow DQN baseline \\
+Rb + SPR & Add self-predictive representation learning \\
 \bottomrule
 \end{tabular}
-\caption{Rainbow conditions. Both share the same architecture and
-hyperparameters; SPR is the only difference.}
+\caption{Rainbow conditions (Rb = Rainbow DQN). Both share the same
+architecture; SPR is the only difference.}
 \end{table}
 
 \noindent Rainbow uses Adam (lr = $6.25 \times 10^{-5}$) instead of
