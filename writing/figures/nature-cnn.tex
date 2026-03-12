@@ -15,7 +15,6 @@
     arr/.style={->, thick, >=stealth, black!40},
     dimlbl/.style={font=\small, anchor=north},
     namelbl/.style={font=\small, anchor=south},
-    filtlbl/.style={font=\small, text=black!55, anchor=north}
 ]
 
 \newcommand{\cuboid}[7]{
@@ -39,27 +38,21 @@
 \node[namelbl] at (0.92, \nameY, 0) {Input};
 \node[dimlbl] at (0.92, \dimY, 0) {4${\times}$84${\times}$84};
 
-% Arrow + label below
 \draw[arr] (1.45, 0, 0) -- (2.85, 0, 0);
-\node[filtlbl] at (2.15, -0.15, 0) {8${\times}$8, s4};
 
 % Conv1: 32 x 20 x 20
 \cuboid{3.0}{0.6}{2.2}{1.15}{convfront}{convtop}{convside}
 \node[namelbl] at (3.3, \nameY, 0) {Conv1};
 \node[dimlbl] at (3.3, \dimY, 0) {32${\times}$20${\times}$20};
 
-% Arrow + label below
 \draw[arr] (3.95, 0, 0) -- (5.55, 0, 0);
-\node[filtlbl] at (4.75, -0.15, 0) {4${\times}$4, s2};
 
 % Conv2: 64 x 9 x 9
 \cuboid{5.7}{0.85}{1.4}{0.85}{convfront}{convtop}{convside}
 \node[namelbl] at (6.12, \nameY, 0) {Conv2};
 \node[dimlbl] at (6.12, \dimY, 0) {64${\times}$9${\times}$9};
 
-% Arrow + label below
 \draw[arr] (6.9, 0, 0) -- (8.45, 0, 0);
-\node[filtlbl] at (7.68, -0.15, 0) {3${\times}$3, s1};
 
 % Conv3: 64 x 7 x 7
 \cuboid{8.6}{0.85}{1.1}{0.65}{convfront}{convtop}{convside}

@@ -1,0 +1,111 @@
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+    sublbl/.style={font=\footnotesize, text=black!60},
+    oplbl/.style={font=\footnotesize, anchor=west},
+    arr/.style={->, thick, >=stealth, black!40}
+]
+
+% Scale factor: 1 unit = ~25 pixels
+% 84->3.36, 20->0.8, 9->0.36, 7->0.28
+
+% --- Row 1: Conv1  84x84 -> 20x20 ---
+\def\rowA{0}
+
+% Input 84x84
+\draw[fill=gray!8, draw=black!25]
+    (0, \rowA) rectangle (3.36, 3.36+\rowA);
+% Kernel 8x8 overlay
+\draw[fill=blue!15, draw=black!60, thick]
+    (0.1, 3.36+\rowA-0.32-0.1) rectangle (0.1+0.32, 3.36+\rowA-0.1);
+\node[font=\scriptsize] at (0.26, 3.36+\rowA-0.26) {8};
+% Stride arrows on kernel
+\draw[->, thin, black!50] (0.26, 3.36+\rowA-0.48) -- (0.26, 3.36+\rowA-0.7);
+\draw[->, thin, black!50] (0.48, 3.36+\rowA-0.26) -- (0.7, 3.36+\rowA-0.26);
+\node[sublbl, anchor=north] at (1.68, \rowA-0.15) {$84 \times 84 \times 4$};
+
+% Operation label
+\draw[arr] (3.7, 1.68+\rowA) -- (5.0, 1.68+\rowA);
+\node[oplbl] at (3.85, 1.68+\rowA+0.35)
+    {$32$ filters, $8 \times 8$, stride $4$};
+
+% Output 20x20
+\draw[fill=blue!8, draw=black!25]
+    (5.3, 0.88+\rowA) rectangle (5.3+0.8, 0.88+0.8+\rowA);
+\node[sublbl, anchor=north] at (5.7, 0.88+\rowA-0.15)
+    {$20 \times 20 \times 32$};
+
+% Layer label
+\node[font=\small\bfseries, anchor=west] at (6.5, 1.68+\rowA)
+    {Conv1};
+
+% --- Row 2: Conv2  20x20 -> 9x9 ---
+\def\rowB{-4.2}
+
+% Input 20x20
+\draw[fill=gray!8, draw=black!25]
+    (0, 0.88+\rowB) rectangle (0.8, 0.88+0.8+\rowB);
+% Kernel 4x4 overlay
+\draw[fill=blue!15, draw=black!60, thick]
+    (0.06, 0.88+0.8+\rowB-0.22) rectangle (0.06+0.16, 0.88+0.8+\rowB-0.06);
+\node[font=\scriptsize] at (0.14, 0.88+0.8+\rowB-0.14) {4};
+% Stride arrows
+\draw[->, thin, black!50]
+    (0.14, 0.88+0.8+\rowB-0.28) -- (0.14, 0.88+0.8+\rowB-0.45);
+\draw[->, thin, black!50]
+    (0.28, 0.88+0.8+\rowB-0.14) -- (0.45, 0.88+0.8+\rowB-0.14);
+\node[sublbl, anchor=north] at (0.4, 0.88+\rowB-0.15)
+    {$20 \times 20 \times 32$};
+
+% Operation label
+\draw[arr] (1.15, 1.28+\rowB) -- (5.0, 1.28+\rowB);
+\node[oplbl] at (1.3, 1.28+\rowB+0.35)
+    {$64$ filters, $4 \times 4$, stride $2$};
+
+% Output 9x9
+\draw[fill=blue!8, draw=black!25]
+    (5.3, 0.92+\rowB) rectangle (5.3+0.36, 0.92+0.36+\rowB);
+\node[sublbl, anchor=north] at (5.48, 0.92+\rowB-0.15)
+    {$9 \times 9 \times 64$};
+
+% Layer label
+\node[font=\small\bfseries, anchor=west] at (6.5, 1.28+\rowB)
+    {Conv2};
+
+% --- Row 3: Conv3  9x9 -> 7x7 ---
+\def\rowC{-7.0}
+
+% Input 9x9
+\draw[fill=gray!8, draw=black!25]
+    (0, 0.92+\rowC) rectangle (0.36, 0.92+0.36+\rowC);
+% Kernel 3x3 overlay
+\draw[fill=blue!15, draw=black!60, thick]
+    (0.04, 0.92+0.36+\rowC-0.16) rectangle (0.04+0.12, 0.92+0.36+\rowC-0.04);
+\node[font=\scriptsize] at (0.10, 0.92+0.36+\rowC-0.10) {3};
+% Stride arrow
+\draw[->, thin, black!50]
+    (0.10, 0.92+0.36+\rowC-0.22) -- (0.10, 0.92+0.36+\rowC-0.35);
+\node[sublbl, anchor=north] at (0.18, 0.92+\rowC-0.15)
+    {$9 \times 9 \times 64$};
+
+% Operation label
+\draw[arr] (0.7, 1.1+\rowC) -- (5.0, 1.1+\rowC);
+\node[oplbl] at (0.85, 1.1+\rowC+0.35)
+    {$64$ filters, $3 \times 3$, stride $1$};
+
+% Output 7x7
+\draw[fill=blue!8, draw=black!25]
+    (5.3, 0.96+\rowC) rectangle (5.3+0.28, 0.96+0.28+\rowC);
+\node[sublbl, anchor=north] at (5.44, 0.96+\rowC-0.15)
+    {$7 \times 7 \times 64$};
+
+% Layer label
+\node[font=\small\bfseries, anchor=west] at (6.5, 1.1+\rowC)
+    {Conv3};
+
+\end{tikzpicture}
+\caption{Spatial reduction through convolutional layers. Feature map
+  sizes are drawn to scale. Blue squares indicate the kernel window;
+  arrows show stride direction.}
+\label{fig:conv-operations}
+\end{figure}

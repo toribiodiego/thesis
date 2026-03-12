@@ -1,0 +1,21 @@
+\begin{table}[ht]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{llcccc}
+\toprule
+Layer & Type & Filters & Kernel & Stride & Output \\
+\midrule
+Input    & --             & --  & --            & --  & $4 \times 84 \times 84$ \\
+Conv1    & Conv2d + ReLU  & 32  & $8 \times 8$  & 4   & $32 \times 20 \times 20$ \\
+Conv2    & Conv2d + ReLU  & 64  & $4 \times 4$  & 2   & $64 \times 9 \times 9$ \\
+Conv3    & Conv2d + ReLU  & 64  & $3 \times 3$  & 1   & $64 \times 7 \times 7$ \\
+Flatten  & --             & --  & --            & --  & 3136 \\
+FC       & Linear + ReLU  & --  & --            & --  & 512 \\
+Q-head   & Linear         & --  & --            & --  & $|A|$ \\
+\bottomrule
+\end{tabular}
+\caption{Nature CNN layer specifications. Each convolutional layer
+  applies the listed kernel with the given stride, followed by ReLU
+  activation. The output layer is linear.}
+\label{tab:nature-cnn-layers}
+\end{table}
