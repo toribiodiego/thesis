@@ -4,7 +4,9 @@ How each figure and table in `working-results.tex` was produced.
 Update this file whenever you regenerate a result.
 
 Run data lives on Google Drive at `My Drive/thesis-runs/<run-name>/`.
-Download locally with `bash scripts/pull-run.sh <run-name>`.
+Download locally with `bash scripts/pull-run.sh <run-name>`, or pull
+groups with `--group` (e.g. `--group rainbow`), or all runs with
+`--all`. Run `pull-run.sh --list` to see what is available.
 Run directory names are documented in
 `experiments/dqn_atari/runs/INDEX.md`.
 
@@ -93,9 +95,19 @@ Run directory names are documented in
 To regenerate all figures from local run data:
 
 ```bash
-# Download runs from Google Drive (requires rclone)
+# Download all runs from Google Drive (requires rclone)
+bash scripts/pull-run.sh --all
+
+# Or download by group
+bash scripts/pull-run.sh --group base      # vanilla DQN runs
+bash scripts/pull-run.sh --group rainbow   # Rainbow runs
+bash scripts/pull-run.sh --group spr       # DQN+SPR runs
+
+# Or download a single run
 bash scripts/pull-run.sh atari100k_crazy_climber_42_20260310_164841
-# ... repeat for all 24 DQN runs (see INDEX.md for names)
+
+# Skip checkpoints for faster/smaller downloads
+bash scripts/pull-run.sh --all --no-checkpoints
 
 # Generate plots
 python scripts/plot_learning_curves.py
