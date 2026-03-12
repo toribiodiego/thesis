@@ -50,6 +50,10 @@
 \section{Interpretability Methods}
 \label{sec:interpretability-methods}
 
+This section describes the methods we use to analyze what the
+encoder has learned and how its representations vary across
+experimental conditions.
+
 \subsection{Linear Probing}
 \label{subsec:linear-probing}
 
@@ -89,19 +93,58 @@ should represent: object positions, score-relevant features, and
 spatial relationships. The specific targets vary by game and are
 defined in \cref{sec:experiment-design}. For each target, we report
 probe accuracy (classification) or $R^2$ (regression) on a held-out
-test set.
+test set. \Cref{tab:probe-training} summarizes the probe training
+configuration.
+
+\smallskip
+\begin{table}[ht]
+\centering
+\begin{tabular}{ll}
+\toprule
+Parameter & Value \\
+\midrule
+Probe architecture  & Single linear layer \\
+Training states     & \textit{TBD} sampled from evaluation episodes \\
+Train/test split    & \textit{TBD} \\
+Optimizer           & Adam \\
+Learning rate       & \textit{TBD} \\
+Training epochs     & \textit{TBD} \\
+Loss (continuous)   & Mean squared error \\
+Loss (categorical)  & Cross-entropy \\
+\bottomrule
+\end{tabular}
+\caption{Probe training configuration. Italicized values are
+  placeholders to be finalized during experiment design.}
+\label{tab:probe-training}
+\end{table}
 
 \subsection{Probe Attachment Points}
 \label{subsec:probe-attachment}
 
 We attach independent probes at multiple points in the encoder to
 understand how information develops through the network
-(\cref{fig:linear-probe-layers}). Specifically, we probe after
-Conv3, after the fully connected layer, and at the final
-representation $h_t$. Each probe is trained separately with its own
-linear layer.
+(\cref{fig:linear-probe-layers}). Each probe is trained separately
+with its own linear layer. \Cref{tab:probe-attachments} lists the
+attachment points and the corresponding representation dimensions.
 
 \smallskip
+\begin{table}[ht]
+\centering
+\begin{tabular}{llll}
+\toprule
+Probe & Attachment point & Shape & Probe input dim \\
+\midrule
+A & After Conv3 & $64 \times 7 \times 7$ & 3136 \\
+B & After FC    & 512                     & 512  \\
+C & Final $h_t$ & 512                     & 512  \\
+\bottomrule
+\end{tabular}
+\caption{Probe attachment points in the Nature CNN encoder. Probe
+  labels correspond to \cref{fig:linear-probe-layers}. The Conv3
+  output is flattened before input to the probe.}
+\label{tab:probe-attachments}
+\end{table}
+
 Probing at multiple depths reveals whether information is present
 early (in spatial feature maps) or only emerges after compression
 into the fully connected layers. This is informative for
