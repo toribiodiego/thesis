@@ -1,7 +1,8 @@
 # Boxing - Rainbow DQN
 # ====================
-# Rainbow base agent: C51 + Double DQN + Dueling + NoisyNets + PER + 3-step.
-# Adam lr=6.25e-5, eps=1.5e-4 (Hessel et al. 2018).
+# Data-efficient Rainbow: C51 + Double DQN + Dueling + NoisyNets + PER + 10-step.
+# Replay ratio 2, target update every step (Schwarzer et al. 2021, Table 3).
+# Adam lr=6.25e-5, eps=1.5e-4.
 #
 # Usage:
 #   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_boxing_rainbow.yaml --seed 42
@@ -14,8 +15,11 @@ experiment:
 
 rainbow:
   enabled: true
+  multi_step:
+    n: 10
 
 training:
+  updates_per_step: 8  # 8 updates / train_every 4 = replay ratio 2
   optimizer:
     type: "adam"
     lr: 0.0000625
@@ -23,7 +27,7 @@ training:
       eps: 0.00015
 
 target_network:
-  update_interval: 8000
+  update_interval: 1
 
 replay:
   warmup_steps: 20000
