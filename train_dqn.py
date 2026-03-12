@@ -35,6 +35,8 @@ from src.config.run_manager import setup_run_directory, print_run_info
 from src.envs import make_atari_env
 from src.models import DQN
 from src.models.rainbow import RainbowDQN
+from src.models.spr import TransitionModel, ProjectionHead, PredictionHead
+from src.models.ema import EMAEncoder
 from src.replay import ReplayBuffer
 from src.replay.prioritized_buffer import PrioritizedReplayBuffer
 from src.training import (
@@ -173,6 +175,50 @@ def initialize_components(config, paths, device, resuming=False):
             momentum=config.training.optimizer.rmsprop.momentum,
         )
 
+    # Initialize SPR components (if enabled)
+    spr_enabled = config.get('spr', {}).get('enabled', False)
+    spr_components = None
+    if spr_enabled:
+        spr_cfg = config.spr
+        ema_momentum = config.get('ema', {}).get('momentum', 0.99)
+
+        transition_model = TransitionModel(
+            num_actions=num_actions,
+            channels=spr_cfg.get('transition_channels', 64),
+        ).to(device)
+        projection_head = ProjectionHead(
+            output_dim=spr_cfg.get('projection_dim', 512),
+        ).to(device)
+        prediction_head = PredictionHead(
+            dim=spr_cfg.get('projection_dim', 512),
+        ).to(device)
+
+        target_encoder = EMAEncoder(online_net, momentum=ema_momentum)
+        target_projection = EMAEncoder(projection_head, momentum=ema_momentum)
+
+        spr_components = {
+            "transition_model": transition_model,
+            "projection_head": projection_head,
+            "prediction_head": prediction_head,
+            "target_encoder": target_encoder,
+            "target_projection": target_projection,
+        }
+
+        # Add SPR head parameters to optimizer
+        spr_params = (
+            list(transition_model.parameters())
+            + list(projection_head.parameters())
+            + list(prediction_head.parameters())
+        )
+        optimizer.add_param_group({"params": spr_params})
+
+        print(f"SPR enabled: K={spr_cfg.get('prediction_steps', 5)}, "
+              f"weight={spr_cfg.get('loss_weight', 2.0)}, "
+              f"proj_dim={spr_cfg.get('projection_dim', 512)}, "
+              f"EMA momentum={ema_momentum}")
+    else:
+        print("SPR: disabled")
+
     # Create replay buffer
     obs_shape = (config.environment.preprocessing.frame_stack, 84, 84)
     device_str = str(device) if device is not None else None
@@ -266,7 +312,8 @@ def initialize_components(config, paths, device, resuming=False):
         'metrics_logger': metrics_logger,
         'checkpoint_manager': checkpoint_manager,
         'eval_scheduler': eval_scheduler,
-        'evaluation_logger': evaluation_logger
+        'evaluation_logger': evaluation_logger,
+        'spr_components': spr_components,
     }
 
 
@@ -322,6 +369,7 @@ def run_training(config, paths, device):
     checkpoint_manager = components['checkpoint_manager']
     eval_scheduler = components['eval_scheduler']
     evaluation_logger = components['evaluation_logger']
+    spr_components = components['spr_components']
 
     # Setup augmentation
     augment_fn = None
@@ -346,6 +394,11 @@ def run_training(config, paths, device):
             "double_dqn": config.rainbow.double_dqn,
             "buffer": replay_buffer,
         }
+
+    # SPR parameters for training_step
+    spr_enabled = config.get('spr', {}).get('enabled', False)
+    spr_weight = config.spr.get('loss_weight', 2.0) if spr_enabled else 2.0
+    spr_prediction_steps = config.spr.get('prediction_steps', 5) if spr_enabled else 5
 
     # Training state
     episode_count = 0
@@ -392,6 +445,9 @@ def run_training(config, paths, device):
             device=device,
             augment_fn=augment_fn,
             rainbow_config=rainbow_config,
+            spr_components=spr_components,
+            spr_weight=spr_weight,
+            spr_prediction_steps=spr_prediction_steps,
         )
 
         # Update episode tracking
