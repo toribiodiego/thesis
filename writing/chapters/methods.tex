@@ -54,8 +54,8 @@ predicted. This gives the encoder a dense, self-generated training
 signal on every transition, independent of reward.
 
 \smallskip
-\Cref{fig:spr-architecture} illustrates the architecture. The
-online encoder $f_\theta$ -- the same Nature CNN used for
+\Cref{fig:spr-architecture} illustrates the forward prediction.
+The online encoder $f_\theta$ -- the same Nature CNN used for
 Q-learning (\cref{subsec:network-architecture}) -- produces spatial
 feature maps $z_t$ from the current observation. A convolutional
 transition model $h$ takes $z_t$ and the agent's action $a_t$ to
@@ -66,13 +66,14 @@ is passed through a projection head $g$ and a prediction head $q$
 to produce the final prediction vector.
 
 \smallskip
-The target for each prediction comes from a separate path: the
-actual future observation $s_{t+k}$ is fed through an exponential
-moving average (EMA) copy of the encoder $\bar{f}_\theta$ and an
-EMA projection head $\bar{g}$. The prediction head $q$ exists only
-on the online side, creating the asymmetry that prevents
-representation collapse -- without it, both paths could converge to
-a trivial constant output~\citep{grill2020bootstrap}.
+The target for each prediction comes from a separate path
+(\cref{fig:spr-loss}): the actual future observation $s_{t+k}$ is
+fed through an exponential moving average (EMA) copy of the encoder
+$\bar{f}_\theta$ and an EMA projection head $\bar{g}$. The
+prediction head $q$ exists only on the online side, creating the
+asymmetry that prevents representation collapse -- without it, both
+paths could converge to a trivial constant
+output~\citep{grill2020bootstrap}.
 
 \smallskip
 The SPR loss is the negative cosine similarity between the online
