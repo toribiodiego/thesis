@@ -80,9 +80,11 @@
 \cuboid{7.0}{0.15}{1.0}{0.12}{outfront}{outtop}{outside}
 \node[namelbl] at (7.07, \dimY) {Q};
 
-% Trainable label
-\node[font=\scriptsize, text=black!45] at (3.5, -1.7, 0)
-    {weights updated via backpropagation};
+% Encoder brace (Conv1 through FC)
+\draw[decorate, decoration={brace, amplitude=4pt, mirror}, black!35]
+    (1.5, -1.35) -- (6.15, -1.35)
+    node[midway, below=5pt, font=\scriptsize, text=black!45]
+    {$f_\theta$ -- weights \textbf{updated} via backpropagation};
 
 % --- Freeze arrow ---
 \draw[->, very thick, black!25]
@@ -97,7 +99,7 @@
     (9.6, -0.9) -- (9.6, 0.9) -- (11.5, 0.45) -- (11.5, -0.45) -- cycle;
 \node[font=\scriptsize, text=black!45] at (10.45, 0) {$f_\theta$};
 
-\node[lbl, text=black!35] at (10.55, -1.2) {weights fixed};
+\node[font=\scriptsize, text=black!45] at (10.55, -1.85) {weights \textbf{fixed}};
 
 \end{tikzpicture}%
 }
@@ -119,32 +121,32 @@
 ]
 
 % Frozen encoder (trapezoid matching subfigure a)
-\node[lbl] at (-0.1, 0) [left] {$s_t$};
+\node[font=\small, text=black!55] at (-0.1, 0) [left] {$s_t$};
 \draw[arr, black!25] (0.0, 0) -- (0.5, 0);
 
 \fill[encfade, draw=black!25, thick, line join=round]
-    (0.5, -0.9) -- (0.5, 0.9) -- (3.0, 0.4) -- (3.0, -0.4) -- cycle;
-\node[font=\scriptsize, text=black!45] at (1.6, 0) {$f_\theta$};
-\node[lbl, text=black!30] at (1.75, -1.2) {frozen};
+    (0.5, -0.9) -- (0.5, 0.9) -- (2.4, 0.45) -- (2.4, -0.45) -- cycle;
+\node[font=\scriptsize, text=black!45] at (1.35, 0) {$f_\theta$};
+\node[lbl, text=black!30] at (1.45, -1.2) {frozen};
 
 % h_t
-\draw[arr] (3.0, 0) -- (3.9, 0);
-\node[box, fill=outfront] (repr) at (4.5, 0) {$h_t$};
+\draw[arr] (2.4, 0) -- (3.2, 0);
+\node[box, fill=outfront] (repr) at (3.8, 0) {$h_t$};
 
 % Linear probe
-\draw[arr] (repr) -- (5.9, 0);
+\draw[arr] (repr) -- (5.2, 0);
 \node[box, fill=probeorange, minimum width=1.6cm] (probe)
-    at (7.0, 0) {Linear probe};
+    at (6.3, 0) {Linear probe};
 
 % Fork to prediction and ground truth
-\draw[arr] (probe.east) -- ++(0.3,0) |- (9.3, 0.6);
-\draw[arr] (probe.east) -- ++(0.3,0) |- (9.3, -0.6);
+\draw[arr] (probe.east) -- ++(0.3,0) |- (8.6, 0.6);
+\draw[arr] (probe.east) -- ++(0.3,0) |- (8.6, -0.6);
 
-\node[box, fill=predorange] (pred) at (9.9, 0.6) {$\hat{y}$};
-\node[box, fill=gtgreen] (gt) at (9.9, -0.6) {$y$};
+\node[box, fill=predorange] (pred) at (9.2, 0.6) {$\hat{y}$};
+\node[box, fill=gtgreen] (gt) at (9.2, -0.6) {$y$};
 
 % Loss
-\node[box, fill=black!8, font=\small] (loss) at (11.6, 0)
+\node[box, fill=black!8, font=\small] (loss) at (10.9, 0)
     {$\mathcal{L}$};
 \draw[arr] (pred) -- (loss);
 \draw[arr] (gt) -- (loss);
