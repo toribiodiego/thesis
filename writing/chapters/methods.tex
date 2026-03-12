@@ -105,6 +105,43 @@ directly shapes the representations used for action selection.
 
 \input{figures/spr-architecture}
 
+\smallskip
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{llll}
+\toprule
+Component & Architecture & Input & Output \\
+\midrule
+Transition $h$
+    & 2$\times$ Conv 3$\times$3 + BN + ReLU
+    & 64$\times$7$\times$7
+    & 64$\times$7$\times$7 \\
+Projection $g$
+    & Linear + ReLU
+    & 3136
+    & 512 \\
+Prediction $q$
+    & Linear
+    & 512
+    & 512 \\
+EMA encoder $\bar{f}_\theta$
+    & Copy of $f_\theta$
+    & 4$\times$84$\times$84
+    & 64$\times$7$\times$7 \\
+EMA projection $\bar{g}$
+    & Copy of $g$
+    & 3136
+    & 512 \\
+\bottomrule
+\end{tabular}
+\caption{SPR component architectures. The transition model operates
+  on spatial feature maps; projection and prediction heads operate
+  on flattened vectors. EMA components mirror their online
+  counterparts but receive no gradient updates.}
+\label{tab:spr-components}
+\end{table}
+
 \indent A key design choice is that the transition model operates on
 the spatial feature maps ($64 \times 7 \times 7$ after Conv3) rather
 than the flattened FC output. This preserves spatial structure,
@@ -123,6 +160,28 @@ $\tau = 0.99$ when augmentation is disabled and $\tau = 0.0$ (direct
 copy) when augmentation is enabled, following the finding that data
 augmentation provides sufficient regularization on its own. We set
 the prediction depth to $K = 5$ steps for all experiments.
+\Cref{tab:spr-hyperparams} summarizes all SPR hyperparameters.
+
+\smallskip
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lll}
+\toprule
+Parameter & Value & Source \\
+\midrule
+Prediction depth $K$        & 5     & \citet{schwarzer2021dataefficient} \\
+Loss weight $\lambda$       & 2.0   & \citet{schwarzer2021dataefficient} \\
+Projection dimension        & 512   & \citet{schwarzer2021dataefficient} \\
+EMA momentum $\tau$ (no aug) & 0.99 & \citet{schwarzer2021dataefficient} \\
+EMA momentum $\tau$ (w/ aug) & 0.0  & \citet{schwarzer2021dataefficient} \\
+Transition model channels   & 64    & \citet{schwarzer2021dataefficient} \\
+\bottomrule
+\end{tabular}
+\caption{SPR hyperparameters. All values follow the original
+  data-efficient settings. The EMA momentum varies with augmentation
+  status (see text).}
+\label{tab:spr-hyperparams}
+\end{table}
 
 \section{Rainbow Implementation}
 \label{sec:rainbow-implementation}
