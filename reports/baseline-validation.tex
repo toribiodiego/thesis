@@ -1,0 +1,432 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{lineno}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{titling}
+\usepackage{titlesec}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage[font=small,labelfont=bf,labelsep=period,
+  justification=raggedright,singlelinecheck=false]{caption}
+\usepackage[colorlinks=true,linkcolor=black,urlcolor=blue!60!black,citecolor=black]{hyperref}
+
+% Inline references as clickable [N] links (no bibliography section)
+\newcommand{\citelink}[2]{\href{#1}{\small[#2]}}
+\newcommand{\ok}{\textcolor{green!60!black}{OK}}
+\newcommand{\bad}{\textcolor{red!70!black}{MISMATCH}}
+\newcommand{\warn}{\textcolor{orange!80!black}{WARN}}
+
+\renewcommand\linenumberfont{\normalfont\scriptsize\sffamily\color[rgb]{0.5,0.5,0.5}}
+\leftlinenumbers
+\linenumbers
+
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.5em}{}
+\titlespacing{\section}{0pt}{2.0em}{0.6em}
+\titlespacing{\subsection}{0pt}{1.8em}{0.5em}
+
+\setlength{\droptitle}{-4em}
+\pretitle{\begin{center}\large\bfseries}
+\posttitle{\end{center}\vspace{-1em}}
+\preauthor{\begin{center}\normalsize}
+\postauthor{\end{center}\vspace{-1em}}
+\predate{\begin{center}\normalsize}
+\postdate{\end{center}\vspace{-0.5em}}
+
+\title{Baseline Validation Report}
+\author{Diego Toribio\\[0.3em]{\normalsize March 12, 2026}}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\section{Purpose}
+
+Before launching batch experiments, we need to confirm that our
+implementations produce results in the same ballpark as published
+baselines. This report documents:
+
+\begin{enumerate}[leftmargin=2em, itemsep=0.3em]
+  \item Current hyperparameters and their source citations.
+  \item Discrepancies between our configs and published references.
+  \item Validation runs against published numbers.
+  \item A change log recording each fix and its measured effect.
+\end{enumerate}
+
+This serves as the provenance record for our final hyperparameter
+choices and will support the ablation discussion in the thesis.
+
+% =====================================================================
+\section{Reference Baselines}
+% =====================================================================
+
+All published numbers come from Schwarzer et al.\
+\citelink{https://arxiv.org/abs/2007.05929}{1} (SPR paper, Table 4),
+which reports mean scores across 10 seeds. Our runs use a single seed
+(42), so we expect variance but not order-of-magnitude gaps.
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.5}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{l rrrrr}
+\toprule
+\textbf{Game} & \textbf{Random} & \textbf{Human}
+  & \textbf{DER} & \textbf{OTRb} & \textbf{SPR} \\
+\midrule
+Crazy Climber & 10781 & 35829 & 16185 & 21328 & 42924 \\
+Road Runner   & 12    & 7845  & 9600  & 2697  & 14221 \\
+Boxing        & 0.1   & 12.1  & 0.2   & 2.5   & 35.8  \\
+Kangaroo      & 52    & 3035  & 779   & 605   & 3276  \\
+Frostbite     & 65    & 4335  & 867   & 232   & 1822  \\
+Up N Down     & 533   & 11693 & 2877  & 2848  & 28139 \\
+\bottomrule
+\end{tabular}
+\caption{Published baselines (10 seeds). DER = Data-Efficient
+Rainbow. OTRb = OTRainbow. SPR = SPR with augmentation on Rainbow.
+All use Rainbow components.}
+\label{tab:published}
+\end{table}
+
+% =====================================================================
+\section{Current Results vs.\ Published}
+% =====================================================================
+
+\subsection{DQN Conditions (seed 42)}
+
+No published vanilla DQN baseline exists for Atari-100K, so these
+cannot be validated against external numbers. We include them for
+completeness and to establish internal consistency.
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.5}
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{l rrrr}
+\toprule
+\textbf{Game} & \textbf{DQN} & \textbf{+ Aug} & \textbf{+ SPR}
+  & \textbf{Aug + SPR} \\
+\midrule
+Crazy Climber & 3540  & 100   & 3400  & 3     \\
+Road Runner   & 1440  & 3     & 2003  & 1033  \\
+Boxing        & $-3$  & $-16$ & $-17$ & $-40$ \\
+Kangaroo      & 27    & 467   & 20    & 320   \\
+Frostbite     & 147   & 2     & 157   & 173   \\
+Up N Down     & 141   & 1085  & 989   & 491   \\
+\bottomrule
+\end{tabular}
+\caption{Our DQN conditions, single seed. No external baseline
+for comparison.}
+\end{table}
+
+\subsection{Rainbow Conditions (seed 42)}
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.5}
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{l rrrl}
+\toprule
+\textbf{Game} & \textbf{Our Rb} & \textbf{DER} & \textbf{OTRb}
+  & \textbf{Gap vs.\ DER} \\
+\midrule
+Crazy Climber & 557   & 16185 & 21328 & $29\times$ \\
+Road Runner   & 850   & 9600  & 2697  & $11\times$ \\
+Boxing        & $-12$ & 0.2   & 2.5   & both near-zero \\
+Kangaroo      & 40    & 779   & 605   & $20\times$ \\
+Frostbite     & 124   & 867   & 232   & $7\times$ \\
+Up N Down     & 986   & 2877  & 2848  & $3\times$ \\
+\bottomrule
+\end{tabular}
+\caption{Our Rainbow vs.\ published Rainbow variants. Gaps of
+$3$--$29\times$ indicate configuration or implementation issues.}
+\label{tab:rainbow-gap}
+\end{table}
+
+Our Rainbow underperforms published baselines by an order of magnitude
+on most games. Single-seed variance cannot explain a $10$--$29\times$
+gap. This points to hyperparameter mismatches, identified in
+Section~\ref{sec:audit}.
+
+% =====================================================================
+\section{Hyperparameter Audit}
+\label{sec:audit}
+% =====================================================================
+
+We compare our resolved Rainbow config against the SPR paper's
+``controlled Rainbow'' (Table~3, Appendix~A) and the original Rainbow
+paper (Hessel et al.\ \citelink{https://arxiv.org/abs/1710.02298}{2},
+Appendix~B).
+
+\subsection{Full Comparison}
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.5}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l l l l l}
+\toprule
+\textbf{Parameter} & \textbf{Ours} & \textbf{SPR paper}
+  & \textbf{Original Rb} & \textbf{Status} \\
+\midrule
+Optimizer           & Adam           & Adam              & Adam           & \ok \\
+Learning rate       & 6.25e-5        & 1.0e-4            & 6.25e-5        & \warn \\
+Adam $\epsilon$     & 1.5e-4         & 1.5e-4            & 1.5e-4         & \ok \\
+Replay ratio        & 0.25           & 2.0               & 0.25           & \bad \\
+Multi-step $n$      & 3              & 10                & 3              & \bad \\
+Target update       & hard / 8K      & hard / 1 step     & hard / 8K      & \bad \\
+Warmup (transitions)& 5000           & 2000              & 80K            & \warn \\
+FC hidden dim       & 512            & 256               & 512            & \warn \\
+Batch size          & 32             & 32                & 32             & \ok \\
+$\gamma$            & 0.99           & 0.99              & 0.99           & \ok \\
+PER $\alpha$        & 0.5            & 0.5               & 0.5            & \ok \\
+PER $\beta$ start   & 0.4            & 0.5               & 0.4            & \warn \\
+PER $\beta$ end     & 1.0            & 1.0               & 1.0            & \ok \\
+C51 atoms           & 51             & 51                & 51             & \ok \\
+$v_{\min}, v_{\max}$& $-10, 10$      & $-10, 10$         & $-10, 10$      & \ok \\
+NoisyNets           & yes            & yes               & yes            & \ok \\
+Dueling             & yes            & yes               & yes            & \ok \\
+Double DQN          & yes            & yes               & yes            & \ok \\
+Loss function       & C51 CE         & C51 CE            & C51 CE         & \ok \\
+Grad clip norm      & 10.0           & 10.0              & 10.0           & \ok \\
+Reward clipping     & $[-1, 1]$      & $[-1, 1]$         & $[-1, 1]$      & \ok \\
+Frame skip          & 4              & 4                 & 4              & \ok \\
+Frame stack         & 4              & 4                 & 4              & \ok \\
+\bottomrule
+\end{tabular}
+\caption{Hyperparameter audit. \ok{} = matches published.
+\bad{} = critical mismatch likely causing performance gap.
+\warn{} = minor mismatch, lower priority.}
+\label{tab:audit}
+\end{table}
+
+\subsection{Critical Discrepancies}
+
+Three parameters differ from the SPR paper's data-efficient Rainbow
+and are likely responsible for the performance gap:
+
+\medskip
+\textbf{1. Replay ratio: 0.25 vs.\ 2.0 (8$\times$ fewer gradient
+steps).} Our config performs one gradient update per 4 environment
+steps. The SPR paper performs 2 updates per 1 step. Over 100K
+environment steps, SPR performs $\sim$200K gradient updates; we
+perform $\sim$25K. This is the single largest lever. The training
+scheduler (\texttt{src/training/schedulers.py}) currently only
+supports a single update per trigger; implementing replay ratio $>1$
+requires a loop.
+
+Source: Schwarzer et al.\ (2021), Table~3: ``replay ratio = 2''.
+
+\medskip
+\textbf{2. Multi-step $n$: 3 vs.\ 10.} We use the original Rainbow
+default ($n=3$). The SPR paper uses $n=10$, propagating reward signal
+10 steps back through trajectories. In the 100K regime where episodes
+are short and data scarce, longer n-step returns provide
+substantially better learning signal.
+
+Source: Schwarzer et al.\ (2021), Table~3: ``multi-step return n = 10''.
+
+\medskip
+\textbf{3. Target network: hard copy every 8K steps vs.\ every 1
+step.} With our replay ratio of 0.25, we perform $\sim$25K gradient
+steps total. A hard update every 8K steps means roughly 3 target
+updates during the entire run. The SPR paper updates every step,
+keeping targets fresh. With 200K gradient steps, even per-step hard
+copies are practical.
+
+Source: Schwarzer et al.\ (2021), Table~3: ``target network update
+period = 1''.
+
+\subsection{Minor Discrepancies}
+
+These are lower priority but should be aligned after fixing the
+critical items:
+
+\begin{itemize}[leftmargin=2em, itemsep=0.3em]
+  \item \textbf{Learning rate}: 6.25e-5 vs.\ 1.0e-4 (SPR paper uses
+    higher LR with higher replay ratio).
+  \item \textbf{FC hidden dim}: 512 vs.\ 256 (larger network may
+    overfit at high replay ratio; the SPR paper's 256 was tuned for
+    replay ratio 2).
+  \item \textbf{Warmup}: 5000 transitions (20K frames) vs.\ 2000
+    transitions (8K frames).
+  \item \textbf{PER $\beta$ start}: 0.4 vs.\ 0.5 (minor effect on
+    IS correction early in training).
+\end{itemize}
+
+\subsection{Root Cause}
+
+Our Rainbow config inherits directly from the original Rainbow paper
+(Hessel et al.\ 2018), which was designed for 200M-frame training
+runs. The hyperparameters that differ (replay ratio 0.25, $n$-step 3,
+target update every 8K) are all sensible defaults for long training
+but catastrophically underpowered for the 100K-step regime.
+
+The SPR paper adapted these parameters specifically for data
+efficiency: higher replay ratio extracts more signal from limited
+data, longer n-step returns propagate reward faster, and frequent
+target updates prevent staleness when the network changes rapidly.
+
+% =====================================================================
+\section{DQN Hyperparameter Record}
+\label{sec:dqn-params}
+% =====================================================================
+
+Our DQN conditions cannot be compared to published baselines (no
+vanilla DQN exists for Atari-100K), but we record the parameters
+and their sources for completeness.
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.5}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{l l l}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Source} \\
+\midrule
+Architecture   & Nature CNN (32-64-64-512) & Mnih et al.\ (2015) \\
+Optimizer      & RMSProp, lr=2.5e-4        & Mnih et al.\ (2015) \\
+Batch size     & 32                        & Mnih et al.\ (2015) \\
+Replay capacity& 100K                      & Matched to 100K budget \\
+Warmup         & 2K transitions            & SPR paper default \\
+Target update  & Hard copy every 2K steps  & Scaled from 10K/10M \\
+$\epsilon$ decay& 1.0 $\to$ 0.1 / 200K frames & First half of training \\
+$\gamma$       & 0.99                      & Mnih et al.\ (2015) \\
+Grad clip      & L2 norm $\leq$ 10         & Standard practice \\
+Train every    & 4 steps                   & Mnih et al.\ (2015) \\
+Eval episodes  & 30                        & SPR paper protocol \\
+Eval $\epsilon$& 0.05                      & Mnih et al.\ (2015) \\
+\bottomrule
+\end{tabular}
+\caption{DQN hyperparameters with source citations. These were not
+modified from initial implementation.}
+\label{tab:dqn-params}
+\end{table}
+
+\subsection{SPR-Specific Parameters (DQN + SPR)}
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.5}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{l l l}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Source} \\
+\midrule
+Prediction steps $K$ & 5            & SPR paper, Table 3 \\
+Loss weight $\lambda$& 2.0          & SPR paper, Table 3 \\
+Projection dim       & 512          & Matches FC width \\
+Transition model     & 2 conv, 64ch & SPR paper, Section 2.3 \\
+EMA momentum $\tau$  & 0.99         & SPR paper (no aug) \\
+Dropout              & 0.5          & SPR paper (no aug) \\
+\bottomrule
+\end{tabular}
+\caption{SPR parameters. With augmentation: $\tau = 0.0$ (direct
+copy), dropout = 0.0.}
+\label{tab:spr-params}
+\end{table}
+
+% =====================================================================
+\section{Fix Plan}
+\label{sec:fix-plan}
+% =====================================================================
+
+We fix discrepancies one at a time and re-run on 2 validation games
+(Crazy Climber and Up N Down -- chosen for large published-vs-ours
+gap and dense rewards) to measure the delta.
+
+\medskip
+\begin{enumerate}[leftmargin=2em, itemsep=0.5em]
+  \item \textbf{Replay ratio}: Add \texttt{updates\_per\_step}
+    config parameter to the training scheduler. Set to 2 for Rainbow
+    configs. This requires a loop in the training step logic.
+  \item \textbf{Multi-step $n$}: Change from 3 to 10 in Rainbow
+    configs.
+  \item \textbf{Target update}: Change from 8000 to 1 in Rainbow
+    configs.
+  \item \textbf{Learning rate}: Change from 6.25e-5 to 1.0e-4 in
+    Rainbow configs.
+  \item \textbf{Warmup}: Reduce from 20K frames to 8K frames (2K
+    transitions) in Rainbow configs.
+  \item \textbf{FC hidden}: Reduce from 512 to 256 in Rainbow model
+    (requires RainbowDQN architecture change).
+\end{enumerate}
+
+Steps 1--3 are high-impact and will be applied together in the first
+validation run. Steps 4--6 will be applied individually to isolate
+their effects.
+
+% =====================================================================
+\section{Change Log}
+\label{sec:changelog}
+% =====================================================================
+
+Each entry records the change, the validation game(s), and the
+before/after scores. This section will be filled as fixes are
+implemented and tested.
+
+\subsection{Baseline (pre-fix)}
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.5}
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{l rr}
+\toprule
+\textbf{Game} & \textbf{Our Rb} & \textbf{DER (published)} \\
+\midrule
+Crazy Climber & 557   & 16185 \\
+Up N Down     & 986   & 2877  \\
+\bottomrule
+\end{tabular}
+\caption{Pre-fix Rainbow scores on validation games (seed 42).}
+\end{table}
+
+\subsection{Fix 1: Replay ratio + multi-step + target update}
+
+\noindent\textit{Pending.}\\
+\noindent Changes: \texttt{updates\_per\_step = 2}, \texttt{multi\_step.n = 10},
+\texttt{target\_update = 1}.
+
+\subsection{Fix 2: Learning rate}
+
+\noindent\textit{Pending.}\\
+\noindent Change: \texttt{lr = 1.0e-4}.
+
+\subsection{Fix 3: Warmup reduction}
+
+\noindent\textit{Pending.}\\
+\noindent Change: \texttt{warmup\_steps = 2000}, \texttt{min\_size = 2000}.
+
+\subsection{Fix 4: FC hidden dimension}
+
+\noindent\textit{Pending.}\\
+\noindent Change: \texttt{fc\_hidden = 256} for Rainbow model only.
+
+% =====================================================================
+\section{Acceptance Criteria}
+% =====================================================================
+
+Rainbow is ``validated'' when our single-seed scores on the 2
+validation games fall within $2\times$ of published DER numbers (a
+conservative bar given single-seed variance). Specifically:
+
+\begin{itemize}[leftmargin=2em, itemsep=0.3em]
+  \item Crazy Climber: $> 8000$ (vs.\ DER 16185)
+  \item Up N Down: $> 1400$ (vs.\ DER 2877)
+\end{itemize}
+
+Once validated, we lock the Rainbow config and proceed to batch runs.
+
+\end{document}
