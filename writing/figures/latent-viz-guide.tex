@@ -49,9 +49,7 @@
     (3.4, 1.2) rectangle (4.5, 2.5);
 
 \end{tikzpicture}
-\caption{Structured representation. Points with the same game-state
-  property (color) form distinct clusters, indicating the encoder
-  organizes states by task-relevant features.}
+\caption{Structured representation.}
 \label{fig:viz-guide-good}
 \end{subfigure}
 \hfill
@@ -93,9 +91,7 @@
 }
 
 \end{tikzpicture}
-\caption{Unstructured representation. The same coloring reveals no
-  grouping -- game-state properties are not linearly separable in
-  the projected space.}
+\caption{Unstructured representation.}
 \label{fig:viz-guide-bad}
 \end{subfigure}
 
@@ -116,9 +112,6 @@
 
 \caption{Interpreting latent space visualizations. Each point is a
   single state $s_t$ projected to two dimensions via t-SNE or UMAP,
-  colored by a game-state property. (a)~A structured representation
-  groups similar states together. (b)~An unstructured representation
-  shows no relationship between proximity and game-state similarity.
-  Actual results may fall between these extremes.}
+  colored by a game-state property.}
 \label{fig:viz-guide}
 \end{figure}

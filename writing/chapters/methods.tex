@@ -261,7 +261,18 @@ number of neighbors for UMAP), so we report these values explicitly
 hold across a range of settings. We treat these visualizations as
 complementary to the probe results, not as standalone evidence.
 
+\smallskip
 \input{figures/latent-viz-guide}
+
+\Cref{fig:viz-guide} illustrates the two extremes. In a structured
+representation~(\cref{fig:viz-guide-good}), points with the same
+game-state property form distinct clusters, indicating the encoder
+organizes states around task-relevant features. In an unstructured
+representation~(\cref{fig:viz-guide-bad}), the same coloring reveals
+no grouping -- game-state properties are not separable in the
+projected space. In practice, results fall between these extremes,
+and the degree of clustering provides a qualitative measure of how
+well the encoder captures the target property.
 
 \subsection{Transition Model Analysis}
 \label{subsec:transition-analysis}
