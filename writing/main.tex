@@ -1,7 +1,6 @@
 \documentclass[12pt, a4paper, oneside]{report}
 
 % --- Encoding and fonts ---
-\usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 
@@ -48,7 +47,10 @@
 \begin{document}
 
 % --- Front matter ---
+\hypersetup{pageanchor=false}
 \maketitle
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
 
 \begin{abstract}
 % Placeholder -- fill after experiments complete.
@@ -59,6 +61,7 @@
 \listoftables
 
 % --- Chapters ---
+\pagenumbering{arabic}
 \include{chapters/introduction}
 \include{chapters/background}
 \include{chapters/methods}
