@@ -53,14 +53,57 @@
 \subsection{Linear Probing}
 \label{subsec:linear-probing}
 
+To evaluate what information the encoder captures, we use linear
+probing~(\cref{fig:linear-probe}). The encoder $f_\theta$ is first
+trained end-to-end via reinforcement learning, then its weights are
+frozen. A single linear layer is trained on the frozen
+representations to predict known game-state properties. Because the
+probe is restricted to a linear mapping, any structure it recovers
+must already be present in the representation -- the probe cannot
+learn new features of its own. Probe accuracy therefore measures
+what information $f_\theta$ has made linearly accessible.
+
 \input{figures/linear-probe}
 
-\vspace{2em}
+\indent This approach lets us compare representations across experimental
+conditions (e.g., with and without SPR, or across agent
+architectures) on a common basis: we hold the probing procedure
+fixed and vary only the encoder that produced the representations.
+Differences in probe accuracy reflect differences in what the
+encoder has learned to represent, not differences in probe capacity.
 
 \subsection{Probe Design}
 \label{subsec:probe-design}
 
-\vspace{2em}
+Each probe is a single fully connected layer mapping from the
+representation $h_t \in \mathbb{R}^d$ to a target
+$y \in \mathbb{R}^k$, trained with mean squared error for
+continuous targets and cross-entropy for categorical targets. We
+train probes on states sampled from completed evaluation episodes,
+using the same set of states across all conditions to ensure
+comparability.
+
+\smallskip
+The probe targets are game-state properties that a capable agent
+should represent: object positions, score-relevant features, and
+spatial relationships. The specific targets vary by game and are
+defined in \cref{sec:experiment-design}. For each target, we report
+probe accuracy (classification) or $R^2$ (regression) on a held-out
+test set.
 
 \subsection{Probe Attachment Points}
 \label{subsec:probe-attachment}
+
+We attach independent probes at multiple points in the encoder to
+understand how information develops through the network
+(\cref{fig:linear-probe-layers}). Specifically, we probe after
+Conv3, after the fully connected layer, and at the final
+representation $h_t$. Each probe is trained separately with its own
+linear layer.
+
+\smallskip
+Probing at multiple depths reveals whether information is present
+early (in spatial feature maps) or only emerges after compression
+into the fully connected layers. This is informative for
+understanding how SPR and data augmentation reshape the encoder's
+internal representations, not just its final output.
