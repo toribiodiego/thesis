@@ -169,27 +169,28 @@ Appendix~B).
 
 \begin{table}[H]
 \centering
-\small
+\footnotesize
 \renewcommand{\arraystretch}{1.5}
-\setlength{\tabcolsep}{4pt}
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{l l l l l}
 \toprule
 \textbf{Parameter} & \textbf{Ours} & \textbf{SPR paper}
-  & \textbf{Original Rb} & \textbf{Status} \\
+  & \textbf{Orig.\ Rb} & \textbf{Status} \\
 \midrule
 Optimizer           & Adam           & Adam              & Adam           & \ok \\
 Learning rate       & 6.25e-5        & 1.0e-4            & 6.25e-5        & \warn \\
 Adam $\epsilon$     & 1.5e-4         & 1.5e-4            & 1.5e-4         & \ok \\
-Replay ratio        & 0.25           & 2.0               & 0.25           & \bad \\
+Train every         & 4 steps        & 1 step            & 4 steps        & \bad \\
+Updates / trigger   & 1              & 2                 & 1              & \bad \\
+Eff.\ replay ratio  & 0.25           & 2.0               & 0.25           & \bad \\
 Multi-step $n$      & 3              & 10                & 3              & \bad \\
 Target update       & hard / 8K      & hard / 1 step     & hard / 8K      & \bad \\
-Warmup (transitions)& 5000           & 2000              & 80K            & \warn \\
+Warmup (transitions)& 2000           & 2000              & 80K            & \ok \\
 FC hidden dim       & 512            & 256               & 512            & \warn \\
 Batch size          & 32             & 32                & 32             & \ok \\
 $\gamma$            & 0.99           & 0.99              & 0.99           & \ok \\
 PER $\alpha$        & 0.5            & 0.5               & 0.5            & \ok \\
-PER $\beta$ start   & 0.4            & 0.5               & 0.4            & \warn \\
-PER $\beta$ end     & 1.0            & 1.0               & 1.0            & \ok \\
+PER $\beta$ anneal  & 0.4 $\to$ 1.0 & 0.4 $\to$ 1.0     & 0.4 $\to$ 1.0 & \ok \\
 C51 atoms           & 51             & 51                & 51             & \ok \\
 $v_{\min}, v_{\max}$& $-10, 10$      & $-10, 10$         & $-10, 10$      & \ok \\
 NoisyNets           & yes            & yes               & yes            & \ok \\
@@ -200,6 +201,7 @@ Grad clip norm      & 10.0           & 10.0              & 10.0           & \ok 
 Reward clipping     & $[-1, 1]$      & $[-1, 1]$         & $[-1, 1]$      & \ok \\
 Frame skip          & 4              & 4                 & 4              & \ok \\
 Frame stack         & 4              & 4                 & 4              & \ok \\
+Eval episodes       & 30             & 100               & --             & \warn \\
 \bottomrule
 \end{tabular}
 \caption{Hyperparameter audit. \ok{} = matches published.
@@ -210,23 +212,38 @@ Frame stack         & 4              & 4                 & 4              & \ok 
 
 \subsection{Critical Discrepancies}
 
-Three parameters differ from the SPR paper's data-efficient Rainbow
+Four parameters differ from the SPR paper's data-efficient Rainbow
 and are likely responsible for the performance gap:
 
 \medskip
-\textbf{1. Replay ratio: 0.25 vs.\ 2.0 (8$\times$ fewer gradient
-steps).} Our config performs one gradient update per 4 environment
-steps. The SPR paper performs 2 updates per 1 step. Over 100K
-environment steps, SPR performs $\sim$200K gradient updates; we
-perform $\sim$25K. This is the single largest lever. The training
-scheduler (\texttt{src/training/schedulers.py}) currently only
-supports a single update per trigger; implementing replay ratio $>1$
-requires a loop.
+\textbf{1. Training cadence: train every 4 steps vs.\ every 1 step.}
+Our config inherits \texttt{train\_every = 4} from the DQN base
+(Mnih et al.\ 2015). The SPR paper sets ``Replay period every: 1
+step'' (Table~3), meaning a training trigger fires on every
+environment step. Combined with the replay ratio difference below,
+this affects both the total number of gradient updates and how
+frequently fresh experience enters the training loop.
 
-Source: Schwarzer et al.\ (2021), Table~3: ``replay ratio = 2''.
+Source: Schwarzer et al.\ (2021), Table~3: ``Replay period every =
+1 step''.
 
 \medskip
-\textbf{2. Multi-step $n$: 3 vs.\ 10.} We use the original Rainbow
+\textbf{2. Replay ratio: 0.25 vs.\ 2.0 (8$\times$ fewer gradient
+steps).} With \texttt{train\_every = 4} and 1 update per trigger, we
+get 0.25 gradient updates per environment step. The SPR paper
+performs 2 updates per 1 step. Over 100K steps with warmup = 2000,
+SPR accumulates $\sim$196K gradient updates; we accumulate
+$\sim$25K---nearly an order of magnitude fewer.
+
+Together, items 1 and 2 define the training intensity. To match the
+SPR paper exactly: \texttt{train\_every = 1},
+\texttt{updates\_per\_step = 2}, giving 2 gradient updates per
+environment step.
+
+Source: Schwarzer et al.\ (2021), Table~3: ``Updates per step = 2''.
+
+\medskip
+\textbf{3. Multi-step $n$: 3 vs.\ 10.} We use the original Rainbow
 default ($n=3$). The SPR paper uses $n=10$, propagating reward signal
 10 steps back through trajectories. In the 100K regime where episodes
 are short and data scarce, longer n-step returns provide
@@ -235,12 +252,11 @@ substantially better learning signal.
 Source: Schwarzer et al.\ (2021), Table~3: ``multi-step return n = 10''.
 
 \medskip
-\textbf{3. Target network: hard copy every 8K steps vs.\ every 1
+\textbf{4. Target network: hard copy every 8K steps vs.\ every 1
 step.} With our replay ratio of 0.25, we perform $\sim$25K gradient
 steps total. A hard update every 8K steps means roughly 3 target
 updates during the entire run. The SPR paper updates every step,
-keeping targets fresh. With 200K gradient steps, even per-step hard
-copies are practical.
+keeping targets fresh.
 
 Source: Schwarzer et al.\ (2021), Table~3: ``target network update
 period = 1''.
@@ -256,10 +272,11 @@ critical items:
   \item \textbf{FC hidden dim}: 512 vs.\ 256 (larger network may
     overfit at high replay ratio; the SPR paper's 256 was tuned for
     replay ratio 2).
-  \item \textbf{Warmup}: 5000 transitions (20K frames) vs.\ 2000
-    transitions (8K frames).
-  \item \textbf{PER $\beta$ start}: 0.4 vs.\ 0.5 (minor effect on
-    IS correction early in training).
+  \item \textbf{Eval episodes}: 30 vs.\ 100. The Atari-100K
+    benchmark (Kaiser et al.\ 2020) specifies 100 evaluation
+    trajectories; SPR follows this. Our Rainbow config uses Noisy
+    Nets for exploration (no eval $\epsilon$), but we currently
+    evaluate only 30 episodes.
 \end{itemize}
 
 \subsection{Root Cause}
@@ -348,30 +365,29 @@ copy), dropout = 0.0.}
 \label{sec:fix-plan}
 % =====================================================================
 
-We fix discrepancies one at a time and re-run on 2 validation games
-(Crazy Climber and Up N Down -- chosen for large published-vs-ours
-gap and dense rewards) to measure the delta.
+We fix discrepancies in priority order and re-run on 2 validation
+games (Crazy Climber and Up N Down---chosen for large
+published-vs-ours gap and dense rewards) to measure the delta.
 
 \medskip
 \begin{enumerate}[leftmargin=2em, itemsep=0.5em]
-  \item \textbf{Replay ratio}: Add \texttt{updates\_per\_step}
-    config parameter to the training scheduler. Set to 2 for Rainbow
-    configs. This requires a loop in the training step logic.
-  \item \textbf{Multi-step $n$}: Change from 3 to 10 in Rainbow
-    configs.
-  \item \textbf{Target update}: Change from 8000 to 1 in Rainbow
-    configs.
-  \item \textbf{Learning rate}: Change from 6.25e-5 to 1.0e-4 in
-    Rainbow configs.
-  \item \textbf{Warmup}: Reduce from 20K frames to 8K frames (2K
-    transitions) in Rainbow configs.
+  \item \textbf{Training cadence + replay ratio + multi-step +
+    target update}: Set \texttt{train\_every = 1},
+    \texttt{updates\_per\_step = 2} (replay ratio 2.0, matching SPR
+    Table~3 exactly), \texttt{multi\_step.n = 10},
+    \texttt{target\_update = 1}, \texttt{warmup\_steps = 2000},
+    \texttt{min\_size = 2000}. This brings total gradient updates
+    from $\sim$25K to $\sim$196K and starts training 18K steps
+    earlier.
+  \item \textbf{Learning rate}: Change from 6.25e-5 to 1.0e-4.
   \item \textbf{FC hidden}: Reduce from 512 to 256 in Rainbow model
     (requires RainbowDQN architecture change).
 \end{enumerate}
 
-Steps 1--3 are high-impact and will be applied together in the first
-validation run. Steps 4--6 will be applied individually to isolate
-their effects.
+Step 1 contains all critical fixes applied together in the first
+validation run (these parameters are interdependent---replay ratio
+and learning rate were co-tuned in the SPR paper). Steps 2--3 will
+be applied individually to isolate their effects.
 
 % =====================================================================
 \section{Change Log}
@@ -400,24 +416,32 @@ Up N Down     & 986   & 2877  \\
 \caption{Pre-fix Rainbow scores on validation games (seed 42).}
 \end{table}
 
-\subsection{Fix 1: Replay ratio + multi-step + target update}
+\subsection{Fix 1: Training cadence + replay ratio + multi-step +
+target update + warmup}
 
-\noindent\textit{Pending.}\\
-\noindent Changes: \texttt{updates\_per\_step = 8} (with
-\texttt{train\_every = 4}, effective replay ratio = 2.0),
-\texttt{multi\_step.n = 10}, \texttt{target\_update = 1}.
+\noindent\textit{Pending.}
+
+\noindent Changes:
+\begin{itemize}[leftmargin=2em, itemsep=0.1em]
+  \item \texttt{train\_every = 1}, \texttt{updates\_per\_step = 2}
+    (replay ratio 2.0)
+  \item \texttt{multi\_step.n = 10}, \texttt{target\_update = 1}
+  \item \texttt{warmup\_steps = 2000}, \texttt{min\_size = 2000}
+\end{itemize}
+
+\noindent\textit{Note:} Previous configs used
+\texttt{train\_every\,=\,4} with
+\texttt{updates\_per\_step\,=\,8}, which gives the same effective
+ratio but different training dynamics (bursty 8-update blocks every
+4~steps vs.\ smooth 2-update blocks every step). The new settings
+match SPR Table~3 exactly.
 
 \subsection{Fix 2: Learning rate}
 
 \noindent\textit{Pending.}\\
 \noindent Change: \texttt{lr = 1.0e-4}.
 
-\subsection{Fix 3: Warmup reduction}
-
-\noindent\textit{Pending.}\\
-\noindent Change: \texttt{warmup\_steps = 2000}, \texttt{min\_size = 2000}.
-
-\subsection{Fix 4: FC hidden dimension}
+\subsection{Fix 3: FC hidden dimension}
 
 \noindent\textit{Pending.}\\
 \noindent Change: \texttt{fc\_hidden = 256} for Rainbow model only.
@@ -436,13 +460,5 @@ conservative bar given single-seed variance). Specifically:
 \end{itemize}
 
 Once validated, we lock the Rainbow config and proceed to batch runs.
-
-\subsection{Evaluation Protocol Note}
-
-The Atari-100K benchmark (Kaiser et al.\
-\citelink{https://arxiv.org/abs/1903.00374}{4}) specifies 100
-evaluation episodes with $\epsilon = 0.001$. Our current DQN config
-uses 30 episodes at $\epsilon = 0.05$. This should be aligned before
-final batch runs to ensure comparability with published numbers.
 
 \end{document}
