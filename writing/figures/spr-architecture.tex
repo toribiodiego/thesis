@@ -59,9 +59,10 @@
 \draw[arr] (zout.east) -- (zfinal.west);
 
 \end{tikzpicture}
-\caption{The encoder produces spatial features $z_t$. The
-  transition model $h$ rolls these forward $K$ steps using
-  the agent's actions.}
+\caption{The encoder compresses the observation into a latent
+  representation $z_t$. The transition model $h$ predicts the
+  next latent state from $z_t$ and the agent's action, then feeds
+  its output back as input to predict $K$ steps into the future.}
 \label{fig:spr-forward}
 \end{subfigure}
 
