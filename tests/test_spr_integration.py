@@ -10,10 +10,12 @@ Tests end-to-end behavior that requires multiple components working together:
 
 import os
 import tempfile
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
 import torch
+from omegaconf import OmegaConf
 
 from src.models.dqn import DQN
 from src.models.ema import EMAEncoder
@@ -817,3 +819,346 @@ class TestBackwardCompatibility:
         assert torch.allclose(out_train, out_infer, atol=1e-6), (
             "dropout=0.0 should produce identical output in train and non-train"
         )
+
+
+# ---------------------------------------------------------------------------
+# Test: end-to-end SPR through initialize_components + training_step
+# ---------------------------------------------------------------------------
+
+
+def _make_spr_config():
+    """Build a complete OmegaConf config with SPR enabled.
+
+    Mirrors base.yaml + an SPR game config, with small buffer/frame
+    counts for fast testing.
+    """
+    return OmegaConf.create({
+        "experiment": {
+            "name": "test_spr",
+            "run_id": "test_run",
+            "notes": "",
+        },
+        "environment": {
+            "env_id": "PongNoFrameskip-v4",
+            "preprocessing": {
+                "frame_stack": 4,
+                "frame_size": 84,
+                "clip_rewards": True,
+            },
+            "action_repeat": 4,
+            "episode": {
+                "noop_max": 0,
+                "episodic_life": False,
+            },
+        },
+        "network": {
+            "device": "cpu",
+            "dropout": 0.5,
+        },
+        "seed": {"value": 42},
+        "replay": {
+            "capacity": 500,
+            "batch_size": 4,
+            "min_size": 20,
+            "warmup_steps": 20,
+        },
+        "training": {
+            "total_frames": 400,
+            "train_every": 1,
+            "gamma": 0.99,
+            "loss": {"type": "mse"},
+            "gradient_clip": {"max_norm": 10.0},
+            "optimizer": {
+                "type": "adam",
+                "lr": 1e-4,
+                "rmsprop": {
+                    "alpha": 0.95,
+                    "eps": 0.01,
+                    "momentum": 0.0,
+                },
+                "adam": {
+                    "eps": 1.5e-4,
+                },
+            },
+        },
+        "target_network": {"update_interval": 1000},
+        "exploration": {
+            "schedule": {
+                "start_epsilon": 0.1,
+                "end_epsilon": 0.1,
+                "decay_frames": 1,
+            },
+        },
+        "evaluation": {
+            "eval_every": 999999,
+            "num_episodes": 1,
+            "epsilon": 0.0,
+        },
+        "logging": {
+            "base_dir": "experiments/dqn_atari/runs",
+            "log_every_steps": 100,
+            "log_every_episodes": 1,
+            "tensorboard": {"enabled": False},
+            "csv": {"enabled": False},
+            "wandb": {"enabled": False},
+            "checkpoint": {
+                "enabled": False,
+                "save_every": 999999,
+                "keep_last_n": 1,
+                "save_best": False,
+            },
+        },
+        "spr": {
+            "enabled": True,
+            "prediction_steps": 3,
+            "loss_weight": 2.0,
+            "projection_dim": 512,
+            "transition_channels": 64,
+        },
+        "ema": {
+            "momentum": 0.99,
+        },
+    })
+
+
+def _mock_spr_env():
+    """Create a mock Atari environment for SPR tests."""
+    env = MagicMock()
+    env.action_space = MagicMock()
+    env.action_space.n = NUM_ACTIONS
+    env.reset.return_value = (
+        np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8),
+        {},
+    )
+    env.step.return_value = (
+        np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8),
+        1.0,
+        False,
+        False,
+        {},
+    )
+    return env
+
+
+class TestSPREndToEnd:
+    """End-to-end: initialize_components -> training steps -> SPR metrics."""
+
+    def test_initialize_creates_spr_components(self, tmp_path):
+        """initialize_components should create SPR components when spr.enabled."""
+        from train_dqn import initialize_components
+
+        config = _make_spr_config()
+        paths = {
+            "run_dir": tmp_path / "run",
+            "checkpoints": tmp_path / "run" / "checkpoints",
+            "eval": tmp_path / "run" / "eval",
+            "logs": tmp_path / "run" / "logs",
+        }
+        for p in paths.values():
+            p.mkdir(parents=True, exist_ok=True)
+
+        with patch("train_dqn.make_atari_env", return_value=_mock_spr_env()):
+            components = initialize_components(config, paths, torch.device("cpu"))
+
+        spr_components = components["spr_components"]
+        assert spr_components is not None, "SPR components should be created"
+        assert "transition_model" in spr_components
+        assert "projection_head" in spr_components
+        assert "prediction_head" in spr_components
+        assert "target_encoder" in spr_components
+        assert "target_projection" in spr_components
+
+    def test_initialize_adds_spr_params_to_optimizer(self, tmp_path):
+        """Optimizer should have 2 param groups: DQN + SPR heads."""
+        from train_dqn import initialize_components
+
+        config = _make_spr_config()
+        paths = {
+            "run_dir": tmp_path / "run",
+            "checkpoints": tmp_path / "run" / "checkpoints",
+            "eval": tmp_path / "run" / "eval",
+            "logs": tmp_path / "run" / "logs",
+        }
+        for p in paths.values():
+            p.mkdir(parents=True, exist_ok=True)
+
+        with patch("train_dqn.make_atari_env", return_value=_mock_spr_env()):
+            components = initialize_components(config, paths, torch.device("cpu"))
+
+        optimizer = components["optimizer"]
+        assert len(optimizer.param_groups) == 2, (
+            "Optimizer should have 2 param groups (DQN encoder + SPR heads)"
+        )
+
+    def test_initialize_applies_dropout(self, tmp_path):
+        """DQN model should have dropout=0.5 from SPR config."""
+        from train_dqn import initialize_components
+
+        config = _make_spr_config()
+        paths = {
+            "run_dir": tmp_path / "run",
+            "checkpoints": tmp_path / "run" / "checkpoints",
+            "eval": tmp_path / "run" / "eval",
+            "logs": tmp_path / "run" / "logs",
+        }
+        for p in paths.values():
+            p.mkdir(parents=True, exist_ok=True)
+
+        with patch("train_dqn.make_atari_env", return_value=_mock_spr_env()):
+            components = initialize_components(config, paths, torch.device("cpu"))
+
+        assert components["online_net"].dropout == 0.5
+
+    def test_training_steps_produce_spr_metrics(self, tmp_path):
+        """Running training steps with SPR should populate spr_loss and cosine_similarity."""
+        from src.training.training_loop import training_step
+        from train_dqn import initialize_components
+
+        torch.manual_seed(42)
+        np.random.seed(42)
+
+        config = _make_spr_config()
+        paths = {
+            "run_dir": tmp_path / "run",
+            "checkpoints": tmp_path / "run" / "checkpoints",
+            "eval": tmp_path / "run" / "eval",
+            "logs": tmp_path / "run" / "logs",
+        }
+        for p in paths.values():
+            p.mkdir(parents=True, exist_ok=True)
+
+        device = torch.device("cpu")
+        mock_env = _mock_spr_env()
+        with patch("train_dqn.make_atari_env", return_value=mock_env):
+            components = initialize_components(config, paths, device)
+
+        online_net = components["online_net"]
+        target_net = components["target_net"]
+        optimizer = components["optimizer"]
+        replay_buffer = components["replay_buffer"]
+        epsilon_scheduler = components["epsilon_scheduler"]
+        target_updater = components["target_updater"]
+        training_scheduler = components["training_scheduler"]
+        frame_counter = components["frame_counter"]
+        spr_components = components["spr_components"]
+
+        # Fill buffer past warmup with random transitions
+        for _ in range(30):
+            obs = np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8)
+            next_obs = np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8)
+            replay_buffer.append(obs, np.random.randint(NUM_ACTIONS), 1.0, next_obs, False)
+
+        spr_prediction_steps = config.spr.prediction_steps
+        spr_weight = config.spr.loss_weight
+        state = np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8)
+
+        # Run several training steps and collect metrics
+        collected_metrics = []
+        for _ in range(5):
+            result = training_step(
+                env=mock_env,
+                online_net=online_net,
+                target_net=target_net,
+                optimizer=optimizer,
+                replay_buffer=replay_buffer,
+                epsilon_scheduler=epsilon_scheduler,
+                target_updater=target_updater,
+                training_scheduler=training_scheduler,
+                frame_counter=frame_counter,
+                state=state,
+                num_actions=NUM_ACTIONS,
+                gamma=config.training.gamma,
+                loss_type=config.training.loss.type,
+                max_grad_norm=config.training.gradient_clip.max_norm,
+                batch_size=config.replay.batch_size,
+                device=device,
+                spr_components=spr_components,
+                spr_weight=spr_weight,
+                spr_prediction_steps=spr_prediction_steps,
+            )
+            state = result["next_state"]
+            if result["metrics"] is not None:
+                collected_metrics.append(result["metrics"])
+
+        assert len(collected_metrics) > 0, "Should have produced at least one training update"
+
+        # Verify SPR metrics are populated on every update
+        for i, m in enumerate(collected_metrics):
+            assert m.spr_loss is not None, f"Step {i}: spr_loss should be populated"
+            assert m.cosine_similarity is not None, f"Step {i}: cosine_similarity should be populated"
+            assert m.loss is not None, f"Step {i}: total loss should be populated"
+
+        # Sanity checks on metric values
+        m = collected_metrics[0]
+        assert -1.0 <= m.cosine_similarity <= 1.0, (
+            f"cosine_similarity should be in [-1, 1], got {m.cosine_similarity}"
+        )
+        assert m.spr_loss != 0.0, "spr_loss should be non-zero on random data"
+
+    def test_spr_metrics_in_to_dict(self, tmp_path):
+        """UpdateMetrics.to_dict() should include spr_loss and cosine_similarity."""
+        from src.training.training_loop import training_step
+        from train_dqn import initialize_components
+
+        torch.manual_seed(42)
+        np.random.seed(42)
+
+        config = _make_spr_config()
+        paths = {
+            "run_dir": tmp_path / "run",
+            "checkpoints": tmp_path / "run" / "checkpoints",
+            "eval": tmp_path / "run" / "eval",
+            "logs": tmp_path / "run" / "logs",
+        }
+        for p in paths.values():
+            p.mkdir(parents=True, exist_ok=True)
+
+        device = torch.device("cpu")
+        mock_env = _mock_spr_env()
+        with patch("train_dqn.make_atari_env", return_value=mock_env):
+            components = initialize_components(config, paths, device)
+
+        replay_buffer = components["replay_buffer"]
+        for _ in range(30):
+            obs = np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8)
+            next_obs = np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8)
+            replay_buffer.append(obs, np.random.randint(NUM_ACTIONS), 1.0, next_obs, False)
+
+        state = np.random.randint(0, 256, OBS_SHAPE, dtype=np.uint8)
+
+        # Run until we get a metrics object
+        metrics = None
+        for _ in range(5):
+            result = training_step(
+                env=mock_env,
+                online_net=components["online_net"],
+                target_net=components["target_net"],
+                optimizer=components["optimizer"],
+                replay_buffer=replay_buffer,
+                epsilon_scheduler=components["epsilon_scheduler"],
+                target_updater=components["target_updater"],
+                training_scheduler=components["training_scheduler"],
+                frame_counter=components["frame_counter"],
+                state=state,
+                num_actions=NUM_ACTIONS,
+                gamma=config.training.gamma,
+                loss_type=config.training.loss.type,
+                max_grad_norm=config.training.gradient_clip.max_norm,
+                batch_size=config.replay.batch_size,
+                device=device,
+                spr_components=components["spr_components"],
+                spr_weight=config.spr.loss_weight,
+                spr_prediction_steps=config.spr.prediction_steps,
+            )
+            state = result["next_state"]
+            if result["metrics"] is not None:
+                metrics = result["metrics"]
+                break
+
+        assert metrics is not None, "Should have produced a training update"
+
+        d = metrics.to_dict()
+        assert "spr_loss" in d, "to_dict should include spr_loss"
+        assert "cosine_similarity" in d, "to_dict should include cosine_similarity"
+        assert isinstance(d["spr_loss"], float)
+        assert isinstance(d["cosine_similarity"], float)
