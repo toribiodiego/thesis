@@ -439,6 +439,7 @@ def make_atari_env(
     clip_rewards: bool = True,
     episode_life: bool = False,
     noop_max: int = 30,
+    repeat_action_probability: float = 0.0,
     save_samples: bool = False,
     sample_dir: Optional[Path] = None,
     **env_kwargs,
@@ -451,7 +452,7 @@ def make_atari_env(
     2. MaxAndSkipEnv - Action repeat (4x) with max-pooling over last 2 frames
     3. EpisodeLifeEnv - OPTIONAL: Treat life loss as episode end (only if episode_life=True)
     4. RewardClipper - Clip rewards to {-1, 0, +1}
-    5. AtariPreprocessing - Grayscale conversion and resize to 84×84
+    5. AtariPreprocessing - Grayscale conversion and resize to 84x84
     6. FrameStack - Stack last 4 frames in channels-first format
 
     Episode Termination Policy (controlled by episode_life parameter):
@@ -471,6 +472,10 @@ def make_atari_env(
         clip_rewards: Whether to clip rewards to {-1, 0, +1} (default: True)
         episode_life: OPTIONAL: Treat life loss as episode end (default: False)
         noop_max: Maximum number of no-ops on reset (default: 30)
+        repeat_action_probability: Probability of repeating the previous action
+            instead of executing the agent's chosen action (default: 0.0).
+            Machado et al. (2018) recommend 0.25 for evaluation robustness.
+            The Atari-100K benchmark uses 0.25.
         save_samples: Whether to save sample frame stacks
         sample_dir: Directory to save samples
         **env_kwargs: Additional arguments for gym.make()
@@ -491,8 +496,13 @@ def make_atari_env(
     except Exception:
         pass  # Already registered or ale_py not available
 
-    # Create base environment
-    env = gym.make(env_id, **env_kwargs)
+    # Create base environment with sticky actions if specified
+    # repeat_action_probability is passed directly to ALE via gym.make
+    env = gym.make(
+        env_id,
+        repeat_action_probability=repeat_action_probability,
+        **env_kwargs,
+    )
 
     # Apply no-op reset wrapper for diverse initial states
     env = NoopResetEnv(env, noop_max=noop_max)

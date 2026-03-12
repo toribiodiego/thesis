@@ -28,6 +28,10 @@ base_config: "experiments/dqn_atari/configs/base.yaml"
 # Atari-100K Overrides
 # =============================================================================
 
+# Sticky actions (Machado et al. 2018) -- Atari-100K standard
+environment:
+  repeat_action_probability: 0.25  # Previous action repeated with p=0.25
+
 # Training budget
 training:
   total_frames: 400000  # 100K env steps * frame_skip 4 = 400K raw frames

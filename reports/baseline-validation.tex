@@ -201,6 +201,7 @@ Grad clip norm      & 10.0           & 10.0              & 10.0           & \ok 
 Reward clipping     & $[-1, 1]$      & $[-1, 1]$         & $[-1, 1]$      & \ok \\
 Frame skip          & 4              & 4                 & 4              & \ok \\
 Frame stack         & 4              & 4                 & 4              & \ok \\
+Sticky actions      & 0.0            & 0.25              & --             & \bad \\
 Eval episodes       & 30             & 100               & --             & \warn \\
 \bottomrule
 \end{tabular}
@@ -260,6 +261,22 @@ keeping targets fresh.
 
 Source: Schwarzer et al.\ (2021), Table~3: ``target network update
 period = 1''.
+
+\medskip
+\textbf{5. Sticky actions: disabled vs.\ $p = 0.25$.}
+Our configs use \texttt{NoFrameskip-v4} environments, which set
+\texttt{repeat\_action\_probability\,=\,0.0} (deterministic frame
+skip). The Atari-100K benchmark follows Machado et al.\
+\citelink{https://arxiv.org/abs/1709.06009}{4}, which recommends
+$p = 0.25$ to reduce trajectory determinism and improve evaluation
+robustness. SPR, DrQ, and OTRainbow all use sticky actions.
+
+This affects both Rainbow and DQN conditions. Without sticky actions,
+our raw scores are not directly comparable to published baselines.
+More importantly, sticky actions change the effective difficulty of
+games, so relative rankings across conditions could shift.
+
+Source: Machado et al.\ (2018), Section~5.
 
 \subsection{Minor Discrepancies}
 
@@ -329,6 +346,7 @@ Grad clip      & L2 norm $\leq$ 10         & Standard practice \\
 Train every    & 4 steps                   & Mnih et al.\ (2015) \\
 Eval episodes  & 30                        & SPR paper protocol \\
 Eval $\epsilon$& 0.05                      & Mnih et al.\ (2015) \\
+Sticky actions & 0.25                      & Machado et al.\ (2018) \\
 \bottomrule
 \end{tabular}
 \caption{DQN hyperparameters with source citations. These were not
@@ -371,23 +389,30 @@ published-vs-ours gap and dense rewards) to measure the delta.
 
 \medskip
 \begin{enumerate}[leftmargin=2em, itemsep=0.5em]
+  \item \textbf{Sticky actions}: Set
+    \texttt{repeat\_action\_probability = 0.25} following Machado
+    et al.\ (2018). Applies to all conditions (DQN and Rainbow).
+    Requires re-running all 24 DQN validation runs and any Rainbow
+    validation runs.
   \item \textbf{Training cadence + replay ratio + multi-step +
-    target update}: Set \texttt{train\_every = 1},
+    target update} (Rainbow only): Set \texttt{train\_every = 1},
     \texttt{updates\_per\_step = 2} (replay ratio 2.0, matching SPR
     Table~3 exactly), \texttt{multi\_step.n = 10},
     \texttt{target\_update = 1}, \texttt{warmup\_steps = 2000},
     \texttt{min\_size = 2000}. This brings total gradient updates
     from $\sim$25K to $\sim$196K and starts training 18K steps
     earlier.
-  \item \textbf{Learning rate}: Change from 6.25e-5 to 1.0e-4.
-  \item \textbf{FC hidden}: Reduce from 512 to 256 in Rainbow model
-    (requires RainbowDQN architecture change).
+  \item \textbf{Learning rate} (Rainbow only): Change from 6.25e-5
+    to 1.0e-4.
+  \item \textbf{FC hidden} (Rainbow only): Reduce from 512 to 256
+    in Rainbow model (requires RainbowDQN architecture change).
 \end{enumerate}
 
-Step 1 contains all critical fixes applied together in the first
-validation run (these parameters are interdependent---replay ratio
-and learning rate were co-tuned in the SPR paper). Steps 2--3 will
-be applied individually to isolate their effects.
+Step 1 is an environment-level fix that applies to all conditions.
+Steps 2--4 are Rainbow-specific training fixes. Step 2 contains
+interdependent parameters that must be applied together (replay ratio
+and learning rate were co-tuned in the SPR paper). Steps 3--4 will be
+applied individually to isolate their effects.
 
 % =====================================================================
 \section{Change Log}
@@ -413,11 +438,29 @@ Crazy Climber & 557   & 16185 \\
 Up N Down     & 986   & 2877  \\
 \bottomrule
 \end{tabular}
-\caption{Pre-fix Rainbow scores on validation games (seed 42).}
+\caption{Pre-fix Rainbow scores on validation games (seed 42).
+All pre-fix runs used \texttt{repeat\_action\_probability = 0.0}
+(no sticky actions).}
 \end{table}
 
-\subsection{Fix 1: Training cadence + replay ratio + multi-step +
-target update + warmup}
+\subsection{Fix 1: Sticky actions}
+
+\noindent\textit{Pending.}
+
+\noindent Changes:
+\begin{itemize}[leftmargin=2em, itemsep=0.1em]
+  \item Add \texttt{repeat\_action\_probability = 0.25} to
+    environment config (Machado et al.\ 2018)
+  \item Pass parameter through \texttt{make\_atari\_env} to
+    \texttt{gym.make}
+\end{itemize}
+
+\noindent\textit{Impact:} All 24 DQN validation runs (4 conditions
+$\times$ 6 games, seed 42) must be re-run. Previous runs moved to
+\texttt{invalid/} directory. Rainbow validation runs also affected.
+
+\subsection{Fix 2: Training cadence + replay ratio + multi-step +
+target update + warmup (Rainbow only)}
 
 \noindent\textit{Pending.}
 
@@ -436,12 +479,12 @@ ratio but different training dynamics (bursty 8-update blocks every
 4~steps vs.\ smooth 2-update blocks every step). The new settings
 match SPR Table~3 exactly.
 
-\subsection{Fix 2: Learning rate}
+\subsection{Fix 3: Learning rate (Rainbow only)}
 
 \noindent\textit{Pending.}\\
 \noindent Change: \texttt{lr = 1.0e-4}.
 
-\subsection{Fix 3: FC hidden dimension}
+\subsection{Fix 4: FC hidden dimension (Rainbow only)}
 
 \noindent\textit{Pending.}\\
 \noindent Change: \texttt{fc\_hidden = 256} for Rainbow model only.

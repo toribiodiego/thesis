@@ -103,13 +103,19 @@ def setup_device(config):
 def initialize_components(config, paths, device, resuming=False):
     """Initialize all training components."""
     # Create environment
+    # Read sticky actions probability (Machado et al. 2018)
+    repeat_action_probability = getattr(
+        config.environment, 'repeat_action_probability', 0.0
+    )
+
     env = make_atari_env(
         env_id=config.environment.env_id,
         num_stack=config.environment.preprocessing.frame_stack,
         frame_skip=config.environment.action_repeat,
         noop_max=config.environment.episode.noop_max,
         episode_life=config.environment.episode.episodic_life,
-        clip_rewards=config.environment.preprocessing.clip_rewards
+        clip_rewards=config.environment.preprocessing.clip_rewards,
+        repeat_action_probability=repeat_action_probability,
     )
 
     # Set seed
@@ -127,7 +133,8 @@ def initialize_components(config, paths, device, resuming=False):
         noop_max=config.environment.episode.noop_max,
         episode_life=False,  # Full episodes for evaluation
         clip_rewards=False,  # Raw returns for published baseline comparison
-        render_mode='rgb_array'  # Enable frame capture for video recording
+        render_mode='rgb_array',  # Enable frame capture for video recording
+        repeat_action_probability=repeat_action_probability,
     )
 
     # Set different seed for eval

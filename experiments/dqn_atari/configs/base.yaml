@@ -49,6 +49,12 @@ environment:
     clip_rewards: true  # Clip rewards to {-1, 0, +1}
     reward_range: [-1, 1]  # Clipping range
 
+  # Sticky actions (Machado et al. 2018)
+  # With probability p, the environment repeats the previous action instead
+  # of executing the agent's chosen action. Reduces trajectory determinism.
+  # Default 0.0 for standard DQN; Atari-100K benchmark uses 0.25.
+  repeat_action_probability: 0.0  # Override in atari100k_base.yaml
+
   # Action repeat (frame-skip)
   action_repeat: 4  # Execute each action for 4 frames (DQN paper)
 

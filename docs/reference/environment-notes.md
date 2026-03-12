@@ -258,9 +258,16 @@ Paper may have used float32 throughout. We use:
 - Network: float32
 - Loss computation: float32
 
-### 4. Action Repeat Stochasticity
+### 4. Sticky Actions (Machado et al. 2018)
 
-Some Gymnasium versions introduce stochastic frame skipping (sticky actions). We disable this for determinism.
+Atari-100K configs set `repeat_action_probability=0.25` following
+Machado et al. (2018). With this setting, the environment repeats
+the previous action instead of the agent's chosen action with
+probability 0.25. This reduces trajectory determinism and matches
+the evaluation protocol used by SPR, DrQ, and OTRainbow.
+
+Standard DQN configs (base.yaml) default to 0.0 for backward
+compatibility with the original DQN paper.
 
 <br><br>
 
