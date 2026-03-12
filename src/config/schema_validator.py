@@ -125,6 +125,7 @@ KNOWN_STRUCTURE = {
         "action_repeat",
         "episode",
         "max_episode_steps",
+        "repeat_action_probability",
     },
     "environment.preprocessing": {
         "frame_size",
