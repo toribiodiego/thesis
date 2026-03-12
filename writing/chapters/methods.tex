@@ -261,10 +261,49 @@ number of neighbors for UMAP), so we report these values explicitly
 hold across a range of settings. We treat these visualizations as
 complementary to the probe results, not as standalone evidence.
 
+\input{figures/latent-viz-guide}
+
 \subsection{Transition Model Analysis}
 \label{subsec:transition-analysis}
 
-\vspace{2em}
+SPR trains a transition model $g_\phi$ that predicts future latent
+representations given the current representation and intervening
+actions~(\cref{sec:spr-architecture}). During training, this model
+drives the self-predictive loss that shapes the encoder's
+representations. We analyze the transition model directly to
+understand what kind of dynamics it has learned and how prediction
+quality relates to representation quality.
+
+\smallskip
+For each SPR-enabled condition, we collect trajectories from
+evaluation episodes and compute the cosine similarity between the
+transition model's predicted representation
+$\hat{h}_{t+k} = g_\phi(h_t, a_t, \ldots, a_{t+k-1})$ and the
+encoder's actual representation $h_{t+k} = f_\theta(s_{t+k})$ at
+each prediction horizon $k = 1, \ldots, K$, where $K$ is the SPR
+prediction depth used during training. This produces a prediction
+quality curve showing how faithfully the model anticipates future
+representations as the horizon increases.
+
+\smallskip
+We examine this curve along two dimensions. First, the rate of
+degradation over $k$ steps reveals how far into the future the
+transition model remains reliable -- a slow decay suggests the model
+has learned robust dynamics, while rapid decay indicates it relies
+on short-range correlations. Second, we condition the analysis on
+game-state properties (e.g., object proximity, score changes) to
+test whether prediction quality varies with the complexity of the
+underlying transition. States involving collisions or reward events
+may be harder to predict than smooth trajectories.
+
+\smallskip
+This analysis applies only to the two experimental conditions where
+SPR is enabled. By comparing transition model quality between the
+SPR-only and augmentation+SPR conditions, we can assess whether
+data augmentation improves or degrades the dynamics model. Combined
+with the probe results from \cref{subsec:linear-probing}, this
+reveals whether better predictions correspond to more informative
+representations.
 
 \subsection{Metric Correlation}
 \label{subsec:metric-correlation}
