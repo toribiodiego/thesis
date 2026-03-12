@@ -18,6 +18,7 @@ import sys
 import os
 import time
 import json
+import subprocess
 from pathlib import Path
 
 # Unbuffered stdout for real-time progress in non-TTY environments (Colab, CI)
@@ -326,6 +327,46 @@ def initialize_components(config, paths, device, resuming=False):
     }
 
 
+def get_resource_usage():
+    """Sample GPU and system memory usage for resource monitoring.
+
+    Returns a dict with GPU memory (MB), GPU utilization (%), and
+    system RAM usage (MB). Returns empty dict if metrics unavailable.
+    """
+    usage = {}
+
+    # GPU metrics via nvidia-smi (works on Colab, any NVIDIA GPU)
+    try:
+        result = subprocess.run(
+            ["nvidia-smi",
+             "--query-gpu=memory.used,memory.total,utilization.gpu",
+             "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, timeout=5
+        )
+        if result.returncode == 0:
+            parts = result.stdout.strip().split(", ")
+            if len(parts) == 3:
+                usage["gpu_memory_used_mb"] = int(parts[0])
+                usage["gpu_memory_total_mb"] = int(parts[1])
+                usage["gpu_utilization_pct"] = int(parts[2])
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pass
+
+    # System RAM via /proc/meminfo (Linux) or psutil fallback
+    try:
+        meminfo = Path("/proc/meminfo").read_text()
+        mem = {}
+        for line in meminfo.splitlines():
+            key, val = line.split(":")
+            mem[key.strip()] = int(val.strip().split()[0])  # kB
+        usage["ram_used_mb"] = (mem["MemTotal"] - mem["MemAvailable"]) // 1024
+        usage["ram_total_mb"] = mem["MemTotal"] // 1024
+    except (FileNotFoundError, KeyError, ValueError):
+        pass
+
+    return usage
+
+
 def write_progress(run_dir, frame_counter, config, episode_count, epsilon, fps,
                     start_time, latest_eval=None):
     """Write progress.json for remote monitoring."""
@@ -348,6 +389,11 @@ def write_progress(run_dir, frame_counter, config, episode_count, epsilon, fps,
     }
     if latest_eval is not None:
         progress["latest_eval"] = latest_eval
+
+    # Resource monitoring
+    resources = get_resource_usage()
+    if resources:
+        progress["resources"] = resources
 
     progress_path = Path(run_dir) / "progress.json"
     progress_path.write_text(json.dumps(progress, indent=2))
@@ -666,6 +712,9 @@ def run_training(config, paths, device):
             "std_return": round(float(std_return), 2),
         },
     }
+    resources = get_resource_usage()
+    if resources:
+        final_progress["resources"] = resources
     (Path(paths['run_dir']) / "progress.json").write_text(json.dumps(final_progress, indent=2))
 
     print(f"\nResults saved to: {paths['run_dir']}")
