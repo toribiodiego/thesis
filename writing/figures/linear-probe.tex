@@ -127,25 +127,18 @@
 
 % Linear probe
 \draw[arr] (repr) -- (5.2, 0);
-\node[box, fill=probeorange, minimum width=1.6cm] (probe)
+\node[box, fill=black!10, minimum width=1.6cm] (probe)
     at (6.3, 0) {Linear probe};
+\node[lbl, text=black!30] at (6.3, -0.75) {trainable};
 
-% Fork to prediction and ground truth
-\draw[arr] (probe.east) -- ++(0.3,0) |- (8.6, 0.6);
-\draw[arr] (probe.east) -- ++(0.3,0) |- (8.6, -0.6);
-
-\node[box, fill=predorange] (pred) at (9.2, 0.6) {$\hat{y}$};
-\node[box, fill=gtgreen] (gt) at (9.2, -0.6) {$y$};
-
-% Loss
-\node[box, fill=black!8, font=\small] (loss) at (10.9, 0)
-    {$\mathcal{L}$};
-\draw[arr] (pred) -- (loss);
-\draw[arr] (gt) -- (loss);
+% Prediction
+\draw[arr] (probe) -- (8.0, 0);
+\node[box, fill=black!8] (loss) at (9.2, 0)
+    {$\mathcal{L}(\hat{y}, y)$};
 
 % Annotation
 \node[lbl, anchor=west, align=left] at (loss.east) [xshift=6pt]
-    {e.g.\ object\\positions,\\reward};
+    {e.g.\ object positions,\\reward, game state};
 
 \end{tikzpicture}
 \caption{A linear probe is trained on frozen representations to
