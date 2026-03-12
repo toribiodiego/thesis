@@ -1,0 +1,19 @@
+# Kangaroo - DQN + Augmentation
+# ===============================
+# Random shift augmentation (DrQ-style) without SPR.
+# Isolates the effect of data augmentation on vanilla DQN.
+#
+# Usage:
+#   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_kangaroo_aug.yaml --seed 42
+
+base_config: "experiments/dqn_atari/configs/atari100k_kangaroo.yaml"
+
+experiment:
+  name: "atari100k_kangaroo_aug"
+  notes: "DQN + augmentation on Kangaroo under Atari-100K protocol"
+
+augmentation:
+  enabled: true
+  type: "random_shift"
+  random_shift:
+    pad: 4
