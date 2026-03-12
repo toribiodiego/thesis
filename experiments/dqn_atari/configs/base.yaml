@@ -135,7 +135,8 @@ training:
   # Note: For full reproduction, use 50M frames per game
 
   # Training frequency
-  train_every: 4  # Perform 1 optimization step every 4 environment steps (DQN paper)
+  train_every: 4  # Perform optimization every 4 environment steps (DQN paper)
+  updates_per_step: 1  # Gradient updates per training trigger (replay ratio = updates_per_step / train_every)
 
   # Discount factor
   gamma: 0.99  # Discount factor γ for TD targets (DQN paper)

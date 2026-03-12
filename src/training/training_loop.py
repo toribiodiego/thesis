@@ -152,6 +152,7 @@ def training_step(
     spr_weight: float = 2.0,
     spr_prediction_steps: int = 5,
     rainbow_config=None,
+    updates_per_step: int = 1,
 ):
     """
     Execute one step of the DQN training loop.
@@ -161,7 +162,8 @@ def training_step(
     2. Step environment with frame-skip (handled by wrapper)
     3. Append transition to replay buffer
     4. If warm-up done and step % train_every == 0: perform optimization
-       (with optional SPR auxiliary loss)
+       (with optional SPR auxiliary loss). When updates_per_step > 1,
+       samples and updates multiple times per trigger (replay ratio).
     5. If step % target_update_interval == 0: sync target network
 
     Parameters
@@ -213,6 +215,10 @@ def training_step(
         'n_step' (int), 'double_dqn' (bool), 'buffer' (PrioritizedReplayBuffer).
         When provided, uses perform_rainbow_update_step instead of
         perform_update_step. Pass None for vanilla DQN.
+    updates_per_step : int
+        Number of gradient updates per training trigger (default: 1).
+        Set > 1 for higher replay ratio. With train_every=4 and
+        updates_per_step=8, effective replay ratio = 8/4 = 2.
 
     Returns
     -------
@@ -223,7 +229,7 @@ def training_step(
         - terminated: Whether episode terminated
         - truncated: Whether episode was truncated
         - epsilon: Current epsilon value
-        - metrics: UpdateMetrics if training occurred, else None
+        - metrics: UpdateMetrics from last update if training occurred, else None
         - target_updated: Whether target network was updated
         - trained: Whether optimization step occurred
     """
@@ -257,11 +263,7 @@ def training_step(
     trained = False
 
     if training_scheduler.should_train(frame_counter.steps, replay_buffer):
-        # Sample batch from replay
-        batch = replay_buffer.sample(batch_size)
-
-        # Convert batch to tensors and move to device
-        # (Handle both numpy arrays and torch tensors from replay buffer)
+        # Helper: convert numpy/tensor to device
         def to_tensor(x, dtype=None):
             if isinstance(x, np.ndarray):
                 t = torch.from_numpy(x)
@@ -271,78 +273,88 @@ def training_step(
             else:
                 return x.to(device)
 
-        batch_device = {
-            "states": to_tensor(batch["states"]),
-            "actions": to_tensor(batch["actions"]),
-            "rewards": to_tensor(batch["rewards"]),
-            "next_states": to_tensor(batch["next_states"]),
-            "dones": to_tensor(batch["dones"]),
-        }
+        # Perform updates_per_step gradient updates (replay ratio loop).
+        # Each iteration samples a fresh batch. With updates_per_step=1
+        # this behaves identically to the original single-update path.
+        base_update_count = training_scheduler.training_step_count
+        for update_i in range(updates_per_step):
+            # Sample batch from replay
+            batch = replay_buffer.sample(batch_size)
 
-        # Include PER fields when using Rainbow
-        if rainbow_config is not None and "weights" in batch:
-            batch_device["weights"] = to_tensor(batch["weights"])
-            batch_device["indices"] = batch["indices"]  # int array, stays on CPU
-
-        # Apply data augmentation if enabled
-        if augment_fn is not None:
-            batch_device["states"] = augment_fn(batch_device["states"])
-            batch_device["next_states"] = augment_fn(batch_device["next_states"])
-
-        # Sample SPR sequence batch (if SPR enabled)
-        spr_batch_device = None
-        if spr_components is not None:
-            seq_batch = replay_buffer.sample_sequences(
-                batch_size, spr_prediction_steps
-            )
-            spr_batch_device = {
-                "states": to_tensor(seq_batch["states"]),
-                "actions": to_tensor(seq_batch["actions"]),
-                "dones": to_tensor(seq_batch["dones"]),
+            batch_device = {
+                "states": to_tensor(batch["states"]),
+                "actions": to_tensor(batch["actions"]),
+                "rewards": to_tensor(batch["rewards"]),
+                "next_states": to_tensor(batch["next_states"]),
+                "dones": to_tensor(batch["dones"]),
             }
-            # Apply augmentation to each state in the sequence
+
+            # Include PER fields when using Rainbow
+            if rainbow_config is not None and "weights" in batch:
+                batch_device["weights"] = to_tensor(batch["weights"])
+                batch_device["indices"] = batch["indices"]  # int array, stays on CPU
+
+            # Apply data augmentation if enabled
             if augment_fn is not None:
-                s = spr_batch_device["states"]
-                B, Kp1 = s.shape[0], s.shape[1]
-                s_flat = augment_fn(s.reshape(B * Kp1, *s.shape[2:]))
-                spr_batch_device["states"] = s_flat.reshape(
-                    B, Kp1, *s_flat.shape[1:]
+                batch_device["states"] = augment_fn(batch_device["states"])
+                batch_device["next_states"] = augment_fn(batch_device["next_states"])
+
+            # Sample SPR sequence batch (if SPR enabled)
+            spr_batch_device = None
+            if spr_components is not None:
+                seq_batch = replay_buffer.sample_sequences(
+                    batch_size, spr_prediction_steps
+                )
+                spr_batch_device = {
+                    "states": to_tensor(seq_batch["states"]),
+                    "actions": to_tensor(seq_batch["actions"]),
+                    "dones": to_tensor(seq_batch["dones"]),
+                }
+                # Apply augmentation to each state in the sequence
+                if augment_fn is not None:
+                    s = spr_batch_device["states"]
+                    B, Kp1 = s.shape[0], s.shape[1]
+                    s_flat = augment_fn(s.reshape(B * Kp1, *s.shape[2:]))
+                    spr_batch_device["states"] = s_flat.reshape(
+                        B, Kp1, *s_flat.shape[1:]
+                    )
+
+            # Perform optimization step
+            if rainbow_config is not None:
+                metrics = perform_rainbow_update_step(
+                    online_net=online_net,
+                    target_net=target_net,
+                    optimizer=optimizer,
+                    batch=batch_device,
+                    support=rainbow_config["support"],
+                    gamma=gamma,
+                    n_step=rainbow_config["n_step"],
+                    max_grad_norm=max_grad_norm,
+                    update_count=base_update_count + update_i,
+                    double_dqn=rainbow_config["double_dqn"],
+                    buffer=rainbow_config["buffer"],
+                    spr_components=spr_components,
+                    spr_batch=spr_batch_device,
+                    spr_weight=spr_weight,
+                )
+            else:
+                metrics = perform_update_step(
+                    online_net=online_net,
+                    target_net=target_net,
+                    optimizer=optimizer,
+                    batch=batch_device,
+                    gamma=gamma,
+                    loss_type=loss_type,
+                    max_grad_norm=max_grad_norm,
+                    update_count=base_update_count + update_i,
+                    spr_components=spr_components,
+                    spr_batch=spr_batch_device,
+                    spr_weight=spr_weight,
                 )
 
-        # Perform optimization step
-        if rainbow_config is not None:
-            metrics = perform_rainbow_update_step(
-                online_net=online_net,
-                target_net=target_net,
-                optimizer=optimizer,
-                batch=batch_device,
-                support=rainbow_config["support"],
-                gamma=gamma,
-                n_step=rainbow_config["n_step"],
-                max_grad_norm=max_grad_norm,
-                update_count=training_scheduler.training_step_count,
-                double_dqn=rainbow_config["double_dqn"],
-                buffer=rainbow_config["buffer"],
-                spr_components=spr_components,
-                spr_batch=spr_batch_device,
-                spr_weight=spr_weight,
-            )
-        else:
-            metrics = perform_update_step(
-                online_net=online_net,
-                target_net=target_net,
-                optimizer=optimizer,
-                batch=batch_device,
-                gamma=gamma,
-                loss_type=loss_type,
-                max_grad_norm=max_grad_norm,
-                update_count=training_scheduler.training_step_count,
-                spr_components=spr_components,
-                spr_batch=spr_batch_device,
-                spr_weight=spr_weight,
-            )
-
-        training_scheduler.mark_trained(frame_counter.steps)
+        training_scheduler.mark_trained(
+            frame_counter.steps, updates=updates_per_step
+        )
         trained = True
 
     # Step 5: Conditional target network sync

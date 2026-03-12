@@ -415,7 +415,9 @@ def run_training(config, paths, device):
     print(f"Total frames: {config.training.total_frames:,}")
     print(f"Replay capacity: {config.replay.capacity:,}")
     print(f"Warmup steps: {config.replay.warmup_steps:,}")
+    updates_per_step = config.training.get('updates_per_step', 1)
     print(f"Train every: {config.training.train_every} steps")
+    print(f"Updates per step: {updates_per_step} (replay ratio: {updates_per_step / config.training.train_every:.2f})")
     print(f"Target update: every {config.target_network.update_interval:,} steps")
     print(f"Evaluation: every {config.evaluation.eval_every:,} frames")
     print("="*80 + "\n")
@@ -448,6 +450,7 @@ def run_training(config, paths, device):
             spr_components=spr_components,
             spr_weight=spr_weight,
             spr_prediction_steps=spr_prediction_steps,
+            updates_per_step=updates_per_step,
         )
 
         # Update episode tracking

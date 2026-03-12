@@ -311,7 +311,7 @@ class TrainingScheduler:
 
         return False
 
-    def mark_trained(self, env_step: int):
+    def mark_trained(self, env_step: int, updates: int = 1):
         """
         Mark that training occurred at this environment step.
 
@@ -319,6 +319,10 @@ class TrainingScheduler:
 
         Args:
             env_step: Environment step at which training occurred
+            updates: Number of gradient updates performed (default: 1).
+                     When using replay ratio > 1, pass the number of
+                     updates so training_step_count reflects total
+                     gradient updates, not just trigger count.
 
         Example:
             >>> if scheduler.should_train(env_step, buffer):
@@ -327,7 +331,7 @@ class TrainingScheduler:
         """
         self.env_step_count = env_step
         self.last_train_step = env_step
-        self.training_step_count += 1
+        self.training_step_count += updates
 
     def step(self, env_step: int, replay_buffer) -> bool:
         """
