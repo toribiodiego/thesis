@@ -44,6 +44,7 @@ env/
 experiments/**/runs/
 experiments/**/checkpoints/
 experiments/**/artifacts/
+results/deprecated/*/
 output/
 *.mp4
 *.gif
