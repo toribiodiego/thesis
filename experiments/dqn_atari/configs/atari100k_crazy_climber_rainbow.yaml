@@ -2,7 +2,7 @@
 # ===========================
 # Data-efficient Rainbow: C51 + Double DQN + Dueling + NoisyNets + PER + 10-step.
 # Replay ratio 2, target update every step (Schwarzer et al. 2021, Table 3).
-# Adam lr=6.25e-5, eps=1.5e-4.
+# Adam lr=1e-4, eps=1.5e-4 (Schwarzer et al. 2021, Table 3).
 #
 # Usage:
 #   python train_dqn.py --cfg experiments/dqn_atari/configs/atari100k_crazy_climber_rainbow.yaml --seed 42
@@ -23,7 +23,7 @@ training:
   updates_per_step: 2  # 2 updates / train_every 1 = replay ratio 2
   optimizer:
     type: "adam"
-    lr: 0.0000625
+    lr: 0.0001
     adam:
       eps: 0.00015
 
