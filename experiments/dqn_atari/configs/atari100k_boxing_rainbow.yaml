@@ -19,7 +19,8 @@ rainbow:
     n: 10
 
 training:
-  updates_per_step: 8  # 8 updates / train_every 4 = replay ratio 2
+  train_every: 1       # Train every env step (SPR paper cadence)
+  updates_per_step: 2  # 2 updates / train_every 1 = replay ratio 2
   optimizer:
     type: "adam"
     lr: 0.0000625
