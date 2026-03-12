@@ -11,11 +11,15 @@
 \begin{subfigure}[t]{\textwidth}
 \centering
 \begin{tikzpicture}[
-    box/.style={draw=black!70, thick, minimum height=0.7cm,
-                font=\small, inner sep=5pt, rounded corners=2pt},
+    box/.style={draw=black!70, thick, minimum height=0.9cm,
+                minimum width=1.0cm, font=\small, inner sep=5pt,
+                rounded corners=2pt},
+    state/.style={draw=black!60, thick, rounded corners=3pt,
+                  fill=encfade!50, minimum height=0.55cm,
+                  minimum width=0.7cm, font=\scriptsize,
+                  inner sep=3pt},
     arr/.style={->, thick, >=stealth, black!55},
     lbl/.style={font=\scriptsize, text=black!65},
-    mathlbl/.style={font=\small, text=black!65},
 ]
 
 % s_t
@@ -27,42 +31,41 @@
     (0.8, -0.8) -- (0.8, 0.8) -- (2.1, 0.45) -- (2.1, -0.45) -- cycle;
 \node[font=\small, text=black!85] at (1.35, 0) {$f_\theta$};
 
-% z_t
-\draw[arr] (2.1, 0) -- (2.8, 0);
-\node[font=\small, text=black!90] at (2.45, 0.45) {$z_t$};
+% z_t as a visible state node
+\draw[arr] (2.1, 0) -- (2.6, 0);
+\node[state] (zt) at (3.1, 0) {$z_t$};
 
-% Transition model - step 1
-\node[box, fill=sprcomp] (h1) at (3.6, 0) {$h$};
-\node[font=\small, text=black!90] at (3.6, 1.2) {$a_t$};
-\draw[arr] (3.6, 0.9) -- (h1.north);
+% Arrow into h
+\draw[arr] (zt.east) -- (4.2, 0);
 
-\draw[arr] (h1.east) -- (4.7, 0);
-\node[font=\small, text=black!90] at (4.95, 0.45) {$\hat{z}_{t\!+\!1}$};
+% Transition model h (decoder trapezoid: narrow left, wide right)
+\fill[sprcomp, draw=black!70, thick, line join=round]
+    (4.2, -0.45) -- (4.2, 0.45) -- (5.5, 0.8) -- (5.5, -0.8) -- cycle;
+\node[font=\small, text=black!85] at (4.85, 0) {$h$};
+% Create an invisible node for arrow anchoring
+\coordinate (h-north) at (4.85, 0.65);
+\coordinate (h-east) at (5.5, 0);
 
-% Transition model - step 2
-\node[box, fill=sprcomp] (h2) at (5.8, 0) {$h$};
-\node[font=\small, text=black!90] at (5.8, 1.2) {$a_{t\!+\!1}$};
-\draw[arr] (5.8, 0.9) -- (h2.north);
+% Action input from above
+\node[font=\small, text=black!90] at (4.85, 2.2) {$a_{t+k}$};
+\draw[arr] (4.85, 1.9) -- (h-north);
 
-\draw[arr] (h2.east) -- (6.9, 0);
-\node[font=\small, text=black!90] at (7.15, 0.45) {$\hat{z}_{t\!+\!2}$};
+% Output to the right
+\draw[arr] (h-east) -- (6.2, 0);
+\node[state] (zout) at (6.8, 0) {$\hat{z}_{t\!+\!k\!+\!1}$};
 
-% Dots
-\node[font=\small, text=black!90] at (7.7, 0) {$\cdots$};
+% Feedback loop (below)
+\draw[arr, rounded corners=8pt]
+    (zout.south) -- (6.8, -1.4) -- (3.1, -1.4) -- (zt.south);
 
-% Step K
-\node[box, fill=sprcomp] (hk) at (8.6, 0) {$h$};
-\node[font=\small, text=black!90] at (8.6, 1.2) {$a_{t\!+\!K\!-\!1}$};
-\draw[arr] (8.6, 0.9) -- (hk.north);
+% Loop annotation
+\node[lbl, text=black!55] at (4.9, -1.7)
+    {repeat for $k = 0, 1, \ldots, K\!-\!1$};
 
-\draw[arr] (hk.east) -- (10.0, 0);
-\node[font=\small, text=black!90] at (10.35, 0.45) {$\hat{z}_{t\!+\!K}$};
-
-% Brace under transition models
-\draw[decorate, decoration={brace, amplitude=4pt, mirror}, black!45]
-    (3.1, -0.7) -- (9.1, -0.7)
-    node[midway, below=5pt, lbl]
-    {transition model applied $K$ times};
+% Final output arrow (exits the loop)
+\draw[arr] (zout.east) -- (8.0, 0);
+\node[font=\small, text=black!90] at (8.5, 0)
+    {$\hat{z}_{t\!+\!K}$};
 
 \end{tikzpicture}
 \caption{The encoder produces spatial features $z_t$. The
