@@ -44,7 +44,7 @@
 \def\dimY{-2.8}
 
 % Phase label
-\node[phase] at (3.0, 2.6) {RL training};
+\node[phase] at (3.0, 2.6) {Training};
 
 % Input
 \cuboid{0}{0.2}{2.4}{1.3}{outfront}{outtop}{outside}
@@ -90,29 +90,19 @@
     node[midway, above=2pt, lbl] {freeze};
 
 % --- Phase 2: Frozen encoder (compact trapezoid) ---
-\node[phase] at (11.0, 2.6) {Evaluation};
+\node[phase] at (10.55, 2.6) {Evaluation};
 
-% s_t input
-\node[lbl] at (9.4, 0) {$s_t$};
-\draw[arr, black!30] (9.7, 0) -- (10.1, 0);
-
-% Compact encoder trapezoid
+% Compact encoder trapezoid (no inputs/outputs -- (b) covers that)
 \fill[encfade, draw=black!25, thick, line join=round]
-    (10.1, -0.9) -- (10.1, 0.9) -- (12.0, 0.45) -- (12.0, -0.45) -- cycle;
-\node[font=\scriptsize, text=black!45] at (10.95, 0) {$f_\theta$};
+    (9.6, -0.9) -- (9.6, 0.9) -- (11.5, 0.45) -- (11.5, -0.45) -- cycle;
+\node[font=\scriptsize, text=black!45] at (10.45, 0) {$f_\theta$};
 
-\node[lbl, text=black!35] at (11.0, -1.2) {weights fixed};
-
-% h_t output
-\draw[arr] (12.0, 0) -- (12.7, 0);
-\node[draw=black!40, thick, fill=outfront, rounded corners=2pt,
-      font=\small, inner sep=5pt] (ht) at (13.1, 0) {$h_t$};
+\node[lbl, text=black!35] at (10.55, -1.2) {weights fixed};
 
 \end{tikzpicture}%
 }
 \caption{The encoder is trained end-to-end via RL, then its weights
-  are frozen. The fixed encoder produces representations $h_t$ for
-  downstream evaluation.}
+  are frozen for downstream evaluation.}
 \label{fig:frozen-encoder}
 \end{subfigure}
 
@@ -128,30 +118,17 @@
     lbl/.style={font=\scriptsize, text=black!55},
 ]
 
-% Frozen encoder (faded 2D blocks)
+% Frozen encoder (trapezoid matching subfigure a)
 \node[lbl] at (-0.1, 0) [left] {$s_t$};
 \draw[arr, black!25] (0.0, 0) -- (0.5, 0);
 
-\fill[encfade, draw=black!20, thick, rounded corners=1pt]
-    (0.5, -1.2) rectangle (0.85, 1.2);
-\fill[encfade, draw=black!20, thick, rounded corners=1pt]
-    (1.25, -0.8) rectangle (1.7, 0.8);
-\fill[encfade, draw=black!20, thick, rounded corners=1pt]
-    (2.1, -0.65) rectangle (2.55, 0.65);
-\fill[encfade, draw=black!20, thick, rounded corners=1pt]
-    (2.95, -1.0) rectangle (3.08, 1.0);
-
-\draw[arr, black!25] (0.85, 0) -- (1.25, 0);
-\draw[arr, black!25] (1.7, 0) -- (2.1, 0);
-\draw[arr, black!25] (2.55, 0) -- (2.95, 0);
-
-% Frozen brace
-\draw[decorate, decoration={brace, amplitude=3pt, mirror}, black!25]
-    (0.5, -1.5) -- (3.08, -1.5)
-    node[midway, below=4pt, lbl, text=black!30] {frozen};
+\fill[encfade, draw=black!25, thick, line join=round]
+    (0.5, -0.9) -- (0.5, 0.9) -- (3.0, 0.4) -- (3.0, -0.4) -- cycle;
+\node[font=\scriptsize, text=black!45] at (1.6, 0) {$f_\theta$};
+\node[lbl, text=black!30] at (1.75, -1.2) {frozen};
 
 % h_t
-\draw[arr] (3.08, 0) -- (3.9, 0);
+\draw[arr] (3.0, 0) -- (3.9, 0);
 \node[box, fill=outfront] (repr) at (4.5, 0) {$h_t$};
 
 % Linear probe
@@ -252,9 +229,9 @@
 \label{fig:linear-probe-layers}
 \end{subfigure}
 
-\caption{Linear probe methodology. (a)~The encoder is trained via
-  RL, then frozen. (b)~A linear layer predicts game-state properties
-  from frozen representations. (c)~Probes at multiple layers measure
-  how information is organized across the representation hierarchy.}
+\caption{Linear probe methodology. (a)~The encoder trains via RL and
+  is then frozen. (b)~A linear probe predicts game-state properties
+  from the frozen encoder's representations. (c)~Probes attached at
+  multiple layers measure how information develops across the network.}
 \label{fig:linear-probe}
 \end{figure}
