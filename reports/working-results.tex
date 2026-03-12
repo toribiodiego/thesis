@@ -242,11 +242,11 @@ Appendix~\ref{app:invalid-rainbow} for details on the original runs.
 \begin{tabular}{l rrrr rr}
 \toprule
 \textbf{Game}
-  & \textbf{Baseline}
+  & \textbf{DQN}
   & \textbf{+ Aug}
   & \textbf{+ SPR}
-  & \textbf{+ Both}
-  & \textbf{Rainbow}
+  & \textbf{Aug + SPR}
+  & \textbf{Rb}
   & \textbf{Rb + SPR} \\
 \midrule
 Crazy Climber  & $\mathbf{3540 \pm 754}$  & $100 \pm 58$    & $3400 \pm 0$     & $3 \pm 18$      & --  & -- \\
@@ -260,8 +260,7 @@ Mean           & $882$  & $274$  & $\mathbf{1092}$  & $330$  & --  & -- \\
 \bottomrule
 \end{tabular}
 \caption{Mean raw episode return ($\pm$ std) over 30 evaluation
-episodes at 400K frames, single seed. Each DQN condition adds one
-component to the vanilla baseline.}
+episodes at 400K frames, single seed. Rb = Rainbow DQN.}
 \label{tab:summary}
 \end{table}
 
