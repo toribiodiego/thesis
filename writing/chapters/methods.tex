@@ -108,7 +108,6 @@ directly shapes the representations used for action selection.
 \smallskip
 \begin{table}[htbp]
 \centering
-\small
 \begin{tabular}{llll}
 \toprule
 Component & Architecture & Input & Output \\
@@ -125,20 +124,13 @@ Prediction $q$
     & Linear
     & 512
     & 512 \\
-EMA encoder $\bar{f}_\theta$
-    & Copy of $f_\theta$
-    & 4$\times$84$\times$84
-    & 64$\times$7$\times$7 \\
-EMA projection $\bar{g}$
-    & Copy of $g$
-    & 3136
-    & 512 \\
 \bottomrule
 \end{tabular}
 \caption{SPR component architectures. The transition model operates
   on spatial feature maps; projection and prediction heads operate
-  on flattened vectors. EMA components mirror their online
-  counterparts but receive no gradient updates.}
+  on flattened vectors. The EMA target components
+  ($\bar{f}_\theta$, $\bar{g}$) mirror their online counterparts
+  but receive no gradient updates.}
 \label{tab:spr-components}
 \end{table}
 
@@ -160,26 +152,27 @@ $\tau = 0.99$ when augmentation is disabled and $\tau = 0.0$ (direct
 copy) when augmentation is enabled, following the finding that data
 augmentation provides sufficient regularization on its own. We set
 the prediction depth to $K = 5$ steps for all experiments.
-\Cref{tab:spr-hyperparams} summarizes all SPR hyperparameters.
+\Cref{tab:spr-hyperparams} summarizes all SPR hyperparameters;
+all values follow the original data-efficient
+settings~\citep{schwarzer2021dataefficient}.
 
 \smallskip
 \begin{table}[htbp]
 \centering
-\begin{tabular}{lll}
+\begin{tabular}{ll}
 \toprule
-Parameter & Value & Source \\
+Parameter & Value \\
 \midrule
-Prediction depth $K$        & 5     & \citet{schwarzer2021dataefficient} \\
-Loss weight $\lambda$       & 2.0   & \citet{schwarzer2021dataefficient} \\
-Projection dimension        & 512   & \citet{schwarzer2021dataefficient} \\
-EMA momentum $\tau$ (no aug) & 0.99 & \citet{schwarzer2021dataefficient} \\
-EMA momentum $\tau$ (w/ aug) & 0.0  & \citet{schwarzer2021dataefficient} \\
-Transition model channels   & 64    & \citet{schwarzer2021dataefficient} \\
+Prediction depth $K$         & 5    \\
+Loss weight $\lambda$        & 2.0  \\
+Projection dimension         & 512  \\
+EMA momentum $\tau$ (no aug) & 0.99 \\
+EMA momentum $\tau$ (w/ aug) & 0.0  \\
+Transition model channels    & 64   \\
 \bottomrule
 \end{tabular}
-\caption{SPR hyperparameters. All values follow the original
-  data-efficient settings. The EMA momentum varies with augmentation
-  status (see text).}
+\caption{SPR hyperparameters. The EMA momentum varies with
+  augmentation status (see text).}
 \label{tab:spr-hyperparams}
 \end{table}
 
