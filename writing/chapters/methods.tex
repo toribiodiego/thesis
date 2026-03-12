@@ -189,7 +189,77 @@ internal representations, not just its final output.
 \subsection{Latent Space Visualization}
 \label{subsec:latent-viz}
 
-\vspace{2em}
+While linear probes quantify what information a representation
+contains, they do not reveal how that information is organized.
+Two encoders may achieve similar probe accuracy yet structure their
+representations very differently -- one separating game states into
+tight clusters, the other spreading them across a diffuse manifold.
+Dimensionality reduction techniques let us visualize this structure
+directly.
+
+We apply both t-SNE~\citep{vandermaaten2008visualizing} and
+UMAP~\citep{mcinnes2018umap} to the encoder's representations,
+projecting them from $\mathbb{R}^d$ to $\mathbb{R}^2$ for
+visualization. Using both methods guards against artifacts: t-SNE
+emphasizes local neighborhood structure and tends to reveal
+well-separated clusters, while UMAP better preserves global
+relationships and distances between clusters. Patterns that appear
+consistently under both methods are more likely to reflect genuine
+structure in the representation.
+
+\smallskip
+For each experimental condition and each probe attachment point
+(\cref{tab:probe-attachments}), we collect representations from the
+same evaluation episodes used for probing. Each point in the
+resulting scatter plot corresponds to a single state $s_t$, colored
+by a game-state property (e.g., object position, score) to reveal
+whether the encoder organizes its representations around
+task-relevant features. We generate side-by-side plots across the
+four experimental conditions to compare how augmentation and SPR
+reshape the latent space.
+
+\smallskip
+\begin{table}[htbp]
+\centering
+\begin{tabular}{ll}
+\toprule
+Parameter & Value \\
+\midrule
+t-SNE perplexity   & \textit{TBD} \\
+t-SNE iterations   & \textit{TBD} \\
+UMAP neighbors     & \textit{TBD} \\
+UMAP min.\ distance & \textit{TBD} \\
+Representations     & Same states as probe training set \\
+Coloring            & Game-state properties (per-game) \\
+\bottomrule
+\end{tabular}
+\caption{Dimensionality reduction parameters for latent space
+  visualization. Italicized values are placeholders to be finalized
+  during experiment design.}
+\label{tab:viz-params}
+\end{table}
+
+Comparing visualizations across layers shows whether structure
+emerges gradually through the network or appears abruptly after a
+specific layer. Comparing across conditions reveals whether SPR or
+augmentation produces more structured representations, complementing
+the quantitative probe results with a qualitative view of
+representation geometry.
+
+\smallskip
+Several caveats guide our interpretation of these plots. In t-SNE,
+the relative sizes of clusters are not meaningful -- a tight cluster
+and a diffuse one may contain the same density of points in the
+original space~\citep{vandermaaten2008visualizing}. Distances
+between clusters are also unreliable; t-SNE can place unrelated
+groups at arbitrary separations depending on the perplexity setting.
+UMAP preserves global structure more faithfully, but distances
+within dense regions can still be compressed. For both methods,
+results are sensitive to hyperparameters (perplexity for t-SNE,
+number of neighbors for UMAP), so we report these values explicitly
+(\cref{tab:viz-params}) and verify that our qualitative conclusions
+hold across a range of settings. We treat these visualizations as
+complementary to the probe results, not as standalone evidence.
 
 \subsection{Transition Model Analysis}
 \label{subsec:transition-analysis}
