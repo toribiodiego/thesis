@@ -270,6 +270,13 @@ runs. The hyperparameters that differ (replay ratio 0.25, $n$-step 3,
 target update every 8K) are all sensible defaults for long training
 but catastrophically underpowered for the 100K-step regime.
 
+This diagnosis is confirmed by Kielak
+\citelink{https://arxiv.org/abs/2003.10181}{3} (OTRainbow), whose
+``SRainbow'' column (standard Rainbow with Dopamine defaults at 100K
+steps) reports scores in the same range as ours---e.g., Crazy Climber
+2254 (SRainbow) vs.\ 557 (ours), both far below tuned DER at 16185.
+The gap is purely hyperparameter tuning, not an implementation bug.
+
 The SPR paper adapted these parameters specifically for data
 efficiency: higher replay ratio extracts more signal from limited
 data, longer n-step returns propagate reward faster, and frequent
@@ -396,8 +403,9 @@ Up N Down     & 986   & 2877  \\
 \subsection{Fix 1: Replay ratio + multi-step + target update}
 
 \noindent\textit{Pending.}\\
-\noindent Changes: \texttt{updates\_per\_step = 2}, \texttt{multi\_step.n = 10},
-\texttt{target\_update = 1}.
+\noindent Changes: \texttt{updates\_per\_step = 8} (with
+\texttt{train\_every = 4}, effective replay ratio = 2.0),
+\texttt{multi\_step.n = 10}, \texttt{target\_update = 1}.
 
 \subsection{Fix 2: Learning rate}
 
@@ -428,5 +436,13 @@ conservative bar given single-seed variance). Specifically:
 \end{itemize}
 
 Once validated, we lock the Rainbow config and proceed to batch runs.
+
+\subsection{Evaluation Protocol Note}
+
+The Atari-100K benchmark (Kaiser et al.\
+\citelink{https://arxiv.org/abs/1903.00374}{4}) specifies 100
+evaluation episodes with $\epsilon = 0.001$. Our current DQN config
+uses 30 episodes at $\epsilon = 0.05$. This should be aligned before
+final batch runs to ensure comparability with published numbers.
 
 \end{document}
