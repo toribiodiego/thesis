@@ -231,11 +231,14 @@ settings (100K environment steps, 6 games) match the DQN conditions.
 
 All results report mean raw episode return ($\pm$ std) over 30
 evaluation episodes at the final checkpoint (400K frames), seed 42.
+Rainbow and Rainbow+SPR columns are pending -- see
+Appendix~\ref{app:invalid-rainbow} for details on the original runs.
 
 \begin{table}[H]
 \centering
-\renewcommand{\arraystretch}{1.4}
-\setlength{\tabcolsep}{8pt}
+\small
+\renewcommand{\arraystretch}{1.7}
+\setlength{\tabcolsep}{6pt}
 \begin{tabular}{l rrrr rr}
 \toprule
 \textbf{Game}
@@ -244,23 +247,21 @@ evaluation episodes at the final checkpoint (400K frames), seed 42.
   & \textbf{+ SPR}
   & \textbf{+ Both}
   & \textbf{Rainbow}
-  & \textbf{Rainbow + SPR} \\
+  & \textbf{Rb + SPR} \\
 \midrule
-Crazy Climber  & $3540 \pm 754$  & $100 \pm 58$    & $3400 \pm 0$     & $3 \pm 18$      & --  & -- \\
-Road Runner    & $1440 \pm 859$  & $3 \pm 18$      & $2003 \pm 956$   & $1033 \pm 539$  & --  & -- \\
-Boxing         & $-3 \pm 5$      & $-16 \pm 7$     & $-17 \pm 12$     & $-40 \pm 10$    & --  & -- \\
-Kangaroo       & $27 \pm 68$     & $467 \pm 174$   & $20 \pm 60$      & $320 \pm 98$    & --  & -- \\
-Frostbite      & $147 \pm 45$    & $2 \pm 11$      & $157 \pm 46$     & $173 \pm 15$    & --  & -- \\
-Up N Down      & $141 \pm 155$   & $1085 \pm 637$  & $989 \pm 589$    & $491 \pm 467$   & --  & -- \\
+Crazy Climber  & $\mathbf{3540 \pm 754}$  & $100 \pm 58$    & $3400 \pm 0$     & $3 \pm 18$      & --  & -- \\
+Road Runner    & $1440 \pm 859$  & $3 \pm 18$      & $\mathbf{2003 \pm 956}$   & $1033 \pm 539$  & --  & -- \\
+Boxing         & $\mathbf{-3 \pm 5}$      & $-16 \pm 7$     & $-17 \pm 12$     & $-40 \pm 10$    & --  & -- \\
+Kangaroo       & $27 \pm 68$     & $\mathbf{467 \pm 174}$   & $20 \pm 60$      & $320 \pm 98$    & --  & -- \\
+Frostbite      & $147 \pm 45$    & $2 \pm 11$      & $157 \pm 46$     & $\mathbf{173 \pm 15}$    & --  & -- \\
+Up N Down      & $141 \pm 155$   & $\mathbf{1085 \pm 637}$  & $989 \pm 589$    & $491 \pm 467$   & --  & -- \\
 \midrule
-Mean           & $882$  & $274$  & $1092$  & $330$  & --  & -- \\
+Mean           & $882$  & $274$  & $\mathbf{1092}$  & $330$  & --  & -- \\
 \bottomrule
 \end{tabular}
-\caption{Summary of all conditions. Mean raw episode return ($\pm$
-std) over 30 eval episodes at 400K frames, seed 42. The first four
-columns are DQN isolation study results. Rainbow and Rainbow+SPR
-columns are pending -- see Appendix~\ref{app:invalid-rainbow} for
-details on the original Rainbow runs.}
+\caption{Mean raw episode return ($\pm$ std) over 30 evaluation
+episodes at 400K frames, single seed. Each DQN condition adds one
+component to the vanilla baseline.}
 \label{tab:summary}
 \end{table}
 
