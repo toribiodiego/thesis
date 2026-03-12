@@ -476,13 +476,13 @@ should not be compared to actual Rainbow results.
 
 \begin{table}[H]
 \centering
-\renewcommand{\arraystretch}{1.4}
+\renewcommand{\arraystretch}{1.7}
 \setlength{\tabcolsep}{10pt}
 \begin{tabular}{l rr}
 \toprule
 \textbf{Game}
-  & \textbf{DQN Baseline}
-  & \textbf{``Rainbow'' (invalid)} \\
+  & \textbf{DQN}
+  & \textbf{``Rb'' (invalid)} \\
 \midrule
 Crazy Climber  & $3540 \pm 754$   & $9423 \pm 3712$ \\
 Road Runner    & $1440 \pm 859$   & $90.0 \pm 187$  \\
@@ -492,10 +492,8 @@ Frostbite      & $147 \pm 45$     & $42.3 \pm 15$   \\
 Up N Down      & $141 \pm 155$    & $1712 \pm 657$   \\
 \bottomrule
 \end{tabular}
-\caption{Invalid ``Rainbow'' results. These runs used vanilla DQN with
-Rainbow hyperparameters (Adam at lower lr, 20K warmup) but no actual
-Rainbow components. The modest differences from DQN Baseline are
-consistent with optimizer and hyperparameter changes alone.}
+\caption{Invalid Rainbow runs. Used vanilla DQN with Rainbow
+hyperparameters but no actual Rainbow components.}
 \label{tab:invalid-rainbow}
 \end{table}
 
