@@ -1,16 +1,13 @@
 \begin{figure}[h!]
 \centering
+\vspace{0.5em}
 
 % Shared styles
 \tikzset{
     gw cell/.style={minimum size=1.15cm, draw=black!40, thick,
                     font=\small},
     gw wall/.style={gw cell, fill=black!15},
-    gw goal/.style={gw cell, fill=green!12},
-    gw trap/.style={gw cell, fill=red!10},
     gw reward/.style={font=\small\bfseries},
-    gw action/.style={->, thick, >=stealth, black!60,
-                      shorten >=3pt, shorten <=3pt},
     gw agent/.style={circle, fill=blue!45, inner sep=4pt},
 }
 
@@ -35,7 +32,7 @@
 }
 
 %% Panel (a): States -- the environment layout
-\begin{subfigure}[t]{0.32\textwidth}
+\begin{subfigure}[t]{0.45\textwidth}
 \centering
 \begin{tikzpicture}
     \gridbase
@@ -66,52 +63,46 @@
     % Agent at start
     \node[gw agent] at (c00) {};
     % Goal and trap markers
-    \node[gw reward, text=green!50!black] at (c32) {$+1$};
-    \node[gw reward, text=red!60!black]   at (c31) {$-1$};
+    \node[gw reward] at (c32) {$+1$};
+    \node[gw reward] at (c31) {$-1$};
 \end{tikzpicture}
 \subcaption{Each cell is a \emph{state}; eleven in total.}
 \label{fig:grid-world-states}
 \end{subfigure}
 \hfill
 %% Panel (b): Actions -- movement choices
-\begin{subfigure}[t]{0.32\textwidth}
+\begin{subfigure}[t]{0.45\textwidth}
 \centering
 \begin{tikzpicture}
     \gridbase
-    % Agent in c21 -- all four neighbors are grid cells
+    % Agent in c21 -- three valid moves (wall blocks left)
     \node[gw agent] (agent) at (c21) {};
-    % Four action arrows to neighboring cells
-    \draw[gw action] (agent.north) -- (c22.south);
-    \draw[gw action] (agent.south) -- (c20.north);
-    \draw[gw action] (agent.west)  -- (c11.east);
-    \draw[gw action] (agent.east)  -- (c31.west);
+    % Up chevron
+    \draw[semithick, black!60]
+          ([yshift=8pt, xshift=-2.5pt]c21.center) --
+          ([yshift=11pt]c21.center) --
+          ([yshift=8pt, xshift=2.5pt]c21.center);
+    % Down chevron
+    \draw[semithick, black!60]
+          ([yshift=-8pt, xshift=-2.5pt]c21.center) --
+          ([yshift=-11pt]c21.center) --
+          ([yshift=-8pt, xshift=2.5pt]c21.center);
+    % Right chevron
+    \draw[semithick, black!60]
+          ([xshift=8pt, yshift=2.5pt]c21.center) --
+          ([xshift=11pt]c21.center) --
+          ([xshift=8pt, yshift=-2.5pt]c21.center);
 \end{tikzpicture}
 \subcaption{Moves are \emph{actions}.}
 \label{fig:grid-world-actions}
 \end{subfigure}
-\hfill
-%% Panel (c): Rewards -- feedback from the environment
-\begin{subfigure}[t]{0.32\textwidth}
-\centering
-\begin{tikzpicture}
-    \gridbase
-    % Agent about to step into goal or trap
-    \node[gw agent] (agent) at (c22) {};
-    \draw[gw action] (agent.east) -- (c32.west);
-    % Reward labels inside target cells
-    \node[gw reward, text=green!50!black] at (c32) {$+1$};
-    \node[gw reward, text=red!60!black]   at (c31) {$-1$};
-\end{tikzpicture}
-\subcaption{Feedback is the \emph{reward}.}
-\label{fig:grid-world-rewards}
-\end{subfigure}
 
+\vspace{0.5em}
 \caption{A grid-world MDP\@. An agent (blue circle) navigates a
-  $4 \times 3$ grid from a starting cell toward a goal while
-  avoiding a penalty. (a)~Each accessible cell is a state, labeled
-  by column and row; the shaded wall is impassable, giving eleven
-  states in total. (b)~At each step the agent chooses a direction
-  to move. (c)~Reaching the goal yields $+1$; the penalty
-  yields~$-1$.}
+  $4 \times 3$ grid from a starting cell toward a goal ($+1$)
+  while avoiding a penalty ($-1$). (a)~Each accessible cell is a
+  state, labeled by column and row; the shaded wall is impassable,
+  giving eleven states in total. (b)~At each step the agent
+  chooses a direction to move.}
 \label{fig:grid-world}
 \end{figure}
