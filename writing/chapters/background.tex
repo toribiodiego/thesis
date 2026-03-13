@@ -45,9 +45,7 @@ $A_t \in \mathcal{A}(S_t)$, and receives a scalar reward
 $R_{t+1} \in \mathbb{R}$ as the environment transitions to a new
 state $S_{t+1}$. In the grid-world, $S_t$ is the agent's current
 cell, $A_t$ is the chosen direction, and $R_{t+1}$ is the score
-received after the move. In an Atari game, the state is the
-current screen image, the actions are joystick directions and the
-fire button, and the reward is the change in score.
+received after the move.
 
 \input{figures/mdp-loop}
 
@@ -136,10 +134,10 @@ collect the larger reward.
 \smallskip
 In many problems, the interaction breaks naturally into
 \emph{episodes} -- finite sequences that end in a terminal state
-and then reset. Games of Atari are episodic: each game starts from
-an initial state, proceeds through a sequence of frames, and
-terminates when the agent loses all lives or reaches a time limit.
-Most benchmark environments are episodic, so in practice the
+and then reset. The grid-world is episodic: the agent starts in
+cell $s_{00}$, takes a sequence of moves, and the episode ends
+when it reaches the goal or the penalty. Most reinforcement
+learning benchmark environments are episodic, so in practice the
 return reduces to a finite sum over the steps within each episode.
 
 \smallskip
@@ -274,9 +272,8 @@ There is a catch, however. The Bellman optimality equation is a
 system of $|\mathcal{S}| \times |\mathcal{A}|$ simultaneous
 equations, one for every state--action pair. Solving it requires
 knowing the dynamics~$p$ and enumerating every state -- both of
-which are impractical for large problems. In an Atari game, the
-number of possible screen images is astronomically large, and
-the dynamics are not given to the agent. The next two sections
+which are impractical for any problem with a large state space
+or unknown dynamics. The next two sections
 address these obstacles: Q-learning estimates $q_*$ from
 experience without knowing the dynamics, and function
 approximation replaces the explicit table of $q$-values
