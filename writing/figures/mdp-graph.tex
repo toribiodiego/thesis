@@ -2,7 +2,7 @@
 \centering
 
 %% Left: grid-world with a short path highlighted
-\begin{subfigure}[t]{0.42\textwidth}
+\begin{subfigure}[b]{0.47\textwidth}
 \centering
 \begin{tikzpicture}[
     cell/.style={minimum size=1.15cm, draw=black!40, thick,
@@ -58,12 +58,13 @@
       ([xshift=8pt, yshift=-2.5pt]c22.center);
 
 \end{tikzpicture}
+\vspace{1.8em}
 \subcaption{Grid-world path: $s_{21} \to s_{22} \to s_{32}$.}
 \label{fig:mdp-grid}
 \end{subfigure}
 \hfill
 %% Right: same path as a state-transition graph
-\begin{subfigure}[t]{0.52\textwidth}
+\begin{subfigure}[b]{0.47\textwidth}
 \centering
 \begin{tikzpicture}[
     state/.style={circle, draw=black!60, thick,
@@ -79,13 +80,13 @@
     fader/.style={font=\footnotesize, text=black!18},
 ]
 
-% Nodes -- generous spacing
+% Nodes -- centered horizontally
 \node[state]    (s21) at (0, 0)     {$s_{21}$};
-\node[state]    (s22) at (0, 2.8)   {$s_{22}$};
-\node[terminal] (s32) at (3.8, 2.8) {$s_{32}$};
-\node[terminal] (s31) at (3.8, 0)   {$s_{31}$};
+\node[state]    (s22) at (0, 2.6)   {$s_{22}$};
+\node[terminal] (s32) at (3.0, 2.6) {$s_{32}$};
+\node[terminal] (s31) at (3.0, 0)   {$s_{31}$};
 
-% Goal/penalty annotations (plain text)
+% Goal/penalty annotations
 \node[font=\footnotesize, text=black!60,
       above=2pt] at (s32.north) {goal};
 \node[font=\footnotesize, text=black!60,
@@ -120,6 +121,7 @@
 \label{fig:mdp-graph}
 \end{subfigure}
 
+\vspace{0.8em}
 \caption{Two views of the same MDP fragment. Left: a path through
   the grid-world from $s_{21}$ to the goal. Right: the same
   states and transitions as a directed graph.}
