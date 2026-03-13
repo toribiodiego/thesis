@@ -77,6 +77,8 @@ its target, or an opponent's response can change the outcome.
 The dynamics function $p$ is a probability distribution rather
 than a deterministic mapping precisely because it must handle
 these uncertain outcomes.
+
+\smallskip
 Note that the subscripts in the equation shift by one relative to
 the prose above -- the agent in state $S_{t-1}$ takes action
 $A_{t-1}$ and then receives $R_t$ and $S_t$, which is the same
@@ -107,19 +109,26 @@ G_t \;\doteq\; R_{t+1} + \gamma\, R_{t+2} + \gamma^2 R_{t+3} + \cdots
   = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1},
 \end{equation}
 %
-As a concrete example, suppose the agent receives rewards
+Each term $\gamma^k R_{t+k+1}$ weights a future reward by how
+far away it is -- rewards received sooner count more, and very
+distant rewards fade toward zero.
+
+\smallskip
+To see this concretely, suppose the agent receives rewards
 $0, 0, +1$ over three steps with $\gamma = 0.9$. The return
 from the first step is $G_0 = 0 + 0.9 \cdot 0 + 0.81 \cdot 1
-= 0.81$ -- the distant reward of $+1$ is worth $0.81$ today
-because it is discounted twice.
+= 0.81$ -- the distant reward of $+1$ is worth only $0.81$
+today because it is discounted twice.
 
 \smallskip
 The parameter $\gamma \in [0, 1)$ is the \emph{discount rate}. When
 $\gamma = 0$, the agent cares only about the very next reward and
 ignores everything after -- a myopic strategy. As $\gamma$
 approaches 1, the agent plans further ahead, weighing future
-rewards more heavily. Discounting reflects two practical
-realities: the future is uncertain -- the agent may not survive
+rewards more heavily.
+
+\smallskip
+Discounting reflects two practical realities: the future is uncertain -- the agent may not survive
 long enough to collect distant rewards -- and a reward received
 sooner can be reinvested or built upon earlier. It also serves a
 mathematical purpose: because $\gamma < 1$, the infinite sum
@@ -146,6 +155,8 @@ rule is called a \emph{policy}, written $\pi(a \mid s)$, which
 gives the probability of selecting action $a$ in state $s$. A
 deterministic policy always picks the same action in a given state,
 while a stochastic policy samples from a distribution over actions.
+
+\smallskip
 The central question of reinforcement learning is how to find a
 policy that maximizes the expected return -- and answering that
 question requires a way to evaluate how good a given policy is,
