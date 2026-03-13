@@ -38,9 +38,10 @@ the reward is the change in score.
 Formally, an MDP is defined by the tuple
 $(\mathcal{S}, \mathcal{A}, p, \gamma)$: a set of states
 $\mathcal{S}$, a set of actions $\mathcal{A}$, a dynamics function
-$p$, and a discount factor $\gamma$. The dynamics function gives
-the probability of each possible next state and reward, given the
-current state and action:
+$p$, and a discount factor $\gamma$. The dynamics function
+captures both the transition probabilities and the reward
+structure in a single object -- it gives the probability of each
+possible next state and reward, given the current state and action:
 %
 \begin{equation}
 \label{eq:mdp-dynamics}
@@ -48,6 +49,16 @@ p(s', r \mid s, a)
   \;\doteq\; \Pr\{S_t = s',\, R_t = r \mid S_{t-1} = s,\, A_{t-1} = a\}.
 \end{equation}
 %
+This function is a conditional probability distribution: for any
+state--action pair $(s, a)$, the values $p(s', r \mid s, a)$
+sum to one over all possible next states $s'$ and rewards $r$.
+Note that the subscripts in the equation shift by one relative to
+the prose above -- the agent in state $S_{t-1}$ takes action
+$A_{t-1}$ and then receives $R_t$ and $S_t$, which is the same
+relationship as $S_t, A_t \to R_{t+1}, S_{t+1}$ with different
+index labels.
+
+\smallskip
 The key assumption is the \emph{Markov property}: the current state
 alone determines what happens next -- the agent does not need to
 remember its full history of past states and actions. This is what
@@ -85,11 +96,13 @@ return reduces to a finite sum over the steps within each episode.
 \smallskip
 Given an MDP, the agent needs a rule for choosing actions. This
 rule is called a \emph{policy}, written $\pi(a \mid s)$, which
-gives the probability of selecting action $a$ in state $s$. The
-central question of reinforcement learning is how to find a policy
-that maximizes the expected return -- and answering that question
-requires a way to evaluate how good a given policy is, which leads
-to value functions.
+gives the probability of selecting action $a$ in state $s$. A
+deterministic policy always picks the same action in a given state,
+while a stochastic policy samples from a distribution over actions.
+The central question of reinforcement learning is how to find a
+policy that maximizes the expected return -- and answering that
+question requires a way to evaluate how good a given policy is,
+which leads to value functions.
 
 \subsection{Value Functions}
 \label{subsec:value-functions}
