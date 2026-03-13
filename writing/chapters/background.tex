@@ -71,6 +71,14 @@ p(s', r \mid s, a)
 This function is a conditional probability distribution: for any
 state--action pair $(s, a)$, the values $p(s', r \mid s, a)$
 sum to one over all possible next states $s'$ and rewards $r$.
+In our grid-world, moving right from a given cell always takes
+the agent to the cell on its right -- the dynamics are
+deterministic. But many environments are not: wind can push a
+robot off course, a slippery surface can send it sliding past
+its target, or an opponent's response can change the outcome.
+The dynamics function $p$ is a probability distribution rather
+than a deterministic mapping precisely because it must handle
+these uncertain outcomes.
 Note that the subscripts in the equation shift by one relative to
 the prose above -- the agent in state $S_{t-1}$ takes action
 $A_{t-1}$ and then receives $R_t$ and $S_t$, which is the same
@@ -101,11 +109,22 @@ G_t \;\doteq\; R_{t+1} + \gamma\, R_{t+2} + \gamma^2 R_{t+3} + \cdots
   = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1},
 \end{equation}
 %
-where $\gamma \in [0, 1)$ is the \emph{discount rate}. When
+As a concrete example, suppose the agent receives rewards
+$0, 0, +1$ over three steps with $\gamma = 0.9$. The return
+from the first step is $G_0 = 0 + 0.9 \cdot 0 + 0.81 \cdot 1
+= 0.81$ -- the distant reward of $+1$ is worth $0.81$ today
+because it is discounted twice.
+
+\smallskip
+The parameter $\gamma \in [0, 1)$ is the \emph{discount rate}. When
 $\gamma = 0$, the agent cares only about the very next reward and
 ignores everything after -- a myopic strategy. As $\gamma$
 approaches 1, the agent plans further ahead, weighing future
-rewards more heavily. Because $\gamma < 1$, the infinite sum
+rewards more heavily. Discounting reflects two practical
+realities: the future is uncertain -- the agent may not survive
+long enough to collect distant rewards -- and a reward received
+sooner can be reinvested or built upon earlier. It also serves a
+mathematical purpose: because $\gamma < 1$, the infinite sum
 converges as long as individual rewards are bounded.
 \cref{fig:discounting} shows how this plays out: with a low
 discount rate, a nearby small reward is preferred over a distant
