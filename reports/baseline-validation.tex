@@ -178,15 +178,15 @@ Appendix~B).
   & \textbf{Orig.\ Rb} & \textbf{Status} \\
 \midrule
 Optimizer           & Adam           & Adam              & Adam           & \ok \\
-Learning rate       & 6.25e-5        & 1.0e-4            & 6.25e-5        & \warn \\
+Learning rate       & 1.0e-4         & 1.0e-4            & 6.25e-5        & \ok \\
 Adam $\epsilon$     & 1.5e-4         & 1.5e-4            & 1.5e-4         & \ok \\
-Train every         & 4 steps        & 1 step            & 4 steps        & \bad \\
-Updates / trigger   & 1              & 2                 & 1              & \bad \\
-Eff.\ replay ratio  & 0.25           & 2.0               & 0.25           & \bad \\
-Multi-step $n$      & 3              & 10                & 3              & \bad \\
-Target update       & hard / 8K      & hard / 1 step     & hard / 8K      & \bad \\
+Train every         & 1 step         & 1 step            & 4 steps        & \ok \\
+Updates / trigger   & 2              & 2                 & 1              & \ok \\
+Eff.\ replay ratio  & 2.0            & 2.0               & 0.25           & \ok \\
+Multi-step $n$      & 10             & 10                & 3              & \ok \\
+Target update       & hard / 1 step  & hard / 1 step     & hard / 8K      & \ok \\
 Warmup (transitions)& 2000           & 2000              & 80K            & \ok \\
-FC hidden dim       & 512            & 256               & 512            & \warn \\
+FC hidden dim       & 256            & 256               & 512            & \ok \\
 Batch size          & 32             & 32                & 32             & \ok \\
 $\gamma$            & 0.99           & 0.99              & 0.99           & \ok \\
 PER $\alpha$        & 0.5            & 0.5               & 0.5            & \ok \\
@@ -201,7 +201,7 @@ Grad clip norm      & 10.0           & 10.0              & 10.0           & \ok 
 Reward clipping     & $[-1, 1]$      & $[-1, 1]$         & $[-1, 1]$      & \ok \\
 Frame skip          & 4              & 4                 & 4              & \ok \\
 Frame stack         & 4              & 4                 & 4              & \ok \\
-Sticky actions      & 0.0            & 0.25              & --             & \bad \\
+Sticky actions      & 0.25           & 0.25              & --             & \ok \\
 Eval episodes       & 30             & 100               & --             & \warn \\
 \bottomrule
 \end{tabular}
@@ -443,33 +443,30 @@ All pre-fix runs used \texttt{repeat\_action\_probability = 0.0}
 (no sticky actions).}
 \end{table}
 
-\subsection{Fix 1: Sticky actions}
-
-\noindent\textit{Pending.}
+\subsection{Fix 1: Sticky actions -- Applied}
 
 \noindent Changes:
 \begin{itemize}[leftmargin=2em, itemsep=0.1em]
-  \item Add \texttt{repeat\_action\_probability = 0.25} to
-    environment config (Machado et al.\ 2018)
-  \item Pass parameter through \texttt{make\_atari\_env} to
-    \texttt{gym.make}
+  \item Added \texttt{repeat\_action\_probability = 0.25} to
+    \texttt{atari100k\_base.yaml} (Machado et al.\ 2018)
+  \item Added default \texttt{repeat\_action\_probability = 0.0} to
+    \texttt{base.yaml} for backward compatibility
+  \item Passed parameter through \texttt{make\_atari\_env} to
+    \texttt{gym.make} in both training and evaluation environments
 \end{itemize}
 
-\noindent\textit{Impact:} All 24 DQN validation runs (4 conditions
-$\times$ 6 games, seed 42) must be re-run. Previous runs moved to
-\texttt{invalid/} directory. Rainbow validation runs also affected.
+\noindent\textit{Impact:} All previous DQN and Rainbow validation
+runs were invalidated and moved to \texttt{deprecated/} directories.
+Applies to all conditions (DQN and Rainbow).
 
-\subsection{Fix 2: Training cadence + replay ratio + multi-step +
-target update + warmup (Rainbow only)}
-
-\noindent\textit{Pending.}
+\subsection{Fix 2: Training cadence (Rainbow only) -- Applied}
 
 \noindent Changes:
 \begin{itemize}[leftmargin=2em, itemsep=0.1em]
-  \item \texttt{train\_every = 1}, \texttt{updates\_per\_step = 2}
-    (replay ratio 2.0)
-  \item \texttt{multi\_step.n = 10}, \texttt{target\_update = 1}
-  \item \texttt{warmup\_steps = 2000}, \texttt{min\_size = 2000}
+  \item Set \texttt{train\_every = 1}, \texttt{updates\_per\_step = 2}
+    across all 10 Rainbow Atari-100K configs (replay ratio 2.0)
+  \item \texttt{multi\_step.n = 10} and \texttt{target\_update = 1}
+    were already set correctly in all Rainbow configs
 \end{itemize}
 
 \noindent\textit{Note:} Previous configs used
@@ -479,18 +476,64 @@ ratio but different training dynamics (bursty 8-update blocks every
 4~steps vs.\ smooth 2-update blocks every step). The new settings
 match SPR Table~3 exactly.
 
-\subsection{Fix 3: Learning rate (Rainbow only)}
+\subsection{Fix 3: Learning rate (Rainbow only) -- Applied}
 
-\noindent\textit{Pending.}\\
-\noindent Change: \texttt{lr = 1.0e-4}.
+\noindent Change: \texttt{lr = 1.0e-4} (was 6.25e-5) across all 10
+Rainbow Atari-100K configs. The SPR paper co-tuned this LR with
+replay ratio 2.0.
 
-\subsection{Fix 4: FC hidden dimension (Rainbow only)}
+\subsection{Fix 4: FC hidden dimension (Rainbow only) -- Applied}
 
-\noindent\textit{Pending.}\\
-\noindent Change: \texttt{fc\_hidden = 256} for Rainbow model only.
+\noindent Change: \texttt{fc\_hidden = 256} (was 512) for Rainbow
+model only. Added \texttt{fc\_hidden} parameter to
+\texttt{RainbowDQN} constructor (default 512 preserves backward
+compatibility). Set to 256 in all 10 Rainbow Atari-100K configs.
+
+\subsection{Post-fix Validation Results}
+
+All four fixes were applied together before re-running validation.
+Both games were run sequentially on a T4 GPU (seed 42, 30 eval
+episodes).
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.5}
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{l rrrrl}
+\toprule
+\textbf{Game} & \textbf{Pre-fix} & \textbf{Post-fix}
+  & \textbf{DER} & \textbf{OTRb} & \textbf{Status} \\
+\midrule
+Crazy Climber & 557   & 26013 & 16185 & 21328 & \ok{} ($>$ 8000) \\
+Up N Down     & 986   & 3103  & 2877  & 2848  & \ok{} ($>$ 1400) \\
+\bottomrule
+\end{tabular}
+\caption{Before/after Rainbow scores on validation games (seed 42).
+Pre-fix runs used no sticky actions and original Rainbow
+hyperparameters. Post-fix runs include all four fixes.}
+\end{table}
+
+Both games exceed acceptance criteria (Section~\ref{sec:acceptance}).
+Crazy Climber at 26013 exceeds published DER (16185) by
+$1.6\times$. Up N Down at 3103 is within $8\%$ of DER (2877).
+Single-seed variance is expected; published numbers average 10 seeds.
+
+\noindent\textit{Resource profile (single run, T4 High-RAM):}
+\begin{itemize}[leftmargin=2em, itemsep=0.1em]
+  \item GPU memory: 277 MB / 15360 MB (1.8\%)
+  \item GPU utilization: $\sim$40\%
+  \item RAM: $\sim$8.5 GB peak / 52 GB (16\%)
+  \item Wall time: $\sim$42 min per game (130 FPS during training)
+\end{itemize}
+
+\noindent The low GPU memory and utilization suggest 2--3 parallel
+runs are feasible on a T4, with further parallelism possible on
+larger GPUs (A100, L4).
 
 % =====================================================================
 \section{Acceptance Criteria}
+\label{sec:acceptance}
 % =====================================================================
 
 Rainbow is ``validated'' when our single-seed scores on the 2
