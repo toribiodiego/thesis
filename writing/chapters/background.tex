@@ -4,10 +4,92 @@
 \section{Reinforcement Learning Foundations}
 \label{sec:rl-foundations}
 
+This section introduces the core concepts that underpin modern
+deep reinforcement learning. We start with the Markov decision
+process framework that defines the problem, then develop value
+functions and Q-learning as the solution approach, and finally
+show why function approximation is needed to scale these ideas
+to high-dimensional environments.
+
 \subsection{Markov Decision Processes}
 \label{subsec:mdp}
 
-\vspace{2em}
+Before an agent can learn, we need a precise language for
+describing what it observes, what it can do, and what it is trying
+to achieve. The \emph{Markov decision process} (MDP) provides this
+framework~\citep{sutton2018reinforcement}. Nearly every
+reinforcement learning algorithm -- from tabular methods to deep
+neural network approaches -- is built on the MDP formulation.
+
+\smallskip
+\input{figures/mdp-loop}
+
+An MDP describes a loop between an agent and an environment
+(\cref{fig:mdp-loop}). At each discrete time step
+$t = 0, 1, 2, \ldots$, the agent observes a state
+$S_t \in \mathcal{S}$, chooses an action
+$A_t \in \mathcal{A}(S_t)$, and receives a scalar reward
+$R_{t+1} \in \mathbb{R}$ as the environment transitions to a new
+state $S_{t+1}$. In an Atari game, the state is the current screen
+image, the actions are joystick directions and the fire button, and
+the reward is the change in score.
+
+\smallskip
+Formally, an MDP is defined by the tuple
+$(\mathcal{S}, \mathcal{A}, p, \gamma)$: a set of states
+$\mathcal{S}$, a set of actions $\mathcal{A}$, a dynamics function
+$p$, and a discount factor $\gamma$. The dynamics function gives
+the probability of each possible next state and reward, given the
+current state and action:
+%
+\begin{equation}
+\label{eq:mdp-dynamics}
+p(s', r \mid s, a)
+  \;\doteq\; \Pr\{S_t = s',\, R_t = r \mid S_{t-1} = s,\, A_{t-1} = a\}.
+\end{equation}
+%
+The key assumption is the \emph{Markov property}: the current state
+alone determines what happens next -- the agent does not need to
+remember its full history of past states and actions. This is what
+makes the problem tractable. If the outcome depended on everything
+the agent had ever seen, learning from limited experience would be
+far harder.
+
+\smallskip
+The agent's goal is to collect as much reward as possible over
+time. This is made precise by the \emph{return} -- the cumulative
+discounted reward from time step $t$ onward:
+%
+\begin{equation}
+\label{eq:return}
+G_t \;\doteq\; R_{t+1} + \gamma\, R_{t+2} + \gamma^2 R_{t+3} + \cdots
+  = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1},
+\end{equation}
+%
+where $\gamma \in [0, 1)$ is the \emph{discount rate}. When
+$\gamma = 0$, the agent cares only about the very next reward and
+ignores everything after -- a myopic strategy. As $\gamma$
+approaches 1, the agent plans further ahead, weighing future
+rewards more heavily. Because $\gamma < 1$, the infinite sum
+converges as long as individual rewards are bounded.
+
+\smallskip
+In many problems, the interaction breaks naturally into
+\emph{episodes} -- finite sequences that end in a terminal state
+and then reset. Games of Atari are episodic: each game starts from
+an initial state, proceeds through a sequence of frames, and
+terminates when the agent loses all lives or reaches a time limit.
+Most benchmark environments are episodic, so in practice the
+return reduces to a finite sum over the steps within each episode.
+
+\smallskip
+Given an MDP, the agent needs a rule for choosing actions. This
+rule is called a \emph{policy}, written $\pi(a \mid s)$, which
+gives the probability of selecting action $a$ in state $s$. The
+central question of reinforcement learning is how to find a policy
+that maximizes the expected return -- and answering that question
+requires a way to evaluate how good a given policy is, which leads
+to value functions.
 
 \subsection{Value Functions}
 \label{subsec:value-functions}
