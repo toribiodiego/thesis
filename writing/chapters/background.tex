@@ -29,7 +29,7 @@ navigate to a goal by choosing to move up, down, left, or right
 at each step. Each cell the agent can occupy is a \emph{state},
 each movement direction is an \emph{action}, and the numerical
 feedback it receives after moving -- such as $+1$ for reaching the
-goal or $-1$ for falling into a trap -- is a \emph{reward}. The
+goal or $-1$ for reaching a penalty -- is a \emph{reward}. The
 grid-world is deliberately simple, but every MDP, no matter how
 complex, has exactly these three ingredients: states, actions, and
 rewards.
@@ -37,8 +37,6 @@ rewards.
 \input{figures/grid-world}
 
 \smallskip
-\input{figures/mdp-loop}
-
 More generally, an MDP describes a loop between an agent and an
 environment (\cref{fig:mdp-loop}). At each discrete time step
 $t = 0, 1, 2, \ldots$, the agent observes a state
@@ -50,6 +48,8 @@ cell, $A_t$ is the chosen direction, and $R_{t+1}$ is the score
 received after the move. In an Atari game, the state is the
 current screen image, the actions are joystick directions and the
 fire button, and the reward is the change in score.
+
+\input{figures/mdp-loop}
 
 \smallskip
 These components -- states, actions, transitions, and how much
@@ -75,7 +75,10 @@ Note that the subscripts in the equation shift by one relative to
 the prose above -- the agent in state $S_{t-1}$ takes action
 $A_{t-1}$ and then receives $R_t$ and $S_t$, which is the same
 relationship as $S_t, A_t \to R_{t+1}, S_{t+1}$ with different
-index labels.
+index labels. \cref{fig:mdp-views} illustrates these transitions
+for a fragment of the grid-world: each arrow is one entry of the
+dynamics function, with the action label, destination state, and
+reward annotation corresponding to $a$, $s'$, and $r$.
 
 \input{figures/mdp-graph}
 
@@ -104,6 +107,10 @@ ignores everything after -- a myopic strategy. As $\gamma$
 approaches 1, the agent plans further ahead, weighing future
 rewards more heavily. Because $\gamma < 1$, the infinite sum
 converges as long as individual rewards are bounded.
+\cref{fig:discounting} shows how this plays out: with a low
+discount rate, a nearby small reward is preferred over a distant
+large one; with a high discount rate, the agent walks further to
+collect the larger reward.
 
 \input{figures/discounting}
 
