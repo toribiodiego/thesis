@@ -156,7 +156,131 @@ which leads to value functions.
 \subsection{Value Functions}
 \label{subsec:value-functions}
 
-\vspace{2em}
+A policy tells the agent what to do, but not how well it will do.
+To compare policies -- and ultimately find the best one -- the
+agent needs a way to assign a numerical score to each state,
+capturing how much reward it can expect from that point onward.
+
+\smallskip
+The \emph{state-value function} $v_\pi(s)$ answers exactly this
+question: it gives the expected return when starting in state~$s$
+and following policy~$\pi$ thereafter:
+%
+\begin{equation}
+\label{eq:v-pi}
+v_\pi(s) \;\doteq\; \mathbb{E}_\pi\!\big[G_t \mid S_t = s\big].
+\end{equation}
+%
+In the grid-world, $v_\pi(s)$ is the average total reward the
+agent collects from cell~$s$ onward if it follows policy~$\pi$.
+Cells near the goal have high values because the agent reaches
+the $+1$ reward quickly; cells near the penalty have low values
+because the policy is likely to lead there.
+
+\smallskip
+The state-value function tells us how good a state is, but it
+does not tell us which action to take. For that, we need the
+\emph{action-value function} $q_\pi(s, a)$, which gives the
+expected return for taking action~$a$ in state~$s$ and then
+following~$\pi$:
+%
+\begin{equation}
+\label{eq:q-pi}
+q_\pi(s, a) \;\doteq\; \mathbb{E}_\pi\!\big[G_t \mid S_t = s,\, A_t = a\big].
+\end{equation}
+%
+The difference is subtle but important: $v_\pi$ evaluates
+\emph{states}, while $q_\pi$ evaluates \emph{actions in states}.
+In the grid-world, $q_\pi(s_{21}, \text{right})$ is the expected
+return for moving right from $s_{21}$ and then following~$\pi$,
+while $q_\pi(s_{21}, \text{up})$ is the expected return for
+moving up first. Comparing these values tells the agent which
+action is better -- and this is why $q_\pi$ is more directly
+useful for decision-making than $v_\pi$.
+
+\smallskip
+Both value functions share a key property: they can be decomposed
+recursively. The Markov property established in the previous
+section -- that the future depends only on the current state --
+means that the value of a state can be written as the immediate
+reward plus the discounted value of the next state. For $v_\pi$,
+this gives the \emph{Bellman expectation equation}:
+%
+\begin{equation}
+\label{eq:bellman-expectation}
+v_\pi(s) = \sum_{a} \pi(a \mid s) \sum_{s',\, r}
+  p(s', r \mid s, a)\,\big[r + \gamma\, v_\pi(s')\big].
+\end{equation}
+%
+This says: the value of state~$s$ is the average over all actions
+the policy might take, of the immediate reward plus the
+discounted value of wherever the agent ends up. In the grid-world,
+if the policy in cell $s_{21}$ says ``go right'' with certainty,
+then $v_\pi(s_{21})$ equals the reward for that move ($r = 0$)
+plus $\gamma$ times the value of cell $s_{22}$.
+
+\smallskip
+The Bellman equation is powerful because it turns a calculation
+over the entire future -- the sum of all discounted rewards --
+into a one-step relationship between neighboring states. Instead
+of tracing every possible trajectory to the end of the episode,
+we only need to look one step ahead. This recursion is what makes
+reinforcement learning computationally tractable.
+
+\smallskip
+With value functions defined, we can formalize the goal of
+reinforcement learning. A policy $\pi^*$ is \emph{optimal} if
+its expected return is at least as high as that of every other
+policy, in every state:
+$v_{\pi^*}(s) \geq v_\pi(s)$ for all states~$s$ and all
+policies~$\pi$~\citep{sutton2018reinforcement}. At least one
+optimal policy always exists, and all optimal policies share
+the same value functions, which we denote $v_*$ and $q_*$:
+%
+\begin{align}
+\label{eq:v-star}
+v_*(s) &\;\doteq\; \max_\pi\, v_\pi(s), \\[4pt]
+\label{eq:q-star}
+q_*(s, a) &\;\doteq\; \max_\pi\, q_\pi(s, a).
+\end{align}
+%
+The optimal value functions satisfy their own recursive
+relationship, the \emph{Bellman optimality equation}. For $q_*$:
+%
+\begin{equation}
+\label{eq:bellman-optimality-q}
+q_*(s, a) = \sum_{s',\, r} p(s', r \mid s, a)
+  \Big[r + \gamma \max_{a'} q_*(s', a')\Big].
+\end{equation}
+%
+The key difference from \cref{eq:bellman-expectation} is that the
+average over the policy's action choices is replaced by a maximum:
+instead of asking ``what return does the current policy achieve,''
+we ask ``what is the best possible return if we act optimally from
+here.''
+
+\smallskip
+If $q_*$ were known, acting optimally would be trivial: in every
+state, the agent simply picks the action with the highest
+$q$-value, $\pi^*(s) = \arg\max_a q_*(s, a)$. No model of the
+environment is needed and no planning is required -- the optimal
+action is a direct lookup. This is why much of reinforcement
+learning, including the Q-learning algorithm in the next section
+and the deep Q-networks that build on it, focuses on estimating
+$q_*$ rather than $v_*$.
+
+\smallskip
+There is a catch, however. The Bellman optimality equation is a
+system of $|\mathcal{S}| \times |\mathcal{A}|$ simultaneous
+equations, one for every state--action pair. Solving it requires
+knowing the dynamics~$p$ and enumerating every state -- both of
+which are impractical for large problems. In an Atari game, the
+number of possible screen images is astronomically large, and
+the dynamics are not given to the agent. The next two sections
+address these obstacles: Q-learning estimates $q_*$ from
+experience without knowing the dynamics, and function
+approximation replaces the explicit table of $q$-values
+with a neural network that can generalize across states.
 
 \subsection{Q-Learning}
 \label{subsec:q-learning}
