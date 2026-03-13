@@ -47,11 +47,15 @@
 \node[circle, fill=blue!45, inner sep=3.5pt, opacity=0.55] at (c22) {};
 \node[agent] at (c32) {};
 
-% Direction arrows with gap from dot, ending near cell edge
-\draw[->, semithick, blue!65]
-      ([yshift=7pt]c21.center) -- ([yshift=14pt]c21.center);
-\draw[->, semithick, blue!65]
-      ([xshift=7pt]c22.center) -- ([xshift=14pt]c22.center);
+% Bare chevrons showing direction (no stem)
+\draw[semithick, blue!65]
+      ([yshift=8pt, xshift=-2.5pt]c21.center) --
+      ([yshift=11pt]c21.center) --
+      ([yshift=8pt, xshift=2.5pt]c21.center);
+\draw[semithick, blue!65]
+      ([xshift=8pt, yshift=2.5pt]c22.center) --
+      ([xshift=11pt]c22.center) --
+      ([xshift=8pt, yshift=-2.5pt]c22.center);
 
 \end{tikzpicture}
 \subcaption{Grid-world path: $s_{21} \to s_{22} \to s_{32}$.}
