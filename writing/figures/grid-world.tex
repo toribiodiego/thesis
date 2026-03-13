@@ -1,0 +1,56 @@
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[
+    cell/.style={minimum size=1.3cm, draw=black!40, thick,
+                 font=\small},
+    wall/.style={cell, fill=black!15, draw=black!40},
+    goal/.style={cell, fill=green!12},
+    trap/.style={cell, fill=red!10},
+    reward/.style={font=\small\bfseries},
+    action/.style={->, thick, >=stealth, black!60,
+                   shorten >=3pt, shorten <=3pt},
+]
+
+% Grid cells -- 4 columns x 3 rows
+% Row 0 (bottom)
+\node[cell]  (c00) at (0, 0) {};
+\node[cell]  (c10) at (1.3, 0) {};
+\node[cell]  (c20) at (2.6, 0) {};
+\node[cell]  (c30) at (3.9, 0) {};
+
+% Row 1 (middle)
+\node[cell]  (c01) at (0, 1.3) {};
+\node[wall]  (c11) at (1.3, 1.3) {};
+\node[cell]  (c21) at (2.6, 1.3) {};
+\node[trap]  (c31) at (3.9, 1.3) {};
+
+% Row 2 (top)
+\node[cell]  (c02) at (0, 2.6) {};
+\node[cell]  (c12) at (1.3, 2.6) {};
+\node[cell]  (c22) at (2.6, 2.6) {};
+\node[goal]  (c32) at (3.9, 2.6) {};
+
+% Reward labels
+\node[reward, text=green!50!black] at (c32) {$+1$};
+\node[reward, text=red!60!black]   at (c31) {$-1$};
+
+% Start label
+\node[font=\scriptsize, text=black!50, below=1pt]
+  at (c00.south) {start};
+
+% Agent marker in c21
+\node[circle, fill=blue!45, inner sep=4.5pt] (agent) at (c21) {};
+
+% Action arrows -- all four directions from agent
+\draw[action] (agent.north) -- (c22.south);
+\draw[action] (agent.south) -- (c20.north);
+\draw[action] (agent.west)  -- (c11.east);
+\draw[action] (agent.east)  -- (c31.west);
+
+\end{tikzpicture}
+\caption{A grid-world MDP\@. The agent (blue circle) occupies a
+  cell (state) and chooses to move up, down, left, or right
+  (actions). Reaching the goal yields reward~$+1$; stepping into
+  the trap yields~$-1$. The shaded cell is a wall.}
+\label{fig:grid-world}
+\end{figure}

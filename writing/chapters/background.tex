@@ -14,34 +14,53 @@ to high-dimensional environments.
 \subsection{Markov Decision Processes}
 \label{subsec:mdp}
 
-Before an agent can learn, we need a precise language for
-describing what it observes, what it can do, and what it is trying
-to achieve. The \emph{Markov decision process} (MDP) provides this
-framework~\citep{sutton2018reinforcement}. Nearly every
+In reinforcement learning, an agent learns by interacting with its
+environment -- observing situations, taking actions, and receiving
+feedback. The \emph{Markov decision process} (MDP) is the
+mathematical framework that makes this interaction
+precise~\citep{sutton2018reinforcement}, and nearly every
 reinforcement learning algorithm -- from tabular methods to deep
-neural network approaches -- is built on the MDP formulation.
+neural network approaches -- is built on it.
+
+\smallskip
+To make the framework concrete, consider the grid-world in
+\cref{fig:grid-world}: an agent starts in one cell and must
+navigate to a goal by choosing to move up, down, left, or right
+at each step. Each cell the agent can occupy is a \emph{state},
+each movement direction is an \emph{action}, and the numerical
+feedback it receives after moving -- such as $+1$ for reaching the
+goal or $-1$ for falling into a trap -- is a \emph{reward}. The
+grid-world is deliberately simple, but every MDP, no matter how
+complex, has exactly these three ingredients: states, actions, and
+rewards.
+
+\input{figures/grid-world}
 
 \smallskip
 \input{figures/mdp-loop}
 
-An MDP describes a loop between an agent and an environment
-(\cref{fig:mdp-loop}). At each discrete time step
+More generally, an MDP describes a loop between an agent and an
+environment (\cref{fig:mdp-loop}). At each discrete time step
 $t = 0, 1, 2, \ldots$, the agent observes a state
 $S_t \in \mathcal{S}$, chooses an action
 $A_t \in \mathcal{A}(S_t)$, and receives a scalar reward
 $R_{t+1} \in \mathbb{R}$ as the environment transitions to a new
-state $S_{t+1}$. In an Atari game, the state is the current screen
-image, the actions are joystick directions and the fire button, and
-the reward is the change in score.
+state $S_{t+1}$. In the grid-world, $S_t$ is the agent's current
+cell, $A_t$ is the chosen direction, and $R_{t+1}$ is the score
+received after the move. In an Atari game, the state is the
+current screen image, the actions are joystick directions and the
+fire button, and the reward is the change in score.
 
 \smallskip
-Formally, an MDP is defined by the tuple
-$(\mathcal{S}, \mathcal{A}, p, \gamma)$: a set of states
-$\mathcal{S}$, a set of actions $\mathcal{A}$, a dynamics function
-$p$, and a discount factor $\gamma$. The dynamics function
-captures both the transition probabilities and the reward
-structure in a single object -- it gives the probability of each
-possible next state and reward, given the current state and action:
+These components -- states, actions, transitions, and how much
+the agent cares about future rewards -- are collected into a
+single mathematical object: the MDP tuple
+$(\mathcal{S}, \mathcal{A}, p, \gamma)$, where $\mathcal{S}$
+is the set of states, $\mathcal{A}$ the set of actions, $p$ a
+dynamics function, and $\gamma$ a discount factor. The dynamics
+function captures both the transition probabilities and the
+reward structure -- it gives the probability of each possible
+next state and reward, given the current state and action:
 %
 \begin{equation}
 \label{eq:mdp-dynamics}
