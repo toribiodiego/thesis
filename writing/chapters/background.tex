@@ -299,7 +299,141 @@ with a neural network that can generalize across states.
 \subsection{Q-Learning}
 \label{subsec:q-learning}
 
-\vspace{2em}
+The Bellman optimality equation tells us what $q_*$ must satisfy,
+but solving it requires knowing the dynamics~$p$ -- the
+probability of every possible next state and reward for every
+action. In most problems of interest, the agent does not have
+this information. It cannot look up what will happen; it can only
+try an action and observe the result.
+
+\smallskip
+This is the setting Q-learning addresses: the agent learns $q_*$
+directly from experience, one transition at a
+time~\citep{watkins1992q}. Instead of solving a system of
+equations, it updates its estimates after every step, gradually
+converging to the optimal values.
+
+\smallskip
+The key idea behind Q-learning comes from
+\emph{temporal-difference} (TD)
+learning~\citep{sutton1988learning}: rather than waiting until
+the end of an episode to see how things turned out, the agent
+updates its estimate after every single step. It observes the
+immediate reward, peeks at its current estimate of the next
+state's value, and uses these together as a learning target.
+
+\smallskip
+This ``peek at the next state'' is called \emph{bootstrapping}
+-- the agent learns from its own estimates rather than from
+complete outcomes. The estimates may be wrong at first, but
+because each update incorporates a real observed reward, the
+errors shrink over time and the estimates converge to the true
+values.
+
+\smallskip
+The Q-learning update rule puts this idea into practice. After
+the agent takes action~$A_t$ in state~$S_t$, observes
+reward~$R_{t+1}$, and arrives in state~$S_{t+1}$, it updates
+its estimate of $q_*(S_t, A_t)$:
+%
+\begin{equation}
+\label{eq:q-learning}
+Q(S_t, A_t) \;\leftarrow\; Q(S_t, A_t)
+  + \alpha \Big[R_{t+1} + \gamma \max_{a} Q(S_{t+1}, a)
+  - Q(S_t, A_t)\Big].
+\end{equation}
+%
+Each piece has a clear role. $Q(S_t, A_t)$ is the agent's
+current estimate for this state--action pair. The expression
+$R_{t+1} + \gamma \max_a Q(S_{t+1}, a)$ is the \emph{TD
+target} -- the reward the agent actually received, plus its best
+estimate of the value from the next state onward. The difference
+between the target and the current estimate is the \emph{TD
+error}: how far off the agent's prediction was.
+
+\smallskip
+The learning rate $\alpha \in (0, 1]$ controls how much each
+update adjusts the estimate. A large $\alpha$ moves quickly
+toward the target but may overshoot; a small $\alpha$ is more
+stable but learns slowly.
+
+\smallskip
+To see this in the grid-world, suppose the agent is in
+cell~$s_{21}$ and moves right, receiving reward $r = 0$ and
+arriving in cell~$s_{22}$. If the agent currently estimates
+$Q(s_{21}, \text{right}) = 0.5$ and $\max_a Q(s_{22}, a) = 1.0$,
+then with $\gamma = 0.9$ and $\alpha = 0.1$:
+%
+\begin{align*}
+\text{target} &= 0 + 0.9 \times 1.0 = 0.9, \\
+\text{TD error} &= 0.9 - 0.5 = 0.4, \\
+Q(s_{21}, \text{right}) &\leftarrow 0.5 + 0.1 \times 0.4 = 0.54.
+\end{align*}
+%
+The estimate moved from $0.5$ toward the target of $0.9$ -- not
+all the way, but a step in the right direction. After many such
+updates across many transitions, the estimates converge to $q_*$.
+
+\smallskip
+The connection to the Bellman optimality equation
+(\cref{eq:bellman-optimality-q}) is direct: the TD target
+$R_{t+1} + \gamma \max_a Q(S_{t+1}, a)$ is a single-sample
+estimate of the right-hand side of that equation. Each update
+nudges the Q-values toward satisfying the Bellman optimality
+equation, using real experience instead of known dynamics.
+
+\smallskip
+There is a tension, however, between learning and acting. If the
+agent always picks the action with the highest Q-value -- the
+\emph{greedy} action -- it will exploit what it currently knows
+but may never discover that a different action is better. In the
+grid-world, an agent that found a path to the $+1$ reward early
+on might follow it forever, never exploring the route that leads
+to a higher reward elsewhere.
+
+\smallskip
+This is the \emph{exploration--exploitation} trade-off: the agent
+must sometimes try actions that look suboptimal in order to gather
+information that could improve its long-term behavior. The
+simplest solution is the $\epsilon$\emph{-greedy} strategy: with
+probability $1 - \epsilon$ the agent takes the greedy action, and
+with probability~$\epsilon$ it picks a random action instead.
+Early in training, $\epsilon$ is large so the agent explores
+broadly; over time, $\epsilon$ is decayed toward a small value so
+the agent increasingly exploits its learned Q-values.
+
+\smallskip
+A notable property of Q-learning is that it is \emph{off-policy}:
+the update rule always uses $\max_a Q(S_{t+1}, a)$ -- the value
+of the best action -- regardless of which action the agent
+actually takes next. The agent explores with $\epsilon$-greedy,
+but the update targets the greedy (optimal) policy. This means
+Q-learning estimates $q_*$ directly, no matter how the agent
+chooses to explore.
+
+\smallskip
+Under standard conditions -- all state--action pairs continue to
+be visited, and the learning rate is decreased
+appropriately -- Q-learning converges to $q_*$ with probability
+one~\citep{watkins1992q}. The $\epsilon$-greedy policy ensures
+the visitation condition as long as $\epsilon > 0$.
+
+\smallskip
+The algorithm as described maintains a table with one entry for
+every state--action pair. For the grid-world, this table has
+$11 \times 4 = 44$ entries -- perfectly manageable. But for
+problems with large state spaces, the table becomes impractical.
+If the state is a raw image, the number of possible states grows
+astronomically, and the agent would need to visit each one
+repeatedly to learn its Q-values. Worse, learning that one state
+is valuable tells the agent nothing about similar states it has
+not yet seen -- there is no generalization.
+
+\smallskip
+The next section addresses this limitation by replacing the table
+with a parameterized function that can generalize across states,
+allowing Q-learning to scale to problems where explicit
+enumeration is impossible.
 
 \subsection{Function Approximation}
 \label{subsec:func-approx}
