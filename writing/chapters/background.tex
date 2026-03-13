@@ -174,6 +174,12 @@ agent collects from cell~$s$ onward if it follows policy~$\pi$.
 Cells near the goal have high values because the agent reaches
 the $+1$ reward quickly; cells near the penalty have low values
 because the policy is likely to lead there.
+\cref{fig:value-grid} makes this concrete: panel~(a) shows the
+value of each cell under a policy that navigates toward the goal,
+while panel~(b) shows the policy itself. The values form a
+gradient -- highest near the goal, decreasing with distance.
+
+\input{figures/value-grid}
 
 \smallskip
 The state-value function tells us how good a state is, but it

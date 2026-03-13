@@ -1,0 +1,127 @@
+\begin{figure}[h!]
+\centering
+
+%% Panel (a): State values
+\begin{subfigure}[b]{0.45\textwidth}
+\centering
+\begin{tikzpicture}[
+    cell/.style={minimum size=1.15cm, draw=black!40, thick,
+                 font=\scriptsize},
+    wall/.style={cell, fill=black!15},
+    terminal/.style={cell, fill=black!8},
+    val/.style={font=\small},
+    plabel/.style={font=\scriptsize\bfseries},
+]
+\def\s{1.15}
+
+% Row 0 (bottom)
+\node[cell] (c00) at (0, 0) {};
+\node[cell] (c10) at (\s, 0) {};
+\node[cell] (c20) at (2*\s, 0) {};
+\node[cell] (c30) at (3*\s, 0) {};
+% Row 1 (middle)
+\node[cell] (c01) at (0, \s) {};
+\node[wall] (c11) at (\s, \s) {};
+\node[cell] (c21) at (2*\s, \s) {};
+\node[terminal] (c31) at (3*\s, \s) {};
+% Row 2 (top)
+\node[cell] (c02) at (0, 2*\s) {};
+\node[cell] (c12) at (\s, 2*\s) {};
+\node[cell] (c22) at (2*\s, 2*\s) {};
+\node[terminal] (c32) at (3*\s, 2*\s) {};
+
+% V_pi values (gamma = 0.9)
+\node[val] at (c00) {0.66};
+\node[val] at (c10) {0.73};
+\node[val] at (c20) {0.81};
+\node[val] at (c30) {0.81};
+\node[val] at (c01) {0.73};
+\node[val] at (c21) {0.90};
+\node[plabel] at (c31) {$-1$};
+\node[val] at (c02) {0.81};
+\node[val] at (c12) {0.90};
+\node[val] at (c22) {1.00};
+\node[plabel] at (c32) {$+1$};
+
+\end{tikzpicture}
+\vspace{0.5em}
+\subcaption{State values $v_\pi(s)$ with $\gamma = 0.9$.}
+\label{fig:value-grid-values}
+\end{subfigure}
+\hfill
+%% Panel (b): Policy arrows
+\begin{subfigure}[b]{0.45\textwidth}
+\centering
+\begin{tikzpicture}[
+    cell/.style={minimum size=1.15cm, draw=black!40, thick,
+                 font=\scriptsize},
+    wall/.style={cell, fill=black!15},
+    terminal/.style={cell, fill=black!8},
+    chev/.style={semithick, blue!55},
+    plabel/.style={font=\scriptsize\bfseries},
+]
+\def\s{1.15}
+
+% Row 0 (bottom)
+\node[cell] (c00) at (0, 0) {};
+\node[cell] (c10) at (\s, 0) {};
+\node[cell] (c20) at (2*\s, 0) {};
+\node[cell] (c30) at (3*\s, 0) {};
+% Row 1 (middle)
+\node[cell] (c01) at (0, \s) {};
+\node[wall] (c11) at (\s, \s) {};
+\node[cell] (c21) at (2*\s, \s) {};
+\node[terminal] (c31) at (3*\s, \s) {};
+% Row 2 (top)
+\node[cell] (c02) at (0, 2*\s) {};
+\node[cell] (c12) at (\s, 2*\s) {};
+\node[cell] (c22) at (2*\s, 2*\s) {};
+\node[terminal] (c32) at (3*\s, 2*\s) {};
+
+% Terminal labels
+\node[plabel] at (c31) {$-1$};
+\node[plabel] at (c32) {$+1$};
+
+% Policy chevrons (centered in cells, matching grid-world style)
+% Row 0: right, right, up, left
+\draw[chev] ([xshift=8pt, yshift=2.5pt]c00.center) --
+            ([xshift=11pt]c00.center) --
+            ([xshift=8pt, yshift=-2.5pt]c00.center);
+\draw[chev] ([xshift=8pt, yshift=2.5pt]c10.center) --
+            ([xshift=11pt]c10.center) --
+            ([xshift=8pt, yshift=-2.5pt]c10.center);
+\draw[chev] ([yshift=8pt, xshift=-2.5pt]c20.center) --
+            ([yshift=11pt]c20.center) --
+            ([yshift=8pt, xshift=2.5pt]c20.center);
+\draw[chev] ([xshift=-8pt, yshift=-2.5pt]c30.center) --
+            ([xshift=-11pt]c30.center) --
+            ([xshift=-8pt, yshift=2.5pt]c30.center);
+% Row 1: up, (wall), up
+\draw[chev] ([yshift=8pt, xshift=-2.5pt]c01.center) --
+            ([yshift=11pt]c01.center) --
+            ([yshift=8pt, xshift=2.5pt]c01.center);
+\draw[chev] ([yshift=8pt, xshift=-2.5pt]c21.center) --
+            ([yshift=11pt]c21.center) --
+            ([yshift=8pt, xshift=2.5pt]c21.center);
+% Row 2: right, right, right
+\draw[chev] ([xshift=8pt, yshift=2.5pt]c02.center) --
+            ([xshift=11pt]c02.center) --
+            ([xshift=8pt, yshift=-2.5pt]c02.center);
+\draw[chev] ([xshift=8pt, yshift=2.5pt]c12.center) --
+            ([xshift=11pt]c12.center) --
+            ([xshift=8pt, yshift=-2.5pt]c12.center);
+\draw[chev] ([xshift=8pt, yshift=2.5pt]c22.center) --
+            ([xshift=11pt]c22.center) --
+            ([xshift=8pt, yshift=-2.5pt]c22.center);
+
+\end{tikzpicture}
+\vspace{0.5em}
+\subcaption{The policy $\pi$ that produces these values.}
+\label{fig:value-grid-policy}
+\end{subfigure}
+
+\vspace{0.8em}
+\caption{State values and the corresponding policy in the
+  grid-world. Higher values indicate proximity to the goal.}
+\label{fig:value-grid}
+\end{figure}
