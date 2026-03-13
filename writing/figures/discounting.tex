@@ -1,0 +1,179 @@
+\begin{figure}[h!]
+\centering
+\vspace{1em}
+
+% Shared styles
+\tikzset{
+    dg cell/.style={minimum size=1.05cm, draw=black!40, thick,
+                    font=\scriptsize},
+    dg reward/.style={font=\scriptsize\bfseries},
+    dg slabel/.style={font=\tiny, text=black!45, anchor=north west},
+    dg agent/.style={circle, fill=blue!45, inner sep=2.5pt},
+    dg ghost/.style={circle, fill=blue!45, inner sep=2.5pt},
+    dg chevron/.style={semithick, blue!65},
+    % Tree styles
+    dt node/.style={circle, draw=black!40, thick,
+                    minimum size=0.75cm, font=\scriptsize},
+    dt reward/.style={dt node, font=\scriptsize\bfseries},
+    dt path/.style={thick, black!45, dashed},
+    dt taken/.style={thick, black!45},
+}
+
+%% Row (a): Low gamma -- short path
+\begin{subfigure}{\textwidth}
+\centering
+\begin{minipage}[c]{0.35\textwidth}
+\centering
+\begin{tikzpicture}
+    \def\ds{1.05}
+    % Row 0 (bottom)
+    \node[dg cell] (g00) at (0, 0) {};
+    \node[dg cell] (g10) at (\ds, 0) {};
+    \node[dg cell] (g20) at (2*\ds, 0) {};
+    \node[dg cell] (g30) at (3*\ds, 0) {};
+    % Row 1 (top)
+    \node[dg cell] (g01) at (0, \ds) {};
+    \node[dg cell] (g11) at (\ds, \ds) {};
+    \node[dg cell] (g21) at (2*\ds, \ds) {};
+    \node[dg cell] (g31) at (3*\ds, \ds) {};
+    % State labels
+    \node[dg slabel] at (g00.north west) {$s_0$};
+    \node[dg slabel] at (g10.north west) {$s_1$};
+    \node[dg slabel] at (g20.north west) {$s_2$};
+    \node[dg slabel] at (g30.north west) {$s_3$};
+    \node[dg slabel] at (g01.north west) {$s_4$};
+    \node[dg slabel] at (g11.north west) {$s_5$};
+    \node[dg slabel] at (g21.north west) {$s_6$};
+    \node[dg slabel] at (g31.north west) {$s_7$};
+    % Rewards
+    \node[dg reward] at (g10) {$+1$};
+    \node[dg reward] at (g31) {$+3$};
+    % Agent at start with right-pointing chevron
+    \node[dg agent] at (g00) {};
+    \draw[dg chevron]
+          ([xshift=6pt, yshift=2pt]g00.center) --
+          ([xshift=8.5pt]g00.center) --
+          ([xshift=6pt, yshift=-2pt]g00.center);
+\end{tikzpicture}
+\end{minipage}%
+\hfill
+\begin{minipage}[c]{0.55\textwidth}
+\centering
+\begin{tikzpicture}
+    \node[dt node] (s0) at (0, 0) {$s_0$};
+    \node[dt reward] (r1) at (1.6, -1.0) {$+1$};
+    \node[dt node] (t1) at (1.6, 1.0) {$s_4$};
+    \node[dt node] (t2) at (2.8, 1.0) {$s_5$};
+    \node[dt node] (t3) at (4.0, 1.0) {$s_6$};
+    \node[dt reward] (r3) at (5.2, 1.0) {$+3$};
+    % Faded long path
+    \draw[dt path] (s0) -- (t1);
+    \draw[dt path] (t1) -- (t2);
+    \draw[dt path] (t2) -- (t3);
+    \draw[dt path] (t3) -- (r3);
+    % Taken short path
+    \draw[dt taken] (s0) -- (r1);
+    % Annotation
+    \node[font=\footnotesize, text=black!60]
+          at (2.8, -0.5) {$G_0 = 1.0$};
+\end{tikzpicture}
+\end{minipage}
+\vspace{0.3em}
+\subcaption{$\gamma = 0.5$: the agent prefers the nearby $+1$.}
+\label{fig:discount-low}
+\end{subfigure}
+
+\vspace{0.8em}
+
+%% Row (b): High gamma -- long path
+\begin{subfigure}{\textwidth}
+\centering
+\begin{minipage}[c]{0.35\textwidth}
+\centering
+\begin{tikzpicture}
+    \def\ds{1.05}
+    % Row 0 (bottom)
+    \node[dg cell] (g00) at (0, 0) {};
+    \node[dg cell] (g10) at (\ds, 0) {};
+    \node[dg cell] (g20) at (2*\ds, 0) {};
+    \node[dg cell] (g30) at (3*\ds, 0) {};
+    % Row 1 (top)
+    \node[dg cell] (g01) at (0, \ds) {};
+    \node[dg cell] (g11) at (\ds, \ds) {};
+    \node[dg cell] (g21) at (2*\ds, \ds) {};
+    \node[dg cell] (g31) at (3*\ds, \ds) {};
+    % State labels
+    \node[dg slabel] at (g00.north west) {$s_0$};
+    \node[dg slabel] at (g10.north west) {$s_1$};
+    \node[dg slabel] at (g20.north west) {$s_2$};
+    \node[dg slabel] at (g30.north west) {$s_3$};
+    \node[dg slabel] at (g01.north west) {$s_4$};
+    \node[dg slabel] at (g11.north west) {$s_5$};
+    \node[dg slabel] at (g21.north west) {$s_6$};
+    \node[dg slabel] at (g31.north west) {$s_7$};
+    % Rewards
+    \node[dg reward] at (g10) {$+1$};
+    \node[dg reward] at (g31) {$+3$};
+    % Agent at start with up-pointing chevron
+    \node[dg agent] at (g00) {};
+    \draw[dg chevron]
+          ([yshift=6pt, xshift=-2pt]g00.center) --
+          ([yshift=8.5pt]g00.center) --
+          ([yshift=6pt, xshift=2pt]g00.center);
+    % Ghost trail through s4, s5, s6 with increasing opacity
+    \node[dg ghost, opacity=0.25] at (g01) {};
+    \node[dg ghost, opacity=0.35] at (g11) {};
+    \node[dg ghost, opacity=0.45] at (g21) {};
+    % Chevrons on ghost trail (right-pointing)
+    \draw[dg chevron]
+          ([xshift=6pt, yshift=2pt]g01.center) --
+          ([xshift=8.5pt]g01.center) --
+          ([xshift=6pt, yshift=-2pt]g01.center);
+    \draw[dg chevron]
+          ([xshift=6pt, yshift=2pt]g11.center) --
+          ([xshift=8.5pt]g11.center) --
+          ([xshift=6pt, yshift=-2pt]g11.center);
+    \draw[dg chevron]
+          ([xshift=6pt, yshift=2pt]g21.center) --
+          ([xshift=8.5pt]g21.center) --
+          ([xshift=6pt, yshift=-2pt]g21.center);
+\end{tikzpicture}
+\end{minipage}%
+\hfill
+\begin{minipage}[c]{0.55\textwidth}
+\centering
+\begin{tikzpicture}
+    \node[dt node] (s0) at (0, 0) {$s_0$};
+    \node[dt reward] (r1) at (1.6, -1.0) {$+1$};
+    \node[dt node] (t1) at (1.6, 1.0) {$s_4$};
+    \node[dt node] (t2) at (2.8, 1.0) {$s_5$};
+    \node[dt node] (t3) at (4.0, 1.0) {$s_6$};
+    \node[dt reward] (r3) at (5.2, 1.0) {$+3$};
+    % Faded short path
+    \draw[dt path] (s0) -- (r1);
+    % Taken long path
+    \draw[dt taken] (s0) -- (t1);
+    \draw[dt taken] (t1) -- (t2);
+    \draw[dt taken] (t2) -- (t3);
+    \draw[dt taken] (t3) -- (r3);
+    % Annotation
+    \node[font=\footnotesize, text=black!60]
+          at (3.4, 1.7) {$G_0 = 2.19$};
+\end{tikzpicture}
+\end{minipage}
+\vspace{0.3em}
+\subcaption{$\gamma = 0.9$: the agent prefers the distant $+3$.}
+\label{fig:discount-high}
+\end{subfigure}
+
+\vspace{0.5em}
+\caption{The discount rate determines which path an agent prefers.
+  Left: a small grid-world with a nearby reward ($+1$, one step
+  from $s_0$) and a distant reward ($+3$, four steps). Right: the
+  same decision as a tree. With a low discount
+  rate~(\subref{fig:discount-low}), the distant $+3$ is discounted
+  to $0.375$, so the agent takes the short path. With a high
+  discount rate~(\subref{fig:discount-high}), the distant reward
+  retains most of its value, so the agent walks further.}
+\label{fig:discounting}
+\end{figure}
