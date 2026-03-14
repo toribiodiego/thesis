@@ -1,79 +1,102 @@
 \begin{figure}[ht]
 \centering
 \input{figures/palette}
+
+%% Panel (a): The transition on the grid
+\begin{subfigure}[t]{0.42\textwidth}
+\centering
 \begin{tikzpicture}[
-    cell/.style={minimum size=1.15cm, draw=black!15, thick,
-                 font=\scriptsize},
-    active/.style={cell, draw=black!40},
-    wall/.style={cell, fill=black!8},
-    terminal/.style={cell, fill=black!6},
+    cell/.style={minimum size=1.15cm, draw=black!40, thick},
+    wall/.style={cell, fill=black!15},
+    terminal/.style={cell, fill=black!8},
+    highlight/.style={cell, fill=palA!12},
     arr/.style={->, thick, >=stealth},
-    lbl/.style={font=\scriptsize, text=black!55},
-    qlbl/.style={font=\scriptsize},
-    plabel/.style={font=\scriptsize\bfseries, text=black!30},
+    plabel/.style={font=\scriptsize\bfseries},
+    slabel/.style={font=\tiny, text=black!45, anchor=north west},
 ]
 \def\s{1.15}
 
-% Grid (faded except active cells)
+% Full 4x3 grid
 % Row 0
-\node[cell] at (0, 0) {};
-\node[cell] at (\s, 0) {};
-\node[cell] at (2*\s, 0) {};
-\node[cell] at (3*\s, 0) {};
+\node[cell] (c00) at (0, 0) {};
+\node[cell] (c10) at (\s, 0) {};
+\node[cell] (c20) at (2*\s, 0) {};
+\node[cell] (c30) at (3*\s, 0) {};
 % Row 1
-\node[cell] at (0, \s) {};
-\node[wall, draw=black!15] at (\s, \s) {};
-\node[active] (c21) at (2*\s, \s) {};
+\node[cell] (c01) at (0, \s) {};
+\node[wall] (c11) at (\s, \s) {};
+\node[highlight] (c21) at (2*\s, \s) {};
 \node[terminal] (c31) at (3*\s, \s) {};
 % Row 2
-\node[cell] at (0, 2*\s) {};
-\node[cell] at (\s, 2*\s) {};
-\node[active] (c22) at (2*\s, 2*\s) {};
+\node[cell] (c02) at (0, 2*\s) {};
+\node[cell] (c12) at (\s, 2*\s) {};
+\node[highlight] (c22) at (2*\s, 2*\s) {};
 \node[terminal] (c32) at (3*\s, 2*\s) {};
+
+% State labels
+\node[slabel] at (c21.north west) {$s_{21}$};
+\node[slabel] at (c22.north west) {$s_{22}$};
 
 % Terminal labels
 \node[plabel] at (c31) {$-1$};
 \node[plabel] at (c32) {$+1$};
 
-% State labels
-\node[font=\scriptsize, text=black!60] at (c21) {$s_{21}$};
-\node[font=\scriptsize, text=black!60] at (c22) {$s_{22}$};
-
-% Action arrow (up)
+% Action arrow
 \draw[arr, palA!70, very thick]
-    ([yshift=3pt]c21.north) -- ([yshift=-3pt]c22.south)
+    ([yshift=2pt]c21.north) -- ([yshift=-2pt]c22.south)
     node[midway, left=4pt, font=\scriptsize, text=palA!70]
     {up};
 
-% Reward label (left side)
-\node[lbl, left=14pt] at (c21.north west) {$r = 0$};
-
-% Q-value annotations
-\node[qlbl, below=6pt, text=palA!70] at (c21.south)
-    {$Q(s_{21}, \text{up}) = 0.5$};
-
-\node[qlbl, above=6pt, text=palC!70] at (c22.north)
-    {$\max_a Q(s_{22}, a) = 1.0$};
-
-% Curved "bootstrap" arrow from c22 back to c21 (right side)
-\draw[arr, palC!50, dashed, thick]
-    ([xshift=8pt]c22.east) .. controls +(1.2, -0.3)
-    and +(1.2, 0.3) .. ([xshift=8pt]c21.east)
-    node[midway, right=3pt, lbl, text=palC!60]
-    {bootstrap};
-
-% Update annotation (centered below the grid)
-\node[font=\scriptsize, text=black!60, align=left]
-    at (1.7, -1.2) {
-    target $= r + \gamma \max_a Q(s_{22}, a)
-            = 0 + 0.9 \times 1.0 = 0.9$\\[2pt]
-    TD error $= 0.9 - 0.5 = 0.4$\\[2pt]
-    $Q(s_{21}, \text{up}) \leftarrow 0.5 + 0.1 \times 0.4 = 0.54$
-};
+% Reward annotation
+\node[font=\scriptsize, text=black!50, right=4pt]
+    at ([yshift=2pt]c21.north east) {$r = 0$};
 
 \end{tikzpicture}
-\caption{One Q-learning update. The agent moves up from $s_{21}$
-  to $s_{22}$, receiving reward $r=0$. The estimate at $s_{22}$
-  bootstraps back to update the estimate at $s_{21}$.}
+\subcaption{The agent in $s_{21}$ moves up to $s_{22}$,
+  receiving reward $r = 0$.}
+\label{fig:td-update-transition}
+\end{subfigure}
+\hfill
+%% Panel (b): The bootstrap update
+\begin{subfigure}[t]{0.52\textwidth}
+\centering
+\begin{tikzpicture}[
+    state/.style={draw=black!40, thick, rounded corners=3pt,
+                  minimum width=2.2cm, minimum height=0.9cm,
+                  font=\scriptsize, align=center, fill=palA!8},
+    arr/.style={->, thick, >=stealth},
+    lbl/.style={font=\scriptsize, text=black!55},
+]
+
+% State boxes (horizontal layout)
+\node[state] (s21) at (0, 0)
+    {$s_{21}$\\[-2pt] $Q(\cdot, \text{up}) = 0.5$};
+
+\node[state] (s22) at (4.2, 0)
+    {$s_{22}$\\[-2pt] $\max_a Q(\cdot, a) = 1.0$};
+
+% Forward arrow: action + reward
+\draw[arr, palA!70, very thick]
+    (s21.east) -- (s22.west)
+    node[midway, above=3pt, font=\scriptsize, text=palA!70]
+    {up,\; $r = 0$};
+
+% Bootstrap arrow (curved, below)
+\draw[arr, palC!50, dashed, thick]
+    ([yshift=-4pt]s22.south west)
+    .. controls +(-0.5, -1.0) and +(0.5, -1.0) ..
+    ([yshift=-4pt]s21.south east)
+    node[midway, below=3pt, font=\scriptsize, text=palC!60]
+    {$0 + 0.9 \times 1.0 = 0.9$}
+    node[midway, below=15pt, font=\scriptsize, text=black!50]
+    {$Q \leftarrow 0.5 + 0.1 \times (0.9 - 0.5) = 0.54$};
+
+\end{tikzpicture}
+\subcaption{The estimate at $s_{22}$ bootstraps back.
+  The target updates $Q(s_{21}, \text{up})$ toward $0.9$.}
+\label{fig:td-update-bootstrap}
+\end{subfigure}
+
+\caption{One Q-learning update step in the grid-world.}
 \label{fig:td-update}
 \end{figure}
