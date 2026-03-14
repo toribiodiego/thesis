@@ -947,7 +947,116 @@ additional improvements that further boost performance.
 \subsection{Rainbow DQN}
 \label{subsec:rainbow-dqn}
 
-\vspace{2em}
+Between 2015 and 2018, several independent lines of research each
+identified a specific weakness in DQN and proposed a targeted fix.
+\citet{hessel2018rainbow} showed that combining six of these
+improvements into a single agent -- \emph{Rainbow} -- produces
+performance far exceeding any individual extension. The gains are
+largely complementary, not redundant: each improvement addresses a
+different aspect of learning, and their benefits compound when used
+together.
+
+\smallskip
+\textbf{Double DQN.}\quad The $\max$ operator in the Q-learning
+target (\cref{eq:dqn-loss}) causes a systematic upward bias: when
+Q-value estimates are noisy, taking the maximum over noisy values
+tends to select overestimates. Double
+DQN~\citep{van2016deep} fixes this by decoupling action
+selection from action evaluation. The online network selects the
+best action, but the target network evaluates it -- reducing the
+overestimation because two independent estimates are unlikely to
+both be biased in the same direction for the same action.
+
+\smallskip
+\textbf{Prioritized experience replay.}\quad Standard experience
+replay samples transitions uniformly from the buffer, but not all
+transitions are equally informative. Prioritized
+replay~\citep{schaul2016prioritized} samples transitions with
+probability proportional to their TD error -- the magnitude of the
+difference between the predicted and target Q-values. Transitions
+where the agent's prediction was furthest off are replayed more
+often, focusing learning on the most surprising or informative
+experiences.
+
+\smallskip
+\textbf{Dueling networks.}\quad Rather than estimating $Q(s, a)$
+directly, the dueling architecture~\citep{wang2016dueling}
+decomposes the Q-value into a state-value $V(s)$ and an advantage
+$A(s, a)$, combining them as
+$Q(s, a) = V(s) + A(s, a) - \overline{A}(s)$. Both streams share
+the convolutional encoder but have separate fully connected heads.
+This separation lets the network learn ``how good is this state''
+independently from ``how much better is this action than average,''
+which is beneficial in states where the choice of action matters
+little.
+
+\smallskip
+\textbf{Multi-step returns.}\quad Standard DQN bootstraps from the
+immediate next state -- a one-step target. Multi-step
+returns~\citep{sutton2018reinforcement} instead use the actual
+rewards from the next $n$ steps before bootstrapping, computing the
+target as
+$\sum_{k=0}^{n-1} \gamma^k R_{t+k+1}
+  + \gamma^n \max_a Q(S_{t+n}, a)$.
+This propagates reward information faster and shifts the
+bias--variance trade-off: more real rewards and less bootstrapping
+reduces bias at the cost of higher variance. Rainbow uses $n = 3$.
+
+\smallskip
+\textbf{Distributional RL.}\quad Instead of estimating the expected
+return -- a single number -- distributional
+RL~\citep{bellemare2017distributional} models the full distribution
+of possible returns. The C51 variant used in Rainbow represents this
+distribution as a probability mass function over 51 evenly spaced
+values. The network outputs probabilities for each value, and the
+loss minimizes the KL divergence between the predicted and target
+distributions. This richer learning signal can improve feature
+learning even though the policy still acts on the expected value.
+
+\smallskip
+\textbf{Noisy networks.}\quad DQN uses $\varepsilon$-greedy
+exploration, which selects random actions with fixed
+probability~$\varepsilon$ regardless of the agent's uncertainty.
+Noisy networks~\citep{fortunato2018noisy} replace this with learned
+parametric noise injected into the network's weights. The network
+learns to explore where it is uncertain and exploit where it is
+confident, rather than exploring uniformly at random. With noisy
+networks, $\varepsilon$ is set to zero -- action selection is fully
+greedy with respect to the (noisy) Q-values.
+
+\smallskip
+Taken together, these six extensions modify nearly every component
+of DQN: the loss function changes from squared error to
+distributional KL divergence, the replay strategy from uniform to
+prioritized sampling, the target computation from single-step to
+multi-step with double Q-learning, the exploration strategy from
+$\varepsilon$-greedy to noisy networks, and the network head from
+a single stream to the dueling architecture. The only component
+left unchanged is the convolutional encoder -- the Nature CNN
+backbone from \cref{subsec:conv-encoder}.
+
+\smallskip
+\citet{hessel2018rainbow} performed ablation experiments, removing
+one component at a time to measure each extension's contribution.
+The most critical components were prioritized replay and multi-step
+returns; the least impactful in isolation were double Q-learning and
+dueling networks. However, this ranking was established at 200
+million frames of training. Whether the same ranking holds in the
+data-efficient regime -- where the agent has far fewer interactions
+to learn from -- is less clear, as the relative importance of each
+component may shift when data is scarce.
+
+\smallskip
+That the convolutional encoder remains unchanged across all of these
+improvements is significant. Methods such as SPR, introduced in
+\cref{subsec:spr}, add self-supervised objectives that operate
+directly on the encoder's learned representations. When SPR was
+shown to improve Rainbow's performance, it was unclear whether the
+gains came from SPR's representation learning or from Rainbow's many
+enhancements providing a richer learning substrate. Disentangling
+these factors -- testing whether SPR's benefits transfer to a
+simpler base agent -- is one of the questions that motivates the
+experiments in this work.
 
 \section{The Arcade Learning Environment}
 \label{sec:ale}
