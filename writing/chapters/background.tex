@@ -744,12 +744,17 @@ Second, the frame is converted to grayscale by extracting the
 luminance channel. For most games, the spatial layout of objects
 matters far more than their color, and reducing from three channels
 to one cuts the input size by two-thirds.
+\Cref{fig:grayscale} illustrates the transformation.
+
+\input{figures/grayscale-conversion}
 
 \smallskip
 Third, the frame is resized to $84 \times 84$ pixels, balancing
 spatial resolution against computational cost. This size preserves
 enough spatial detail for game play while keeping the input
-manageable.
+manageable. \Cref{fig:resize} shows the spatial reduction.
+
+\input{figures/resize}
 
 \smallskip
 Fourth, the four most recent preprocessed frames are stacked along
@@ -758,8 +763,11 @@ tensor. A single frame is a static image -- it shows positions but
 not velocities. Stacking four frames gives the network access to
 motion information: the direction and speed of a moving object can
 be inferred from its positions across consecutive frames, without
-requiring recurrence or explicit motion estimation.
+requiring recurrence or explicit motion estimation
+(\cref{fig:frame-stacking}).
 \Cref{fig:preprocessing} summarizes the four steps.
+
+\input{figures/frame-stacking}
 
 \input{figures/preprocessing}
 
@@ -1501,7 +1509,86 @@ multiple forward passes are needed.
 \subsection{Augmentation as Regularization}
 \label{subsec:aug-regularization}
 
-\vspace{2em}
+In the 100K regime, the replay buffer contains at most around
+100{,}000 transitions -- this is the agent's entire dataset. With a
+replay ratio of one (one gradient update per environment step),
+each transition is sampled roughly once. Data-efficient settings
+often use higher replay ratios, reusing each transition two to four
+times. When the same transitions are replayed repeatedly, the
+network risks memorizing specific pixel patterns rather than
+learning general features. This is the same overfitting problem
+that afflicts small-dataset classifiers in supervised learning, but
+amplified by the shifting target distribution in RL.
+
+\smallskip
+Consider what overfitting looks like at the representation level.
+The encoder might learn that a bright pixel at position $(42, 17)$
+predicts high Q-values -- because in the limited training data,
+that pixel happens to be bright when the ball is near the paddle.
+This feature is fragile: it breaks with any positional variation.
+A robust encoder would instead learn to represent the ball's
+position relative to the paddle, a feature that generalizes across
+spatial shifts. Without augmentation, the encoder has no pressure
+to prefer the robust feature over the fragile one, because both
+predict Q-values equally well on the exact training observations.
+
+\smallskip
+Random shift augmentation addresses this directly. Each time a
+transition is replayed, the observation is augmented with a
+different random spatial shift. Even though the buffer contains
+only 100{,}000 transitions, the network never sees the exact same
+input twice. This effectively expands the training distribution:
+each transition generates a family of slightly different training
+examples, all sharing the same Q-value target because the game
+semantics are unchanged. The encoder is forced to learn features
+that are invariant to small spatial shifts -- features that capture
+``where the paddle is relative to the ball'' rather than ``what
+pixel values appear at specific coordinates.'' This is
+\emph{implicit regularization}: not an explicit penalty in the loss
+function, but a constraint on what the encoder can learn, imposed
+by the data distribution it trains on.
+
+\smallskip
+The same mechanism explains why augmentation helps in supervised
+learning: random crops force a classifier to recognize objects
+regardless of their position in the frame. In RL, the effect is
+amplified because the dataset is orders of magnitude smaller --
+100{,}000 transitions versus millions of labeled images -- and
+because the training distribution shifts as the policy improves,
+compounding the risk of overfitting to early, unrepresentative
+data.
+
+\smallskip
+CURL~\citep{srinivas2020curl} combined contrastive learning with
+random crop augmentation on data-efficient Rainbow, reporting
+improved performance on Atari-100K. The contrastive loss requires
+augmentation to generate positive pairs: two different random crops
+of the same observation form a positive pair, while crops of
+different observations form negative pairs. Because augmentation is
+integral to the contrastive objective, the original results could
+not distinguish whether the gains came from contrastive learning or
+from the augmentation itself. DrQ and RAD answered this question:
+augmentation alone, without any contrastive or self-supervised
+loss, achieves similar or better results. The augmentation was
+doing most of the work. This finding is important for experimental
+design: augmentation and representation learning can be studied as
+independent factors only when the representation learning method
+does not depend on augmentation for its training signal.
+
+\smallskip
+Augmentation ensures the encoder sees diverse views of each
+observation, encouraging spatial invariance and reducing
+overfitting. But it does not change what the encoder is
+\emph{trained to predict}. The Q-learning loss remains the sole
+objective shaping the encoder's representations, and in the 100K
+regime this signal is weak -- targets are bootstrapped from poor
+estimates early in training, providing noisy guidance about what
+features matter. The encoder may settle on representations that
+satisfy the current Q-targets but fail to support further learning.
+This is the gap that self-supervised representation learning
+addresses: an auxiliary training objective that shapes the
+encoder's representations to capture dynamics and structure beyond
+what the Q-learning loss alone requires.
 
 \section{Self-Supervised Representation Learning}
 \label{sec:ssl}
