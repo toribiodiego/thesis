@@ -1398,10 +1398,105 @@ constraint.
 \section{Data Augmentation for RL}
 \label{sec:augmentation}
 
+The previous section established the 100K constraint: agents must
+learn from roughly six minutes of play. Under such a tight data
+budget, the agent replays the same transitions repeatedly,
+risking overfitting to specific pixel patterns rather than
+learning general features. Data augmentation -- a standard
+technique in supervised learning -- has recently been shown to be
+surprisingly effective in reinforcement learning. By applying
+small, semantics-preserving transformations to game frames during
+training, augmentation expands the effective dataset without
+additional environment interaction. This section describes the
+specific augmentation used in data-efficient RL (random spatial
+shifts) and explains why it works as a form of implicit
+regularization.
+
 \subsection{Random Shift Augmentation}
 \label{subsec:random-shift}
 
-\vspace{2em}
+In supervised learning, data augmentation applies label-preserving
+transformations to training inputs: random crops, horizontal flips,
+color jitter. The key requirement is that the transformation must
+not change the correct answer -- a horizontally flipped cat is
+still a cat. Augmentation is standard practice for training image
+classifiers, especially when data is limited, because it
+effectively multiplies the dataset by creating many versions of
+each training example.
+
+\smallskip
+Transferring this idea to reinforcement learning is not
+straightforward. In supervised learning, the label for an image is
+fixed: a cat is always a cat regardless of how many times the image
+is transformed. In RL, the ``label'' for an observation is the
+Q-value target, which depends on the current policy and changes
+every training step. But the observation itself is still an image.
+If a small spatial transformation does not change the game
+semantics -- the paddle is in nearly the same position, the ball
+trajectory is the same, the optimal action has not changed -- then
+the Q-values should also be unchanged. Spatial transforms that
+produce small, semantics-preserving perturbations should therefore
+be safe for RL, despite the non-stationary target problem.
+
+\smallskip
+The specific augmentation used in data-efficient RL is the
+\emph{random shift}. Starting from the preprocessed
+$84 \times 84$ grayscale frame, the operation pads the image by 4
+pixels on each side using reflection padding, creating a
+$92 \times 92$ image where the border mirrors the edge pixels. A
+random $84 \times 84$ crop is then taken from this padded image,
+with the crop position sampled uniformly at random. The result is
+the original game frame shifted by up to $\pm 4$ pixels in both the
+horizontal and vertical directions. The visual content is preserved;
+only the spatial position has changed slightly. This is the
+operation used by DrQ~\citep{kostrikov2020image}; the equivalent
+operation in RAD~\citep{laskin2020reinforcement} is called ``random
+translate.''
+
+\smallskip
+Because the observation is a stack of four consecutive frames, the
+same random shift -- the same horizontal and vertical offset -- is
+applied to all four frames in the stack. This consistency matters:
+the agent infers velocity and motion from pixel differences between
+consecutive frames. If each frame were shifted independently, these
+inter-frame differences would be corrupted, creating spurious
+motion signals. Consistent augmentation across the stack preserves
+temporal information while still providing spatial perturbation.
+
+\smallskip
+During training, each transition $(s, a, r, s')$ sampled from the
+replay buffer is augmented before computing the loss. The current
+state $s$ and next state $s'$ receive independent random shifts --
+different crop positions -- because they are separate observations.
+There is no need for the spatial offset of $s$ and $s'$ to match.
+Both DrQ and RAD apply augmentation in this way.
+
+\smallskip
+\citet{laskin2020reinforcement} systematically tested ten
+augmentation types on pixel-based RL: crop, translate, window,
+grayscale, cutout, cutout-color, flip, rotate, random convolution,
+and color jitter. Random crop and translate were the most effective
+by a wide margin; most other augmentations were neutral or harmful.
+The reason is that game semantics are approximately
+translation-invariant at small scales -- a paddle shifted three
+pixels is still a paddle in approximately the same place -- but
+they are not invariant to other transforms. Horizontal flips
+reverse left and right, changing the optimal action. Rotation
+disrupts spatial layout (gravity goes sideways). Color jitter
+alters object appearance in ways the encoder should remain
+sensitive to. Random shift succeeds because it perturbs position
+without breaking the game's spatial structure.
+
+\smallskip
+DrQ~\citep{kostrikov2020image} and
+RAD~\citep{laskin2020reinforcement} are concurrent papers that
+independently demonstrated image augmentation is sufficient for
+competitive data-efficient RL. DrQ additionally proposed averaging
+Q-targets across $K$ augmented versions of $s'$ and averaging
+Q-values across $M$ augmented versions of $s$, but the simplest
+setting -- $K = 1$, $M = 1$, a single random shift per observation
+-- is already sufficient for Atari-100K. No complex averaging or
+multiple forward passes are needed.
 
 \subsection{Augmentation as Regularization}
 \label{subsec:aug-regularization}
