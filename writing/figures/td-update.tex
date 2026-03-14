@@ -45,8 +45,8 @@
     node[midway, left=4pt, font=\scriptsize, text=palA!70]
     {up};
 
-% Reward label
-\node[lbl, right=14pt] at (c21.north east) {$r = 0$};
+% Reward label (left side)
+\node[lbl, left=14pt] at (c21.north west) {$r = 0$};
 
 % Q-value annotations
 \node[qlbl, below=6pt, text=palA!70] at (c21.south)
@@ -55,21 +55,21 @@
 \node[qlbl, above=6pt, text=palC!70] at (c22.north)
     {$\max_a Q(s_{22}, a) = 1.0$};
 
-% Update annotation (right side)
-\node[anchor=west, font=\scriptsize, text=black!60,
-      text width=4.5cm, align=left]
-    at (4.2, \s) {
-    target $= 0 + 0.9 \times 1.0 = 0.9$\\[2pt]
-    TD error $= 0.9 - 0.5 = 0.4$\\[2pt]
-    $Q \leftarrow 0.5 + 0.1 \times 0.4 = 0.54$
-};
-
-% Curved "bootstrap" arrow from c22 back to c21 update
+% Curved "bootstrap" arrow from c22 back to c21 (right side)
 \draw[arr, palC!50, dashed, thick]
-    ([xshift=8pt]c22.east) .. controls +(1.0, -0.3)
-    and +(1.0, 0.3) .. ([xshift=8pt]c21.east)
-    node[midway, right=2pt, lbl, text=palC!60]
+    ([xshift=8pt]c22.east) .. controls +(1.2, -0.3)
+    and +(1.2, 0.3) .. ([xshift=8pt]c21.east)
+    node[midway, right=3pt, lbl, text=palC!60]
     {bootstrap};
+
+% Update annotation (centered below the grid)
+\node[font=\scriptsize, text=black!60, align=left]
+    at (1.7, -1.2) {
+    target $= r + \gamma \max_a Q(s_{22}, a)
+            = 0 + 0.9 \times 1.0 = 0.9$\\[2pt]
+    TD error $= 0.9 - 0.5 = 0.4$\\[2pt]
+    $Q(s_{21}, \text{up}) \leftarrow 0.5 + 0.1 \times 0.4 = 0.54$
+};
 
 \end{tikzpicture}
 \caption{One Q-learning update. The agent moves up from $s_{21}$
