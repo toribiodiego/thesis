@@ -1778,6 +1778,12 @@ which assign diverse targets to different classes, a self-prediction
 objective has a single goal -- match yourself -- and nothing in the
 loss penalizes constant outputs. Any self-supervised method built
 on prediction must actively prevent this outcome.
+\Cref{fig:collapse} illustrates the contrast: useful
+representations preserve meaningful distinctions between game
+states, while collapsed representations map every state to the same
+point.
+
+\input{figures/collapse}
 
 \smallskip
 Contrastive methods avoid collapse by construction. Methods such as

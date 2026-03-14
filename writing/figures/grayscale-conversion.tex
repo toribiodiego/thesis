@@ -8,16 +8,13 @@
 \def\c{0.095}
 
 % --- Helper: draw 21x16 face grid ---
-% #1=x-offset, #2=bg (outside face), #3=face fill,
-% #4=feature fill, #5=outline fill, #6=draw color
+% #1=x-offset, #2=bg, #3=face, #4=feature, #5=outline, #6=draw
 \newcommand{\drawface}[6]{%
     \foreach \x in {0,...,20} {
         \foreach \y in {0,...,15} {
-            % Distance from face center (10, 7.5)
             \pgfmathsetmacro{\dist}{sqrt((\x-10)*(\x-10)+(\y-7.5)*(\y-7.5))}
             \pgfmathtruncatemacro{\inface}{\dist < 6.3 ? 1 : 0}
             \pgfmathtruncatemacro{\onedge}{(\dist >= 6.3)*(\dist < 7.2) ? 1 : 0}
-            % Eyes (2x2) + smile curve
             \pgfmathtruncatemacro{\feat}{(
                 (\x>=7)*(\x<=8)*(\y>=9)*(\y<=10) +
                 (\x>=12)*(\x<=13)*(\y>=9)*(\y<=10) +
@@ -42,50 +39,68 @@
     }
 }
 
+% === Layout constants ===
+\def\sx{2.90}         % stack group x-start
+\def\ho{0.40}         % horizontal offset per layer
+\def\vo{0.30}         % vertical offset per layer
+% Label line: one horizontal line above the tallest element
+\pgfmathsetmacro{\labely}{16*\c + 2*\vo + 0.50}
+
 % === Color image ===
 \definecolor{imgbg}{rgb}{0.92, 0.92, 0.92}
 \definecolor{ybg}{rgb}{0.95, 0.82, 0.12}
 \definecolor{yfg}{rgb}{0.15, 0.10, 0.08}
 \definecolor{yol}{rgb}{0.30, 0.25, 0.10}
-\drawface{0}{imgbg}{ybg}{yfg}{yol}{black!4}
-\node[lbl] at ({10.5*\c}, {16*\c + 0.22}) {color image};
+\begin{scope}[shift={(0, \vo)}]
+    \drawface{0}{imgbg}{ybg}{yfg}{yol}{black!4}
+\end{scope}
+\node[lbl] at ({10.5*\c}, \labely) {color image};
 \node[dimlbl, anchor=north] at ({10.5*\c}, -0.08)
     {$210 \times 160 \times 3$};
 
 % === Arrow 1 ===
 \draw[->, thick, black!35]
-    ({21*\c + 0.12}, {8*\c}) -- ++(0.3, 0);
+    ({21*\c + 0.35}, {8*\c + \vo}) -- ++(0.4, 0);
 
-% === R channel ===
-\def\rx{2.45}
-\drawface{\rx}{red!6}{red!80}{red!12}{red!40}{red!8}
-\node[clbl, text=red!70] at ({\rx + 10.5*\c}, {16*\c + 0.22}) {R};
+% === Stacked channels (B back, G middle, R front) ===
+% B (back -- upper-right)
+\begin{scope}[shift={(0, {2*\vo})}]
+    \pgfmathsetmacro{\bxx}{\sx + 2*\ho}
+    \drawface{\bxx}{blue!4}{blue!14}{blue!8}{blue!10}{blue!5}
+\end{scope}
 
-% === G channel ===
-\pgfmathsetmacro{\gx}{\rx + 21*\c + 0.06}
-\drawface{\gx}{green!5}{green!70}{green!8}{green!35}{green!8!black!3}
-\node[clbl, text=green!55!black]
-    at ({\gx + 10.5*\c}, {16*\c + 0.22}) {G};
+% G (middle)
+\begin{scope}[shift={(0, \vo)}]
+    \pgfmathsetmacro{\gxx}{\sx + \ho}
+    \drawface{\gxx}{green!5}{green!70}{green!8}{green!35}{green!8!black!3}
+\end{scope}
 
-% === B channel ===
-\pgfmathsetmacro{\bx}{\gx + 21*\c + 0.06}
-\drawface{\bx}{blue!4}{blue!14}{blue!8}{blue!10}{blue!5}
-\node[clbl, text=blue!60] at ({\bx + 10.5*\c}, {16*\c + 0.22}) {B};
+% R (front -- drawn last = on top)
+\drawface{\sx}{red!6}{red!80}{red!12}{red!40}{red!8}
 
-% Brace under channel group
+% Channel labels on same horizontal line
+\pgfmathsetmacro{\stackmid}{\sx + \ho + 10.5*\c}
+\node[clbl, text=red!70] at ({\stackmid - 0.7}, \labely) {R};
+\node[clbl, text=green!55!black] at (\stackmid, \labely) {G};
+\node[clbl, text=blue!60] at ({\stackmid + 0.7}, \labely) {B};
+
+% Brace under stack
+\pgfmathsetmacro{\stackright}{\sx + 2*\ho + 21*\c}
 \draw[decorate, decoration={brace, amplitude=3pt, mirror}, black!35]
-    (\rx, -0.05) -- ({\bx + 21*\c}, -0.05)
+    (\sx, -0.08) -- (\stackright, -0.08)
     node[midway, below=4pt, lbl] {3 channels};
 
 % === Arrow 2 ===
-\pgfmathsetmacro{\arrtwo}{\bx + 21*\c + 0.12}
+\pgfmathsetmacro{\arrtwo}{\stackright + 0.25}
 \draw[->, thick, black!35]
-    (\arrtwo, {8*\c}) -- ++(0.3, 0);
+    (\arrtwo, {8*\c + \vo}) -- ++(0.4, 0);
 
 % === Grayscale output ===
-\pgfmathsetmacro{\ox}{\arrtwo + 0.42}
-\drawface{\ox}{black!6}{black!20}{black!85}{black!55}{black!5}
-\node[lbl] at ({\ox + 10.5*\c}, {16*\c + 0.22}) {grayscale};
+\pgfmathsetmacro{\ox}{\arrtwo + 0.75}
+\begin{scope}[shift={(0, \vo)}]
+    \drawface{\ox}{black!6}{black!20}{black!85}{black!55}{black!5}
+\end{scope}
+\node[lbl] at ({\ox + 10.5*\c}, \labely) {grayscale};
 \node[dimlbl, anchor=north] at ({\ox + 10.5*\c}, -0.08)
     {$210 \times 160 \times 1$};
 

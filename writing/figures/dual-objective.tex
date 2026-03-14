@@ -7,68 +7,60 @@
 \begin{tikzpicture}[
     arr/.style={->, thick, >=stealth, black!55},
     gradarr/.style={->, thick, >=stealth, dashed},
-    box/.style={draw=black!70, thick, minimum height=0.7cm,
+    box/.style={draw=black!70, thick, minimum height=0.8cm,
+                minimum width=1.6cm,
                 font=\small, inner sep=5pt, rounded corners=2pt},
-    lossbox/.style={draw=black!40, thick, minimum height=0.6cm,
-                font=\small, inner sep=4pt, rounded corners=2pt,
-                fill=black!4},
     lbl/.style={font=\scriptsize, text=black!55},
 ]
 
 % === Observation input ===
-\node[font=\small, text=black!90] (obs) at (-1.0, 0) {$s_t$};
-\draw[arr] (-0.6, 0) -- (0.3, 0);
+\node[font=\small, text=black!90] (obs) at (-0.8, 0) {$s_t$};
+\draw[arr] (-0.4, 0) -- (0.5, 0);
 
 % === Shared encoder (trapezoid) ===
 \fill[encfade, draw=black!70, thick, line join=round]
-    (0.5, -1.1) -- (0.5, 1.1) -- (2.2, 0.6) -- (2.2, -0.6) -- cycle;
-\node[font=\small, text=black!85] at (1.25, 0) {$f_\theta$};
-\node[lbl, anchor=north] at (1.25, -1.5) {shared encoder};
+    (0.7, -1.1) -- (0.7, 1.1) -- (2.4, 0.6) -- (2.4, -0.6) -- cycle;
+\node[font=\small, text=black!85] at (1.45, 0) {$f_\theta$};
 
-% === 512-dim bottleneck ===
-\node[font=\small, text=black!90, inner sep=2pt] (z) at (3.1, 0)
+% === Bottleneck representation ===
+\node[font=\small, text=black!90, inner sep=2pt] (z) at (3.3, 0)
     {$\mathbf{z}_t$};
-\draw[arr] (2.2, 0) -- (z.west);
-\node[lbl, anchor=north] at (3.1, -0.3) {512-dim};
+\draw[arr] (2.4, 0) -- (z.west);
 
-% === Q-learning path (upper, palA blue) ===
-\draw[arr, palA] (z.north) -- ++(0, 0.6) -| (4.6, 1.4);
-\node[box, fill=palA!15] (qhead) at (5.6, 1.4) {Q-head};
-\draw[arr, palA] (qhead.east) -- ++(0.6, 0)
-    node[right, font=\small, text=black!90] {$Q(s_t, a_i)$};
-% Loss node
-\node[lossbox, text=palA!80!black] (qloss) at (9.2, 1.4)
-    {$\mathcal{L}_{\text{Q}}$};
-\draw[arr, palA!60] (7.6, 1.4) -- (qloss.west);
-\node[lbl, text=palA!70!black] at (9.2, 0.95)
+% === Q-learning path (upper) ===
+\draw[arr, palA] (z.north) -- ++(0, 0.75) coordinate (qfork);
+\draw[arr, palA] (qfork) -- ++(2.3, 0);
+\node[box, fill=palA!12] (qhead) at (7.1, 1.5)
+    {Q-head $\;\to\; \mathcal{L}_{\text{Q}}$};
+\node[lbl, text=palA!70!black, anchor=north] at (7.1, 0.95)
     {action values};
 
-% === SSL path (lower, palC green) ===
-\draw[arr, palC!80!black] (z.south) -- ++(0, -0.6) -| (4.6, -1.4);
-\node[box, fill=sprcomp] (sslhead) at (5.6, -1.4) {SSL head};
-\draw[arr, palC!80!black] (sslhead.east) -- ++(0.6, 0)
-    node[right, font=\small, text=black!90]
-    {$\hat{\mathbf{z}}_{t+1}$};
-% Loss node
-\node[lossbox, text=palC!70!black] (sslloss) at (9.2, -1.4)
-    {$\lambda\,\mathcal{L}_{\text{SSL}}$};
-\draw[arr, palC!50!black] (8.05, -1.4) -- (sslloss.west);
-\node[lbl, text=palC!60!black] at (9.2, -1.85)
+% === SSL path (lower) ===
+\draw[arr, palC!80!black] (z.south) -- ++(0, -0.75) coordinate (sslfork);
+\draw[arr, palC!80!black] (sslfork) -- ++(2.3, 0);
+\node[box, fill=sprcomp!70] (sslhead) at (7.1, -1.5)
+    {SSL head $\;\to\; \lambda\,\mathcal{L}_{\text{SSL}}$};
+\node[lbl, text=palC!60!black, anchor=north] at (7.1, -2.05)
     {dynamics / structure};
 
-% === Gradient arrows (routed outside, back to encoder) ===
+% === Gradient arrows (routed outside) ===
 % Q gradient (blue, dashed, above)
-\draw[gradarr, palA!65, rounded corners=6pt]
-    (qloss.north) -- ++(0, 0.5) -- (1.25, 2.3) -- (1.25, 1.15);
-\node[font=\scriptsize, text=palA!65, anchor=south] at (5.2, 2.3)
+\draw[gradarr, palA!65, rounded corners=8pt]
+    (qhead.west |- 0, 2.3) -- (1.45, 2.3) -- (1.45, 1.15);
+\draw[thick, dashed, palA!65] (qhead.north) -- ++(0, 0.23);
+\node[font=\scriptsize, text=palA!65] at (4.3, 2.6)
     {$\nabla \mathcal{L}_{\text{Q}}$};
 
 % SSL gradient (green, dashed, below)
-\draw[gradarr, palC!55!black, rounded corners=6pt]
-    (sslloss.south) -- ++(0, -0.5) -- (1.25, -2.3) -- (1.25, -1.15);
-\node[font=\scriptsize, text=palC!55!black, anchor=north]
-    at (5.2, -2.3)
+\draw[gradarr, palC!55!black, rounded corners=8pt]
+    (sslhead.west |- 0, -2.3) -- (1.45, -2.3) -- (1.45, -1.15);
+\draw[thick, dashed, palC!55!black] (sslhead.south) -- ++(0, -0.22);
+\node[font=\scriptsize, text=palC!55!black] at (4.3, -2.6)
     {$\nabla \lambda\mathcal{L}_{\text{SSL}}$};
+
+% === Labels ===
+\node[lbl, anchor=north] at (1.45, -1.4) {shared encoder};
+\node[lbl, anchor=north] at (3.3, -0.35) {\footnotesize 512-dim};
 
 \end{tikzpicture}
 \caption{Dual-objective training. The shared encoder $f_\theta$
