@@ -320,6 +320,10 @@ def main():
         print(f"     steps: {missing_steps}")
 
         # Create environment with correct sticky actions
+        # render_mode needed for video recording (env.render() returns frames)
+        env_kwargs = {}
+        if args.record_video:
+            env_kwargs["render_mode"] = "rgb_array"
         env = make_atari_env(
             env_id=env_id,
             frame_size=84,
@@ -329,6 +333,7 @@ def main():
             episode_life=False,
             noop_max=30,
             repeat_action_probability=repeat_action_prob,
+            **env_kwargs,
         )
         num_actions = env.action_space.n
 
