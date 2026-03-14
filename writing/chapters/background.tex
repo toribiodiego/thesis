@@ -570,21 +570,14 @@ enumeration is impossible.
 \subsection{Function Approximation}
 \label{subsec:func-approx}
 
-Q-learning converges to $q_*$ -- but only when every state--action
-pair is stored in a table and visited repeatedly. The previous
-section closed by noting that this tabular representation breaks
-down for large state spaces: the table cannot fit in memory, and
-visiting every entry is infeasible. There is a deeper problem as
-well: a table treats every state as entirely unrelated. If the agent
-learns that one state is valuable, that knowledge says nothing about
-similar states it has not yet visited.
-
-\smallskip
-When the state is a raw image -- say, $84 \times 84$ grayscale
-pixels -- the number of possible states is $256^{84 \times 84}$,
-a figure so large that even listing the entries would require more
-storage than exists in the known universe. Tabular Q-learning is
-not merely slow in such settings; it is impossible.
+Q-learning as described in the previous section maintains a table
+with one entry for every state--action pair. When the state is a
+raw image -- say, $84 \times 84$ grayscale pixels -- the number of
+possible states is astronomical. A table cannot fit in memory, the
+agent cannot visit every entry, and learning that one state is
+valuable tells it nothing about similar states it has not yet seen.
+Tabular Q-learning is not merely slow in such settings; it is
+impossible.
 
 \smallskip
 The solution is to replace the table with a parameterized function.
@@ -659,11 +652,9 @@ weaken the theoretical convergence guarantees compared to supervised
 learning.
 
 \smallskip
-The choice of function determines how expressive the approximation
-can be. Linear functions, tile coding, and radial basis functions
-are all valid options, but for high-dimensional inputs such as
-images, neural networks are the natural choice. A neural network can
-learn hierarchical features -- from edges and textures to shapes and
+For high-dimensional inputs such as images, neural networks are the
+natural choice of function approximator. A neural network can learn
+hierarchical features -- from edges and textures to shapes and
 spatial arrangements -- directly from raw pixel values, without
 requiring hand-crafted feature engineering.
 
@@ -685,12 +676,21 @@ generalize across similar states, and scale to environments with
 vast state spaces. But these gains come at a cost. Tabular
 Q-learning converges to $q_*$ under standard conditions; with
 nonlinear function approximation, no such guarantee exists in
-general. The combination of three elements -- bootstrapping
-(updating toward a target that depends on the current estimates),
-off-policy learning (the $\max$ in the target), and function
-approximation (shared parameters across states) -- can cause the
-estimates to diverge rather than converge, a problem known as the
-\emph{deadly triad}~\citep{sutton2018reinforcement}.
+general.
+
+\smallskip
+The instability arises from the combination of three elements,
+known as the \emph{deadly triad}~\citep{sutton2018reinforcement}.
+First, \emph{bootstrapping}: the TD target depends on the current
+estimates, so errors in the Q-values feed back into the targets
+used to train them. Second, \emph{off-policy learning}: the $\max$
+operator in the target means the agent updates toward a different
+policy (the greedy one) than the one it uses to collect data,
+which can amplify estimation errors. Third, \emph{function
+approximation} itself: because parameters are shared across states,
+a single update changes Q-values for many states simultaneously,
+and these coupled changes can reinforce each other and cause the
+estimates to diverge.
 
 \smallskip
 The next section introduces the deep Q-network (DQN), which
