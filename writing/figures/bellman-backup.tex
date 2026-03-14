@@ -2,47 +2,72 @@
 \centering
 \input{figures/palette}
 \begin{tikzpicture}[
-    snode/.style={circle, draw=black!50, thick, fill=palA!12,
-                  minimum size=0.9cm, font=\small},
-    anode/.style={circle, fill=black!60, minimum size=5pt,
+    snode/.style={circle, draw=black!50, thick, fill=white,
+                  minimum size=0.7cm, font=\small},
+    anode/.style={circle, fill=black!55, minimum size=6pt,
                   inner sep=0pt},
-    edge/.style={thick, black!45, -Stealth},
+    edge/.style={thick, black!40},
     elabel/.style={font=\scriptsize, text=black!55},
     payoff/.style={font=\scriptsize, text=black!45},
+    brace/.style={decorate, decoration={brace, amplitude=5pt},
+                  thick, black!30},
+    annot/.style={font=\scriptsize, text=black!50, align=left},
 ]
 
 % Root state
 \node[snode] (s) at (0, 0) {$s$};
 
-% Action nodes
-\node[anode] (a1) at (-1.8, -1.5) {};
-\node[anode] (a2) at ( 1.8, -1.5) {};
-\node[font=\scriptsize, left=3pt] at (a1) {$a_1$};
-\node[font=\scriptsize, right=3pt] at (a2) {$a_2$};
-
-% Next-state nodes
-\node[snode] (s1) at (-1.8, -3.4) {$s'$};
-\node[snode] (s2) at ( 1.8, -3.4) {$s''$};
+% Action nodes -- two actions
+\node[anode] (a1) at (-2.0, -1.4) {};
+\node[anode] (a2) at ( 2.0, -1.4) {};
+\node[elabel, left=2pt] at (a1) {$a_1$};
+\node[elabel, right=2pt] at (a2) {$a_2$};
 
 % Policy edges (state -> actions)
-\draw[edge] (s) -- node[elabel, left, pos=0.4]
+\draw[edge] (s) -- node[elabel, left, pos=0.45]
     {$\pi(a_1 \!\mid\! s)$} (a1);
-\draw[edge] (s) -- node[elabel, right, pos=0.4]
+\draw[edge] (s) -- node[elabel, right, pos=0.45]
     {$\pi(a_2 \!\mid\! s)$} (a2);
 
-% Transition edges (actions -> next states)
-\draw[edge] (a1) -- node[elabel, left] {$r_1$} (s1);
-\draw[edge] (a2) -- node[elabel, right] {$r_2$} (s2);
+% Successor states for a1 (two possible outcomes)
+\node[snode] (s11) at (-3.0, -3.2) {$s'$};
+\node[snode] (s12) at (-1.0, -3.2) {$s''$};
 
-% Payoff annotations
-\node[payoff, below=5pt] at (s1)
-    {$r_1 + \gamma\, v_\pi(s')$};
-\node[payoff, below=5pt] at (s2)
-    {$r_2 + \gamma\, v_\pi(s'')$};
+% Successor states for a2 (two possible outcomes)
+\node[snode] (s21) at ( 1.0, -3.2) {$s'$};
+\node[snode] (s22) at ( 3.0, -3.2) {$s''$};
+
+% Transition edges from a1
+\draw[edge] (a1) -- node[elabel, left, pos=0.4] {$r$} (s11);
+\draw[edge] (a1) -- node[elabel, right, pos=0.4] {$r'$} (s12);
+
+% Transition edges from a2
+\draw[edge] (a2) -- node[elabel, left, pos=0.4] {$r$} (s21);
+\draw[edge] (a2) -- node[elabel, right, pos=0.4] {$r'$} (s22);
+
+% Transition probability annotations (below edges)
+\node[elabel, text=black!40] at (-3.15, -2.1) {$p$};
+\node[elabel, text=black!40] at (-0.85, -2.1) {$p$};
+\node[elabel, text=black!40] at ( 0.85, -2.1) {$p$};
+\node[elabel, text=black!40] at ( 3.15, -2.1) {$p$};
+
+% Payoff annotations below leaf nodes
+\node[payoff, below=4pt] at (s11)
+    {$r + \gamma\, v_\pi(s')$};
+\node[payoff, below=4pt] at (s22)
+    {$r' + \gamma\, v_\pi(s'')$};
+
+% Right-side annotation connecting tree layers to equation terms
+\draw[brace] (4.0, -0.1) -- (4.0, -1.3)
+    node[annot, midway, right=6pt] {$\displaystyle\sum_a \pi(a \mid s)$};
+\draw[brace] (4.0, -1.5) -- (4.0, -3.1)
+    node[annot, midway, right=6pt]
+    {$\displaystyle\sum_{s',r} p(s',r \mid s,a)$\\[2pt]
+     $\big[r + \gamma\, v_\pi(s')\big]$};
 
 \end{tikzpicture}
-\vspace{0.5em}
-\caption{Bellman backup: $v_\pi(s)$ decomposes into one step of
-  reward plus the discounted value of the successor state.}
+\caption{Bellman backup diagram for $v_\pi$. Each open circle is a
+  state; each filled dot is an action. The two layers of branching
+  correspond to the two sums in the Bellman equation.}
 \label{fig:bellman-backup}
 \end{figure}
