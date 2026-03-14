@@ -1,0 +1,80 @@
+\begin{figure}[htbp]
+\centering
+\input{figures/palette}
+\definecolor{encfade}{HTML}{B8D2E6}
+\definecolor{sprcomp}{HTML}{C2D4A8}
+
+\begin{tikzpicture}[
+    arr/.style={->, thick, >=stealth, black!55},
+    gradarr/.style={->, thick, >=stealth, dashed},
+    box/.style={draw=black!70, thick, minimum height=0.7cm,
+                font=\small, inner sep=5pt, rounded corners=2pt},
+    lossbox/.style={draw=black!40, thick, minimum height=0.6cm,
+                font=\small, inner sep=4pt, rounded corners=2pt,
+                fill=black!4},
+    lbl/.style={font=\scriptsize, text=black!55},
+]
+
+% === Observation input ===
+\node[font=\small, text=black!90] (obs) at (-1.0, 0) {$s_t$};
+\draw[arr] (-0.6, 0) -- (0.3, 0);
+
+% === Shared encoder (trapezoid) ===
+\fill[encfade, draw=black!70, thick, line join=round]
+    (0.5, -1.1) -- (0.5, 1.1) -- (2.2, 0.6) -- (2.2, -0.6) -- cycle;
+\node[font=\small, text=black!85] at (1.25, 0) {$f_\theta$};
+\node[lbl, anchor=north] at (1.25, -1.5) {shared encoder};
+
+% === 512-dim bottleneck ===
+\node[font=\small, text=black!90, inner sep=2pt] (z) at (3.1, 0)
+    {$\mathbf{z}_t$};
+\draw[arr] (2.2, 0) -- (z.west);
+\node[lbl, anchor=north] at (3.1, -0.3) {512-dim};
+
+% === Q-learning path (upper, palA blue) ===
+\draw[arr, palA] (z.north) -- ++(0, 0.6) -| (4.6, 1.4);
+\node[box, fill=palA!15] (qhead) at (5.6, 1.4) {Q-head};
+\draw[arr, palA] (qhead.east) -- ++(0.6, 0)
+    node[right, font=\small, text=black!90] {$Q(s_t, a_i)$};
+% Loss node
+\node[lossbox, text=palA!80!black] (qloss) at (9.2, 1.4)
+    {$\mathcal{L}_{\text{Q}}$};
+\draw[arr, palA!60] (7.6, 1.4) -- (qloss.west);
+\node[lbl, text=palA!70!black] at (9.2, 0.95)
+    {action values};
+
+% === SSL path (lower, palC green) ===
+\draw[arr, palC!80!black] (z.south) -- ++(0, -0.6) -| (4.6, -1.4);
+\node[box, fill=sprcomp] (sslhead) at (5.6, -1.4) {SSL head};
+\draw[arr, palC!80!black] (sslhead.east) -- ++(0.6, 0)
+    node[right, font=\small, text=black!90]
+    {$\hat{\mathbf{z}}_{t+1}$};
+% Loss node
+\node[lossbox, text=palC!70!black] (sslloss) at (9.2, -1.4)
+    {$\lambda\,\mathcal{L}_{\text{SSL}}$};
+\draw[arr, palC!50!black] (8.05, -1.4) -- (sslloss.west);
+\node[lbl, text=palC!60!black] at (9.2, -1.85)
+    {dynamics / structure};
+
+% === Gradient arrows (routed outside, back to encoder) ===
+% Q gradient (blue, dashed, above)
+\draw[gradarr, palA!65, rounded corners=6pt]
+    (qloss.north) -- ++(0, 0.5) -- (1.25, 2.3) -- (1.25, 1.15);
+\node[font=\scriptsize, text=palA!65, anchor=south] at (5.2, 2.3)
+    {$\nabla \mathcal{L}_{\text{Q}}$};
+
+% SSL gradient (green, dashed, below)
+\draw[gradarr, palC!55!black, rounded corners=6pt]
+    (sslloss.south) -- ++(0, -0.5) -- (1.25, -2.3) -- (1.25, -1.15);
+\node[font=\scriptsize, text=palC!55!black, anchor=north]
+    at (5.2, -2.3)
+    {$\nabla \lambda\mathcal{L}_{\text{SSL}}$};
+
+\end{tikzpicture}
+\caption{Dual-objective training. The shared encoder $f_\theta$
+  produces a representation $\mathbf{z}_t$ that feeds both the
+  Q-head and the self-supervised head. Gradients from both losses
+  flow back through the encoder, shaping its representations with
+  complementary signals.}
+\label{fig:dual-objective}
+\end{figure}

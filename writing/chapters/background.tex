@@ -1723,6 +1723,12 @@ self-supervised loss provides structurally rich guidance (even if
 not directly about rewards). The weight $\lambda$ controls the
 balance between the two objectives. In SPR, $\lambda = 2$, giving
 the self-supervised signal twice the weight of the Q-learning loss.
+\Cref{fig:dual-objective} illustrates this dual-objective
+architecture: the shared encoder feeds both the Q-head and the
+self-supervised head, and gradients from both losses flow back
+through the encoder.
+
+\input{figures/dual-objective}
 
 \smallskip
 Self-supervised methods fall into two broad families.
