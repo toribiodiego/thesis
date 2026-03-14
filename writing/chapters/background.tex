@@ -652,7 +652,11 @@ when computing the gradient. This is called a \emph{semi-gradient}
 method~\citep{sutton2018reinforcement}. Semi-gradient updates are
 simpler and more stable than full-gradient alternatives, though they
 weaken the theoretical convergence guarantees compared to supervised
-learning.
+learning. \Cref{fig:semi-gradient} illustrates this asymmetry: the
+same parameters appear on both sides of the loss, but the gradient
+update treats the target as if it were a fixed label.
+
+\input{figures/semi-gradient}
 
 \smallskip
 For high-dimensional inputs such as images, neural networks are the
