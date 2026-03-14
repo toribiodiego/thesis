@@ -34,7 +34,9 @@
         \fi\fi\fi
     }
 }
-\node[lbl] at ({10.5*\c}, {16*\c + 0.35}) {$210 \times 160$};
+\node[lbl] at ({10.5*\c}, {16*\c + 0.35}) {original};
+\node[dimlbl, anchor=north] at ({10.5*\c}, -0.08)
+    {$210 \times 160$};
 
 % --- Arrow ---
 \draw[->, thick, black!35]
@@ -70,7 +72,9 @@
         \fi\fi\fi
     }
 }
-\node[lbl] at ({\ox + 4*\c}, {16*\c + 0.35}) {$84 \times 84$};
+\node[lbl] at ({\ox + 4*\c}, {16*\c + 0.35}) {downsampled};
+\node[dimlbl, anchor=north] at ({\ox + 4*\c}, {\oy - 0.08})
+    {$84 \times 84$};
 
 \end{tikzpicture}
 \caption{Downsampling. The frame is resized from $210 \times 160$
