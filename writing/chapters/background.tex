@@ -1854,11 +1854,140 @@ predict the agent's own future latent states.
 \subsection{Self-Predictive Representations}
 \label{subsec:spr}
 
-% Figure commented out until section prose is drafted --
-% without anchor text, LaTeX floats it to earlier pages.
-% \input{figures/spr-loss}
+SPR~\citep{schwarzer2021dataefficient} trains the encoder to
+predict its own future representations -- not future pixels, not
+future rewards, but future latent states. The idea follows directly
+from the previous two subsections: RL has a natural pretext task
+(temporal prediction), predicting in latent space avoids the cost of
+pixel reconstruction, and the EMA target encoder plus asymmetric
+predictor prevent collapse. SPR adds one further insight:
+\emph{multi-step} prediction -- predicting $K$ steps ahead rather
+than just one -- produces richer representations because the
+encoder must capture dynamics that unfold over multiple time steps.
+By default, SPR uses $K = 5$.
 
-\vspace{2em}
+\smallskip
+SPR adds several components on top of the base agent's
+architecture. The \emph{online encoder} is the standard CNN
+encoder from DQN (the Nature CNN described in
+\cref{subsec:conv-encoder}). It takes the observation $s_t$ and
+produces a spatial feature map
+$\mathbf{y}_t = f_{\text{online}}(s_t)$. This is the same
+encoder that feeds into the Q-head; the SPR components share it
+rather than using a separate network.
+
+\smallskip
+The \emph{EMA target encoder} is a slow-moving copy of the online
+encoder, updated via the EMA rule from \cref{eq:ema-update}. It
+takes future observations $s_{t+k}$ and produces target
+representations
+$\mathbf{y}^{\text{tgt}}_{t+k} = f_{\text{target}}(s_{t+k})$.
+Gradients do not flow through this encoder -- it provides stable
+targets for the online encoder to predict, using the same
+anti-collapse mechanism described in \cref{subsec:collapse-problem}.
+
+\smallskip
+The \emph{transition model} $h$ is an action-conditioned network
+that predicts the next latent state given the current latent and
+the action taken:
+$\hat{\mathbf{y}}_{t+1} = h(\mathbf{y}_t,\, a_t)$. This is the
+component that captures dynamics: it learns how the latent
+representation should change when the agent takes a specific
+action. The transition model is applied iteratively for multi-step
+prediction -- each step's output becomes the next step's input.
+
+\smallskip
+Two additional heads complete the architecture. A \emph{projection
+head} $g$ maps spatial feature maps to a lower-dimensional vector
+suitable for comparison. It is applied to both predicted and target
+representations. A \emph{prediction head} $q$ -- the asymmetric
+predictor from BYOL -- is applied only to the online (predicted)
+side, providing the second anti-collapse mechanism from
+\cref{subsec:collapse-problem}. The full comparison for a single
+prediction step is between
+$q(g(\hat{\mathbf{y}}_{t+k}))$ on the online side and
+$g(\mathbf{y}^{\text{tgt}}_{t+k})$ on the target side.
+
+\smallskip
+SPR's training operates on sequences sampled from the replay
+buffer. Given a transition sequence
+$(s_t, a_t, s_{t+1}, a_{t+1}, \ldots, s_{t+K})$, the procedure
+is as follows. First, the current state is encoded with the
+online encoder:
+$\mathbf{y}_t = f_{\text{online}}(s_t)$. Then, for each of the
+next $K$ steps, the transition model predicts the next latent from
+the previous \emph{prediction} (not from a fresh encoding):
+$\hat{\mathbf{y}}_{t+k} = h(\hat{\mathbf{y}}_{t+k-1},\, a_{t+k-1})$.
+Meanwhile, the actual future state $s_{t+k}$ is encoded with the
+target encoder to produce the prediction target
+$\mathbf{y}^{\text{tgt}}_{t+k}$. The SPR loss is the negative mean
+cosine similarity across all $K$ steps:
+\begin{equation}
+\label{eq:spr-loss}
+\mathcal{L}_{\text{SPR}}
+  = -\frac{1}{K} \sum_{k=1}^{K}
+    \frac{q(g(\hat{\mathbf{y}}_{t+k})) \cdot
+          g(\mathbf{y}^{\text{tgt}}_{t+k})}
+         {\|q(g(\hat{\mathbf{y}}_{t+k}))\|\;
+          \|g(\mathbf{y}^{\text{tgt}}_{t+k})\|}.
+\end{equation}
+Gradients flow through the online encoder, transition model,
+projection head, and prediction head, but not through the target
+encoder.
+
+\smallskip
+The chained predictions are a deliberate design choice, not a
+shortcut. Because each step uses the \emph{previous prediction}
+rather than a fresh encoding, errors compound: a poor prediction at
+step~1 produces a flawed input for step~2, which in turn degrades
+step~3, and so on. This compounding pressure forces the encoder to
+produce representations that the transition model can propagate
+accurately over multiple steps. The encoder must represent
+information that is \emph{predictable over time} -- stable features
+such as object positions and velocities, rather than transient
+noise like exact pixel patterns. The $K = 5$ horizon is enough to
+capture short-term dynamics (ball trajectories, paddle movements)
+without requiring long-horizon planning.
+
+\smallskip
+The encoder thus receives gradients from two losses: the Q-learning
+loss, which signals what actions are valuable, and the SPR loss,
+which signals how states evolve under actions. The SPR loss
+encourages the encoder to represent object positions, velocities,
+and action effects -- information that is useful for Q-learning but
+that the Q-loss alone may not explicitly require, especially early
+in training when Q-targets are noisy. The result is richer, more
+informative representations that support faster and more stable
+Q-learning. The encoder captures the environment's dynamics, not
+just whatever happens to correlate with current Q-targets.
+
+\smallskip
+SPR shapes representations but does not change the agent's
+exploration strategy, replay sampling, or learning algorithm. The
+agent still uses $\varepsilon$-greedy exploration and uniform
+replay. SPR does not add domain knowledge: the transition model is
+a generic convolutional network, and the representations it
+encourages are discovered from data. Its benefits may therefore
+depend on the base agent. A capable base agent such as Rainbow
+provides richer replay data (through prioritized sampling and
+$n$-step returns) and more effective exploration (through noisy
+networks), which could make SPR's predictions more informative. A
+simple DQN may provide weaker data for SPR to learn from.
+
+\smallskip
+This is precisely the question that motivates the experiments in
+this work. SPR was originally evaluated on top of
+Rainbow~\citep{hessel2018rainbow}, which includes six extensions
+beyond DQN. The reported improvements on Atari-100K were
+substantial, but the base agent was already sophisticated. The
+gains could come from SPR's representation learning alone, from
+the interaction between SPR and Rainbow's components, or from a
+combination of both. By testing SPR on a simple DQN -- without
+Rainbow's extensions -- the contribution of representation learning
+can be isolated from the contribution of the base agent. Combined
+with data augmentation as a second experimental factor, this
+produces a controlled study of when self-supervised representations
+help and what determines their usefulness.
 
 \section{Related Work and Positioning}
 \label{sec:related-work}
