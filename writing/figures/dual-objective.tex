@@ -2,20 +2,16 @@
 \centering
 \input{figures/palette}
 \definecolor{encfade}{HTML}{B8D2E6}
-% Q-head colors (from nature-cnn.tex output layer)
 \definecolor{outfront}{HTML}{DCE8F4}
 \definecolor{outtop}{HTML}{EBF1F8}
 \definecolor{outside}{HTML}{C2D6E8}
-% FC layer colors
 \definecolor{fcfront}{HTML}{B3CEE4}
 \definecolor{fctop}{HTML}{CDDEF0}
 \definecolor{fcside}{HTML}{8DB3D2}
-% SSL head colors (green variant)
 \definecolor{sslfront}{HTML}{B8D8A0}
 \definecolor{ssltop}{HTML}{CBE4B8}
 \definecolor{sslside}{HTML}{8FB870}
 
-% Cuboid macro (from nature-cnn.tex)
 \newcommand{\cuboid}[7]{%
     \fill[#5, draw=black!35, line join=round]
         (#1, {-#3/2}, 0) -- ({#1+#2}, {-#3/2}, 0) --
@@ -28,69 +24,6 @@
         ({#1+#2}, {#3/2}, #4) -- ({#1+#2}, {-#3/2}, #4) -- cycle;
 }
 
-%% ====== Panel (a): Standard DQN ======
-\begin{subfigure}[t]{\textwidth}
-\centering
-\begin{tikzpicture}[
-    x={(1cm,0cm)}, y={(0cm,1cm)}, z={(0.35cm,0.25cm)},
-    arr/.style={->, thick, >=stealth, black!45},
-    gradarr/.style={<-, thick, >=stealth, dashed, palA!55},
-    lbl/.style={font=\scriptsize, text=black!45},
-]
-
-% Observation label
-\node[font=\small, text=black!85] at (-0.5, 0, 0) {$s_t$};
-\draw[arr] (0.0, 0, 0) -- (0.6, 0, 0);
-
-% Encoder (trapezoid in 2D -- just use y coords, z=0)
-\fill[encfade, draw=black!60, thick, line join=round]
-    (0.8, -0.9, 0) -- (0.8, 0.9, 0) -- (2.5, 0.5, 0)
-    -- (2.5, -0.5, 0) -- cycle;
-\node[font=\small, text=black!80] at (1.55, 0, 0) {$f_\theta$};
-
-% z_t label
-\node[font=\small, text=black!85] (zt) at (3.4, 0, 0)
-    {$\mathbf{z}_t$};
-\draw[arr] (2.5, 0, 0) -- (3.05, 0, 0);
-
-\draw[arr] (3.75, 0, 0) -- (4.6, 0, 0);
-
-% FC layer (thin tall cuboid)
-\cuboid{4.8}{0.15}{1.2}{0.1}{fcfront}{fctop}{fcside}
-
-\draw[arr] (5.3, 0, 0) -- (5.9, 0, 0);
-
-% Q-values output (thin cuboid, lighter)
-\cuboid{6.1}{0.15}{0.7}{0.1}{outfront}{outtop}{outside}
-\node[lbl, anchor=south] at (6.17, 0.5, 0) {$Q(s,a)$};
-\node[lbl, anchor=north] at (4.88, -0.75, 0) {Q-head};
-
-% Loss label
-\draw[arr] (6.6, 0, 0) -- (7.3, 0, 0);
-\node[font=\small, text=palA!80!black] at (7.8, 0, 0)
-    {$\mathcal{L}_{\text{Q}}$};
-
-% Encoder + bottleneck labels
-\node[lbl, anchor=north] at (1.55, -1.15, 0) {encoder};
-\node[lbl, anchor=north] at (3.4, -0.4, 0) {512};
-
-% Gradient arrow (below, outside the figure)
-\draw[gradarr, rounded corners=5pt]
-    (1.55, -1.55, 0) -- (1.55, -1.85, 0) -- (7.6, -1.85, 0)
-    -- (7.6, -0.3, 0);
-\node[lbl, text=palA!50] at (4.6, -2.1, 0)
-    {sole gradient signal};
-
-\end{tikzpicture}
-\subcaption{Standard DQN: single objective}
-\label{fig:dual-obj-standard}
-\end{subfigure}
-
-\vspace{1.5em}
-
-%% ====== Panel (b): With self-supervision ======
-\begin{subfigure}[t]{\textwidth}
-\centering
 \begin{tikzpicture}[
     x={(1cm,0cm)}, y={(0cm,1cm)}, z={(0.35cm,0.25cm)},
     arr/.style={->, thick, >=stealth, black!45},
@@ -102,7 +35,7 @@
 \node[font=\small, text=black!85] at (-0.5, 0, 0) {$s_t$};
 \draw[arr] (0.0, 0, 0) -- (0.6, 0, 0);
 
-% Encoder (same trapezoid)
+% Encoder (trapezoid)
 \fill[encfade, draw=black!60, thick, line join=round]
     (0.8, -0.9, 0) -- (0.8, 0.9, 0) -- (2.5, 0.5, 0)
     -- (2.5, -0.5, 0) -- cycle;
@@ -114,39 +47,43 @@
 \draw[arr] (2.5, 0, 0) -- (3.05, 0, 0);
 
 % === Upper path: Q-head ===
-\draw[arr] (3.75, 0.15, 0) -- (4.4, 1.6, 0);
+\draw[arr] (3.75, 0.15, 0) -- (4.6, 1.8, 0);
 
 % FC layer (upper)
-\cuboid{4.6}{0.15}{1.0}{0.1}{fcfront}{fctop}{fcside}
-\draw[arr] (5.1, 1.6, 0) -- (5.9, 1.6, 0);
+\cuboid{4.8}{0.15}{1.0}{0.1}{fcfront}{fctop}{fcside}
+\draw[arr] (5.3, 1.8, 0) -- (6.1, 1.8, 0);
 
 % Q-values output (upper)
-\cuboid{6.1}{0.15}{0.6}{0.1}{outfront}{outtop}{outside}
-\node[lbl, anchor=south] at (6.17, 1.95, 0) {$Q(s,a)$};
-\node[lbl] at (5.5, 0.9, 0) {Q-head};
+\cuboid{6.3}{0.15}{0.6}{0.1}{outfront}{outtop}{outside}
+\node[lbl, anchor=south] at (6.37, 2.15, 0) {$Q(s,a)$};
 
 % Q loss
-\draw[arr] (6.6, 1.6, 0) -- (7.3, 1.6, 0);
-\node[font=\small, text=palA!80!black] at (7.8, 1.6, 0)
+\draw[arr] (6.8, 1.8, 0) -- (7.5, 1.8, 0);
+\node[font=\small, text=palA!80!black] at (8.0, 1.8, 0)
     {$\mathcal{L}_{\text{Q}}$};
 
+% Q-head label (between fork and cuboids)
+\node[lbl] at (5.05, 1.05, 0) {Q-head};
+
 % === Lower path: SSL head ===
-\draw[arr] (3.75, -0.15, 0) -- (4.4, -1.6, 0);
+\draw[arr] (3.75, -0.15, 0) -- (4.6, -1.8, 0);
 
 % SSL projection (lower, green cuboid)
-\cuboid{4.6}{0.15}{1.0}{0.1}{sslfront}{ssltop}{sslside}
-\draw[arr] (5.1, -1.6, 0) -- (5.9, -1.6, 0);
+\cuboid{4.8}{0.15}{1.0}{0.1}{sslfront}{ssltop}{sslside}
+\draw[arr] (5.3, -1.8, 0) -- (6.1, -1.8, 0);
 
 % SSL output (lower, green cuboid)
-\cuboid{6.1}{0.15}{0.6}{0.1}{sslfront}{ssltop}{sslside}
-\node[lbl, anchor=north] at (6.17, -1.95, 0)
+\cuboid{6.3}{0.15}{0.6}{0.1}{sslfront}{ssltop}{sslside}
+\node[lbl, anchor=north] at (6.37, -2.15, 0)
     {$\hat{\mathbf{z}}_{t+1}$};
-\node[lbl] at (5.5, -0.9, 0) {SSL head};
 
 % SSL loss
-\draw[arr] (6.6, -1.6, 0) -- (7.3, -1.6, 0);
-\node[font=\small, text=palC!70!black] at (7.8, -1.6, 0)
+\draw[arr] (6.8, -1.8, 0) -- (7.5, -1.8, 0);
+\node[font=\small, text=palC!70!black] at (8.2, -1.8, 0)
     {$\lambda\,\mathcal{L}_{\text{SSL}}$};
+
+% SSL-head label
+\node[lbl] at (5.05, -1.05, 0) {SSL head};
 
 % Encoder + bottleneck labels
 \node[lbl, anchor=north] at (1.55, -1.15, 0) {encoder};
@@ -155,28 +92,22 @@
 % === Gradient arrows (colored to show which loss) ===
 % Q gradient (blue, above)
 \draw[gradarr, palA!55, rounded corners=5pt]
-    (1.55, 1.4, 0) -- (1.55, 2.5, 0) -- (7.6, 2.5, 0)
-    -- (7.6, 1.85, 0);
-\node[lbl, text=palA!50] at (4.6, 2.7, 0) {action values};
+    (1.55, 1.5, 0) -- (1.55, 2.8, 0) -- (7.8, 2.8, 0)
+    -- (7.8, 2.05, 0);
+\node[lbl, text=palA!50] at (4.7, 3.0, 0) {action values};
 
 % SSL gradient (green, below)
 \draw[gradarr, palC!45!black, rounded corners=5pt]
-    (1.55, -1.4, 0) -- (1.55, -2.5, 0) -- (7.6, -2.5, 0)
-    -- (7.6, -1.85, 0);
-\node[lbl, text=palC!45!black] at (4.6, -2.7, 0)
+    (1.55, -1.5, 0) -- (1.55, -2.8, 0) -- (8.0, -2.8, 0)
+    -- (8.0, -2.05, 0);
+\node[lbl, text=palC!45!black] at (4.7, -3.0, 0)
     {dynamics / structure};
 
 \end{tikzpicture}
-\subcaption{With self-supervision: dual objective}
-\label{fig:dual-obj-ssl}
-\end{subfigure}
-
-\caption{Adding self-supervised learning to DQN.
-  (a)~In standard DQN, the Q-learning loss is the sole signal
-  shaping the encoder.
-  (b)~Self-supervised learning adds a second objective: the encoder
-  receives gradients from both $\mathcal{L}_{\text{Q}}$ (action
-  values) and $\lambda\mathcal{L}_{\text{SSL}}$ (dynamics),
-  producing richer representations.}
+\caption{Dual-objective training. Self-supervised learning adds a
+  second path: the encoder receives gradients from both
+  $\mathcal{L}_{\text{Q}}$ (action values) and
+  $\lambda\mathcal{L}_{\text{SSL}}$ (dynamics), shaping its
+  representations with complementary signals.}
 \label{fig:dual-objective}
 \end{figure}

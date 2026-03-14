@@ -1,0 +1,80 @@
+\begin{figure}[htbp]
+\centering
+\input{figures/palette}
+\definecolor{encfade}{HTML}{B8D2E6}
+\definecolor{outfront}{HTML}{DCE8F4}
+\definecolor{outtop}{HTML}{EBF1F8}
+\definecolor{outside}{HTML}{C2D6E8}
+\definecolor{fcfront}{HTML}{B3CEE4}
+\definecolor{fctop}{HTML}{CDDEF0}
+\definecolor{fcside}{HTML}{8DB3D2}
+
+\newcommand{\cuboid}[7]{%
+    \fill[#5, draw=black!35, line join=round]
+        (#1, {-#3/2}, 0) -- ({#1+#2}, {-#3/2}, 0) --
+        ({#1+#2}, {#3/2}, 0) -- (#1, {#3/2}, 0) -- cycle;
+    \fill[#6, draw=black!35, line join=round]
+        (#1, {#3/2}, 0) -- ({#1+#2}, {#3/2}, 0) --
+        ({#1+#2}, {#3/2}, #4) -- (#1, {#3/2}, #4) -- cycle;
+    \fill[#7, draw=black!35, line join=round]
+        ({#1+#2}, {-#3/2}, 0) -- ({#1+#2}, {#3/2}, 0) --
+        ({#1+#2}, {#3/2}, #4) -- ({#1+#2}, {-#3/2}, #4) -- cycle;
+}
+
+\begin{tikzpicture}[
+    x={(1cm,0cm)}, y={(0cm,1cm)}, z={(0.35cm,0.25cm)},
+    arr/.style={->, thick, >=stealth, black!45},
+    gradarr/.style={<-, thick, >=stealth, dashed, palA!55},
+    lbl/.style={font=\scriptsize, text=black!45},
+]
+
+% Observation label
+\node[font=\small, text=black!85] at (-0.5, 0, 0) {$s_t$};
+\draw[arr] (0.0, 0, 0) -- (0.6, 0, 0);
+
+% Encoder (trapezoid)
+\fill[encfade, draw=black!60, thick, line join=round]
+    (0.8, -0.9, 0) -- (0.8, 0.9, 0) -- (2.5, 0.5, 0)
+    -- (2.5, -0.5, 0) -- cycle;
+\node[font=\small, text=black!80] at (1.55, 0, 0) {$f_\theta$};
+
+% z_t label
+\node[font=\small, text=black!85] (zt) at (3.4, 0, 0)
+    {$\mathbf{z}_t$};
+\draw[arr] (2.5, 0, 0) -- (3.05, 0, 0);
+
+\draw[arr] (3.75, 0, 0) -- (4.6, 0, 0);
+
+% FC layer (thin tall cuboid)
+\cuboid{4.8}{0.15}{1.2}{0.1}{fcfront}{fctop}{fcside}
+
+\draw[arr] (5.3, 0, 0) -- (5.9, 0, 0);
+
+% Q-values output (thin cuboid, lighter)
+\cuboid{6.1}{0.15}{0.7}{0.1}{outfront}{outtop}{outside}
+\node[lbl, anchor=south] at (6.17, 0.5, 0) {$Q(s,a)$};
+\node[lbl, anchor=north] at (4.88, -0.75, 0) {Q-head};
+
+% Loss label
+\draw[arr] (6.6, 0, 0) -- (7.3, 0, 0);
+\node[font=\small, text=palA!80!black] at (7.8, 0, 0)
+    {$\mathcal{L}_{\text{Q}}$};
+
+% Encoder + bottleneck labels
+\node[lbl, anchor=north] at (1.55, -1.15, 0) {encoder};
+\node[lbl, anchor=north] at (3.4, -0.4, 0) {512};
+
+% Gradient arrow (below)
+\draw[gradarr, rounded corners=5pt]
+    (1.55, -1.55, 0) -- (1.55, -1.85, 0) -- (7.6, -1.85, 0)
+    -- (7.6, -0.3, 0);
+\node[lbl, text=palA!50] at (4.6, -2.1, 0)
+    {sole gradient signal};
+
+\end{tikzpicture}
+\caption{Standard DQN training. The Q-learning loss is the only
+  signal shaping the encoder's representations. The 512-dimensional
+  bottleneck captures whatever features predict Q-values -- nothing
+  more.}
+\label{fig:single-objective}
+\end{figure}
