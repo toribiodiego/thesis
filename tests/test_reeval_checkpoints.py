@@ -18,12 +18,14 @@ import yaml
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from scripts.reeval_checkpoints import (
-    append_eval_row,
     create_model,
     discover_checkpoint_steps,
     discover_runs,
-    get_existing_eval_steps,
+    get_existing_steps,
+    get_repeat_action_probability,
+    get_run_eval_epsilon,
     load_config,
+    save_results,
 )
 from src.models.rainbow import RainbowDQN
 
@@ -175,15 +177,15 @@ def test_discover_checkpoint_steps_nonexistent_dir(tmp_path):
 
 
 # =============================================================================
-# get_existing_eval_steps tests
+# get_existing_steps tests
 # =============================================================================
 
 
-def test_get_existing_eval_steps_reads_csv(tmp_path):
+def test_get_existing_steps_reads_csv(tmp_path):
     """Reads step numbers from evaluations.csv."""
     eval_dir = tmp_path / "eval_output"
     eval_dir.mkdir()
-    # get_existing_eval_steps expects run_dir/eval/evaluations.csv
+    # get_existing_steps expects run_dir/eval/evaluations.csv
     run_eval_dir = tmp_path / "run" / "eval"
     run_eval_dir.mkdir(parents=True)
     csv_path = run_eval_dir / "evaluations.csv"
@@ -193,13 +195,13 @@ def test_get_existing_eval_steps_reads_csv(tmp_path):
         writer.writerow([40000, 10.5])
         writer.writerow([80000, 15.2])
 
-    steps = get_existing_eval_steps(str(tmp_path / "run"))
+    steps = get_existing_steps(str(tmp_path / "run"))
     assert steps == {40000, 80000}
 
 
-def test_get_existing_eval_steps_no_csv(tmp_path):
+def test_get_existing_steps_no_csv(tmp_path):
     """Returns empty set when no CSV exists."""
-    assert get_existing_eval_steps(str(tmp_path)) == set()
+    assert get_existing_steps(str(tmp_path)) == set()
 
 
 # =============================================================================
@@ -233,22 +235,27 @@ def test_create_model_dqn(dqn_config):
 
 
 # =============================================================================
-# append_eval_row tests
+# save_results tests
 # =============================================================================
 
 
-def test_append_eval_row_creates_csv(tmp_path):
-    """Creates evaluations.csv with header when it doesn't exist."""
+def test_save_results_creates_all_outputs(tmp_path):
+    """save_results creates CSV, JSONL, per-episode, and detailed JSON."""
     results = {
         "mean_return": 10.5,
         "median_return": 9.0,
         "std_return": 3.2,
         "min_return": 5.0,
         "max_return": 18.0,
+        "mean_length": 500.0,
         "num_episodes": 30,
+        "episode_returns": [10.0, 11.0],
+        "episode_lengths": [450, 550],
     }
-    append_eval_row(str(tmp_path), step=40000, results=results, training_epsilon=0.05)
+    save_results(str(tmp_path), step=40000, results=results,
+                 run_eval_epsilon=0.05, training_epsilon=0.05)
 
+    # CSV
     csv_path = tmp_path / "eval" / "evaluations.csv"
     assert csv_path.exists()
     with open(csv_path) as f:
@@ -257,8 +264,25 @@ def test_append_eval_row_creates_csv(tmp_path):
     assert int(rows[0]["step"]) == 40000
     assert float(rows[0]["mean_return"]) == 10.5
 
+    # JSONL
+    jsonl_path = tmp_path / "eval" / "evaluations.jsonl"
+    assert jsonl_path.exists()
 
-def test_append_eval_row_appends(tmp_path):
+    # Per-episode returns
+    episodes_path = tmp_path / "eval" / "per_episode_returns.jsonl"
+    assert episodes_path.exists()
+    import json
+    with open(episodes_path) as f:
+        entry = json.loads(f.readline())
+    assert entry["step"] == 40000
+    assert entry["episode_returns"] == [10.0, 11.0]
+
+    # Detailed JSON
+    detailed_path = tmp_path / "eval" / "detailed" / "eval_step_40000.json"
+    assert detailed_path.exists()
+
+
+def test_save_results_appends(tmp_path):
     """Appends rows without duplicating headers."""
     results = {
         "mean_return": 10.0,
@@ -266,15 +290,60 @@ def test_append_eval_row_appends(tmp_path):
         "std_return": 3.0,
         "min_return": 5.0,
         "max_return": 15.0,
+        "mean_length": 400.0,
         "num_episodes": 30,
+        "episode_returns": [10.0],
+        "episode_lengths": [400],
     }
-    append_eval_row(str(tmp_path), step=40000, results=results, training_epsilon=0.05)
-    append_eval_row(str(tmp_path), step=80000, results=results, training_epsilon=0.05)
+    save_results(str(tmp_path), step=40000, results=results,
+                 run_eval_epsilon=0.05, training_epsilon=0.05)
+    save_results(str(tmp_path), step=80000, results=results,
+                 run_eval_epsilon=0.05, training_epsilon=0.05)
 
     csv_path = tmp_path / "eval" / "evaluations.csv"
     with open(csv_path) as f:
         rows = list(csv.DictReader(f))
     assert len(rows) == 2
+
+
+# =============================================================================
+# get_run_eval_epsilon tests
+# =============================================================================
+
+
+def test_eval_epsilon_dqn():
+    """DQN uses epsilon=0.05."""
+    config = {"rainbow": {"enabled": False}}
+    assert get_run_eval_epsilon(config) == 0.05
+
+
+def test_eval_epsilon_rainbow_noisy():
+    """Rainbow with NoisyNets uses epsilon=0.0 (greedy)."""
+    config = {"rainbow": {"enabled": True, "noisy_nets": True}}
+    assert get_run_eval_epsilon(config) == 0.0
+
+
+def test_eval_epsilon_rainbow_no_noisy():
+    """Rainbow without NoisyNets falls back to epsilon=0.05."""
+    config = {"rainbow": {"enabled": True, "noisy_nets": False}}
+    assert get_run_eval_epsilon(config) == 0.05
+
+
+# =============================================================================
+# get_repeat_action_probability tests
+# =============================================================================
+
+
+def test_repeat_action_probability_present():
+    """Reads sticky actions from config."""
+    config = {"environment": {"repeat_action_probability": 0.25}}
+    assert get_repeat_action_probability(config) == 0.25
+
+
+def test_repeat_action_probability_missing():
+    """Defaults to 0.0 when not in config."""
+    config = {"environment": {"env_id": "test"}}
+    assert get_repeat_action_probability(config) == 0.0
 
 
 # =============================================================================
@@ -292,7 +361,7 @@ def test_rainbow_checkpoint_load_and_assessment(run_dir_with_rainbow_checkpoint)
     steps = discover_checkpoint_steps(checkpoint_dir)
     assert len(steps) == 2
 
-    existing = get_existing_eval_steps(run_dir)
+    existing = get_existing_steps(run_dir)
     assert len(existing) == 0
 
     # Load checkpoint and create model
@@ -315,10 +384,13 @@ def test_rainbow_checkpoint_load_and_assessment(run_dir_with_rainbow_checkpoint)
         "std_return": 4.1,
         "min_return": 3.0,
         "max_return": 25.0,
+        "mean_length": 600.0,
         "num_episodes": 30,
+        "episode_returns": [12.0, 13.0],
+        "episode_lengths": [550, 650],
     }
 
-    append_eval_row(run_dir, steps[0], mock_results, checkpoint.get("epsilon", 0.1))
+    save_results(run_dir, steps[0], mock_results, 0.0, checkpoint.get("epsilon", 0.1))
 
     # Verify CSV was written
     csv_path = os.path.join(run_dir, "eval", "evaluations.csv")
@@ -329,7 +401,11 @@ def test_rainbow_checkpoint_load_and_assessment(run_dir_with_rainbow_checkpoint)
     assert int(rows[0]["step"]) == steps[0]
     assert float(rows[0]["mean_return"]) == 12.5
 
-    # Verify the step is now in existing assessment results
-    existing_after = get_existing_eval_steps(run_dir)
+    # Verify per-episode and detailed files were written
+    assert os.path.exists(os.path.join(run_dir, "eval", "per_episode_returns.jsonl"))
+    assert os.path.exists(os.path.join(run_dir, "eval", "detailed", f"eval_step_{steps[0]}.json"))
+
+    # Verify the step is now in existing results
+    existing_after = get_existing_steps(run_dir)
     assert steps[0] in existing_after
     assert steps[1] not in existing_after

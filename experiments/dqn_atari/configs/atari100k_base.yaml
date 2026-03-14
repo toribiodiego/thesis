@@ -51,10 +51,10 @@ exploration:
   schedule:
     decay_frames: 200000  # Decay epsilon 1.0 -> 0.1 over 50K env steps (200K frames)
 
-# Evaluation (10 checkpoints across training)
+# Evaluation (decoupled -- run post-training via reeval_checkpoints.py)
 evaluation:
-  eval_every: 40000       # Evaluate every 10K env steps (40K frames)
-  num_episodes: 30        # 30 episodes per eval checkpoint
+  eval_every: 999999      # Disabled during training for max throughput
+  num_episodes: 30        # 30 episodes per eval checkpoint (used by reeval)
 
 # Data augmentation (off by default for baseline)
 augmentation:
@@ -67,5 +67,5 @@ augmentation:
 logging:
   log_every_steps: 500    # More frequent logging for shorter runs
   checkpoint:
-    save_every: 100000    # Save checkpoint every 25K env steps (100K frames)
-    keep_last_n: 5        # Keep more checkpoints (run is short)
+    save_every: 40000     # Save checkpoint every 10K env steps (40K frames)
+    keep_last_n: 10       # Keep all 10 checkpoints for post-hoc evaluation
