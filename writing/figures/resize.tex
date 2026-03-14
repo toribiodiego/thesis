@@ -50,7 +50,9 @@
 
 % --- Downsampled: 8x8 grid, same cell size ---
 % Nearest-neighbor: map each cell back to 21x16 source coords
+% Vertically center the 8x8 grid with the 21x16 grid
 \pgfmathsetmacro{\ox}{21*\c + 1.1}
+\pgfmathsetmacro{\oy}{(16*\c - 8*\c) / 2}
 \foreach \x in {0,...,7} {
     \foreach \y in {0,...,7} {
         % Map to source coordinates in 21x16 space
@@ -71,21 +73,21 @@
         ) > 0 ? 1 : 0}
         \ifnum\onedge=1
             \fill[black!55, draw=black!8]
-                ({\ox + \x*\c}, \y*\c) rectangle ++(\c, \c);
+                ({\ox + \x*\c}, {\oy + \y*\c}) rectangle ++(\c, \c);
         \else\ifnum\inface=0
             \fill[black!6, draw=black!8]
-                ({\ox + \x*\c}, \y*\c) rectangle ++(\c, \c);
+                ({\ox + \x*\c}, {\oy + \y*\c}) rectangle ++(\c, \c);
         \else\ifnum\feat=1
             \fill[black!85, draw=black!8]
-                ({\ox + \x*\c}, \y*\c) rectangle ++(\c, \c);
+                ({\ox + \x*\c}, {\oy + \y*\c}) rectangle ++(\c, \c);
         \else
             \fill[black!20, draw=black!8]
-                ({\ox + \x*\c}, \y*\c) rectangle ++(\c, \c);
+                ({\ox + \x*\c}, {\oy + \y*\c}) rectangle ++(\c, \c);
         \fi\fi\fi
     }
 }
 \node[lbl] at ({\ox + 4*\c}, {16*\c + 0.5}) {downsampled};
-\node[dimlbl, anchor=north] at ({\ox + 4*\c}, -0.08)
+\node[dimlbl, anchor=north] at ({\ox + 4*\c}, {\oy - 0.08})
     {$84 \times 84$};
 
 \end{tikzpicture}

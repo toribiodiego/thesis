@@ -639,7 +639,9 @@ def run_training(config, paths, device):
                     target_model=target_net,
                     optimizer=optimizer,
                     replay_buffer=replay_buffer,
-                    rng_states=get_rng_states(env)
+                    rng_states=get_rng_states(env),
+                    spr_components=spr_components,
+                    rainbow_enabled=rainbow_config.get('enabled', False) if rainbow_config else False,
                 )
                 if is_new_best:
                     print(f"New best model saved (return: {eval_results['mean_return']:.2f})")
@@ -654,7 +656,9 @@ def run_training(config, paths, device):
                 target_model=target_net,
                 optimizer=optimizer,
                 replay_buffer=replay_buffer,
-                rng_states=get_rng_states(env)
+                rng_states=get_rng_states(env),
+                spr_components=spr_components,
+                rainbow_enabled=rainbow_config.get('enabled', False) if rainbow_config else False,
             )
             print(f"Checkpoint saved: {checkpoint_path}")
 
