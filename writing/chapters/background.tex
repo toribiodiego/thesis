@@ -1135,15 +1135,186 @@ experiments in this work.
 \section{The Arcade Learning Environment}
 \label{sec:ale}
 
+The previous section introduced two agents -- vanilla DQN and
+Rainbow -- that differ in algorithmic sophistication but share the
+same convolutional encoder and the same type of input: preprocessed
+Atari game frames. This section introduces the benchmark on which
+both agents are evaluated. The Arcade Learning
+Environment~\citep{bellemare2013arcade} provides a standardized
+interface to dozens of Atari 2600 games, making it possible to
+evaluate a single agent architecture across a diverse set of tasks
+without game-specific engineering. We describe the standard
+evaluation protocol that established DQN's original results, the
+data-efficient 100K variant used in our experiments, and the
+metrics used to compare agents across games.
+
 \subsection{The Standard Protocol}
 \label{subsec:standard-protocol}
 
-\vspace{2em}
+\citet{bellemare2013arcade} introduced the Arcade Learning
+Environment (ALE): a software framework that wraps Atari 2600 game
+ROMs into a standardized reinforcement learning interface. For
+each game, the environment exposes $210 \times 160$ RGB frames
+rendered at 60 frames per second, a discrete action set of up to
+18 actions, a scalar reward signal derived from the game score, and
+an episode termination signal. The key property is uniformity:
+every game uses the same interface, so a single agent architecture
+can be evaluated across the full suite without modification.
+
+\smallskip
+The games span a wide range of challenges -- spatial reasoning and
+reaction time in Breakout, navigation and long-horizon planning in
+Montezuma's Revenge, precise timing in Freeway, and multi-object
+tracking in Space Invaders. This diversity is what made ALE the
+standard benchmark for deep reinforcement learning: strong
+performance across many games requires general-purpose
+representations, not game-specific heuristics.
+
+\smallskip
+In the standard protocol, the agent does not act on every raw
+frame. Instead, it selects an action every $k$-th frame, and the
+chosen action is repeated for the intermediate frames.
+\citet{mnih2015human} used $k = 4$, which became the default. This
+\emph{frame skip} (or \emph{action repeat}) means that one agent
+decision corresponds to four raw frames. The distinction between
+raw frames and agent decisions matters when comparing training
+budgets: 200 million raw frames is 50 million environment steps.
+Frame skip serves two purposes: consecutive frames are nearly
+identical, so acting on every one is unnecessary, and skipping
+frames effectively speeds up the game from the agent's perspective.
+
+\smallskip
+The preprocessing pipeline that converts raw frames into the
+$84 \times 84 \times 4$ input tensor was described in
+\cref{subsec:conv-encoder}. This pipeline -- max-pooling over
+consecutive frames, grayscale conversion, resizing, and stacking
+four frames -- is universal across methods. DQN, Rainbow, DrQ,
+and SPR all receive the same preprocessed observations.
+
+\smallskip
+\citet{mnih2015human} trained DQN for 200 million frames per game,
+roughly 38 days of game time at 60 frames per second. Each game
+was trained independently with a single set of hyperparameters
+shared across the entire suite. Evaluation followed a fixed
+procedure: insert a random number (up to 30) of no-op actions at
+the start of each episode to randomize the initial state, then let
+the agent play for up to five minutes. Performance was averaged
+over 30 evaluation episodes. Under this protocol, DQN achieved
+human-competitive scores on roughly 60\% of 49 games -- the first
+demonstration that a single architecture could learn diverse
+visuomotor tasks from raw pixels.
+
+\smallskip
+\citet{machado2018revisiting} later identified weaknesses in the
+original protocol and proposed two revisions that are now standard.
+The first is \emph{sticky actions}: with probability 0.25, the
+environment repeats the agent's previous action instead of
+executing its current choice. Many Atari games are deterministic --
+the same sequence of actions always produces the same outcome. An
+agent trained on a deterministic game can exploit this by
+memorizing fixed action sequences that achieve high scores without
+learning general strategies. Sticky actions inject stochasticity
+into the transition dynamics, forcing the agent to cope with
+variability and preventing such memorization.
+
+\smallskip
+The second revision concerns episode boundaries. The original
+protocol treated each life loss as an episode termination,
+resetting the agent's trajectory. While this helped in some games
+by making early deaths less costly to explore from, it changed the
+effective task: the agent optimized for one-life performance rather
+than full-game performance. \citet{machado2018revisiting}
+recommended using only the game-over signal for episode boundaries,
+preserving the original game structure. Both revisions -- sticky
+actions and game-over termination -- are adopted in the 100K
+protocol and in our experiments.
+
+\smallskip
+This protocol -- 200 million frames per game -- gave DQN enough
+experience to learn effective policies for most games. But from a
+practical standpoint, 200 million frames is an enormous amount of
+interaction. The next section introduces a protocol that asks
+whether agents can learn with far less.
 
 \subsection{The 100K Protocol}
 \label{subsec:100k-protocol}
 
-\vspace{2em}
+\citet{kaiser2020model} proposed the Atari-100K benchmark: agents
+are limited to 100{,}000 environment steps per game. With frame
+skip $k = 4$, this corresponds to 400{,}000 raw frames -- roughly
+six and a half minutes of game time at 60 frames per second.
+Compared to the standard 200 million frames, the agent sees 0.2\%
+of the data that DQN was originally trained on: a reduction of
+500$\times$.
+
+\smallskip
+This constraint is not merely a smaller version of the standard
+protocol. It creates a qualitatively different learning regime. In
+the 200-million-frame setting, an agent can afford to explore
+randomly for millions of steps, encounter diverse game situations
+through sheer volume of experience, and gradually refine its
+representations. At 100{,}000 steps, none of this is possible. The
+agent must learn useful representations from its first experiences
+and extract as much information as possible from every transition.
+Vanilla DQN, which was designed for the high-data regime, barely
+learns anything on most games under this constraint.
+
+\smallskip
+The benchmark has practical motivation beyond evaluating
+algorithms. In real-world domains -- robotics, autonomous driving,
+clinical decision support -- collecting millions of interactions is
+expensive, slow, or dangerous. An agent that learns from 100{,}000
+steps is closer to practical deployment than one requiring 200
+million. The 100K benchmark distills this challenge into a
+controlled setting where methods can be compared systematically.
+
+\smallskip
+The benchmark selects 26 games from the full 57-game ALE suite,
+chosen to span a range of challenges: reward density, visual
+complexity, planning horizon, and interaction patterns. Some games
+offer frequent rewards that guide learning (Breakout, Pong), while
+others require extended exploration before any reward is
+encountered (Montezuma's Revenge, Private Eye). This diversity
+ensures that strong aggregate performance requires general-purpose
+data efficiency, not a strategy that works for only one type of
+game.
+
+\smallskip
+After training for 100{,}000 steps, the agent is evaluated over
+100 episodes using a near-greedy policy ($\varepsilon = 0.001$).
+The evaluation score is the average undiscounted return across
+these episodes. Sticky actions ($p = 0.25$) apply during both
+training and evaluation, following the revised protocol of
+\citet{machado2018revisiting}. The original benchmark paper
+\citep{kaiser2020model} did not use sticky actions, but subsequent
+work -- including SPR~\citep{schwarzer2021dataefficient} and the
+Dopamine framework -- adopted them. Our experiments use sticky
+actions consistently.
+
+\smallskip
+Hyperparameters tuned for 200 million frames are poorly suited to
+the 100K regime. Key adjustments include a higher replay ratio --
+performing more gradient updates per environment step to extract
+more learning from each transition -- a shorter warmup period
+before training begins, and faster $\varepsilon$ decay to shift
+from exploration to exploitation earlier given the tiny budget.
+\citet{kielak2020recent} demonstrated this concretely: the
+model-free Rainbow baseline reported in the original benchmark
+paper used default Dopamine hyperparameters without
+game-specific tuning, making model-free methods appear weaker than
+they are. A properly tuned Rainbow (``OTRainbow'') substantially
+outperformed the original baseline without any algorithmic changes.
+Published 100K results are sensitive to hyperparameter choices, not
+just algorithmic differences -- a point that matters when comparing
+across papers.
+
+\smallskip
+Comparing agents under the 100K constraint requires metrics that
+aggregate performance across games with very different score
+ranges. A score of 500 in one game might represent near-perfect
+play, while the same score in another game is negligible. The next
+section introduces the normalization and aggregation methods that
+make these comparisons meaningful.
 
 \subsection{Metrics}
 \label{subsec:metrics}
