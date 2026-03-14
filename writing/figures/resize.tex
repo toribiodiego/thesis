@@ -1,45 +1,80 @@
 \begin{figure}[ht]
 \centering
 \begin{tikzpicture}[
-    lbl/.style={font=\scriptsize, text=black!55},
-    dimlbl/.style={font=\tiny, text=black!45},
+    lbl/.style={font=\footnotesize, text=black!55},
+    dimlbl/.style={font=\scriptsize, text=black!45},
 ]
+\def\c{0.095}
 
-% --- Large input grid (10x8, proportional to 210x160) ---
-\def\cs{0.22}
-\foreach \x in {0,...,9} {
-    \foreach \y in {0,...,7} {
-        \pgfmathparse{mod(\y, 2) == 0 ? 8 : 4}
-        \edef\shade{\pgfmathresult}
-        \fill[black!\shade, draw=black!12]
-            (\x*\cs, \y*\cs) rectangle ++(\cs, \cs);
+% --- Large grayscale face (21x16, same as grayscale output) ---
+\foreach \x in {0,...,20} {
+    \foreach \y in {0,...,15} {
+        \pgfmathsetmacro{\dist}{sqrt((\x-10)*(\x-10)+(\y-7.5)*(\y-7.5))}
+        \pgfmathtruncatemacro{\inface}{\dist < 6.3 ? 1 : 0}
+        \pgfmathtruncatemacro{\onedge}{(\dist >= 6.3)*(\dist < 7.2) ? 1 : 0}
+        \pgfmathtruncatemacro{\feat}{(
+            (\x>=7)*(\x<=8)*(\y>=9)*(\y<=10) +
+            (\x>=12)*(\x<=13)*(\y>=9)*(\y<=10) +
+            (\x==6)*(\y==5) + (\x==14)*(\y==5) +
+            (\x==7)*(\y==4) + (\x==13)*(\y==4) +
+            (\x>=8)*(\x<=12)*(\y==3)
+        ) > 0 ? 1 : 0}
+        \ifnum\onedge=1
+            \fill[black!55, draw=black!5]
+                (\x*\c, \y*\c) rectangle ++(\c, \c);
+        \else\ifnum\inface=0
+            \fill[black!6, draw=black!5]
+                (\x*\c, \y*\c) rectangle ++(\c, \c);
+        \else\ifnum\feat=1
+            \fill[black!85, draw=black!5]
+                (\x*\c, \y*\c) rectangle ++(\c, \c);
+        \else
+            \fill[black!20, draw=black!5]
+                (\x*\c, \y*\c) rectangle ++(\c, \c);
+        \fi\fi\fi
     }
 }
-\node[lbl, anchor=north] at ({5*\cs}, -0.12) {$210 \times 160$};
+\node[lbl] at ({10.5*\c}, {16*\c + 0.35}) {$210 \times 160$};
 
 % --- Arrow ---
-\draw[->, thick, black!40]
-    ({10*\cs + 0.4}, {4*\cs}) -- ++(0.8, 0);
+\draw[->, thick, black!35]
+    ({21*\c + 0.35}, {8*\c}) -- ++(0.5, 0);
 
-% --- Small output grid (5x5, proportional to 84x84) ---
-\def\ox{3.9}
-\def\oy{0.165}
-\def\cr{0.28}
-\foreach \x in {0,...,4} {
-    \foreach \y in {0,...,4} {
-        \pgfmathparse{mod(\y, 2) == 0 ? 8 : 4}
-        \edef\shade{\pgfmathresult}
-        \fill[black!\shade, draw=black!12]
-            ({\ox + \x*\cr}, {\oy + \y*\cr})
-            rectangle ++({\cr}, {\cr});
+% --- Small grayscale face (8x8, proportional to 84x84) ---
+% Same cell size so physical size difference is apparent
+\pgfmathsetmacro{\ox}{21*\c + 1.2}
+% Vertically centered with large grid
+\pgfmathsetmacro{\oy}{(16*\c - 8*\c) / 2}
+\foreach \x in {0,...,7} {
+    \foreach \y in {0,...,7} {
+        \pgfmathsetmacro{\dist}{sqrt((\x-3.5)*(\x-3.5)+(\y-3.5)*(\y-3.5))}
+        \pgfmathtruncatemacro{\inface}{\dist < 3.0 ? 1 : 0}
+        \pgfmathtruncatemacro{\onedge}{(\dist >= 3.0)*(\dist < 3.5) ? 1 : 0}
+        \pgfmathtruncatemacro{\feat}{(
+            (\x==2)*(\y==5) + (\x==5)*(\y==5) +
+            (\x==2)*(\y==2) + (\x==5)*(\y==2) +
+            (\x>=3)*(\x<=4)*(\y==1)
+        ) > 0 ? 1 : 0}
+        \ifnum\onedge=1
+            \fill[black!55, draw=black!5]
+                ({\ox + \x*\c}, {\oy + \y*\c}) rectangle ++(\c, \c);
+        \else\ifnum\inface=0
+            \fill[black!6, draw=black!5]
+                ({\ox + \x*\c}, {\oy + \y*\c}) rectangle ++(\c, \c);
+        \else\ifnum\feat=1
+            \fill[black!85, draw=black!5]
+                ({\ox + \x*\c}, {\oy + \y*\c}) rectangle ++(\c, \c);
+        \else
+            \fill[black!20, draw=black!5]
+                ({\ox + \x*\c}, {\oy + \y*\c}) rectangle ++(\c, \c);
+        \fi\fi\fi
     }
 }
-\node[lbl, anchor=north] at ({\ox + 2.5*\cr}, {\oy - 0.12})
-    {$84 \times 84$};
+\node[lbl] at ({\ox + 4*\c}, {16*\c + 0.35}) {$84 \times 84$};
 
 \end{tikzpicture}
-\caption{Downsampling. The frame is resized from
-  $210 \times 160$ to $84 \times 84$, preserving spatial
-  structure at lower resolution.}
+\caption{Downsampling. The frame is resized from $210 \times 160$
+  to $84 \times 84$, preserving spatial structure at lower
+  resolution.}
 \label{fig:resize}
 \end{figure}
