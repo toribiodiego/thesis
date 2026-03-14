@@ -854,7 +854,95 @@ contributes one term to the loss.
 \subsection{Target Networks}
 \label{subsec:target-networks-bg}
 
-\vspace{2em}
+Experience replay solves the data correlation problem, but a second
+instability remains. Recall from \cref{subsec:func-approx} that the
+TD target in the semi-gradient update depends on the same parameters
+$\mathbf{w}$ that are being updated: the target
+$R_{t+1} + \gamma \max_a Q(S_{t+1}, a;\, \mathbf{w})$ shifts every
+time the network takes a gradient step. The agent is optimizing
+toward a goal that moves with every update.
+
+\smallskip
+In supervised learning, labels are fixed -- the loss landscape does
+not change during training, and SGD can make steady progress toward
+a minimum. In Q-learning with function approximation, the
+``labels'' are the TD targets, and they depend on the current
+parameters. Every step that improves the prediction also shifts the
+target, creating a feedback loop: the network's estimates and its
+targets chase each other, and training can oscillate or diverge
+rather than converge. This is the bootstrapping element of the
+deadly triad -- the target depends on the very estimate being
+refined.
+
+\smallskip
+The solution is to decouple the prediction from the target by
+maintaining two copies of the network. The \emph{online network},
+with parameters~$\boldsymbol{\theta}$, is the network being
+trained -- it receives gradient updates at every step. The
+\emph{target network}, with parameters~$\boldsymbol{\theta}^-$, is
+a frozen copy used only to compute the TD target. The target
+becomes:
+%
+\[
+R_{t+1} + \gamma \max_{a} Q(S_{t+1}, a;\,
+  \boldsymbol{\theta}^-),
+\]
+%
+where $\boldsymbol{\theta}^-$ does not change during training.
+Because the target is fixed, the loss landscape is stationary and
+SGD can make progress toward a stable objective -- the same
+conditions that make supervised learning work.
+
+\smallskip
+Periodically -- every $C$ gradient steps -- the target network is
+replaced with a copy of the online network:
+$\boldsymbol{\theta}^- \leftarrow \boldsymbol{\theta}$. In the
+original DQN, $C = 10{,}000$. Between these updates, the target
+network is completely frozen: no gradients flow through it, and its
+parameters do not change.
+
+\smallskip
+With both stabilization techniques in place, the complete DQN loss
+combines experience replay and the target network:
+%
+\begin{equation}
+\label{eq:dqn-loss}
+L(\boldsymbol{\theta}) = \mathbb{E}_{(s,a,r,s') \sim \mathcal{D}}
+  \Big[\big(r + \gamma \max_{a'} Q(s', a';\,
+  \boldsymbol{\theta}^-) - Q(s, a;\, \boldsymbol{\theta})
+  \big)^2\Big].
+\end{equation}
+%
+This is the function approximation loss from \cref{eq:fa-loss} with
+two concrete changes. The expectation is over minibatches sampled
+uniformly from the replay buffer~$\mathcal{D}$, addressing the data
+correlation problem. And the target uses frozen
+parameters~$\boldsymbol{\theta}^-$ instead of the current
+parameters~$\boldsymbol{\theta}$, stabilizing the optimization
+target. These two changes -- replay and frozen targets -- are DQN's
+core algorithmic contribution, and they are what make Q-learning
+with a deep neural network stable enough to
+learn~\citep{mnih2015human}.
+
+\smallskip
+The update interval $C$ controls a trade-off between stability and
+staleness. A longer interval gives more stability -- the target
+moves less frequently, and SGD has more time to converge toward it.
+But it also makes the target more stale, since
+$\boldsymbol{\theta}^-$ falls further behind
+$\boldsymbol{\theta}$ as training progresses. Too long, and the
+agent trains against an outdated target that no longer reflects its
+current knowledge; too short, and the target moves so often that the
+stability benefit is lost.
+
+\smallskip
+Together, experience replay and target networks address two of the
+three instabilities in the deadly triad: correlated training data
+and a shifting optimization target. They do not eliminate the third
+element -- the use of a nonlinear function approximator -- but they
+reduce the practical instability enough for learning to succeed.
+The next section introduces Rainbow, which extends DQN with six
+additional improvements that further boost performance.
 
 \subsection{Rainbow DQN}
 \label{subsec:rainbow-dqn}
