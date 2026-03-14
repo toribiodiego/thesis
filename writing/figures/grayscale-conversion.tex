@@ -1,0 +1,86 @@
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+    lbl/.style={font=\scriptsize, text=black!55},
+    clbl/.style={font=\scriptsize\bfseries},
+]
+\def\c{0.26}
+
+% Face pattern (7x7): 1 = dark feature, 0 = yellow background
+% Row 5: eyes at (2,5) and (4,5)
+% Row 2: mouth corners at (1,2) and (5,2)
+% Row 1: mouth bottom at (2,1), (3,1), (4,1)
+\def\facedata{
+    0/6/0, 1/6/0, 2/6/0, 3/6/0, 4/6/0, 5/6/0, 6/6/0,
+    0/5/0, 1/5/0, 2/5/1, 3/5/0, 4/5/1, 5/5/0, 6/5/0,
+    0/4/0, 1/4/0, 2/4/0, 3/4/0, 4/4/0, 5/4/0, 6/4/0,
+    0/3/0, 1/3/0, 2/3/0, 3/3/0, 4/3/0, 5/3/0, 6/3/0,
+    0/2/0, 1/2/1, 2/2/0, 3/2/0, 4/2/0, 5/2/1, 6/2/0,
+    0/1/0, 1/1/0, 2/1/1, 3/1/1, 4/1/1, 5/1/0, 6/1/0,
+    0/0/0, 1/0/0, 2/0/0, 3/0/0, 4/0/0, 5/0/0, 6/0/0}
+
+% === Color image (mixed RGB -- yellow with dark features) ===
+\definecolor{ybg}{rgb}{0.95, 0.85, 0.15}
+\definecolor{yfg}{rgb}{0.18, 0.12, 0.10}
+\foreach \x/\y/\f in \facedata {
+    \ifnum\f=1 \def\cc{yfg} \else \def\cc{ybg} \fi
+    \fill[\cc, draw=black!12]
+        (\x*\c, \y*\c) rectangle ++(\c, \c);
+}
+\node[lbl, anchor=north] at ({3.5*\c}, -0.1) {color image};
+
+% === Arrow 1 ===
+\draw[->, thick, black!35]
+    ({7*\c + 0.12}, {3.5*\c}) -- ++(0.35, 0);
+
+% === R channel ===
+\def\rx{2.35}
+\foreach \x/\y/\f in \facedata {
+    \ifnum\f=1 \def\rv{15} \else \def\rv{80} \fi
+    \fill[red!\rv, draw=red!18]
+        ({\rx + \x*\c}, \y*\c) rectangle ++({\c}, {\c});
+}
+\node[clbl, text=red!70] at ({\rx + 3.5*\c}, {7*\c + 0.15}) {R};
+
+% === G channel ===
+\def\gx{4.35}
+\foreach \x/\y/\f in \facedata {
+    \ifnum\f=1 \def\gv{12} \else \def\gv{70} \fi
+    \fill[green!\gv, draw=green!18!black!6]
+        ({\gx + \x*\c}, \y*\c) rectangle ++({\c}, {\c});
+}
+\node[clbl, text=green!55!black] at ({\gx + 3.5*\c}, {7*\c + 0.15}) {G};
+
+% === B channel ===
+\def\bx{6.35}
+\foreach \x/\y/\f in \facedata {
+    \ifnum\f=1 \def\bv{10} \else \def\bv{15} \fi
+    \fill[blue!\bv, draw=blue!12]
+        ({\bx + \x*\c}, \y*\c) rectangle ++({\c}, {\c});
+}
+\node[clbl, text=blue!60] at ({\bx + 3.5*\c}, {7*\c + 0.15}) {B};
+
+% === Label under channels ===
+\node[lbl, anchor=north] at ({\gx + 3.5*\c}, -0.1) {3 channels};
+
+% === Arrow 2 ===
+\draw[->, thick, black!35]
+    ({\bx + 7*\c + 0.12}, {3.5*\c}) -- ++(0.35, 0);
+
+% === Grayscale output ===
+\def\ox{8.65}
+\foreach \x/\y/\f in \facedata {
+    \ifnum\f=1 \def\sv{82} \else \def\sv{18} \fi
+    \fill[black!\sv, draw=black!12]
+        ({\ox + \x*\c}, \y*\c) rectangle ++({\c}, {\c});
+}
+\node[lbl, anchor=north] at ({\ox + 3.5*\c}, -0.1) {1 channel};
+
+\end{tikzpicture}
+\caption{Grayscale conversion. A color image (here a face pattern)
+  is stored as three channels. Red and green carry the pattern
+  clearly; blue is nearly empty because yellow contains little
+  blue. Combining the channels produces a single brightness value
+  per pixel.}
+\label{fig:grayscale}
+\end{figure}

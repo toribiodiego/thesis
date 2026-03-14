@@ -1,0 +1,45 @@
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+    lbl/.style={font=\scriptsize, text=black!55},
+    dimlbl/.style={font=\tiny, text=black!45},
+]
+
+% --- Large input grid (10x8, proportional to 210x160) ---
+\def\cs{0.22}
+\foreach \x in {0,...,9} {
+    \foreach \y in {0,...,7} {
+        \pgfmathparse{mod(\y, 2) == 0 ? 8 : 4}
+        \edef\shade{\pgfmathresult}
+        \fill[black!\shade, draw=black!12]
+            (\x*\cs, \y*\cs) rectangle ++(\cs, \cs);
+    }
+}
+\node[lbl, anchor=north] at ({5*\cs}, -0.12) {$210 \times 160$};
+
+% --- Arrow ---
+\draw[->, thick, black!40]
+    ({10*\cs + 0.4}, {4*\cs}) -- ++(0.8, 0);
+
+% --- Small output grid (5x5, proportional to 84x84) ---
+\def\ox{3.9}
+\def\oy{0.165}
+\def\cr{0.28}
+\foreach \x in {0,...,4} {
+    \foreach \y in {0,...,4} {
+        \pgfmathparse{mod(\y, 2) == 0 ? 8 : 4}
+        \edef\shade{\pgfmathresult}
+        \fill[black!\shade, draw=black!12]
+            ({\ox + \x*\cr}, {\oy + \y*\cr})
+            rectangle ++({\cr}, {\cr});
+    }
+}
+\node[lbl, anchor=north] at ({\ox + 2.5*\cr}, {\oy - 0.12})
+    {$84 \times 84$};
+
+\end{tikzpicture}
+\caption{Downsampling. The frame is resized from
+  $210 \times 160$ to $84 \times 84$, preserving spatial
+  structure at lower resolution.}
+\label{fig:resize}
+\end{figure}
