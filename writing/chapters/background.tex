@@ -428,35 +428,24 @@ a neural network that can generalize across states.
 \label{subsec:q-learning}
 
 The Bellman optimality equation tells us what $q_*$ must satisfy,
-but solving it requires knowing the dynamics~$p$ -- the
-probability of every possible next state and reward for every
-action. In most problems of interest, the agent does not have
-this information. It cannot look up what will happen; it can only
-try an action and observe the result.
+but solving it requires knowing the dynamics~$p$. In most problems
+of interest, the agent does not have this information -- it cannot
+look up what will happen; it can only try an action and observe the
+result. Q-learning~\citep{watkins1992q} addresses exactly this
+setting: the agent learns $q_*$ directly from experience, one
+transition at a time, without ever knowing $p$.
 
 \smallskip
-This is the setting Q-learning addresses: the agent learns $q_*$
-directly from experience, one transition at a
-time~\citep{watkins1992q}. Instead of solving a system of
-equations, it updates its estimates after every step, gradually
-converging to the optimal values.
-
-\smallskip
-The key idea behind Q-learning comes from
-\emph{temporal-difference} (TD)
+The key idea comes from \emph{temporal-difference} (TD)
 learning~\citep{sutton1988learning}: rather than waiting until
 the end of an episode to see how things turned out, the agent
 updates its estimate after every single step. It observes the
 immediate reward, peeks at its current estimate of the next
 state's value, and uses these together as a learning target.
-
-\smallskip
-This ``peek at the next state'' is called \emph{bootstrapping}
--- the agent learns from its own estimates rather than from
-complete outcomes. The estimates may be wrong at first, but
-because each update incorporates a real observed reward, the
-errors shrink over time and the estimates converge to the true
-values.
+This peeking is called \emph{bootstrapping} -- the agent learns
+from its own estimates rather than from complete outcomes. The
+estimates may be wrong at first, but because each update
+incorporates a real observed reward, the errors shrink over time.
 
 \smallskip
 The Q-learning update rule puts this idea into practice. After
@@ -471,19 +460,16 @@ Q(S_t, A_t) \;\leftarrow\; Q(S_t, A_t)
   - Q(S_t, A_t)\Big].
 \end{equation}
 %
-Each piece has a clear role. $Q(S_t, A_t)$ is the agent's
-current estimate for this state--action pair. The expression
+$Q(S_t, A_t)$ is the agent's current estimate for this
+state--action pair. The expression
 $R_{t+1} + \gamma \max_a Q(S_{t+1}, a)$ is the \emph{TD
 target} -- the reward the agent actually received, plus its best
 estimate of the value from the next state onward. The difference
 between the target and the current estimate is the \emph{TD
-error}: how far off the agent's prediction was.
-
-\smallskip
-The learning rate $\alpha \in (0, 1]$ controls how much each
-update adjusts the estimate. A large $\alpha$ moves quickly
-toward the target but may overshoot; a small $\alpha$ is more
-stable but learns slowly.
+error}: how far off the agent's prediction was. The learning rate
+$\alpha \in (0, 1]$ controls how far the estimate moves toward
+the target on each step -- large $\alpha$ moves quickly but may
+overshoot; small $\alpha$ is more stable but learns slowly.
 
 \smallskip
 To see this in the grid-world, suppose the agent is in
@@ -539,9 +525,10 @@ A notable property of Q-learning is that it is \emph{off-policy}:
 the update rule always uses $\max_a Q(S_{t+1}, a)$ -- the value
 of the best action -- regardless of which action the agent
 actually takes next. The agent explores with $\epsilon$-greedy,
-but the update targets the greedy (optimal) policy. This means
-Q-learning estimates $q_*$ directly, no matter how the agent
-chooses to explore.
+but the update targets the greedy (optimal) policy. This
+separation is what makes exploration safe: the agent can try
+random actions to discover new information without corrupting its
+estimate of $q_*$.
 
 \smallskip
 Under standard conditions -- all state--action pairs continue to
