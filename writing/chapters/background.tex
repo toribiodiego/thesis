@@ -248,12 +248,24 @@ q_\pi(s, a) \;\doteq\; \mathbb{E}_\pi\!\big[G_t \mid S_t = s,\, A_t = a\big].
 %
 The difference is subtle but important: $v_\pi$ evaluates
 \emph{states}, while $q_\pi$ evaluates \emph{actions in states}.
-In the grid-world, $q_\pi(s_{21}, \text{right})$ is the expected
-return for moving right from $s_{21}$ and then following~$\pi$,
-while $q_\pi(s_{21}, \text{up})$ is the expected return for
-moving up first. Comparing these values tells the agent which
-action is better -- and this is why $q_\pi$ is more directly
-useful for decision-making than $v_\pi$.
+
+\smallskip
+In the grid-world, consider the agent in cell~$s_{21}$.
+Moving up leads toward the $+1$ goal, so
+$q_\pi(s_{21}, \text{up})$ is high. Moving right leads directly
+to the $-1$ penalty in $s_{31}$, so
+$q_\pi(s_{21}, \text{right})$ is low. The state value $v_\pi$
+assigns a single number to~$s_{21}$, but the action values reveal
+that the actions available there are dramatically different.
+\Cref{fig:q-values} shows this: each arrow from~$s_{21}$ carries
+a different Q-value, making the best action immediately apparent.
+
+\input{figures/q-values}
+
+\smallskip
+This is why $q_\pi$ is more directly useful for decision-making
+than $v_\pi$: comparing Q-values across actions tells the agent
+which action to take, without needing a model of the environment.
 
 \smallskip
 Both value functions are defined as expectations over the entire

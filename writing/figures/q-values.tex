@@ -1,0 +1,61 @@
+\begin{figure}[ht]
+\centering
+\input{figures/palette}
+\begin{tikzpicture}[
+    cell/.style={minimum size=1.15cm, draw=black!40, thick,
+                 font=\scriptsize},
+    wall/.style={cell, fill=black!15},
+    terminal/.style={cell, fill=black!8},
+    qarr/.style={->, thick, >=stealth},
+    qlbl/.style={font=\scriptsize},
+    plabel/.style={font=\scriptsize\bfseries},
+]
+\def\s{1.15}
+
+% Draw a 4x3 grid for context (faded)
+% Row 0
+\node[cell, draw=black!15] (c00) at (0, 0) {};
+\node[cell, draw=black!15] (c10) at (\s, 0) {};
+\node[cell, draw=black!15] (c20) at (2*\s, 0) {};
+\node[cell, draw=black!15] (c30) at (3*\s, 0) {};
+% Row 1
+\node[cell, draw=black!15] (c01) at (0, \s) {};
+\node[wall, draw=black!15, fill=black!8] (c11) at (\s, \s) {};
+\node[cell, draw=black!40] (c21) at (2*\s, \s) {};
+\node[terminal] (c31) at (3*\s, \s) {};
+% Row 2
+\node[cell, draw=black!15] (c02) at (0, 2*\s) {};
+\node[cell, draw=black!15] (c12) at (\s, 2*\s) {};
+\node[cell, draw=black!15] (c22) at (2*\s, 2*\s) {};
+\node[terminal] (c32) at (3*\s, 2*\s) {};
+
+% Terminal labels
+\node[plabel, text=black!30] at (c31) {$-1$};
+\node[plabel, text=black!30] at (c32) {$+1$};
+
+% Highlight s_21
+\node[font=\scriptsize, text=black!60] at (c21) {$s_{21}$};
+
+% Q-value arrows from s_21
+% Up (high value -- good)
+\draw[qarr, palC!70] (c21.north) -- ++(0, 0.35)
+    node[qlbl, right=2pt, text=palC!80] {$0.90$};
+
+% Right (low value -- penalty)
+\draw[qarr, palB!60] (c21.east) -- ++(0.35, 0)
+    node[qlbl, above=1pt, text=palB!70] {$-0.10$};
+
+% Down (moderate)
+\draw[qarr, black!35] (c21.south) -- ++(0, -0.35)
+    node[qlbl, right=2pt, text=black!50] {$0.73$};
+
+% Left (moderate -- toward wall, bounces back)
+\draw[qarr, black!35] (c21.west) -- ++(-0.35, 0)
+    node[qlbl, above=1pt, text=black!50] {$0.81$};
+
+\end{tikzpicture}
+\caption{Action values $q_\pi$ at cell~$s_{21}$. Each arrow shows
+  the Q-value for one action. Moving up (toward the goal) has the
+  highest value; moving right (into the penalty) has the lowest.}
+\label{fig:q-values}
+\end{figure}
