@@ -775,7 +775,81 @@ learning.
 \subsection{Experience Replay}
 \label{subsec:experience-replay-bg}
 
-\vspace{2em}
+The previous section described the architecture that maps raw frames
+to Q-values. But training this network with standard Q-learning
+updates -- applying the SGD rule from \cref{eq:sgd-update} to each
+transition as it arrives -- is unstable. The problem lies not in the
+network itself, but in the data it trains on.
+
+\smallskip
+In supervised learning, SGD convergence relies on the training data
+being independent and identically distributed (i.i.d.): each example
+in a minibatch is drawn independently from the same underlying
+distribution. In reinforcement learning, this assumption is violated
+in two ways.
+
+\smallskip
+First, consecutive transitions are highly correlated. If the agent
+is in a particular state at time~$t$, the state at time~$t+1$ is
+almost identical -- a ball has moved a few pixels, or a character has
+shifted slightly. Training on a sequence of near-identical inputs
+pushes the network's parameters in the same direction repeatedly,
+overfitting to the agent's recent local experience rather than
+learning general value estimates.
+
+\smallskip
+Second, the data distribution itself changes as the agent learns.
+Each gradient step updates the network, which changes the policy,
+which changes which states the agent visits, which changes the
+distribution of training data. The agent is training on a shifting
+distribution of its own creation -- a feedback loop that can cause
+the network's predictions to diverge.
+
+\smallskip
+\emph{Experience replay}~\citep{lin1992self,mnih2013playing} breaks
+this loop with a simple mechanism: instead of training on each
+transition once as it arrives, the agent stores every transition
+$(s, a, r, s')$ in a large buffer and trains on random minibatches
+sampled uniformly from the buffer. The buffer is a fixed-size
+first-in-first-out queue -- typically holding one million transitions.
+When full, the oldest transitions are discarded to make room for
+new ones. \Cref{fig:replay-buffer} illustrates the mechanism:
+transitions arrive sequentially from the agent, but the training
+minibatch is assembled by sampling randomly across the buffer.
+
+\input{figures/replay-buffer}
+
+\smallskip
+Random sampling from the buffer serves three purposes. First, it
+\emph{decorrelates} the training data: a minibatch drawn from a
+million-transition buffer contains experiences from many different
+episodes and time steps, approximating the i.i.d.\ condition that
+SGD requires.
+
+\smallskip
+Second, it improves \emph{data efficiency}: each transition can
+appear in many minibatches over the course of training, rather than
+being used for a single gradient step and discarded. This is
+especially important when environment interactions are expensive --
+extracting more learning from each transition means the agent needs
+fewer total interactions to improve.
+
+\smallskip
+Third, it provides \emph{smoothing}: because the buffer accumulates
+transitions from many past versions of the policy, the training
+distribution changes gradually rather than shifting abruptly with
+each policy update. This prevents the network from overfitting to
+its most recent behavior and reduces oscillations in the learned
+values.
+
+\smallskip
+Experience replay connects directly to the function approximation
+loss in \cref{eq:fa-loss}. That equation defined the expected
+squared TD error, with the expectation taken over transitions --
+but did not specify where those transitions come from. Experience
+replay provides the answer: the expectation is approximated by
+sampling minibatches from the buffer, and each sampled transition
+contributes one term to the loss.
 
 \subsection{Target Networks}
 \label{subsec:target-networks-bg}
