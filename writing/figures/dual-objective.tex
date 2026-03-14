@@ -1,20 +1,19 @@
 \begin{figure}[htbp]
 \centering
 \input{figures/palette}
-
-% Shared colors from Nature CNN figure
-\definecolor{convfront}{HTML}{7BA4CC}
-\definecolor{convtop}{HTML}{9CBDDD}
-\definecolor{convside}{HTML}{5A87B5}
-\definecolor{fcfront}{HTML}{B3CEE4}
-\definecolor{fctop}{HTML}{CDDEF0}
-\definecolor{fcside}{HTML}{8DB3D2}
+\definecolor{encfade}{HTML}{B8D2E6}
+% Q-head colors (from nature-cnn.tex output layer)
 \definecolor{outfront}{HTML}{DCE8F4}
 \definecolor{outtop}{HTML}{EBF1F8}
 \definecolor{outside}{HTML}{C2D6E8}
-\definecolor{sprfront}{HTML}{A8C487}
-\definecolor{sprtop}{HTML}{BDD4A3}
-\definecolor{sprside}{HTML}{8FB06D}
+% FC layer colors
+\definecolor{fcfront}{HTML}{B3CEE4}
+\definecolor{fctop}{HTML}{CDDEF0}
+\definecolor{fcside}{HTML}{8DB3D2}
+% SSL head colors (green variant)
+\definecolor{sslfront}{HTML}{B8D8A0}
+\definecolor{ssltop}{HTML}{CBE4B8}
+\definecolor{sslside}{HTML}{8FB870}
 
 % Cuboid macro (from nature-cnn.tex)
 \newcommand{\cuboid}[7]{%
@@ -34,119 +33,138 @@
 \centering
 \begin{tikzpicture}[
     x={(1cm,0cm)}, y={(0cm,1cm)}, z={(0.35cm,0.25cm)},
-    arr/.style={->, thick, >=stealth, black!40},
-    gradarr/.style={<-, thick, >=stealth, dashed, palA!60},
-    lbl/.style={font=\scriptsize, text=black!50},
+    arr/.style={->, thick, >=stealth, black!45},
+    gradarr/.style={<-, thick, >=stealth, dashed, palA!55},
+    lbl/.style={font=\scriptsize, text=black!45},
 ]
 
-% Input
-\cuboid{0}{0.15}{1.5}{0.8}{outfront}{outtop}{outside}
-\node[lbl, anchor=south] at (0.07, 0.9, 0) {$s_t$};
+% Observation label
+\node[font=\small, text=black!85] at (-0.5, 0, 0) {$s_t$};
+\draw[arr] (0.0, 0, 0) -- (0.6, 0, 0);
 
-\draw[arr] (0.55, 0, 0) -- (1.15, 0, 0);
+% Encoder (trapezoid in 2D -- just use y coords, z=0)
+\fill[encfade, draw=black!60, thick, line join=round]
+    (0.8, -0.9, 0) -- (0.8, 0.9, 0) -- (2.5, 0.5, 0)
+    -- (2.5, -0.5, 0) -- cycle;
+\node[font=\small, text=black!80] at (1.55, 0, 0) {$f_\theta$};
 
-% Conv layers (simplified: 3 blocks)
-\cuboid{1.3}{0.3}{1.3}{0.6}{convfront}{convtop}{convside}
-\cuboid{2.1}{0.35}{1.0}{0.45}{convfront}{convtop}{convside}
-\cuboid{2.9}{0.35}{0.8}{0.35}{convfront}{convtop}{convside}
+% z_t label
+\node[font=\small, text=black!85] (zt) at (3.4, 0, 0)
+    {$\mathbf{z}_t$};
+\draw[arr] (2.5, 0, 0) -- (3.05, 0, 0);
 
-\draw[arr] (3.6, 0, 0) -- (4.2, 0, 0);
+\draw[arr] (3.75, 0, 0) -- (4.6, 0, 0);
 
-% FC layer (512)
-\cuboid{4.35}{0.12}{1.4}{0.08}{fcfront}{fctop}{fcside}
-\node[lbl, anchor=north] at (4.41, -0.85, 0) {512};
+% FC layer (thin tall cuboid)
+\cuboid{4.8}{0.15}{1.2}{0.1}{fcfront}{fctop}{fcside}
 
-\draw[arr] (4.8, 0, 0) -- (5.4, 0, 0);
+\draw[arr] (5.3, 0, 0) -- (5.9, 0, 0);
 
-% Q-values output
-\cuboid{5.55}{0.12}{0.7}{0.08}{outfront}{outtop}{outside}
-\node[lbl, anchor=south] at (5.61, 0.5, 0) {$Q(s,a)$};
+% Q-values output (thin cuboid, lighter)
+\cuboid{6.1}{0.15}{0.7}{0.1}{outfront}{outtop}{outside}
+\node[lbl, anchor=south] at (6.17, 0.5, 0) {$Q(s,a)$};
+\node[lbl, anchor=north] at (4.88, -0.75, 0) {Q-head};
 
 % Loss label
-\node[font=\small, text=palA!80!black] at (6.5, 0, 0)
+\draw[arr] (6.6, 0, 0) -- (7.3, 0, 0);
+\node[font=\small, text=palA!80!black] at (7.8, 0, 0)
     {$\mathcal{L}_{\text{Q}}$};
 
-% Single gradient arrow (below)
-\draw[gradarr, rounded corners=4pt]
-    (4.41, -1.1) -- (4.41, -1.5) -- (6.3, -1.5) -- (6.3, -0.3);
-\node[lbl, text=palA!60] at (5.4, -1.75)
-    {sole gradient signal};
+% Encoder + bottleneck labels
+\node[lbl, anchor=north] at (1.55, -1.15, 0) {encoder};
+\node[lbl, anchor=north] at (3.4, -0.4, 0) {512};
 
-% Encoder brace
-\draw[decorate, decoration={brace, amplitude=3pt, mirror},
-    black!30]
-    (1.3, -0.85) -- (3.55, -0.85)
-    node[midway, below=5pt, lbl] {encoder $f_\theta$};
+% Gradient arrow (below, outside the figure)
+\draw[gradarr, rounded corners=5pt]
+    (1.55, -1.55, 0) -- (1.55, -1.85, 0) -- (7.6, -1.85, 0)
+    -- (7.6, -0.3, 0);
+\node[lbl, text=palA!50] at (4.6, -2.1, 0)
+    {sole gradient signal};
 
 \end{tikzpicture}
 \subcaption{Standard DQN: single objective}
 \label{fig:dual-obj-standard}
 \end{subfigure}
+
 \vspace{1.5em}
+
 %% ====== Panel (b): With self-supervision ======
 \begin{subfigure}[t]{\textwidth}
 \centering
 \begin{tikzpicture}[
     x={(1cm,0cm)}, y={(0cm,1cm)}, z={(0.35cm,0.25cm)},
-    arr/.style={->, thick, >=stealth, black!40},
+    arr/.style={->, thick, >=stealth, black!45},
     gradarr/.style={<-, thick, >=stealth, dashed},
-    lbl/.style={font=\scriptsize, text=black!50},
+    lbl/.style={font=\scriptsize, text=black!45},
 ]
 
-% Input
-\cuboid{0}{0.15}{1.5}{0.8}{outfront}{outtop}{outside}
-\node[lbl, anchor=south] at (0.07, 0.9, 0) {$s_t$};
+% Observation label
+\node[font=\small, text=black!85] at (-0.5, 0, 0) {$s_t$};
+\draw[arr] (0.0, 0, 0) -- (0.6, 0, 0);
 
-\draw[arr] (0.55, 0, 0) -- (1.15, 0, 0);
+% Encoder (same trapezoid)
+\fill[encfade, draw=black!60, thick, line join=round]
+    (0.8, -0.9, 0) -- (0.8, 0.9, 0) -- (2.5, 0.5, 0)
+    -- (2.5, -0.5, 0) -- cycle;
+\node[font=\small, text=black!80] at (1.55, 0, 0) {$f_\theta$};
 
-% Conv layers (same encoder)
-\cuboid{1.3}{0.3}{1.3}{0.6}{convfront}{convtop}{convside}
-\cuboid{2.1}{0.35}{1.0}{0.45}{convfront}{convtop}{convside}
-\cuboid{2.9}{0.35}{0.8}{0.35}{convfront}{convtop}{convside}
-
-\draw[arr] (3.6, 0, 0) -- (4.2, 0, 0);
-
-% FC layer (512) -- the fork point
-\cuboid{4.35}{0.12}{1.4}{0.08}{fcfront}{fctop}{fcside}
-\node[lbl, anchor=north] at (4.41, -0.85, 0) {512};
+% z_t label
+\node[font=\small, text=black!85] (zt) at (3.4, 0, 0)
+    {$\mathbf{z}_t$};
+\draw[arr] (2.5, 0, 0) -- (3.05, 0, 0);
 
 % === Upper path: Q-head ===
-\draw[arr, palA!70] (4.8, 0.3, 0) -- (5.4, 0.9, 0);
+\draw[arr] (3.75, 0.15, 0) -- (4.4, 1.6, 0);
+
+% FC layer (upper)
+\cuboid{4.6}{0.15}{1.0}{0.1}{fcfront}{fctop}{fcside}
+\draw[arr] (5.1, 1.6, 0) -- (5.9, 1.6, 0);
 
 % Q-values output (upper)
-\cuboid{5.55}{0.12}{0.55}{0.08}{outfront}{outtop}{outside}
-\node[lbl, anchor=south, text=palA!70!black]
-    at (5.61, 1.25, 0) {$Q(s,a)$};
-\node[font=\small, text=palA!80!black] at (6.4, 0.95, 0)
+\cuboid{6.1}{0.15}{0.6}{0.1}{outfront}{outtop}{outside}
+\node[lbl, anchor=south] at (6.17, 1.95, 0) {$Q(s,a)$};
+\node[lbl] at (5.5, 0.9, 0) {Q-head};
+
+% Q loss
+\draw[arr] (6.6, 1.6, 0) -- (7.3, 1.6, 0);
+\node[font=\small, text=palA!80!black] at (7.8, 1.6, 0)
     {$\mathcal{L}_{\text{Q}}$};
 
 % === Lower path: SSL head ===
-\draw[arr, palC!70!black] (4.8, -0.3, 0) -- (5.4, -0.9, 0);
+\draw[arr] (3.75, -0.15, 0) -- (4.4, -1.6, 0);
 
-% SSL output (lower, green)
-\cuboid{5.55}{0.12}{0.55}{0.08}{sprfront}{sprtop}{sprside}
-\node[lbl, anchor=north, text=palC!60!black]
-    at (5.61, -1.25, 0) {$\hat{\mathbf{z}}_{t+1}$};
-\node[font=\small, text=palC!70!black] at (6.5, -0.95, 0)
-    {$\lambda\mathcal{L}_{\text{SSL}}$};
+% SSL projection (lower, green cuboid)
+\cuboid{4.6}{0.15}{1.0}{0.1}{sslfront}{ssltop}{sslside}
+\draw[arr] (5.1, -1.6, 0) -- (5.9, -1.6, 0);
 
-% === Gradient arrows ===
+% SSL output (lower, green cuboid)
+\cuboid{6.1}{0.15}{0.6}{0.1}{sslfront}{ssltop}{sslside}
+\node[lbl, anchor=north] at (6.17, -1.95, 0)
+    {$\hat{\mathbf{z}}_{t+1}$};
+\node[lbl] at (5.5, -0.9, 0) {SSL head};
+
+% SSL loss
+\draw[arr] (6.6, -1.6, 0) -- (7.3, -1.6, 0);
+\node[font=\small, text=palC!70!black] at (7.8, -1.6, 0)
+    {$\lambda\,\mathcal{L}_{\text{SSL}}$};
+
+% Encoder + bottleneck labels
+\node[lbl, anchor=north] at (1.55, -1.15, 0) {encoder};
+\node[lbl, anchor=north] at (3.4, -0.4, 0) {512};
+
+% === Gradient arrows (colored to show which loss) ===
 % Q gradient (blue, above)
-\draw[gradarr, palA!60, rounded corners=4pt]
-    (2.5, 1.1) -- (2.5, 1.7) -- (6.2, 1.7) -- (6.2, 1.15);
-\node[lbl, text=palA!60] at (4.35, 1.9) {action values};
+\draw[gradarr, palA!55, rounded corners=5pt]
+    (1.55, 1.4, 0) -- (1.55, 2.5, 0) -- (7.6, 2.5, 0)
+    -- (7.6, 1.85, 0);
+\node[lbl, text=palA!50] at (4.6, 2.7, 0) {action values};
 
 % SSL gradient (green, below)
-\draw[gradarr, palC!50!black, rounded corners=4pt]
-    (2.5, -1.1) -- (2.5, -1.7) -- (6.3, -1.7) -- (6.3, -1.15);
-\node[lbl, text=palC!50!black] at (4.35, -1.9)
+\draw[gradarr, palC!45!black, rounded corners=5pt]
+    (1.55, -1.4, 0) -- (1.55, -2.5, 0) -- (7.6, -2.5, 0)
+    -- (7.6, -1.85, 0);
+\node[lbl, text=palC!45!black] at (4.6, -2.7, 0)
     {dynamics / structure};
-
-% Encoder brace
-\draw[decorate, decoration={brace, amplitude=3pt, mirror},
-    black!30]
-    (1.3, -0.85) -- (3.55, -0.85)
-    node[midway, below=5pt, lbl] {encoder $f_\theta$};
 
 \end{tikzpicture}
 \subcaption{With self-supervision: dual objective}
