@@ -1319,7 +1319,81 @@ make these comparisons meaningful.
 \subsection{Metrics}
 \label{subsec:metrics}
 
-\vspace{2em}
+Raw scores are not comparable across games. Pong scores range from
+$-21$ to $+21$; Crazy Climber scores reach hundreds of thousands.
+Averaging raw scores would let a single high-scoring game dominate
+the aggregate, hiding poor performance elsewhere. Meaningful
+comparison requires a normalization that puts all games on a common
+scale.
+
+\smallskip
+The standard normalization is the \emph{human-normalized score}
+(HNS):
+\begin{equation}
+\label{eq:hns}
+\text{HNS} = \frac{\text{agent score} - \text{random score}}
+                   {\text{human score} - \text{random score}}.
+\end{equation}
+An HNS of 0 means the agent performs at the level of a random
+policy; an HNS of 1 means it matches human performance; values
+above 1 are superhuman. In concrete terms, HNS measures what
+fraction of the gap between random play and human play the agent
+closes. The human and random baselines come from
+\citet{mnih2015human}: human scores were recorded by a
+professional games tester playing each game for two hours, and
+random scores were measured from a uniform random policy.
+
+\smallskip
+Once scores are normalized, they must be aggregated across games
+into a single number for comparison. The two obvious choices --
+mean and median -- each have problems.
+The mean is sensitive to outliers: if an agent achieves an HNS of
+10 on one game (far above human level) but 0.1 on the rest, the
+mean looks strong despite broadly weak performance. The median is
+robust to outliers but statistically inefficient -- it uses only
+the middle value and discards most of the data.
+\citet{agarwal2021deep} demonstrated the practical consequences:
+with only five runs per game (common in the literature), the median
+of the same algorithm can vary by over 30\% depending on which
+random seeds are included.
+
+\smallskip
+\citet{agarwal2021deep} recommended the \emph{interquartile mean}
+(IQM) as the primary aggregate metric. IQM is a 25\% trimmed mean:
+pool the normalized scores from all game-run combinations, discard
+the bottom 25\% and top 25\%, and take the mean of the remaining
+50\%. This makes IQM more robust than the mean (outliers are
+trimmed) and more statistically efficient than the median (it uses
+half the data rather than a single point), producing tighter
+confidence intervals for the same number of runs.
+
+\smallskip
+Point estimates of any aggregate metric are unreliable when the
+number of runs is small. \citet{agarwal2021deep} proposed reporting
+\emph{stratified bootstrap confidence intervals}: for each game,
+resample the available runs with replacement; compute the aggregate
+metric on each bootstrap sample; report the 95\% interval. This
+tells the reader how much the aggregate could shift with different
+random seeds. A difference between two agents is meaningful only if
+their confidence intervals show clear separation.
+
+\smallskip
+A complementary tool is the \emph{performance profile}: a curve
+showing the fraction of game-run combinations where the agent
+exceeds a given normalized score threshold. Higher curves indicate
+stronger algorithms, and a curve that lies strictly above another
+indicates stochastic dominance across the full range of thresholds.
+Performance profiles provide a richer picture than any single
+aggregate metric because they reveal the full distribution of
+performance -- not just a summary statistic.
+
+\smallskip
+These metrics -- human-normalized scores aggregated via IQM with
+bootstrap confidence intervals -- provide a principled framework
+for comparing agents across games with very different score
+ranges. The next section introduces data augmentation, the first
+of two techniques that improve data efficiency under the 100K
+constraint.
 
 \section{Data Augmentation for RL}
 \label{sec:augmentation}
