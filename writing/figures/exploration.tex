@@ -1,0 +1,65 @@
+\begin{figure}[h!]
+\centering
+\input{figures/palette}
+
+%% Panel (a): Pure exploitation
+\begin{subfigure}[t]{0.45\textwidth}
+\centering
+\begin{tikzpicture}[
+    snode/.style={circle, draw=black!50, thick, fill=palA!12,
+                  minimum size=0.9cm, font=\small},
+    rnode/.style={circle, draw=black!40, thick,
+                  minimum size=0.9cm, font=\small\bfseries},
+    chosen/.style={very thick, palA, -Stealth},
+    unchosen/.style={thick, black!25, dashed, -Stealth},
+    qlabel/.style={font=\scriptsize},
+]
+
+\node[snode] (s) at (0, 0) {$s$};
+\node[rnode, fill=palA!8] (r1) at (-1.6, -2) {$+1$};
+\node[rnode, fill=black!5] (r2) at ( 1.6, -2) {?};
+
+\draw[chosen] (s) -- node[qlabel, left, pos=0.4]
+    {$Q\!=\!1$} (r1);
+\draw[unchosen] (s) -- node[qlabel, right, pos=0.4,
+    text=black!35] {$Q\!=\!0$} (r2);
+
+\end{tikzpicture}
+\vspace{0.5em}
+\subcaption{Greedy: always picks the known $+1$.}
+\label{fig:exploration-greedy}
+\end{subfigure}
+\hfill
+%% Panel (b): After exploration
+\begin{subfigure}[t]{0.45\textwidth}
+\centering
+\begin{tikzpicture}[
+    snode/.style={circle, draw=black!50, thick, fill=palA!12,
+                  minimum size=0.9cm, font=\small},
+    rnode/.style={circle, draw=black!40, thick,
+                  minimum size=0.9cm, font=\small\bfseries},
+    chosen/.style={very thick, palC, -Stealth},
+    unchosen/.style={thick, black!25, -Stealth},
+    qlabel/.style={font=\scriptsize},
+]
+
+\node[snode] (s) at (0, 0) {$s$};
+\node[rnode, fill=black!5] (r1) at (-1.6, -2) {$+1$};
+\node[rnode, fill=palC!10] (r2) at ( 1.6, -2) {$+3$};
+
+\draw[unchosen] (s) -- node[qlabel, left, pos=0.4,
+    text=black!45] {$Q\!=\!1$} (r1);
+\draw[chosen] (s) -- node[qlabel, right, pos=0.4]
+    {$Q\!=\!3$} (r2);
+
+\end{tikzpicture}
+\vspace{0.5em}
+\subcaption{Exploring discovers the $+3$ reward.}
+\label{fig:exploration-discovered}
+\end{subfigure}
+
+\vspace{0.8em}
+\caption{Without exploration, the agent settles for the first
+  rewarding action it finds and never discovers better alternatives.}
+\label{fig:exploration}
+\end{figure}

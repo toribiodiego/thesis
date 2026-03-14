@@ -1,0 +1,48 @@
+\begin{figure}[h!]
+\centering
+\input{figures/palette}
+\begin{tikzpicture}[
+    snode/.style={circle, draw=black!50, thick, fill=palA!12,
+                  minimum size=0.9cm, font=\small},
+    anode/.style={circle, fill=black!60, minimum size=5pt,
+                  inner sep=0pt},
+    edge/.style={thick, black!45, -Stealth},
+    elabel/.style={font=\scriptsize, text=black!55},
+    payoff/.style={font=\scriptsize, text=black!45},
+]
+
+% Root state
+\node[snode] (s) at (0, 0) {$s$};
+
+% Action nodes
+\node[anode] (a1) at (-1.8, -1.5) {};
+\node[anode] (a2) at ( 1.8, -1.5) {};
+\node[font=\scriptsize, left=3pt] at (a1) {$a_1$};
+\node[font=\scriptsize, right=3pt] at (a2) {$a_2$};
+
+% Next-state nodes
+\node[snode] (s1) at (-1.8, -3.4) {$s'$};
+\node[snode] (s2) at ( 1.8, -3.4) {$s''$};
+
+% Policy edges (state -> actions)
+\draw[edge] (s) -- node[elabel, left, pos=0.4]
+    {$\pi(a_1 \!\mid\! s)$} (a1);
+\draw[edge] (s) -- node[elabel, right, pos=0.4]
+    {$\pi(a_2 \!\mid\! s)$} (a2);
+
+% Transition edges (actions -> next states)
+\draw[edge] (a1) -- node[elabel, left] {$r_1$} (s1);
+\draw[edge] (a2) -- node[elabel, right] {$r_2$} (s2);
+
+% Payoff annotations
+\node[payoff, below=5pt] at (s1)
+    {$r_1 + \gamma\, v_\pi(s')$};
+\node[payoff, below=5pt] at (s2)
+    {$r_2 + \gamma\, v_\pi(s'')$};
+
+\end{tikzpicture}
+\vspace{0.5em}
+\caption{Bellman backup: $v_\pi(s)$ decomposes into one step of
+  reward plus the discounted value of the successor state.}
+\label{fig:bellman-backup}
+\end{figure}
