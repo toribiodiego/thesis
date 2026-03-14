@@ -777,9 +777,9 @@ connected layer and a linear output layer. Each convolutional layer
 applies a set of learned filters that slide across the input,
 detecting spatial patterns at progressively higher levels of
 abstraction -- edges and textures in the first layer, shapes and
-object parts in deeper layers. \Cref{fig:conv-operation} illustrates
-the basic convolution operation: a small kernel slides across the
-input, and each position produces one output value.
+object parts in deeper layers. \Cref{fig:conv-operation} illustrates the basic convolution
+operation: a kernel of learned weights slides across the input,
+computing a weighted sum at each position to produce one output value.
 
 \input{figures/conv-operations}
 
@@ -789,7 +789,13 @@ kernel sizes of $8 \times 8$, $4 \times 4$, and $3 \times 3$ and
 strides of 4, 2, and 1, respectively. The large kernel and stride in
 the first layer rapidly reduce the spatial dimensions from
 $84 \times 84$ to $20 \times 20$, while the later layers refine
-features at finer spatial scales. After the final convolutional
+features at finer spatial scales. \Cref{fig:stride-effect}
+illustrates the trade-off: a larger stride means the kernel visits
+fewer positions and the output shrinks accordingly.
+
+\input{figures/stride-comparison}
+
+\smallskip After the final convolutional
 layer, the output is flattened and passed through a fully connected
 layer with 512 units. Each hidden layer uses a ReLU activation
 function. The output layer produces one Q-value for every available
