@@ -995,7 +995,10 @@ the convolutional encoder but have separate fully connected heads.
 This separation lets the network learn ``how good is this state''
 independently from ``how much better is this action than average,''
 which is beneficial in states where the choice of action matters
-little.
+little. \Cref{fig:dueling-architecture} contrasts the two
+architectures.
+
+\input{figures/dueling-architecture}
 
 \smallskip
 \textbf{Multi-step returns.}\quad Standard DQN bootstraps from the
