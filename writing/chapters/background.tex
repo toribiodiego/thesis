@@ -485,8 +485,13 @@ Q(s_{21}, \text{up}) &\leftarrow 0.5 + 0.1 \times 0.4 = 0.54.
 \end{align*}
 %
 The estimate moved from $0.5$ toward the target of $0.9$ -- not
-all the way, but a step in the right direction. After many such
-updates across many transitions, the estimates converge to $q_*$.
+all the way, but a step in the right direction.
+\Cref{fig:td-update} shows this update spatially: the value
+estimate at $s_{22}$ bootstraps back to refine the estimate at
+$s_{21}$. After many such updates across many transitions, the
+estimates converge to $q_*$.
+
+\input{figures/td-update}
 
 \smallskip
 The connection to the Bellman optimality equation
