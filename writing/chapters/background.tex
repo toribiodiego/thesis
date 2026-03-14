@@ -214,6 +214,12 @@ and following policy~$\pi$ thereafter:
 v_\pi(s) \;\doteq\; \mathbb{E}_\pi\!\big[G_t \mid S_t = s\big].
 \end{equation}
 %
+The subscript~$\pi$ on the expectation means that the agent
+follows policy~$\pi$ at every step -- the average is taken over
+all the randomness in the trajectory (action choices and
+transitions) that this policy produces.
+
+\smallskip
 In the grid-world, $v_\pi(s)$ is the average total reward the
 agent collects from cell~$s$ onward if it follows policy~$\pi$.
 Cells near the goal have high values because the agent reaches
