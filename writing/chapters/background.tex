@@ -1022,6 +1022,10 @@ values. The network outputs probabilities for each value, and the
 loss minimizes the KL divergence between the predicted and target
 distributions. This richer learning signal can improve feature
 learning even though the policy still acts on the expected value.
+\Cref{fig:distributional-output} illustrates the difference in
+output structure.
+
+\input{figures/distributional-output}
 
 \smallskip
 \textbf{Noisy networks.}\quad DQN uses $\varepsilon$-greedy
