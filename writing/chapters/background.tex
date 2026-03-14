@@ -899,7 +899,11 @@ replaced with a copy of the online network:
 $\boldsymbol{\theta}^- \leftarrow \boldsymbol{\theta}$. In the
 original DQN, $C = 10{,}000$. Between these updates, the target
 network is completely frozen: no gradients flow through it, and its
-parameters do not change.
+parameters do not change. \Cref{fig:target-network} illustrates this
+asymmetry: gradients update only the online network, while the target
+network provides a stable reference.
+
+\input{figures/target-network}
 
 \smallskip
 With both stabilization techniques in place, the complete DQN loss
