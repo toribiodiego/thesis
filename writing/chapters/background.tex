@@ -1593,10 +1593,155 @@ what the Q-learning loss alone requires.
 \section{Self-Supervised Representation Learning}
 \label{sec:ssl}
 
+The previous section showed that data augmentation reduces
+overfitting by diversifying the encoder's inputs. But augmentation
+does not change what the encoder is trained to predict -- the
+Q-learning loss remains the sole objective shaping the encoder's
+representations. In the 100K regime, this signal is weak: Q-targets
+are bootstrapped from the agent's own poor estimates, and the
+encoder may learn shallow features that satisfy current targets
+without capturing the full structure of the environment.
+Self-supervised representation learning addresses this gap by adding
+an auxiliary training objective that shapes the encoder's
+representations independently of the reward signal. This section
+introduces the general idea, the key technical challenge
+(representational collapse), and the specific method used in our
+experiments: Self-Predictive Representations
+(SPR)~\citep{schwarzer2021dataefficient}.
+
 \subsection{Learning Without Labels}
 \label{subsec:learning-without-labels}
 
-\vspace{2em}
+Recall the DQN architecture from \cref{subsec:conv-encoder}: raw
+frames pass through three convolutional layers and a fully
+connected layer, producing a 512-dimensional vector. This vector
+is the agent's internal representation of the game state --
+everything the agent ``knows'' about the current observation
+passes through this bottleneck. The Q-values for all actions are
+computed from this vector, and the Q-learning loss
+(\cref{eq:dqn-loss}) is the only training signal that shapes it.
+The encoder learns to extract whatever features predict Q-values,
+and nothing more.
+
+\smallskip
+In the 100K regime, this single training signal is problematic.
+Q-targets are bootstrapped from the agent's own estimates, which
+are poor early in training. The encoder receives weak, noisy
+gradient information about what features to extract. With limited
+data, it may find features that satisfy the current Q-targets
+without capturing the full structure of the environment -- learning,
+for instance, that dark pixels at the top of the screen correlate
+with high Q-values (because the ball happens to be there in the
+small set of stored transitions), rather than learning to track the
+ball's position and velocity more generally. This is overfitting at
+the representation level: the features work for the data seen so
+far but do not support generalization to new states.
+
+\smallskip
+In the standard 200-million-frame regime, this is less of a
+problem. With enough data, the Q-learning loss eventually provides
+sufficient gradient to learn good representations -- the encoder
+sees enough diverse states that fragile features are weeded out.
+The 100K regime does not offer this luxury. Good representations
+must emerge quickly or not at all.
+
+\smallskip
+Good representations make downstream learning easier. If the
+encoder captures object positions, velocities, and spatial
+relationships, then the Q-head -- a single linear layer -- can
+more easily learn to map these features to accurate Q-values. Poor
+representations force the Q-head to compensate for missing
+information, which is harder and requires more data. The question
+is how to shape the encoder's representations with an additional
+training signal that does not depend on the quality of the
+Q-targets.
+
+\smallskip
+Self-supervised learning creates training signals from the
+structure of the data itself, without requiring external labels. The
+general principle is to define a \emph{pretext task}: an auxiliary
+objective that requires the encoder to capture useful information
+about the input. The pretext task uses no external labels -- it
+derives supervisory signals from the observations themselves. The
+term ``self-supervised'' distinguishes this approach from supervised
+learning (which needs external labels like class names or reward
+signals) and from unsupervised learning (which typically refers to
+clustering or density estimation).
+
+\smallskip
+In computer vision, self-supervised methods have proven remarkably
+effective. Early approaches defined pretext tasks such as
+predicting image rotations, solving jigsaw puzzles from shuffled
+patches, or colorizing grayscale images. The insight behind these
+tasks is that solving them requires understanding the image's
+structure: a network that can predict how an image was rotated has
+implicitly learned to recognize the objects and spatial layout
+within it. Modern methods such as SimCLR~\citep{chen2020simple} and
+BYOL~\citep{grill2020bootstrap} learn representations by comparing
+augmented views of the same image, and their learned features rival
+those of supervised pre-training on downstream tasks.
+
+\smallskip
+Reinforcement learning has something that static image datasets do
+not: temporal structure. The agent observes sequences of states
+connected by actions -- state $s_t$, action $a_t$, and next state
+$s_{t+1}$ form a natural prediction problem. Given the current
+state and the action taken, predict the next state. This is richer
+than spatial-only pretext tasks because it captures \emph{dynamics}
+-- how the game state evolves under different actions. An encoder
+that can predict the next state must represent information about
+object positions, velocities, and the effects of actions: exactly
+the features that are useful for decision-making.
+
+\smallskip
+The prediction does not need to happen in pixel space. Predicting
+future pixels is expensive and requires modeling irrelevant details
+-- exact textures, background patterns, rendering artifacts.
+Predicting future \emph{representations} -- the encoder's own
+internal features -- focuses on the abstract structure that matters.
+This is the key idea behind SPR (\cref{subsec:spr}): train the
+encoder to predict its own future latent states, not future images.
+
+\smallskip
+The self-supervised loss is added alongside the Q-learning loss as
+an auxiliary objective:
+\begin{equation}
+\label{eq:ssl-loss}
+\mathcal{L}_{\text{total}}
+  = \mathcal{L}_{\text{Q}}
+  + \lambda\, \mathcal{L}_{\text{SSL}}.
+\end{equation}
+The encoder receives gradients from both losses. The Q-learning
+loss tells the encoder what matters for decisions (action values);
+the self-supervised loss tells it what matters for understanding
+the environment's dynamics. The two signals are complementary: the
+Q-loss provides task-relevant guidance (even if noisy), while the
+self-supervised loss provides structurally rich guidance (even if
+not directly about rewards). The weight $\lambda$ controls the
+balance between the two objectives. In SPR, $\lambda = 2$, giving
+the self-supervised signal twice the weight of the Q-learning loss.
+
+\smallskip
+Self-supervised methods fall into two broad families.
+\emph{Contrastive methods} (SimCLR, MoCo,
+CURL~\citep{srinivas2020curl}) learn by pulling together
+representations of similar inputs (positive pairs) and pushing
+apart representations of different inputs (negative pairs).
+\emph{Non-contrastive} or \emph{predictive methods} (BYOL, SPR)
+learn by predicting target representations without negatives,
+using an exponential moving average (EMA) target encoder to provide
+stable prediction targets. SPR belongs to the second family. The
+distinction matters for RL because non-contrastive methods are
+simpler (no negative sampling), more robust to small batch sizes
+(RL typically uses batches of 32, far smaller than the thousands
+used in vision), and less dependent on augmentation design.
+
+\smallskip
+But prediction-based objectives have a fundamental obstacle: if the
+encoder maps every input to the same constant vector, the
+prediction task is solved perfectly -- with a useless
+representation. The next section explains this collapse problem and
+how modern methods overcome it.
 
 \subsection{The Collapse Problem}
 \label{subsec:collapse-problem}
