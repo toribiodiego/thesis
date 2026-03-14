@@ -1,72 +1,164 @@
 \begin{figure}[htbp]
 \centering
 \input{figures/palette}
-\definecolor{encfade}{HTML}{B8D2E6}
-\definecolor{sprcomp}{HTML}{C2D4A8}
 
+% Shared colors from Nature CNN figure
+\definecolor{convfront}{HTML}{7BA4CC}
+\definecolor{convtop}{HTML}{9CBDDD}
+\definecolor{convside}{HTML}{5A87B5}
+\definecolor{fcfront}{HTML}{B3CEE4}
+\definecolor{fctop}{HTML}{CDDEF0}
+\definecolor{fcside}{HTML}{8DB3D2}
+\definecolor{outfront}{HTML}{DCE8F4}
+\definecolor{outtop}{HTML}{EBF1F8}
+\definecolor{outside}{HTML}{C2D6E8}
+\definecolor{sprfront}{HTML}{A8C487}
+\definecolor{sprtop}{HTML}{BDD4A3}
+\definecolor{sprside}{HTML}{8FB06D}
+
+% Cuboid macro (from nature-cnn.tex)
+\newcommand{\cuboid}[7]{%
+    \fill[#5, draw=black!35, line join=round]
+        (#1, {-#3/2}, 0) -- ({#1+#2}, {-#3/2}, 0) --
+        ({#1+#2}, {#3/2}, 0) -- (#1, {#3/2}, 0) -- cycle;
+    \fill[#6, draw=black!35, line join=round]
+        (#1, {#3/2}, 0) -- ({#1+#2}, {#3/2}, 0) --
+        ({#1+#2}, {#3/2}, #4) -- (#1, {#3/2}, #4) -- cycle;
+    \fill[#7, draw=black!35, line join=round]
+        ({#1+#2}, {-#3/2}, 0) -- ({#1+#2}, {#3/2}, 0) --
+        ({#1+#2}, {#3/2}, #4) -- ({#1+#2}, {-#3/2}, #4) -- cycle;
+}
+
+%% ====== Panel (a): Standard DQN ======
+\begin{subfigure}[t]{\textwidth}
+\centering
 \begin{tikzpicture}[
-    arr/.style={->, thick, >=stealth, black!55},
-    gradarr/.style={->, thick, >=stealth, dashed},
-    box/.style={draw=black!70, thick, minimum height=0.8cm,
-                minimum width=1.6cm,
-                font=\small, inner sep=5pt, rounded corners=2pt},
-    lbl/.style={font=\scriptsize, text=black!55},
+    x={(1cm,0cm)}, y={(0cm,1cm)}, z={(0.35cm,0.25cm)},
+    arr/.style={->, thick, >=stealth, black!40},
+    gradarr/.style={<-, thick, >=stealth, dashed, palA!60},
+    lbl/.style={font=\scriptsize, text=black!50},
 ]
 
-% === Observation input ===
-\node[font=\small, text=black!90] (obs) at (-0.8, 0) {$s_t$};
-\draw[arr] (-0.4, 0) -- (0.5, 0);
+% Input
+\cuboid{0}{0.15}{1.5}{0.8}{outfront}{outtop}{outside}
+\node[lbl, anchor=south] at (0.07, 0.9, 0) {$s_t$};
 
-% === Shared encoder (trapezoid) ===
-\fill[encfade, draw=black!70, thick, line join=round]
-    (0.7, -1.1) -- (0.7, 1.1) -- (2.4, 0.6) -- (2.4, -0.6) -- cycle;
-\node[font=\small, text=black!85] at (1.45, 0) {$f_\theta$};
+\draw[arr] (0.55, 0, 0) -- (1.15, 0, 0);
 
-% === Bottleneck representation ===
-\node[font=\small, text=black!90, inner sep=2pt] (z) at (3.3, 0)
-    {$\mathbf{z}_t$};
-\draw[arr] (2.4, 0) -- (z.west);
+% Conv layers (simplified: 3 blocks)
+\cuboid{1.3}{0.3}{1.3}{0.6}{convfront}{convtop}{convside}
+\cuboid{2.1}{0.35}{1.0}{0.45}{convfront}{convtop}{convside}
+\cuboid{2.9}{0.35}{0.8}{0.35}{convfront}{convtop}{convside}
 
-% === Q-learning path (upper) ===
-\draw[arr, palA] (z.north) -- ++(0, 0.75) coordinate (qfork);
-\draw[arr, palA] (qfork) -- ++(2.3, 0);
-\node[box, fill=palA!12] (qhead) at (7.1, 1.5)
-    {Q-head $\;\to\; \mathcal{L}_{\text{Q}}$};
-\node[lbl, text=palA!70!black, anchor=north] at (7.1, 0.95)
-    {action values};
+\draw[arr] (3.6, 0, 0) -- (4.2, 0, 0);
 
-% === SSL path (lower) ===
-\draw[arr, palC!80!black] (z.south) -- ++(0, -0.75) coordinate (sslfork);
-\draw[arr, palC!80!black] (sslfork) -- ++(2.3, 0);
-\node[box, fill=sprcomp!70] (sslhead) at (7.1, -1.5)
-    {SSL head $\;\to\; \lambda\,\mathcal{L}_{\text{SSL}}$};
-\node[lbl, text=palC!60!black, anchor=north] at (7.1, -2.05)
-    {dynamics / structure};
+% FC layer (512)
+\cuboid{4.35}{0.12}{1.4}{0.08}{fcfront}{fctop}{fcside}
+\node[lbl, anchor=north] at (4.41, -0.85, 0) {512};
 
-% === Gradient arrows (routed outside) ===
-% Q gradient (blue, dashed, above)
-\draw[gradarr, palA!65, rounded corners=8pt]
-    (qhead.west |- 0, 2.3) -- (1.45, 2.3) -- (1.45, 1.15);
-\draw[thick, dashed, palA!65] (qhead.north) -- ++(0, 0.23);
-\node[font=\scriptsize, text=palA!65] at (4.3, 2.6)
-    {$\nabla \mathcal{L}_{\text{Q}}$};
+\draw[arr] (4.8, 0, 0) -- (5.4, 0, 0);
 
-% SSL gradient (green, dashed, below)
-\draw[gradarr, palC!55!black, rounded corners=8pt]
-    (sslhead.west |- 0, -2.3) -- (1.45, -2.3) -- (1.45, -1.15);
-\draw[thick, dashed, palC!55!black] (sslhead.south) -- ++(0, -0.22);
-\node[font=\scriptsize, text=palC!55!black] at (4.3, -2.6)
-    {$\nabla \lambda\mathcal{L}_{\text{SSL}}$};
+% Q-values output
+\cuboid{5.55}{0.12}{0.7}{0.08}{outfront}{outtop}{outside}
+\node[lbl, anchor=south] at (5.61, 0.5, 0) {$Q(s,a)$};
 
-% === Labels ===
-\node[lbl, anchor=north] at (1.45, -1.4) {shared encoder};
-\node[lbl, anchor=north] at (3.3, -0.35) {\footnotesize 512-dim};
+% Loss label
+\node[font=\small, text=palA!80!black] at (6.5, 0, 0)
+    {$\mathcal{L}_{\text{Q}}$};
+
+% Single gradient arrow (below)
+\draw[gradarr, rounded corners=4pt]
+    (4.41, -1.1) -- (4.41, -1.5) -- (6.3, -1.5) -- (6.3, -0.3);
+\node[lbl, text=palA!60] at (5.4, -1.75)
+    {sole gradient signal};
+
+% Encoder brace
+\draw[decorate, decoration={brace, amplitude=3pt, mirror},
+    black!30]
+    (1.3, -0.85) -- (3.55, -0.85)
+    node[midway, below=5pt, lbl] {encoder $f_\theta$};
 
 \end{tikzpicture}
-\caption{Dual-objective training. The shared encoder $f_\theta$
-  produces a representation $\mathbf{z}_t$ that feeds both the
-  Q-head and the self-supervised head. Gradients from both losses
-  flow back through the encoder, shaping its representations with
-  complementary signals.}
+\subcaption{Standard DQN: single objective}
+\label{fig:dual-obj-standard}
+\end{subfigure}
+\vspace{1.5em}
+%% ====== Panel (b): With self-supervision ======
+\begin{subfigure}[t]{\textwidth}
+\centering
+\begin{tikzpicture}[
+    x={(1cm,0cm)}, y={(0cm,1cm)}, z={(0.35cm,0.25cm)},
+    arr/.style={->, thick, >=stealth, black!40},
+    gradarr/.style={<-, thick, >=stealth, dashed},
+    lbl/.style={font=\scriptsize, text=black!50},
+]
+
+% Input
+\cuboid{0}{0.15}{1.5}{0.8}{outfront}{outtop}{outside}
+\node[lbl, anchor=south] at (0.07, 0.9, 0) {$s_t$};
+
+\draw[arr] (0.55, 0, 0) -- (1.15, 0, 0);
+
+% Conv layers (same encoder)
+\cuboid{1.3}{0.3}{1.3}{0.6}{convfront}{convtop}{convside}
+\cuboid{2.1}{0.35}{1.0}{0.45}{convfront}{convtop}{convside}
+\cuboid{2.9}{0.35}{0.8}{0.35}{convfront}{convtop}{convside}
+
+\draw[arr] (3.6, 0, 0) -- (4.2, 0, 0);
+
+% FC layer (512) -- the fork point
+\cuboid{4.35}{0.12}{1.4}{0.08}{fcfront}{fctop}{fcside}
+\node[lbl, anchor=north] at (4.41, -0.85, 0) {512};
+
+% === Upper path: Q-head ===
+\draw[arr, palA!70] (4.8, 0.3, 0) -- (5.4, 0.9, 0);
+
+% Q-values output (upper)
+\cuboid{5.55}{0.12}{0.55}{0.08}{outfront}{outtop}{outside}
+\node[lbl, anchor=south, text=palA!70!black]
+    at (5.61, 1.25, 0) {$Q(s,a)$};
+\node[font=\small, text=palA!80!black] at (6.4, 0.95, 0)
+    {$\mathcal{L}_{\text{Q}}$};
+
+% === Lower path: SSL head ===
+\draw[arr, palC!70!black] (4.8, -0.3, 0) -- (5.4, -0.9, 0);
+
+% SSL output (lower, green)
+\cuboid{5.55}{0.12}{0.55}{0.08}{sprfront}{sprtop}{sprside}
+\node[lbl, anchor=north, text=palC!60!black]
+    at (5.61, -1.25, 0) {$\hat{\mathbf{z}}_{t+1}$};
+\node[font=\small, text=palC!70!black] at (6.5, -0.95, 0)
+    {$\lambda\mathcal{L}_{\text{SSL}}$};
+
+% === Gradient arrows ===
+% Q gradient (blue, above)
+\draw[gradarr, palA!60, rounded corners=4pt]
+    (2.5, 1.1) -- (2.5, 1.7) -- (6.2, 1.7) -- (6.2, 1.15);
+\node[lbl, text=palA!60] at (4.35, 1.9) {action values};
+
+% SSL gradient (green, below)
+\draw[gradarr, palC!50!black, rounded corners=4pt]
+    (2.5, -1.1) -- (2.5, -1.7) -- (6.3, -1.7) -- (6.3, -1.15);
+\node[lbl, text=palC!50!black] at (4.35, -1.9)
+    {dynamics / structure};
+
+% Encoder brace
+\draw[decorate, decoration={brace, amplitude=3pt, mirror},
+    black!30]
+    (1.3, -0.85) -- (3.55, -0.85)
+    node[midway, below=5pt, lbl] {encoder $f_\theta$};
+
+\end{tikzpicture}
+\subcaption{With self-supervision: dual objective}
+\label{fig:dual-obj-ssl}
+\end{subfigure}
+
+\caption{Adding self-supervised learning to DQN.
+  (a)~In standard DQN, the Q-learning loss is the sole signal
+  shaping the encoder.
+  (b)~Self-supervised learning adds a second objective: the encoder
+  receives gradients from both $\mathcal{L}_{\text{Q}}$ (action
+  values) and $\lambda\mathcal{L}_{\text{SSL}}$ (dynamics),
+  producing richer representations.}
 \label{fig:dual-objective}
 \end{figure}

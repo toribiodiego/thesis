@@ -2,7 +2,7 @@
 \centering
 \begin{tikzpicture}[
     lbl/.style={font=\scriptsize, text=black!55},
-    dimlbl/.style={font=\tiny, text=black!45},
+    dimlbl/.style={font=\scriptsize, text=black!45},
     clbl/.style={font=\scriptsize\bfseries},
 ]
 \def\c{0.095}
@@ -41,8 +41,8 @@
 
 % === Layout constants ===
 \def\sx{3.05}         % stack group x-start
-\def\ho{0.65}         % horizontal offset per layer
-\def\vo{0.48}         % vertical offset per layer
+\def\ho{0.8}          % horizontal offset per layer
+\def\vo{0.58}         % vertical offset per layer
 % Label line: one horizontal line above the tallest element
 \pgfmathsetmacro{\labely}{16*\c + 2*\vo + 0.50}
 
@@ -84,11 +84,8 @@
 \node[clbl, text=green!55!black] at (\stackmid, \labely) {G};
 \node[clbl, text=blue!60] at ({\stackmid + 0.7}, \labely) {B};
 
-% Brace under stack
+% Stack right edge (for arrow positioning)
 \pgfmathsetmacro{\stackright}{\sx + 2*\ho + 21*\c}
-\draw[decorate, decoration={brace, amplitude=3pt, mirror}, black!35]
-    (\sx, -0.08) -- (\stackright, -0.08)
-    node[midway, below=4pt, lbl] {3 channels};
 
 % === Arrow 2 ===
 \pgfmathsetmacro{\arrtwo}{\stackright + 0.25}
