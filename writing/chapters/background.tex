@@ -1456,10 +1456,13 @@ random $84 \times 84$ crop is then taken from this padded image,
 with the crop position sampled uniformly at random. The result is
 the original game frame shifted by up to $\pm 4$ pixels in both the
 horizontal and vertical directions. The visual content is preserved;
-only the spatial position has changed slightly. This is the
+only the spatial position has changed slightly.
+\Cref{fig:random-shift} illustrates the three steps. This is the
 operation used by DrQ~\citep{kostrikov2020image}; the equivalent
 operation in RAD~\citep{laskin2020reinforcement} is called ``random
 translate.''
+
+\input{figures/random-shift}
 
 \smallskip
 Because the observation is a stack of four consecutive frames, the
@@ -1907,6 +1910,12 @@ side, providing the second anti-collapse mechanism from
 prediction step is between
 $q(g(\hat{\mathbf{y}}_{t+k}))$ on the online side and
 $g(\mathbf{y}^{\text{tgt}}_{t+k})$ on the target side.
+\Cref{fig:spr-architecture} shows the forward prediction loop, and
+\cref{fig:spr-loss} shows how the online and target paths are
+compared.
+
+\input{figures/spr-architecture}
+\input{figures/spr-loss}
 
 \smallskip
 SPR's training operates on sequences sampled from the replay
