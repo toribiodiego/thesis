@@ -1,0 +1,25 @@
+\begin{table}[ht]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{lll}
+\toprule
+Extension & DQN Component Modified & Key Change \\
+\midrule
+Double DQN       & Target computation
+    & Decouple action selection from evaluation \\
+Prioritized replay & Replay sampling
+    & Weight transitions by TD error \\
+Dueling networks & Network head
+    & Separate value and advantage streams \\
+Multi-step returns & Target computation
+    & Bootstrap after $n$ steps, not one \\
+Distributional RL  & Loss function
+    & Model return distribution, not mean \\
+Noisy networks   & Exploration
+    & Learned noise replaces $\varepsilon$-greedy \\
+\bottomrule
+\end{tabular}
+\caption{Rainbow's six extensions to DQN. Each targets a different
+  component; the convolutional encoder is unchanged.}
+\label{tab:rainbow-extensions}
+\end{table}
