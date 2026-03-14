@@ -4,9 +4,15 @@
     lbl/.style={font=\footnotesize, text=black!55},
     dimlbl/.style={font=\scriptsize, text=black!45},
 ]
+% Same cell size for both grids -- size difference shows resolution
+\def\c{0.15}
 
-% --- Original: 21x16 fine grid (0.095cm cells) ---
-\def\cf{0.095}
+% --- Shared face pattern evaluator ---
+% Evaluates the 21x16 face at source coordinates (continuous)
+% Sets \facetype to 0=bg, 1=face, 2=outline, 3=feature
+% (Used by both grids; the small grid maps its cells to source coords)
+
+% --- Original: 21x16 grid ---
 \foreach \x in {0,...,20} {
     \foreach \y in {0,...,15} {
         \pgfmathsetmacro{\dist}{sqrt((\x-10)*(\x-10)+(\y-7.5)*(\y-7.5))}
@@ -21,65 +27,70 @@
         ) > 0 ? 1 : 0}
         \ifnum\onedge=1
             \fill[black!55, draw=black!5]
-                (\x*\cf, \y*\cf) rectangle ++(\cf, \cf);
+                (\x*\c, \y*\c) rectangle ++(\c, \c);
         \else\ifnum\inface=0
             \fill[black!6, draw=black!5]
-                (\x*\cf, \y*\cf) rectangle ++(\cf, \cf);
+                (\x*\c, \y*\c) rectangle ++(\c, \c);
         \else\ifnum\feat=1
             \fill[black!85, draw=black!5]
-                (\x*\cf, \y*\cf) rectangle ++(\cf, \cf);
+                (\x*\c, \y*\c) rectangle ++(\c, \c);
         \else
             \fill[black!20, draw=black!5]
-                (\x*\cf, \y*\cf) rectangle ++(\cf, \cf);
+                (\x*\c, \y*\c) rectangle ++(\c, \c);
         \fi\fi\fi
     }
 }
-\node[lbl] at ({10.5*\cf}, {16*\cf + 0.35}) {original};
-\node[dimlbl, anchor=north] at ({10.5*\cf}, -0.08)
+\node[lbl] at ({10.5*\c}, {16*\c + 0.5}) {original};
+\node[dimlbl, anchor=north] at ({10.5*\c}, -0.08)
     {$210 \times 160$};
 
 % --- Arrow ---
 \draw[->, thick, black!35]
-    ({21*\cf + 0.35}, {8*\cf}) -- ++(0.5, 0);
+    ({21*\c + 0.3}, {8*\c}) -- ++(0.5, 0);
 
-% --- Downsampled: 8x8 coarse grid (0.19cm cells, same height) ---
-\def\cc{0.19}
-\pgfmathsetmacro{\ox}{21*\cf + 1.2}
-\pgfmathsetmacro{\oy}{0}
+% --- Downsampled: 8x8 grid, same cell size ---
+% Nearest-neighbor: map each cell back to 21x16 source coords
+\pgfmathsetmacro{\ox}{21*\c + 1.1}
 \foreach \x in {0,...,7} {
     \foreach \y in {0,...,7} {
-        % Scaled from 21x16: center (3.8, 3.75), radius ~2.4/2.7
-        \pgfmathsetmacro{\dist}{sqrt((\x-3.8)*(\x-3.8)+(\y-3.75)*(\y-3.75))}
-        \pgfmathtruncatemacro{\inface}{\dist < 2.5 ? 1 : 0}
-        \pgfmathtruncatemacro{\onedge}{(\dist >= 2.5)*(\dist < 2.9) ? 1 : 0}
-        % Eyes and mouth scaled proportionally from 21x16
+        % Map to source coordinates in 21x16 space
+        \pgfmathsetmacro{\xsrc}{(\x + 0.5) * 21.0 / 8.0 - 0.5}
+        \pgfmathsetmacro{\ysrc}{(\y + 0.5) * 16.0 / 8.0 - 0.5}
+        % Evaluate same face pattern at source coords
+        \pgfmathsetmacro{\dist}{sqrt((\xsrc-10)*(\xsrc-10)+(\ysrc-7.5)*(\ysrc-7.5))}
+        \pgfmathtruncatemacro{\inface}{\dist < 6.3 ? 1 : 0}
+        \pgfmathtruncatemacro{\onedge}{(\dist >= 6.3)*(\dist < 7.2) ? 1 : 0}
+        \pgfmathtruncatemacro{\xr}{round(\xsrc)}
+        \pgfmathtruncatemacro{\yr}{round(\ysrc)}
         \pgfmathtruncatemacro{\feat}{(
-            (\x==3)*(\y==5) + (\x==5)*(\y==5) +
-            (\x==2)*(\y==3) + (\x==5)*(\y==3) +
-            (\x>=3)*(\x<=4)*(\y==2)
+            (\xr>=7)*(\xr<=8)*(\yr>=9)*(\yr<=10) +
+            (\xr>=12)*(\xr<=13)*(\yr>=9)*(\yr<=10) +
+            (\xr==6)*(\yr==5) + (\xr==14)*(\yr==5) +
+            (\xr==7)*(\yr==4) + (\xr==13)*(\yr==4) +
+            (\xr>=8)*(\xr<=12)*(\yr==3)
         ) > 0 ? 1 : 0}
         \ifnum\onedge=1
             \fill[black!55, draw=black!8]
-                ({\ox + \x*\cc}, {\oy + \y*\cc}) rectangle ++(\cc, \cc);
+                ({\ox + \x*\c}, \y*\c) rectangle ++(\c, \c);
         \else\ifnum\inface=0
             \fill[black!6, draw=black!8]
-                ({\ox + \x*\cc}, {\oy + \y*\cc}) rectangle ++(\cc, \cc);
+                ({\ox + \x*\c}, \y*\c) rectangle ++(\c, \c);
         \else\ifnum\feat=1
             \fill[black!85, draw=black!8]
-                ({\ox + \x*\cc}, {\oy + \y*\cc}) rectangle ++(\cc, \cc);
+                ({\ox + \x*\c}, \y*\c) rectangle ++(\c, \c);
         \else
             \fill[black!20, draw=black!8]
-                ({\ox + \x*\cc}, {\oy + \y*\cc}) rectangle ++(\cc, \cc);
+                ({\ox + \x*\c}, \y*\c) rectangle ++(\c, \c);
         \fi\fi\fi
     }
 }
-\node[lbl] at ({\ox + 4*\cc}, {8*\cc + 0.35}) {downsampled};
-\node[dimlbl, anchor=north] at ({\ox + 4*\cc}, {\oy - 0.08})
+\node[lbl] at ({\ox + 4*\c}, {16*\c + 0.5}) {downsampled};
+\node[dimlbl, anchor=north] at ({\ox + 4*\c}, -0.08)
     {$84 \times 84$};
 
 \end{tikzpicture}
 \caption{Downsampling. The frame is resized from $210 \times 160$
-  to $84 \times 84$. Both images show the same content; the
-  downsampled version has fewer, larger pixels.}
+  to $84 \times 84$. The face is still recognizable at lower
+  resolution.}
 \label{fig:resize}
 \end{figure}
