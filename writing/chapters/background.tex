@@ -67,10 +67,15 @@ p(s', r \mid s, a)
   \Pr\{S_t = s',\, R_t = r \mid S_{t-1} = s,\, A_{t-1} = a\}.
 \end{equation}
 %
-This function is a conditional probability distribution: for any
-state--action pair $(s, a)$, the values $p(s', r \mid s, a)$
-sum to one over all possible next states $s'$ and rewards $r$.
-In our grid-world, moving right from a given cell always takes
+In words: given that the agent is in state~$s$ and takes
+action~$a$, the function~$p$ gives the probability of ending up
+in state~$s'$ with reward~$r$. It is a conditional probability
+distribution -- for any state--action pair $(s, a)$, the values
+$p(s', r \mid s, a)$ sum to one over all possible next states
+$s'$ and rewards $r$.
+
+\smallskip
+In the grid-world, moving right from a given cell always takes
 the agent to the cell on its right -- the dynamics are
 deterministic. But many environments are not: wind can push a
 robot off course, a slippery surface can send it sliding past
@@ -80,29 +85,46 @@ than a deterministic mapping precisely because it must handle
 these uncertain outcomes.
 
 \smallskip
-Note that the subscripts in the equation shift by one relative to
-the prose above -- the agent in state $S_{t-1}$ takes action
-$A_{t-1}$ and then receives $R_t$ and $S_t$, which is the same
-relationship as $S_t, A_t \to R_{t+1}, S_{t+1}$ with different
-index labels. \cref{fig:mdp-views} illustrates these transitions
-for a fragment of the grid-world: each arrow is one entry of the
-dynamics function, with the action label, destination state, and
-reward annotation corresponding to $a$, $s'$, and $r$.
+The key assumption underlying this framework is the \emph{Markov
+property}: the probability of reaching any next state and reward
+depends only on the current state and action -- not on the history
+of states and actions that came before. In the grid-world, knowing
+the agent is in cell~$s_{21}$ is enough to determine what happens
+when it moves up; it does not matter whether the agent arrived from
+below, from the left, or by a longer winding path.
+
+\smallskip
+This is what makes the problem tractable. If the outcome depended
+on the agent's entire history -- every state it had visited and
+every action it had taken -- the agent would need to track an
+ever-growing record of past experience. The Markov property says
+that the current state is a sufficient summary: once we know where
+the agent is now, the past is irrelevant for predicting the future.
+
+\smallskip
+\cref{fig:mdp-views} illustrates several transitions from the
+grid-world: each arrow is one entry of the dynamics function, with
+the action label, destination state, and reward annotation
+corresponding to $a$, $s'$, and $r$.
 
 \input{figures/mdp-graph}
 
 \smallskip
-The key assumption is the \emph{Markov property}: the current state
-alone determines what happens next -- the agent does not need to
-remember its full history of past states and actions. This is what
-makes the problem tractable. If the outcome depended on everything
-the agent had ever seen, learning from limited experience would be
-far harder.
+A note on notation: the subscripts in \cref{eq:mdp-dynamics} shift
+by one relative to the prose above -- the agent in state $S_{t-1}$
+takes action $A_{t-1}$ and then receives $R_t$ and $S_t$, which is
+the same relationship as $S_t, A_t \to R_{t+1}, S_{t+1}$ with
+different index labels. Both conventions appear in the literature;
+the distinction is purely notational.
 
 \smallskip
 The agent's goal is to collect as much reward as possible over
-time. This is made precise by the \emph{return} -- the cumulative
-discounted reward from time step $t$ onward:
+time -- but rewards at different times are not equally valuable.
+A reward received now is worth more than the same reward received
+far in the future, both because the future is uncertain and because
+earlier rewards can be built upon sooner. The \emph{return} makes
+this precise -- it is the cumulative discounted reward from time
+step $t$ onward:
 %
 \begin{equation}
 \label{eq:return}
@@ -129,11 +151,11 @@ approaches 1, the agent plans further ahead, weighing future
 rewards more heavily.
 
 \smallskip
-Discounting reflects two practical realities: the future is uncertain -- the agent may not survive
-long enough to collect distant rewards -- and a reward received
-sooner can be reinvested or built upon earlier. It also serves a
-mathematical purpose: because $\gamma < 1$, the infinite sum
-converges as long as individual rewards are bounded.
+Discounting also serves a mathematical purpose: because
+$\gamma < 1$, the infinite sum in \cref{eq:return} converges as
+long as individual rewards are bounded. Without discounting
+($\gamma = 1$), the return could be infinite, making it impossible
+to compare policies meaningfully.
 \cref{fig:discounting} shows how this plays out: with a low
 discount rate, a nearby small reward is preferred over a distant
 large one; with a high discount rate, the agent walks further to
@@ -153,9 +175,17 @@ return reduces to a finite sum over the steps within each episode.
 \smallskip
 Given an MDP, the agent needs a rule for choosing actions. This
 rule is called a \emph{policy}, written $\pi(a \mid s)$, which
-gives the probability of selecting action $a$ in state $s$. A
+gives the probability of selecting action~$a$ in state~$s$. A
 deterministic policy always picks the same action in a given state,
 while a stochastic policy samples from a distribution over actions.
+
+\smallskip
+In the grid-world, a policy might say: ``always go right in
+$s_{00}$, always go up in $s_{10}$, always go up in $s_{20}$.''
+This deterministic policy commits to a fixed direction in each
+cell, tracing a specific path through the grid. A different
+policy -- choosing different directions in some cells -- would
+trace a different path and potentially collect different rewards.
 
 \smallskip
 The central question of reinforcement learning is how to find a
