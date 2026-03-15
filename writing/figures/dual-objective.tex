@@ -48,8 +48,8 @@
 \begin{scope}[yshift=1.8cm]
 \cuboidns{4.6}{0.35}{1.1}{0.15}{fcfront}{fctop}
 \end{scope}
-\node[lbl, anchor=south] at (4.77, 2.4, 0) {$Q(s,a)$};
-\node[lbl] at (4.77, 1.1, 0) {Q-head};
+\node[lbl, anchor=west] at (5.05, 2.15, 0) {$Q(s,a)$};
+\node[lbl, anchor=north] at (4.77, 1.2, 0) {Q-head};
 
 % Q loss arrow
 \draw[arr] (4.97, 1.8, 0) -- (6.2, 1.8, 0)
@@ -63,9 +63,9 @@
 \begin{scope}[yshift=-1.8cm]
 \cuboidns{4.6}{0.35}{1.1}{0.15}{sslfront}{ssltop}
 \end{scope}
-\node[lbl, anchor=north] at (4.77, -2.4, 0)
+\node[lbl, anchor=west] at (5.05, -2.15, 0)
     {$\hat{\mathbf{z}}_{t+1}$};
-\node[lbl] at (4.77, -1.1, 0) {SSL head};
+\node[lbl, anchor=south] at (4.77, -1.2, 0) {SSL head};
 
 % SSL loss arrow
 \draw[arr] (4.97, -1.8, 0) -- (6.2, -1.8, 0)
@@ -73,7 +73,8 @@
     {$\lambda\,\mathcal{L}_{\text{SSL}}$};
 
 % Encoder + bottleneck labels
-\node[lbl, anchor=north] at (1.55, -1.15, 0) {encoder};
+% encoder label omitted -- f_theta in the trapezoid is
+% established from figure 2.25 (single-objective)
 \node[lbl, anchor=north] at (3.4, -0.4, 0) {512};
 
 % === Gradient arrows ===
