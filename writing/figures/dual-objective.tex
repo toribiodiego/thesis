@@ -2,26 +2,21 @@
 \centering
 \input{figures/palette}
 \definecolor{encfade}{HTML}{B8D2E6}
-\definecolor{outfront}{HTML}{DCE8F4}
-\definecolor{outtop}{HTML}{EBF1F8}
-\definecolor{outside}{HTML}{C2D6E8}
-\definecolor{fcfront}{HTML}{B3CEE4}
-\definecolor{fctop}{HTML}{CDDEF0}
-\definecolor{fcside}{HTML}{8DB3D2}
+\definecolor{fcfront}{HTML}{7BA4CC}
+\definecolor{fctop}{HTML}{9CBDDD}
 \definecolor{sslfront}{HTML}{B8D8A0}
 \definecolor{ssltop}{HTML}{CBE4B8}
-\definecolor{sslside}{HTML}{8FB870}
 
-\newcommand{\cuboid}[7]{%
+% Cuboid without right side face -- avoids stub-arrow artifact
+% when the cuboid is followed by an arrow on small elements.
+% Args: x, width, height, depth, front-color, top-color
+\newcommand{\cuboidns}[6]{%
     \fill[#5, draw=black!35, line join=round]
         (#1, {-#3/2}, 0) -- ({#1+#2}, {-#3/2}, 0) --
         ({#1+#2}, {#3/2}, 0) -- (#1, {#3/2}, 0) -- cycle;
     \fill[#6, draw=black!35, line join=round]
         (#1, {#3/2}, 0) -- ({#1+#2}, {#3/2}, 0) --
         ({#1+#2}, {#3/2}, #4) -- (#1, {#3/2}, #4) -- cycle;
-    \fill[#7, draw=black!35, line join=round]
-        ({#1+#2}, {-#3/2}, 0) -- ({#1+#2}, {#3/2}, 0) --
-        ({#1+#2}, {#3/2}, #4) -- ({#1+#2}, {-#3/2}, #4) -- cycle;
 }
 
 \begin{tikzpicture}[
@@ -47,60 +42,52 @@
 \draw[arr] (2.5, 0, 0) -- (3.05, 0, 0);
 
 % === Upper path: Q-head ===
-\draw[arr] (3.75, 0.15, 0) -- (4.6, 1.8, 0);
+\draw[arr] (3.75, 0.15, 0) -- (4.4, 1.8, 0);
 
-% FC layer (upper)
-\cuboid{4.8}{0.15}{1.0}{0.1}{fcfront}{fctop}{fcside}
-\draw[arr] (5.3, 1.8, 0) -- (6.1, 1.8, 0);
+% Q-head cuboid (no side face, shifted to y=1.8)
+\begin{scope}[yshift=1.8cm]
+\cuboidns{4.6}{0.35}{1.1}{0.15}{fcfront}{fctop}
+\end{scope}
+\node[lbl, anchor=south] at (4.77, 2.4, 0) {$Q(s,a)$};
+\node[lbl] at (4.77, 1.1, 0) {Q-head};
 
-% Q-values output (upper)
-\cuboid{6.3}{0.15}{0.6}{0.1}{outfront}{outtop}{outside}
-\node[lbl, anchor=south] at (6.37, 2.15, 0) {$Q(s,a)$};
-
-% Q loss
-\draw[arr] (6.8, 1.8, 0) -- (7.5, 1.8, 0);
-\node[font=\small, text=palA!80!black] at (8.0, 1.8, 0)
+% Q loss arrow
+\draw[arr] (4.97, 1.8, 0) -- (6.2, 1.8, 0)
+    node[right, font=\small, text=palA!80!black]
     {$\mathcal{L}_{\text{Q}}$};
 
-% Q-head label (between fork and cuboids)
-\node[lbl] at (5.05, 1.05, 0) {Q-head};
-
 % === Lower path: SSL head ===
-\draw[arr] (3.75, -0.15, 0) -- (4.6, -1.8, 0);
+\draw[arr] (3.75, -0.15, 0) -- (4.4, -1.8, 0);
 
-% SSL projection (lower, green cuboid)
-\cuboid{4.8}{0.15}{1.0}{0.1}{sslfront}{ssltop}{sslside}
-\draw[arr] (5.3, -1.8, 0) -- (6.1, -1.8, 0);
-
-% SSL output (lower, green cuboid)
-\cuboid{6.3}{0.15}{0.6}{0.1}{sslfront}{ssltop}{sslside}
-\node[lbl, anchor=north] at (6.37, -2.15, 0)
+% SSL head cuboid (no side face, shifted to y=-1.8)
+\begin{scope}[yshift=-1.8cm]
+\cuboidns{4.6}{0.35}{1.1}{0.15}{sslfront}{ssltop}
+\end{scope}
+\node[lbl, anchor=north] at (4.77, -2.4, 0)
     {$\hat{\mathbf{z}}_{t+1}$};
+\node[lbl] at (4.77, -1.1, 0) {SSL head};
 
-% SSL loss
-\draw[arr] (6.8, -1.8, 0) -- (7.5, -1.8, 0);
-\node[font=\small, text=palC!70!black] at (8.2, -1.8, 0)
+% SSL loss arrow
+\draw[arr] (4.97, -1.8, 0) -- (6.2, -1.8, 0)
+    node[right, font=\small, text=palC!70!black]
     {$\lambda\,\mathcal{L}_{\text{SSL}}$};
-
-% SSL-head label
-\node[lbl] at (5.05, -1.05, 0) {SSL head};
 
 % Encoder + bottleneck labels
 \node[lbl, anchor=north] at (1.55, -1.15, 0) {encoder};
 \node[lbl, anchor=north] at (3.4, -0.4, 0) {512};
 
-% === Gradient arrows (colored to show which loss) ===
+% === Gradient arrows ===
 % Q gradient (blue, above)
 \draw[gradarr, palA!55, rounded corners=5pt]
-    (1.55, 1.5, 0) -- (1.55, 2.8, 0) -- (7.8, 2.8, 0)
-    -- (7.8, 2.05, 0);
-\node[lbl, text=palA!50] at (4.7, 3.0, 0) {action values};
+    (1.55, 1.5, 0) -- (1.55, 2.7, 0) -- (6.5, 2.7, 0)
+    -- (6.5, 2.05, 0);
+\node[lbl, text=palA!50] at (4.0, 2.9, 0) {action values};
 
 % SSL gradient (green, below)
 \draw[gradarr, palC!45!black, rounded corners=5pt]
-    (1.55, -1.5, 0) -- (1.55, -2.8, 0) -- (8.0, -2.8, 0)
-    -- (8.0, -2.05, 0);
-\node[lbl, text=palC!45!black] at (4.7, -3.0, 0)
+    (1.55, -1.5, 0) -- (1.55, -2.7, 0) -- (6.7, -2.7, 0)
+    -- (6.7, -2.05, 0);
+\node[lbl, text=palC!45!black] at (4.1, -2.9, 0)
     {dynamics / structure};
 
 \end{tikzpicture}
