@@ -271,6 +271,45 @@ holds the representation learning method constant and varies only
 the base agent, directly testing whether SPR's effectiveness depends
 on the agent's underlying capability.
 
+\subsection{Game Selection}
+\label{subsec:game-selection}
+
+We select six games from the 26-game Atari-100K suite. The selection
+is based on published Rainbow+SPR results in
+\citet{schwarzer2021dataefficient}, which show that augmentation and
+SPR interact differently across games. By choosing games that span
+this range of interactions, we can test whether the same patterns
+hold when SPR is applied to a simpler agent.
+\Cref{tab:game-selection} lists the games and the interaction
+pattern observed on Rainbow.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{ll}
+\toprule
+Game & Published interaction (Rainbow + SPR) \\
+\midrule
+Boxing        & Both methods contribute independently \\
+Crazy Climber & SPR dominant; augmentation adds little \\
+Frostbite     & SPR dominant; sparse reward setting \\
+Kangaroo      & Strong synergy; both needed \\
+Road Runner   & SPR large lift; augmentation moderate \\
+Up N Down     & Augmentation dominant; SPR depends on it \\
+\bottomrule
+\end{tabular}
+\caption{Game selection. Interaction patterns are from
+  Rainbow+SPR~\citep{schwarzer2021dataefficient}. A key question
+  is whether these patterns transfer to vanilla DQN.}
+\label{tab:game-selection}
+\end{table}
+
+If augmentation and SPR interacted identically across all games,
+a single game would suffice. The diversity of published patterns
+-- from independent contributions (Boxing) to strong synergy
+(Kangaroo) to augmentation dominance (Up N Down) -- lets us test
+whether the interaction depends on game-specific factors such as
+reward density and visual complexity.
+
 \section{Interpretability Methods}
 \label{sec:interpretability-methods}
 
