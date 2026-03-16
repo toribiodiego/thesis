@@ -344,6 +344,15 @@ Checkpoints are saved every 10{,}000 environment steps, producing
 checkpoints supply the frozen representations used for the
 interpretability analyses in \cref{sec:interpretability-methods}.
 
+\subsection{Compute}
+\label{subsec:compute}
+
+All runs execute on Google Colab Pro using NVIDIA T4 or A100 GPUs.
+A DQN run (100K steps) takes approximately 15--20 minutes on a T4;
+Rainbow runs take 30--45 minutes due to distributional values,
+prioritized replay, and noisy networks. The full 108-run matrix
+requires approximately 40--60 GPU-hours.
+
 \section{Interpretability Methods}
 \label{sec:interpretability-methods}
 
