@@ -22,8 +22,9 @@
 \draw[arr] (3.1, 1.4) -- node[above, lbl] {pad $+4$} (4.2, 1.4);
 
 % === Panel 2: Padded 92x92 ===
-% Padding region (dashed border, lighter fill)
-\draw[thick, black!35, fill=black!3, dashed]
+% Padding region (tinted to distinguish from content)
+\fill[palA!6] (4.5, -0.4) rectangle (7.7, 3.2);
+\draw[thick, black!35, dashed]
     (4.5, -0.4) rectangle (7.7, 3.2);
 % Original content region inside padding
 \draw[thick, black!70, fill=black!8]
@@ -32,13 +33,22 @@
 \fill[palA!35] (5.3, 1.75) rectangle (6.9, 1.97);
 \fill[palB!40] (6.0, 0.9) circle (0.15);
 \fill[palC!40] (5.6, 0.12) rectangle (6.5, 0.3);
-% Reflection hints at edges (mirrored elements, faded)
-\fill[palC!12] (5.6, -0.2) rectangle (6.5, -0.02);  % bottom
-\fill[palA!10] (5.3, 2.45) rectangle (6.9, 2.6);    % top
+% Reflection hints at edges (more visible)
+\fill[palC!20] (5.6, -0.22) rectangle (6.5, -0.02);  % bottom
+\fill[palA!15] (5.3, 2.42) rectangle (6.9, 2.6);     % top
+\fill[palC!15] (5.6, 2.42) rectangle (6.5, 2.6);     % top paddle
+\fill[palB!15] (6.0, -0.12) circle (0.12);            % bottom ball
 
-% Padding dimension annotation
-\draw[<->, thin, black!35] (4.5, 2.85) -- (4.9, 2.85)
-    node[midway, above, font=\tiny, text=black!40] {4};
+% Crop region highlighted (offset from center)
+\draw[palB!50, thick, dashed, rounded corners=1pt]
+    (5.05, 0.15) rectangle (7.15, 2.55);
+\node[font=\tiny, text=palB!45, anchor=south east]
+    at (7.1, 2.55) {crop};
+
+% Padding dimension lines (left side, clearer)
+\draw[<->, black!45] (4.5, 2.8) -- (4.9, 2.8);
+\node[font=\tiny, text=black!50, anchor=south]
+    at (4.7, 2.82) {4\,px};
 \node[lbl] at (6.1, -0.65) {$92 \times 92$};
 \node[font=\scriptsize\bfseries, text=black!70]
     at (6.1, 3.55) {reflection pad};

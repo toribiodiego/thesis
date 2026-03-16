@@ -37,16 +37,27 @@
 \node[tlbl] at ({3.4 + 2.5*\c}, {-0.2}) {$t{-}1$};
 \node[tlbl] at ({5.1 + 2.5*\c}, {-0.2}) {$t$};
 
-% Arrow to stacked output
+% Arrow to stacked tensor
+\pgfmathsetmacro{\arrx}{5.1 + 5*\c + 0.3}
 \draw[->, thick, black!40]
-    ({5.1 + 5*\c + 0.25}, {2.5*\c}) -- ++(0.5, 0);
+    (\arrx, {2.5*\c}) -- ++(0.6, 0);
 
-% Output block
-\node[draw=black!30, thick, rounded corners=2pt,
-      minimum width=1.1cm, minimum height=1.3cm,
-      fill=black!5, font=\scriptsize, align=center]
-    at ({5.1 + 5*\c + 1.35}, {2.5*\c})
-    {$84{\times}84$\\${\times}\,4$};
+% 3D stacked tensor (4 layers with z-offset)
+\pgfmathsetmacro{\tx}{\arrx + 1.15}
+\def\tw{1.2}   % tensor face width
+\def\th{1.2}   % tensor face height
+\def\td{0.13}  % offset per layer
+% Draw back to front: layer 0 (t-3) to layer 3 (t)
+\foreach \l/\op in {3/15, 2/12, 1/9, 0/6} {
+    \pgfmathsetmacro{\lx}{\tx + \l*\td}
+    \pgfmathsetmacro{\ly}{2.5*\c - \th/2 + \l*\td}
+    \fill[black!\op, draw=black!25]
+        (\lx, \ly) rectangle ++({\tw}, {\th});
+}
+% Dimension label below the block
+\node[font=\scriptsize, text=black!50, anchor=north]
+    at ({\tx + \tw/2 + 1.5*\td}, {2.5*\c - \th/2 - 0.15})
+    {$84 \times 84 \times 4$};
 
 \end{tikzpicture}
 \subcaption{Four consecutive frames capture the ball at different
@@ -56,62 +67,62 @@
 
 \vspace{1em}
 
-%% Panel (b): Motion inference from the stacked frames
+%% Panel (b): Motion inference -- single frame vs stacked
 \begin{subfigure}{\textwidth}
 \centering
 \begin{tikzpicture}[
     lbl/.style={font=\footnotesize, text=black!55},
     dimlbl/.style={font=\scriptsize, text=black!45},
 ]
-\def\c{0.34}
+\def\c{0.3}
 
-% Game-like grid (8x6)
-\foreach \x in {0,...,7} {
+% --- Single frame (left): no direction info ---
+\foreach \x in {0,...,5} {
     \foreach \y in {0,...,5} {
         \fill[gray!6, draw=black!10]
             (\x*\c, \y*\c) rectangle ++(\c, \c);
     }
 }
+% Ball at one position only
+\fill[palA] ({3.5*\c}, {3.5*\c}) circle (0.13);
+\node[dimlbl] at ({3*\c}, {-0.25}) {single frame};
+\node[dimlbl] at ({3*\c}, {-0.5}) {(position only)};
 
-% Ball at four positions matching panel (a), increasing opacity
-% t-3: bottom-left
-\fill[palA!25] ({1.5*\c}, {1*\c}) circle (0.13);
-\node[dimlbl, anchor=north] at ({1.5*\c}, {1*\c - 0.16})
-    {$t{-}3$};
+% --- vs label ---
+\node[lbl, text=black!40] at ({6*\c + 0.5}, {3*\c}) {vs.};
 
-% t-2: left-center
-\fill[palA!40] ({3*\c}, {2.5*\c}) circle (0.13);
-\node[dimlbl, anchor=north] at ({3*\c}, {2.5*\c - 0.16})
-    {$t{-}2$};
+% --- Stacked view (right): trajectory visible ---
+\def\ox{4.3}
+\foreach \x in {0,...,5} {
+    \foreach \y in {0,...,5} {
+        \fill[gray!6, draw=black!10]
+            ({\ox + \x*\c}, \y*\c) rectangle ++(\c, \c);
+    }
+}
 
-% t-1: right-center
-\fill[palA!60] ({4.5*\c}, {3.5*\c}) circle (0.13);
-\node[dimlbl, anchor=north] at ({4.5*\c}, {3.5*\c - 0.16})
-    {$t{-}1$};
+% Ball at four positions with increasing opacity
+\fill[palA!25] ({\ox + 1*\c}, {1*\c}) circle (0.12);
+\fill[palA!45] ({\ox + 2*\c}, {2.2*\c}) circle (0.12);
+\fill[palA!65] ({\ox + 3.2*\c}, {3.2*\c}) circle (0.12);
+\fill[palA]    ({\ox + 4.2*\c}, {4.5*\c}) circle (0.12);
 
-% t: upper-right
-\fill[palA] ({6*\c}, {5*\c}) circle (0.13);
-\node[dimlbl, anchor=north] at ({6*\c}, {5*\c - 0.16})
-    {$t$};
-
-% Dashed trajectory arrows
+% Trajectory arrows
 \draw[->, thick, dashed, palA!35]
-    ({1.5*\c + 0.15}, {1*\c + 0.1})
-    -- ({3*\c - 0.12}, {2.5*\c - 0.06});
-\draw[->, thick, dashed, palA!45]
-    ({3*\c + 0.15}, {2.5*\c + 0.1})
-    -- ({4.5*\c - 0.12}, {3.5*\c - 0.06});
-\draw[->, thick, dashed, palA!60]
-    ({4.5*\c + 0.15}, {3.5*\c + 0.1})
-    -- ({6*\c - 0.12}, {5*\c - 0.06});
+    ({\ox + 1*\c + 0.14}, {1*\c + 0.1})
+    -- ({\ox + 2*\c - 0.1}, {2.2*\c - 0.06});
+\draw[->, thick, dashed, palA!50]
+    ({\ox + 2*\c + 0.14}, {2.2*\c + 0.1})
+    -- ({\ox + 3.2*\c - 0.1}, {3.2*\c - 0.06});
+\draw[->, thick, dashed, palA!65]
+    ({\ox + 3.2*\c + 0.14}, {3.2*\c + 0.1})
+    -- ({\ox + 4.2*\c - 0.1}, {4.5*\c - 0.06});
 
-% Annotation
-\node[lbl, anchor=north, align=center] at ({4*\c}, -0.2)
-    {the stacked frames reveal the ball's trajectory};
+\node[dimlbl] at ({\ox + 3*\c}, {-0.25}) {four stacked frames};
+\node[dimlbl] at ({\ox + 3*\c}, {-0.5}) {(position + direction)};
 
 \end{tikzpicture}
-\subcaption{Overlaying the four frames shows the ball's direction
-  -- information unavailable from any single frame.}
+\subcaption{A single frame shows where the ball is but not where
+  it is going. Stacking four frames reveals the trajectory.}
 \label{fig:frame-stack-motion}
 \end{subfigure}
 
