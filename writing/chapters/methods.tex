@@ -259,6 +259,18 @@ separate their individual contributions from their interaction.
 Without the combined condition, we could not tell whether the two
 methods produce gains beyond what either achieves alone.
 
+\subsection{Capability Comparison}
+\label{subsec:capability-comparison}
+
+The second part adds two conditions using Rainbow
+(\cref{sec:rainbow-implementation}) as the base agent: Rainbow
+without SPR, and Rainbow with SPR integrated identically to the DQN
+conditions -- same transition model, same loss weight, same
+prediction depth. The comparison between DQN + SPR and Rainbow + SPR
+holds the representation learning method constant and varies only
+the base agent, directly testing whether SPR's effectiveness depends
+on the agent's underlying capability.
+
 \section{Interpretability Methods}
 \label{sec:interpretability-methods}
 
