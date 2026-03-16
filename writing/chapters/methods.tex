@@ -210,6 +210,55 @@ Transition model channels    & 64   \\
 \section{Experiment Design}
 \label{sec:experiment-design}
 
+The experiments are organized in two parts. The first part is a
+DQN isolation study that tests data augmentation and self-predictive
+representations as independent factors on a simple base agent. The
+second part is a capability comparison that tests SPR on Rainbow to
+provide the contrasting case where representation learning is known
+to produce large improvements. Together, the two parts answer whether
+SPR's benefits require a capable base agent or transfer to a simpler
+one.
+
+\subsection{DQN Isolation Study}
+\label{subsec:dqn-isolation}
+
+The first part tests four conditions on vanilla DQN, each adding
+one or both of the methods introduced in
+\cref{sec:augmentation-method,sec:spr-architecture}.
+\Cref{tab:dqn-conditions} lists the conditions and what each one
+tests.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{ll}
+\toprule
+Condition & Purpose \\
+\midrule
+DQN        & Baseline: Q-learning loss alone \\
+DQN + Aug  & Contribution of augmentation \\
+DQN + SPR  & Contribution of representation learning \\
+DQN + Both & Interaction between the two \\
+\bottomrule
+\end{tabular}
+\caption{DQN isolation study conditions.}
+\label{tab:dqn-conditions}
+\end{table}
+
+All four conditions share the same encoder architecture, the same
+hyperparameters, and the same training procedure
+(\cref{sec:dqn-implementation}). The only differences are whether
+random shift augmentation is applied to the sampled batches and
+whether the SPR auxiliary loss is added to the training objective.
+This controlled setup ensures that any performance differences
+reflect the contribution of augmentation, SPR, or their combination
+-- not confounding changes to the base agent.
+
+\smallskip
+Testing each method alone and in combination is necessary to
+separate their individual contributions from their interaction.
+Without the combined condition, we could not tell whether the two
+methods produce gains beyond what either achieves alone.
+
 \section{Interpretability Methods}
 \label{sec:interpretability-methods}
 
