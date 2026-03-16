@@ -628,3 +628,33 @@ representations.
 
 \section{Representation-Informed Modification}
 \label{sec:repr-modification}
+
+The interpretability analyses in \cref{sec:interpretability-methods}
+are designed to reveal what the encoder represents under each
+condition and what differs between DQN + SPR and Rainbow + SPR. If
+that analysis identifies a specific bottleneck -- a missing property
+that the capable agent provides but the simple agent lacks -- this
+section describes how we test whether addressing it improves
+performance.
+
+\smallskip
+The modification is one of three types, depending on what the probes
+and ablations reveal: a change to SPR's training objective (e.g.,
+modified loss weighting or prediction target), a change to the
+training configuration (e.g., replay ratio or augmentation schedule),
+or the addition of the single Rainbow component identified by the
+targeted ablations in \cref{subsec:targeted-ablations}. In each
+case, the modification targets the specific bottleneck identified
+by the interpretability analysis, not a generic improvement.
+
+\smallskip
+The modified condition is evaluated on the same six games with the
+same three seeds and the same evaluation protocol as all other
+conditions (\cref{sec:experiment-design}). We compare against
+unmodified DQN + SPR and measure both final performance and
+representation quality (probe accuracy, latent space structure).
+A successful modification should improve both -- a performance gain
+without a corresponding change in representation quality would
+suggest the improvement is unrelated to the bottleneck, while a
+representation improvement without a performance gain would suggest
+the bottleneck lies elsewhere in the agent.
