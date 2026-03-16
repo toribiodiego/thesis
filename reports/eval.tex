@@ -205,19 +205,37 @@ Reeval correctly uses epsilon=0.0 for NoisyNets.}
 has long episodes with high scores).
 
 
-\section{Example Outputs}
+\section{Figure Catalog}
 
-\subsection{Learning Curves}
+This section catalogs every figure and table the thesis will need
+from evaluation and training data. Figures marked \textbf{[LIVE]}
+are generated from existing data. Figures marked
+\textbf{[PLACEHOLDER]} require batch runs or additional
+infrastructure.
+
+% ================================================================
+% Category A: Performance (from eval CSVs)
+% ================================================================
+
+\subsection{A. Performance Figures (from eval CSVs)}
+
+\subsubsection{A1. Learning Curves -- DQN Isolation [LIVE]}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{../output/plots/boxing_learning_curves.png}
 \caption{Boxing -- DQN isolation study (seed 42). Four conditions
 with shaded $\pm 1$ std bands from 30 episodes per checkpoint.
-Generated from \texttt{evaluations.csv} data.}
+Full version: 6 subplots (one per game) with multi-seed CI.}
 \end{figure}
 
-\subsection{Score Table}
+\subsubsection{A2. Learning Curves -- Rainbow Comparison [PLACEHOLDER]}
+
+Six subplots showing DQN+SPR, Rainbow, and Rainbow+SPR per game.
+Requires completed Rainbow and Rainbow+SPR eval data across all 6
+games. Shows the capability gap.
+
+\subsubsection{A3. Summary Score Table [LIVE]}
 
 \begin{table}[H]
 \centering
@@ -233,10 +251,148 @@ DQN + SPR & $-21.1$ & 8.0 \\
 DQN + Both & $-19.4$ & 4.4 \\
 \bottomrule
 \end{tabular}
-\caption{Boxing final scores at 400K frames (seed 42,
-30 episodes). Single-seed results; multi-seed means and
-confidence intervals computed after batch runs.}
+\caption{Boxing final scores at 400K frames (seed 42, 30 episodes).
+Full version: 6 games $\times$ 6 conditions with multi-seed CI.}
 \end{table}
+
+\subsubsection{A4. Human-Normalized Scores [PLACEHOLDER]}
+
+Same structure as A3 but normalized: HNS = (agent $-$ random) /
+(human $-$ random). Requires human and random baselines per game
+from Kaiser et al.\ (2020).
+
+\subsubsection{A5. Aggregate Bar Chart [PLACEHOLDER]}
+
+Mean HNS across all 6 games per condition. One bar per condition,
+error bars for cross-game variance. Requires all 6 games completed.
+
+% ================================================================
+% Category B: Research question figures (from eval CSVs)
+% ================================================================
+
+\subsection{B. Research Question Figures}
+
+\subsubsection{B1. SPR and Augmentation Lift [LIVE]}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{../output/plots/boxing_spr_aug_lift.png}
+\caption{Boxing -- effect of SPR (left) and augmentation (right)
+on final score. Bars show score change relative to the condition
+without the intervention. Full version: grouped by game.}
+\end{figure}
+
+\subsubsection{B2. Augmentation $\times$ SPR Interaction [LIVE]}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.55\textwidth]{../output/plots/boxing_interaction.png}
+\caption{Boxing -- 2$\times$2 factorial interaction plot.
+Parallel lines = independent effects; crossing = interaction.
+Full version: one subplot per game.}
+\end{figure}
+
+\subsubsection{B3. SPR Lift: DQN vs Rainbow [PLACEHOLDER]}
+
+Paired bar chart per game: SPR improvement on DQN vs SPR
+improvement on Rainbow. Directly answers whether base agent
+capability determines SPR effectiveness.
+
+\subsubsection{B4. Capability Scatter [PLACEHOLDER]}
+
+Scatter plot: x = DQN score, y = Rainbow score, one point per
+game. Shows the raw performance gap. Diagonal line marks parity.
+
+% ================================================================
+% Category C: Distribution and variance (from per-episode data)
+% ================================================================
+
+\subsection{C. Distribution Figures}
+
+\subsubsection{C1. Episode Return Distribution [LIVE]}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{../output/plots/boxing_return_distribution.png}
+\caption{Boxing -- violin plot of 30 evaluation episode returns
+at 400K. Shows variance structure beyond mean $\pm$ std.
+Full version: one subplot per game.}
+\end{figure}
+
+\subsubsection{C2. Score Heatmap [PLACEHOLDER]}
+
+Games (rows) $\times$ conditions (columns), color-coded by raw
+score or HNS. Quick visual overview showing which games benefit
+from which interventions.
+
+% ================================================================
+% Category D: Training dynamics (from training CSVs)
+% ================================================================
+
+\subsection{D. Training Dynamics Figures}
+
+\subsubsection{D1. SPR Convergence [LIVE]}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{../output/plots/boxing_spr_convergence.png}
+\caption{Boxing -- cosine similarity between predicted and target
+representations over training. Higher = better predictions.
+Full version: DQN+SPR vs DQN+Both per game.}
+\end{figure}
+
+\subsubsection{D2. Training Stability [LIVE]}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{../output/plots/boxing_training_stability.png}
+\caption{Boxing -- training loss (moving average) for DQN vs
+DQN+SPR. Shows whether SPR destabilizes learning.
+Full version: all conditions, all games.}
+\end{figure}
+
+\subsubsection{D3. Computational Overhead [LIVE]}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.55\textwidth]{../output/plots/boxing_fps_comparison.png}
+\caption{Boxing -- mean training FPS per condition. Documents the
+computational cost of each addition.
+Full version: include Rainbow conditions.}
+\end{figure}
+
+\subsubsection{D4. Rainbow Training Metrics [PLACEHOLDER]}
+
+distributional\_loss, priority\_entropy, mean\_is\_weight over
+training for Rainbow and Rainbow+SPR. Used later for metric
+correlation analysis (Task 52).
+
+% ================================================================
+% Category E: Interpretability (from checkpoints, Tasks 47-52)
+% ================================================================
+
+\subsection{E. Interpretability Figures [ALL PLACEHOLDER]}
+
+These require the feature extraction and probing pipeline (Tasks
+47--52). The raw data (checkpoints with spr\_state) will be
+available after batch runs with the checkpoint fix.
+
+\subsubsection{E1. Linear Probe Accuracy}
+Bar chart: per game, per condition, F1 for each probe target.
+
+\subsubsection{E2. Probe Accuracy Over Training}
+x = checkpoint step, y = probe F1. Lines per condition.
+
+\subsubsection{E3. Latent Space PCA/t-SNE}
+2D scatter plots colored by probe target. Grid layout.
+
+\subsubsection{E4. Transition Model Cosine Similarity}
+x = prediction step K (1--5), y = cosine similarity. DQN+SPR vs
+Rainbow+SPR.
+
+\subsubsection{E5. Metric Correlation Heatmap}
+Rows = Rainbow metrics, columns = games, cells = correlation
+coefficient with probe F1.
 
 
 \section{Pipeline Status}
