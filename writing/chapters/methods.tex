@@ -327,6 +327,23 @@ but limits the precision of per-game comparisons. Our analysis
 therefore focuses on patterns that are consistent across games
 rather than on individual point estimates.
 
+\subsection{Evaluation Protocol}
+\label{subsec:eval-protocol}
+
+Each agent trains for 100{,}000 environment steps. Evaluation is
+decoupled from training: after each run completes, saved
+checkpoints are re-loaded and evaluated over 30 episodes with a
+near-greedy policy ($\varepsilon = 0.001$). Sticky actions
+($p = 0.25$) are enabled during both training and evaluation.
+The reported score is the mean undiscounted return across the 30
+episodes at the final checkpoint.
+
+\smallskip
+Checkpoints are saved every 10{,}000 environment steps, producing
+10 per run. Beyond providing the final performance score, these
+checkpoints supply the frozen representations used for the
+interpretability analyses in \cref{sec:interpretability-methods}.
+
 \section{Interpretability Methods}
 \label{sec:interpretability-methods}
 
