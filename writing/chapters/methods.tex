@@ -382,11 +382,10 @@ must already be present in the representation -- the probe cannot
 learn new features of its own. Probe accuracy therefore measures
 what information $f_\theta$ has made linearly accessible.
 
-\clearpage
 \input{figures/linear-probe}
-\clearpage
 
-\indent This approach lets us compare representations across experimental
+\smallskip
+This approach lets us compare representations across experimental
 conditions (e.g., with and without SPR, or across agent
 architectures) on a common basis: we hold the probing procedure
 fixed and vary only the encoder that produced the representations.
@@ -527,19 +526,12 @@ the quantitative probe results with a qualitative view of
 representation geometry.
 
 \smallskip
-Several caveats guide our interpretation of these plots. In t-SNE,
-the relative sizes of clusters are not meaningful -- a tight cluster
-and a diffuse one may contain the same density of points in the
-original space~\citep{vandermaaten2008visualizing}. Distances
-between clusters are also unreliable; t-SNE can place unrelated
-groups at arbitrary separations depending on the perplexity setting.
-UMAP preserves global structure more faithfully, but distances
-within dense regions can still be compressed. For both methods,
-results are sensitive to hyperparameters (perplexity for t-SNE,
-number of neighbors for UMAP), so we report these values explicitly
-(\cref{tab:viz-params}) and verify that our qualitative conclusions
-hold across a range of settings. We treat these visualizations as
-complementary to the probe results, not as standalone evidence.
+Both methods are sensitive to hyperparameters and can produce
+artifacts -- in t-SNE, cluster sizes and inter-cluster distances are
+not meaningful~\citep{vandermaaten2008visualizing}. We report all
+parameter values (\cref{tab:viz-params}), verify that conclusions
+hold across a range of settings, and treat these visualizations as
+complementary to the quantitative probe results.
 
 \smallskip
 \input{figures/latent-viz-guide}
@@ -599,7 +591,22 @@ representations.
 \subsection{Metric Correlation}
 \label{subsec:metric-correlation}
 
-\vspace{2em}
+If the capability comparison reveals that SPR helps Rainbow more
+than DQN, the natural question is which Rainbow component enables
+the difference. Rather than ablating all six components exhaustively,
+we first screen candidates by correlating Rainbow training metrics
+with representation quality across games.
+
+\smallskip
+For each game, we record per-condition metrics that reflect each
+Rainbow extension's contribution: the distribution of replay
+priorities (prioritized replay), the variance of $n$-step returns,
+the entropy of the distributional value estimates (C51), and the
+magnitude of noisy network parameters. We then compute Spearman
+rank correlations between these per-game metrics and the per-game
+improvement in probe accuracy that SPR produces on Rainbow versus
+DQN. Extensions whose metrics correlate strongly with representation
+quality are candidates for targeted ablation.
 
 \subsection{Targeted Ablations}
 \label{subsec:targeted-ablations}
