@@ -175,35 +175,46 @@ Transition model channels    & 64   \\
 \section{Rainbow Implementation}
 \label{sec:rainbow-implementation}
 
-\subsection{Distributional Value Estimates}
-\label{subsec:distributional}
+Rainbow combines the six extensions described in
+\cref{subsec:rainbow-dqn}: distributional values (C51), prioritized
+replay, dueling architecture, $n$-step returns, noisy exploration,
+and double DQN. Our implementation follows
+\citet{hessel2018rainbow} with the same 100K adaptations applied to
+the DQN base (\cref{tab:dqn-100k}). The optimizer switches to Adam
+(learning rate $6.25 \times 10^{-5}$, $\varepsilon = 1.5 \times
+10^{-4}$) following the original Rainbow
+settings. \Cref{tab:rainbow-hyperparams} lists the extension-specific
+hyperparameters.
 
-\vspace{2em}
+\begin{table}[htbp]
+\centering
+\begin{tabular}{ll}
+\toprule
+Parameter & Value \\
+\midrule
+\multicolumn{2}{l}{\textit{C51 (distributional)}} \\
+Atoms                   & 51 \\
+$V_{\min}$, $V_{\max}$  & $-10$, $+10$ \\
+\midrule
+\multicolumn{2}{l}{\textit{Prioritized replay}} \\
+Priority $\alpha$       & 0.5 \\
+IS correction $\beta$   & 0.4 $\to$ 1.0 \\
+\midrule
+$n$-step returns        & $n = 3$ \\
+Noisy nets              & Factorised Gaussian \\
+Optimizer               & Adam, lr $= 6.25 \times 10^{-5}$ \\
+\bottomrule
+\end{tabular}
+\caption{Rainbow hyperparameters. Dueling and double DQN are
+  architectural choices with no additional hyperparameters.}
+\label{tab:rainbow-hyperparams}
+\end{table}
 
-\subsection{Prioritized Experience Replay}
-\label{subsec:prioritized-replay}
-
-\vspace{2em}
-
-\subsection{Dueling Architecture}
-\label{subsec:dueling}
-
-\vspace{2em}
-
-\subsection{N-Step Returns}
-\label{subsec:nstep}
-
-\vspace{2em}
-
-\subsection{Noisy Exploration}
-\label{subsec:noisy-nets}
-
-\vspace{2em}
-
-\subsection{Double DQN}
-\label{subsec:double-dqn}
-
-\clearpage
+The dueling architecture splits the final layer into separate value
+and advantage streams, and double DQN decouples action selection
+from evaluation in the target computation. Neither introduces
+additional hyperparameters. With noisy networks enabled, epsilon-greedy exploration is disabled ($\varepsilon = 0$) -- the network
+learns its own exploration through parametric noise.
 
 \section{Experiment Design}
 \label{sec:experiment-design}
