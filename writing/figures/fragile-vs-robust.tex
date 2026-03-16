@@ -2,152 +2,125 @@
 \centering
 \input{figures/palette}
 
-\newcommand{\ponggrid}[3]{%
-    % #1=x-off, #2=y-off, #3=cell shade (for dimming)
-    \def\c{0.38}
-    \foreach \x in {0,...,7} {
-        \foreach \y in {0,...,5} {
-            \fill[black!#3, draw=black!8]
-                ({#1 + \x*\c}, {#2 + \y*\c}) rectangle ++(\c, \c);
-        }
-    }
+%% (a) Fragile: fixed pixel position
+\begin{subfigure}[t]{0.47\textwidth}
+\centering
+\begin{tikzpicture}[
+    lbl/.style={font=\footnotesize, text=black!55},
+]
+\def\c{0.42}
+\def\gw{8}
+\def\gh{7}
+
+% Dark game background
+\fill[black!85] (0, 0) rectangle ({\gw*\c}, {\gh*\c});
+% Subtle grid lines
+\foreach \x in {0,...,8} {
+    \draw[black!70] (\x*\c, 0) -- (\x*\c, {\gh*\c});
+}
+\foreach \y in {0,...,7} {
+    \draw[black!70] (0, \y*\c) -- ({\gw*\c}, \y*\c);
 }
 
-%% (a) Fragile, original -- spotlight on ball
-\begin{subfigure}[t]{0.45\textwidth}
-\centering
-\begin{tikzpicture}
-    \def\c{0.38}
-    % Dimmed grid
-    \ponggrid{0}{0}{6}
-    % Bright spotlight region (3x3 cells around position 4,4)
-    \foreach \x in {3,...,5} {
-        \foreach \y in {3,...,5} {
-            \fill[white, draw=black!8]
-                (\x*\c, \y*\c) rectangle ++(\c, \c);
-        }
-    }
-    \draw[palB, very thick, rounded corners=2pt]
-        ({3*\c}, {3*\c}) rectangle ({6*\c}, {6*\c});
-    % Paddle (dimmed)
-    \fill[black!35, rounded corners=1pt]
-        ({7*\c + 0.03}, {1.5*\c})
-        rectangle ({8*\c - 0.03}, {4.5*\c});
-    % Ball INSIDE spotlight
-    \fill[palA] ({4.5*\c}, {4.5*\c}) circle (0.13);
-    % Spotlight label
-    \node[font=\scriptsize, text=palB!80, anchor=south]
-        at ({4.5*\c}, {6*\c + 0.08}) {encoder looks here};
-    % Verdict
-    \node[font=\footnotesize, text=palC!80]
-        at ({4*\c}, {-0.35}) {ball found -- correct};
+% Top and bottom walls (Pong borders)
+\fill[black!50] (0, 0) rectangle ({\gw*\c}, {0.15*\c});
+\fill[black!50] (0, {6.85*\c}) rectangle ({\gw*\c}, {\gh*\c});
+
+% Paddle (tall, thin, right side)
+\fill[white!90, rounded corners=1pt]
+    ({7*\c + 0.06}, {2*\c}) rectangle ({7.6*\c}, {5*\c});
+
+% Ball
+\fill[white] ({4.5*\c}, {4.5*\c}) circle (0.13);
+
+% Spotlight: bright region at fixed position (cells 3-5, 3-5)
+\fill[palB!25, opacity=0.5]
+    ({3*\c}, {3*\c}) rectangle ({6*\c}, {6*\c});
+\draw[palB, very thick, rounded corners=2pt]
+    ({3*\c}, {3*\c}) rectangle ({6*\c}, {6*\c});
+
+% Label on spotlight
+\node[font=\scriptsize, text=palB, fill=black!80,
+      inner sep=2pt, rounded corners=1pt, anchor=south]
+    at ({4.5*\c}, {6*\c + 0.1})
+    {encoder checks here};
+
+% Verdict
+\node[lbl] at ({4*\c}, {-0.4})
+    {fragile: fixed pixel position};
+
 \end{tikzpicture}
-\subcaption{Original: the ball is inside the fixed region.}
-\label{fig:fragile-original}
+\subcaption{The encoder memorizes a fixed region. It works when
+  the ball is there but fails if the image shifts.}
+\label{fig:fragile-feature}
 \end{subfigure}
 \hfill
-%% (b) Fragile, shifted -- spotlight misses ball
-\begin{subfigure}[t]{0.45\textwidth}
+%% (b) Robust: object relationship
+\begin{subfigure}[t]{0.47\textwidth}
 \centering
-\begin{tikzpicture}
-    \def\c{0.38}
-    % Dimmed grid
-    \ponggrid{0}{0}{6}
-    % Same spotlight region (3x3 cells, same position)
-    \foreach \x in {3,...,5} {
-        \foreach \y in {3,...,5} {
-            \fill[white, draw=black!8]
-                (\x*\c, \y*\c) rectangle ++(\c, \c);
-        }
-    }
-    \draw[palB, very thick, rounded corners=2pt]
-        ({3*\c}, {3*\c}) rectangle ({6*\c}, {6*\c});
-    % Paddle (dimmed)
-    \fill[black!35, rounded corners=1pt]
-        ({7*\c + 0.03}, {1.5*\c})
-        rectangle ({8*\c - 0.03}, {4.5*\c});
-    % Ball OUTSIDE spotlight (shifted to bottom-left)
-    \fill[palA] ({1.5*\c}, {1.5*\c}) circle (0.13);
-    % Spotlight label
-    \node[font=\scriptsize, text=palB!80, anchor=south]
-        at ({4.5*\c}, {6*\c + 0.08}) {encoder looks here};
-    % Verdict
-    \node[font=\footnotesize, text=palB!80]
-        at ({4*\c}, {-0.35}) {ball missed -- wrong};
+\begin{tikzpicture}[
+    lbl/.style={font=\footnotesize, text=black!55},
+]
+\def\c{0.42}
+\def\gw{8}
+\def\gh{7}
+
+% Dark game background
+\fill[black!85] (0, 0) rectangle ({\gw*\c}, {\gh*\c});
+% Subtle grid lines
+\foreach \x in {0,...,8} {
+    \draw[black!70] (\x*\c, 0) -- (\x*\c, {\gh*\c});
+}
+\foreach \y in {0,...,7} {
+    \draw[black!70] (0, \y*\c) -- ({\gw*\c}, \y*\c);
+}
+
+% Top and bottom walls
+\fill[black!50] (0, 0) rectangle ({\gw*\c}, {0.15*\c});
+\fill[black!50] (0, {6.85*\c}) rectangle ({\gw*\c}, {\gh*\c});
+
+% Paddle
+\fill[white!90, rounded corners=1pt]
+    ({7*\c + 0.06}, {2*\c}) rectangle ({7.6*\c}, {5*\c});
+
+% Ball
+\fill[white] ({4.5*\c}, {4.5*\c}) circle (0.13);
+
+% Green highlight around ball
+\draw[palC, very thick, rounded corners=3pt]
+    ({4*\c - 0.02}, {4*\c - 0.02})
+    rectangle ({5*\c + 0.02}, {5*\c + 0.02});
+
+% Green highlight around paddle
+\draw[palC, very thick, rounded corners=3pt]
+    ({7*\c}, {1.8*\c})
+    rectangle ({7.7*\c}, {5.2*\c});
+
+% Distance line connecting ball to paddle
+\draw[palC, thick, dashed]
+    ({5*\c + 0.06}, {4.5*\c}) -- ({7*\c - 0.04}, {3.5*\c});
+\node[font=\scriptsize, text=palC, fill=black!80,
+      inner sep=2pt, rounded corners=1pt]
+    at ({6*\c}, {4.3*\c}) {$d$};
+
+% Label
+\node[font=\scriptsize, text=palC, fill=black!80,
+      inner sep=2pt, rounded corners=1pt, anchor=south]
+    at ({4.5*\c}, {6*\c + 0.1})
+    {encoder tracks objects};
+
+% Verdict
+\node[lbl] at ({4*\c}, {-0.4})
+    {robust: ball-paddle distance};
+
 \end{tikzpicture}
-\subcaption{Shifted: the ball moved but the encoder did not.}
-\label{fig:fragile-shifted}
+\subcaption{The encoder tracks the spatial relationship between
+  ball and paddle -- a feature that survives any shift.}
+\label{fig:robust-feature}
 \end{subfigure}
 
-\vspace{1.2em}
-
-%% (c) Robust, original -- tracks relationship
-\begin{subfigure}[t]{0.45\textwidth}
-\centering
-\begin{tikzpicture}
-    \def\c{0.38}
-    % Normal grid (not dimmed -- encoder sees everything)
-    \ponggrid{0}{0}{3}
-    % Paddle
-    \fill[black!45, rounded corners=1pt]
-        ({7*\c + 0.03}, {1.5*\c})
-        rectangle ({8*\c - 0.03}, {4.5*\c});
-    % Ball
-    \fill[palA] ({4.5*\c}, {4.5*\c}) circle (0.13);
-    % Green highlights around objects
-    \draw[palC, very thick, rounded corners=3pt]
-        ({4*\c}, {4*\c}) rectangle ({5*\c}, {5*\c});
-    \draw[palC, very thick, rounded corners=3pt]
-        ({7*\c - 0.04}, {1.3*\c})
-        rectangle ({8*\c + 0.04}, {4.7*\c});
-    % Relationship
-    \draw[palC, very thick, <->]
-        ({5*\c + 0.06}, {4.3*\c}) -- ({7*\c - 0.08}, {3.2*\c});
-    \node[font=\scriptsize, text=palC!70, anchor=south]
-        at ({6*\c}, {4.0*\c}) {distance};
-    % Verdict
-    \node[font=\footnotesize, text=palC!80]
-        at ({4*\c}, {-0.35}) {relationship found -- correct};
-\end{tikzpicture}
-\subcaption{Original: encoder tracks ball-paddle distance.}
-\label{fig:robust-original}
-\end{subfigure}
-\hfill
-%% (d) Robust, shifted -- still tracks
-\begin{subfigure}[t]{0.45\textwidth}
-\centering
-\begin{tikzpicture}
-    \def\c{0.38}
-    % Normal grid
-    \ponggrid{0}{0}{3}
-    % Paddle
-    \fill[black!45, rounded corners=1pt]
-        ({7*\c + 0.03}, {1.5*\c})
-        rectangle ({8*\c - 0.03}, {4.5*\c});
-    % Ball (shifted)
-    \fill[palA] ({1.5*\c}, {1.5*\c}) circle (0.13);
-    % Green highlights follow the ball
-    \draw[palC, very thick, rounded corners=3pt]
-        ({1*\c}, {1*\c}) rectangle ({2*\c}, {2*\c});
-    \draw[palC, very thick, rounded corners=3pt]
-        ({7*\c - 0.04}, {1.3*\c})
-        rectangle ({8*\c + 0.04}, {4.7*\c});
-    % Relationship
-    \draw[palC, very thick, <->]
-        ({2*\c + 0.06}, {1.5*\c}) -- ({7*\c - 0.08}, {2.8*\c});
-    \node[font=\scriptsize, text=palC!70, anchor=south]
-        at ({4.5*\c}, {2.5*\c}) {distance};
-    % Verdict
-    \node[font=\footnotesize, text=palC!80]
-        at ({4*\c}, {-0.35}) {relationship found -- correct};
-\end{tikzpicture}
-\subcaption{Shifted: feature follows the ball -- still correct.}
-\label{fig:robust-shifted}
-\end{subfigure}
-
-\caption{Augmentation as regularization. Top: without augmentation,
-  the encoder checks a fixed region that misses the ball after a
-  shift. Bottom: augmentation forces features that track objects
-  regardless of position.}
+\caption{Augmentation as regularization. (a)~Without augmentation,
+  the encoder can rely on fixed pixel positions.
+  (b)~Random shifts force it to learn object relationships.}
 \label{fig:fragile-vs-robust}
 \end{figure}
