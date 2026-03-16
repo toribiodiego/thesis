@@ -9,58 +9,60 @@
 
 % === Panel 1: Original 84x84 ===
 \draw[thick, black!70, fill=black!8]
-    (0, 0) rectangle (2.4, 2.4);
-% Content region schematic (simple game elements)
-\fill[palA!25] (0.6, 1.8) rectangle (1.8, 2.0);  % top bar
-\fill[palB!30] (1.1, 1.0) circle (0.12);          % ball
-\fill[palC!30] (0.9, 0.3) rectangle (1.5, 0.45);  % paddle
-\node[lbl] at (1.2, -0.3) {$84 \times 84$};
-\node[font=\scriptsize\bfseries, text=black!70] at (1.2, 2.8)
-    {original};
+    (0, 0) rectangle (2.8, 2.8);
+% Game elements (larger, more visible)
+\fill[palA!35] (0.5, 2.1) rectangle (2.3, 2.35);   % top bar
+\fill[palB!40] (1.3, 1.2) circle (0.15);             % ball
+\fill[palC!40] (0.9, 0.25) rectangle (1.9, 0.45);   % paddle
+\node[lbl] at (1.4, -0.3) {$84 \times 84$};
+\node[font=\scriptsize\bfseries, text=black!70]
+    at (1.4, 3.15) {original};
 
 % Arrow 1
-\draw[arr] (2.7, 1.2) -- node[above, lbl] {pad $+4$} (3.7, 1.2);
+\draw[arr] (3.1, 1.4) -- node[above, lbl] {pad $+4$} (4.2, 1.4);
 
 % === Panel 2: Padded 92x92 ===
-% Padding region (lighter)
-\draw[thick, black!40, fill=black!4, dashed]
-    (4.0, -0.3) rectangle (6.7, 2.7);
+% Padding region (dashed border, lighter fill)
+\draw[thick, black!35, fill=black!3, dashed]
+    (4.5, -0.4) rectangle (7.7, 3.2);
 % Original content region inside padding
 \draw[thick, black!70, fill=black!8]
-    (4.3, 0.0) rectangle (6.4, 2.1);
-% Same game elements (shifted inward)
-\fill[palA!25] (4.8, 1.5) rectangle (5.9, 1.67);
-\fill[palB!30] (5.3, 0.8) circle (0.12);
-\fill[palC!30] (5.1, 0.15) rectangle (5.6, 0.28);
-% Reflection hint (mirrored paddle at bottom edge)
-\fill[palC!15] (5.1, -0.15) rectangle (5.6, -0.02);
-% Dimension labels
-\node[lbl] at (5.35, -0.55) {$92 \times 92$};
-% Padding annotation
-\node[lbl, text=black!40] at (4.15, 2.4) {4\,px};
-\node[font=\scriptsize\bfseries, text=black!70] at (5.35, 3.0)
-    {reflection pad};
+    (4.9, 0.0) rectangle (7.3, 2.4);
+% Game elements (same positions relative to content)
+\fill[palA!35] (5.3, 1.75) rectangle (6.9, 1.97);
+\fill[palB!40] (6.0, 0.9) circle (0.15);
+\fill[palC!40] (5.6, 0.12) rectangle (6.5, 0.3);
+% Reflection hints at edges (mirrored elements, faded)
+\fill[palC!12] (5.6, -0.2) rectangle (6.5, -0.02);  % bottom
+\fill[palA!10] (5.3, 2.45) rectangle (6.9, 2.6);    % top
 
-% Arrow 2
-\draw[arr] (7.0, 1.2) -- node[above, lbl] {random crop} (8.0, 1.2);
+% Padding dimension annotation
+\draw[<->, thin, black!35] (4.5, 2.85) -- (4.9, 2.85)
+    node[midway, above, font=\tiny, text=black!40] {4};
+\node[lbl] at (6.1, -0.65) {$92 \times 92$};
+\node[font=\scriptsize\bfseries, text=black!70]
+    at (6.1, 3.55) {reflection pad};
+
+% Arrow 2 (more space from padded panel)
+\draw[arr] (8.1, 1.4)
+    -- node[above, lbl] {random crop} (9.3, 1.4);
 
 % === Panel 3: Cropped 84x84 (shifted) ===
-% Show a slightly offset crop
 \draw[thick, black!70, fill=black!8]
-    (8.3, 0.15) rectangle (10.7, 2.55);
-% Same elements but shifted by ~2px equivalent
-\fill[palA!25] (8.75, 1.9) rectangle (9.85, 2.07);
-\fill[palB!30] (9.25, 1.05) circle (0.12);
-\fill[palC!30] (8.95, 0.35) rectangle (9.45, 0.48);
-\node[lbl] at (9.5, -0.1) {$84 \times 84$};
-\node[font=\scriptsize\bfseries, text=black!70] at (9.5, 2.95)
-    {shifted};
+    (9.6, 0.25) rectangle (12.4, 3.05);
+% Game elements shifted noticeably (offset ~0.2 up and right)
+\fill[palA!35] (10.15, 2.3) rectangle (11.95, 2.55);
+\fill[palB!40] (11.0, 1.4) circle (0.15);
+\fill[palC!40] (10.55, 0.5) rectangle (11.55, 0.7);
+\node[lbl] at (11.0, 0.0) {$84 \times 84$};
+\node[font=\scriptsize\bfseries, text=black!70]
+    at (11.0, 3.4) {shifted};
 
-% Offset annotation (small arrows showing dx, dy)
-\draw[->, thin, palB!70] (10.2, 0.5) -- (10.2, 0.8)
-    node[right, font=\tiny, text=palB!70] {$\delta y$};
-\draw[->, thin, palB!70] (10.2, 0.5) -- (10.5, 0.5)
-    node[above, font=\tiny, text=palB!70] {$\delta x$};
+% Offset annotation (outside the panel, bottom-right)
+\draw[->, thick, palB!60] (12.6, 0.6) -- (12.6, 1.1)
+    node[right, font=\scriptsize, text=palB!60] {$\delta y$};
+\draw[->, thick, palB!60] (12.6, 0.6) -- (13.1, 0.6)
+    node[above, font=\scriptsize, text=palB!60] {$\delta x$};
 
 \end{tikzpicture}
 \caption{Random shift augmentation. The $84 \times 84$ frame is
