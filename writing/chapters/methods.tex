@@ -57,6 +57,30 @@ and SPR are enabled.
 \section{Data Augmentation}
 \label{sec:augmentation-method}
 
+We apply the random shift augmentation described in
+\cref{subsec:random-shift} at training time: batches sampled from
+the replay buffer are augmented before each gradient step. The
+buffer itself stores raw, unaugmented observations. Each time a
+transition is replayed, it receives a fresh random shift -- the
+network never sees the exact same input twice.
+
+\smallskip
+The current state $s$ and next state $s'$ in each transition receive
+independent random shifts (different crop positions). Within each
+observation, all four stacked frames share the same shift to preserve
+inter-frame motion information. The operation pads each
+$84 \times 84$ frame by 4 pixels using reflection padding and takes
+a random $84 \times 84$ crop, implemented on the GPU via Kornia.
+
+\smallskip
+When augmentation is combined with SPR, the augmented observations
+are used for both the Q-learning loss and the SPR prediction loss.
+This changes one SPR hyperparameter: the EMA target encoder momentum
+$\tau$ is set to 0.0 (direct copy) instead of 0.99, following
+\citet{schwarzer2021dataefficient}, who found that augmentation
+provides sufficient regularization on its own, making the slow EMA
+update unnecessary.
+
 \section{Self-Predictive Representations}
 \label{sec:spr-architecture}
 
