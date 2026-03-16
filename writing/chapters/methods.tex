@@ -611,7 +611,20 @@ quality are candidates for targeted ablation.
 \subsection{Targeted Ablations}
 \label{subsec:targeted-ablations}
 
-\vspace{4em}
+The metric correlation identifies candidate components; targeted
+ablations test them causally. For the one or two strongest
+candidates from \cref{subsec:metric-correlation}, we add the
+component to DQN + SPR and measure whether representation quality
+improves. For example, if prioritized replay correlates most
+strongly with probe accuracy, we train DQN + SPR + prioritized
+replay on the same six games and compare probe results against
+unmodified DQN + SPR.
+
+\smallskip
+Adding one component at a time isolates its contribution, avoiding
+the confounds of the full Rainbow combination. This provides causal
+evidence for which Rainbow property enables useful self-supervised
+representations.
 
 \section{Representation-Informed Modification}
 \label{sec:repr-modification}
