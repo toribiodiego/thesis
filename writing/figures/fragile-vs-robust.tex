@@ -1,0 +1,133 @@
+\begin{figure}[ht]
+\centering
+\input{figures/palette}
+
+\begin{tikzpicture}[
+    lbl/.style={font=\footnotesize, text=black!55},
+    dimlbl/.style={font=\scriptsize, text=black!45},
+    scenelbl/.style={font=\scriptsize, text=black!50},
+]
+\def\c{0.25}
+\def\gw{8}  % grid width
+\def\gh{7}  % grid height
+
+% --- Helper: draw a Pong scene ---
+% #1=x-offset, #2=ball-x (grid), #3=ball-y (grid),
+% #4=paddle-y-center (grid)
+\newcommand{\drawscene}[4]{
+    % Grid
+    \foreach \x in {0,...,7} {
+        \foreach \y in {0,...,6} {
+            \fill[black!3, draw=black!8]
+                ({#1 + \x*\c}, \y*\c) rectangle ++(\c, \c);
+        }
+    }
+    % Paddle (right side)
+    \fill[black!45, rounded corners=1pt]
+        ({#1 + 7*\c + 0.03}, {(#4-1)*\c + 0.02})
+        rectangle ({#1 + 8*\c - 0.03}, {(#4+1)*\c - 0.02});
+    % Ball
+    \fill[palA] ({#1 + (#2+0.5)*\c}, {(#3+0.5)*\c}) circle (0.09);
+}
+
+% ============================================================
+% Panel (a): Without augmentation -- fragile feature
+% ============================================================
+\node[lbl, anchor=south] at ({4*\c}, {7*\c + 0.55})
+    {without augmentation};
+
+% Left scene: original -- crosshair hits ball
+\drawscene{0}{4}{5}{4}
+\node[scenelbl] at ({4*\c}, {-0.3}) {original};
+
+% Crosshair at fixed position (4,5)
+\draw[palB, thick]
+    ({4.5*\c - 0.18}, {5.5*\c}) -- ({4.5*\c + 0.18}, {5.5*\c});
+\draw[palB, thick]
+    ({4.5*\c}, {5.5*\c - 0.18}) -- ({4.5*\c}, {5.5*\c + 0.18});
+\draw[palB, thick, dashed]
+    ({4*\c + 0.02}, {5*\c + 0.02}) rectangle ({5*\c - 0.02}, {6*\c - 0.02});
+
+% Checkmark
+\node[font=\scriptsize, text=palC] at ({8*\c + 0.25}, {3.5*\c}) {\checkmark};
+
+% Arrow between scenes
+\node[font=\scriptsize, text=black!35] at ({9.2*\c}, {3.5*\c}) {shift};
+\draw[->, thick, black!25]
+    ({8.5*\c}, {3.5*\c}) -- ({10*\c}, {3.5*\c});
+
+% Right scene: shifted -- crosshair misses ball
+\def\sx{2.8}
+\drawscene{\sx}{2}{3}{4}
+\node[scenelbl] at ({\sx + 4*\c}, {-0.3}) {shifted};
+
+% Crosshair at SAME fixed position (4,5) -- now empty!
+\draw[palB, thick]
+    ({\sx + 4.5*\c - 0.18}, {5.5*\c}) -- ({\sx + 4.5*\c + 0.18}, {5.5*\c});
+\draw[palB, thick]
+    ({\sx + 4.5*\c}, {5.5*\c - 0.18}) -- ({\sx + 4.5*\c}, {5.5*\c + 0.18});
+\draw[palB, thick, dashed]
+    ({\sx + 4*\c + 0.02}, {5*\c + 0.02})
+    rectangle ({\sx + 5*\c - 0.02}, {6*\c - 0.02});
+
+% X mark (feature missed the ball)
+\node[font=\scriptsize, text=palB] at ({\sx + 8*\c + 0.25}, {3.5*\c})
+    {$\times$};
+
+% ============================================================
+% Panel (b): With augmentation -- robust feature
+% ============================================================
+\def\by{-3.2}
+\node[lbl, anchor=south] at ({4*\c}, {\by + 7*\c + 0.55})
+    {with augmentation};
+
+% Left scene: original -- feature on ball-paddle relationship
+\begin{scope}[shift={(0, \by)}]
+\drawscene{0}{4}{5}{4}
+\node[scenelbl] at ({4*\c}, {-0.3}) {original};
+
+% Green highlight around ball
+\draw[palC, thick, rounded corners=2pt]
+    ({4*\c + 0.02}, {5*\c + 0.02}) rectangle ({5*\c - 0.02}, {6*\c - 0.02});
+% Green highlight around paddle
+\draw[palC, thick, rounded corners=2pt]
+    ({7*\c}, {3*\c - 0.02}) rectangle ({8*\c}, {5*\c + 0.02});
+% Relationship arrow
+\draw[palC, thick, <->]
+    ({5*\c + 0.02}, {5.3*\c}) -- ({7*\c - 0.02}, {4.2*\c});
+
+% Checkmark
+\node[font=\scriptsize, text=palC] at ({8*\c + 0.25}, {3.5*\c}) {\checkmark};
+\end{scope}
+
+% Arrow between scenes
+\node[font=\scriptsize, text=black!35] at ({9.2*\c}, {\by + 3.5*\c}) {shift};
+\draw[->, thick, black!25]
+    ({8.5*\c}, {\by + 3.5*\c}) -- ({10*\c}, {\by + 3.5*\c});
+
+% Right scene: shifted -- feature still finds ball-paddle
+\begin{scope}[shift={(\sx, \by)}]
+\drawscene{0}{2}{3}{4}
+\node[scenelbl] at ({4*\c}, {-0.3}) {shifted};
+
+% Green highlight follows the ball to new position
+\draw[palC, thick, rounded corners=2pt]
+    ({2*\c + 0.02}, {3*\c + 0.02}) rectangle ({3*\c - 0.02}, {4*\c - 0.02});
+% Green highlight on paddle (same position)
+\draw[palC, thick, rounded corners=2pt]
+    ({7*\c}, {3*\c - 0.02}) rectangle ({8*\c}, {5*\c + 0.02});
+% Relationship arrow
+\draw[palC, thick, <->]
+    ({3*\c + 0.02}, {3.3*\c}) -- ({7*\c - 0.02}, {4.0*\c});
+
+% Checkmark
+\node[font=\scriptsize, text=palC] at ({8*\c + 0.25}, {3.5*\c}) {\checkmark};
+\end{scope}
+
+\end{tikzpicture}
+\caption{Augmentation as regularization. Top: without augmentation,
+  the encoder memorizes a fixed pixel position that fails when the
+  image shifts. Bottom: augmentation forces the encoder to track
+  object relationships, which survive spatial shifts.}
+\label{fig:fragile-vs-robust}
+\end{figure}
