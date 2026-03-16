@@ -310,6 +310,23 @@ a single game would suffice. The diversity of published patterns
 whether the interaction depends on game-specific factors such as
 reward density and visual complexity.
 
+\subsection{Seeds and Statistical Reporting}
+\label{subsec:seeds-stats}
+
+Each condition is trained with three seeds per game (42, 13, 23),
+chosen arbitrarily. Across six conditions and six games, this
+produces 108 runs. We report per-game performance as the mean
+return $\pm$ standard deviation across seeds. For aggregate
+comparisons across games, we use the interquartile mean (IQM) with
+stratified bootstrap 95\% confidence intervals, following
+\citet{agarwal2021deep}.
+
+\smallskip
+Three seeds per condition is standard in the Atari-100K literature
+but limits the precision of per-game comparisons. Our analysis
+therefore focuses on patterns that are consistent across games
+rather than on individual point estimates.
+
 \section{Interpretability Methods}
 \label{sec:interpretability-methods}
 
