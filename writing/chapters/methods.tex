@@ -84,36 +84,12 @@ update unnecessary.
 \section{Self-Predictive Representations}
 \label{sec:spr-architecture}
 
-In the low-data regime, the standard TD loss provides a sparse and
-noisy learning signal -- the agent may see only a handful of
-rewarding transitions across 100K environment steps. Self-Predictive
-Representations (SPR)~\citep{schwarzer2021dataefficient} address
-this by adding an auxiliary objective that encourages the encoder to
-learn representations from which future latent states can be
-predicted. This gives the encoder a dense, self-generated training
-signal on every transition, independent of reward.
-
-\smallskip
-\Cref{fig:spr-architecture} illustrates the forward prediction.
-The online encoder $f_\theta$ -- the same Nature CNN used for
-Q-learning (\cref{subsec:network-architecture}) -- produces spatial
-feature maps $z_t$ from the current observation. A convolutional
-transition model $h$ takes $z_t$ and the agent's action $a_t$ to
-predict the next latent state $\hat{z}_{t+1}$. This process repeats
-for $K$ steps, producing predictions $\hat{z}_{t+1}, \ldots,
-\hat{z}_{t+K}$ from a single starting state. Each predicted state
-is passed through a projection head $g$ and a prediction head $q$
-to produce the final prediction vector.
-
-\smallskip
-The target for each prediction comes from a separate path
-(\cref{fig:spr-loss}): the actual future observation $s_{t+k}$ is
-fed through an exponential moving average (EMA) copy of the encoder
-$\bar{f}_\theta$ and an EMA projection head $\bar{g}$. The
-prediction head $q$ exists only on the online side, creating the
-asymmetry that prevents representation collapse -- without it, both
-paths could converge to a trivial constant
-output~\citep{grill2020bootstrap}.
+SPR adds an auxiliary self-predictive objective to the base agent,
+as described conceptually in \cref{subsec:spr}. This section
+specifies our implementation: the component architectures, loss
+computation, and hyperparameters. SPR is integrated identically
+into both DQN and Rainbow so that the capability comparison
+(\cref{subsec:capability-comparison}) is controlled.
 
 \smallskip
 The SPR loss is the negative cosine similarity between the online
@@ -130,23 +106,9 @@ predictions (those that do not cross episode boundaries):
 %
 where $\tilde{y}$ is the online prediction, $\bar{y}$ is the target,
 $m_{k,b}$ masks out predictions that cross episode boundaries, and
-$N$ is the number of valid predictions. The total training loss
-combines the standard TD objective with the SPR loss:
-%
-\begin{equation}
-\label{eq:total-loss}
-\mathcal{L} = \mathcal{L}_{\text{TD}}
-  + \lambda\,\mathcal{L}_{\text{SPR}}
-\end{equation}
-%
-with $\lambda = 2.0$ following the original
-authors~\citep{schwarzer2021dataefficient}. Because $f_\theta$ is
-shared between Q-learning and the SPR objective, the auxiliary loss
-directly shapes the representations used for action selection.
+$N$ is the number of valid predictions. This loss is combined with
+the TD objective as in \cref{eq:ssl-loss}, with $\lambda = 2.0$.
 
-\input{figures/spr-architecture}
-
-\smallskip
 \begin{table}[htbp]
 \centering
 \begin{tabular}{llll}
@@ -183,13 +145,9 @@ batch normalization, keeping the same spatial resolution as its
 input.
 
 \smallskip
-The EMA target encoder is updated after each training step:
-$\bar{\theta} \leftarrow \tau\,\bar{\theta} + (1 - \tau)\,\theta$,
-where $\tau$ controls the update speed. In our implementation,
-$\tau = 0.99$ when augmentation is disabled and $\tau = 0.0$ (direct
-copy) when augmentation is enabled, following the finding that data
-augmentation provides sufficient regularization on its own. We set
-the prediction depth to $K = 5$ steps for all experiments.
+The EMA target encoder momentum $\tau$ varies with augmentation
+status, as described in \cref{sec:augmentation-method}. The
+prediction depth is $K = 5$ steps.
 \Cref{tab:spr-hyperparams} summarizes all SPR hyperparameters;
 all values follow the original data-efficient
 settings~\citep{schwarzer2021dataefficient}.
