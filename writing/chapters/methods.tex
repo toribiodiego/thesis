@@ -4,39 +4,55 @@
 \section{DQN Implementation}
 \label{sec:dqn-implementation}
 
-\subsection{Input Preprocessing}
-\label{subsec:input-preprocessing}
+Our DQN agent follows \citet{mnih2015human}. The architecture is the
+Nature CNN described in \cref{subsec:conv-encoder}, trained with
+RMSProp (learning rate $2.5 \times 10^{-4}$), a batch size of 32,
+discount $\gamma = 0.99$, and gradient clipping at norm 10. The
+replay buffer samples uniformly, and the target network is updated
+via hard copy. Rewards are clipped to $[-1, +1]$. All of these
+match the original paper; we make no changes to the base algorithm.
 
-\vspace{2em}
+\smallskip
+The 100K-step budget requires adapting several scale-dependent
+parameters. \Cref{tab:dqn-100k} lists the values that change.
 
-\subsection{Network Architecture}
-\label{subsec:network-architecture}
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lll}
+\toprule
+Parameter & Standard DQN & Our 100K setting \\
+\midrule
+Training frames       & 10M        & 400K \\
+Replay capacity       & 1M         & 100K \\
+Warmup                & 50K steps  & 2K steps \\
+Target network update & 10K steps  & 2K steps \\
+$\varepsilon$ decay   & 1M frames  & 200K frames \\
+Sticky actions $p$    & 0.0        & 0.25 \\
+\bottomrule
+\end{tabular}
+\caption{Atari-100K adaptations. All other hyperparameters
+  follow \citet{mnih2015human} unchanged.}
+\label{tab:dqn-100k}
+\end{table}
 
-\input{figures/nature-cnn}
+The replay buffer is sized to match the generation budget -- the
+agent produces at most 100K transitions, so a larger buffer would
+never fill. The warmup is reduced from 50K to 2K steps because the
+original warmup would consume half the training budget before
+learning begins. Epsilon decay is compressed to cover the first
+half of training, and the target network updates every 2{,}000 steps
+to maintain roughly 50 updates across the run. Sticky actions are
+enabled following the revised evaluation protocol of
+\citet{machado2018revisiting}. These settings follow the
+data-efficient configuration from
+\citet{schwarzer2021dataefficient}.
 
-\input{tables/nature-cnn-layers}
-
-\vspace{2em}
-
-\subsection{Training Procedure}
-\label{subsec:training-procedure}
-
-\vspace{2em}
-
-\subsection{Experience Replay}
-\label{subsec:experience-replay}
-
-\vspace{2em}
-
-\subsection{Target Network}
-\label{subsec:target-network}
-
-\vspace{2em}
-
-\subsection{Atari-100K Adaptations}
-\label{subsec:atari100k-adaptations}
-
-\clearpage
+\smallskip
+The agent is implemented in PyTorch using Gymnasium for the
+environment interface. All experimental conditions in the DQN
+isolation study (\cref{subsec:dqn-isolation}) share this base
+implementation; the only differences are whether augmentation
+and SPR are enabled.
 
 \section{Data Augmentation}
 \label{sec:augmentation-method}
