@@ -1,0 +1,217 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{titling}
+\usepackage{titlesec}
+\usepackage{float}
+\usepackage[font=small,labelfont=bf,labelsep=period,
+  justification=raggedright,singlelinecheck=false]{caption}
+\usepackage[colorlinks=true,linkcolor=black,urlcolor=blue!60!black,
+  citecolor=black]{hyperref}
+
+\newcommand{\ok}{\textcolor{green!60!black}{OK}}
+
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.5em}{}
+\titlespacing{\section}{0pt}{2.0em}{0.6em}
+\titlespacing{\subsection}{0pt}{1.8em}{0.5em}
+
+\setlength{\droptitle}{-4em}
+\pretitle{\begin{center}\large\bfseries}
+\posttitle{\end{center}\vspace{-1em}}
+\preauthor{\begin{center}\normalsize}
+\postauthor{\end{center}\vspace{-1em}}
+\predate{\begin{center}\normalsize}
+\postdate{\end{center}\vspace{-0.5em}}
+
+\title{Decoupled Assessment Pipeline}
+\author{Diego Toribio\\[0.3em]{\normalsize March 14, 2026}}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\section{Purpose}
+
+Before launching 86+ batch training runs, we decoupled the
+assessment step from training to maximize GPU throughput and
+confirmed the post-training pipeline produces correct and complete
+artifacts.
+
+
+\section{Architecture}
+
+\subsection{Problem}
+
+Running assessment episodes inline during training pauses gradient
+computation to run 30 episodes per checkpoint. With 10 checkpoints,
+this adds 300 episodes per run---20--100\% overhead depending on
+episode length. For Rainbow (2 gradient updates per environment
+step), this overhead is proportionally more costly.
+
+\subsection{Solution}
+
+\textbf{Training phase} (A100, maximum throughput):
+\begin{itemize}[leftmargin=2em, itemsep=0.1em]
+  \item Inline assessment disabled
+        (\texttt{eval\_every: 999999})
+  \item 10 checkpoints saved at uniform intervals
+    (\texttt{save\_every: 40000}, \texttt{keep\_last\_n: 10})
+  \item No video recording during training
+\end{itemize}
+
+\textbf{Assessment phase} (T4 or CPU, cheap):
+\begin{itemize}[leftmargin=2em, itemsep=0.1em]
+  \item \texttt{reeval\_checkpoints.py} loads each checkpoint,
+    runs 30 episodes, saves all artifacts
+  \item Produces: \texttt{evaluations.csv},
+    \texttt{evaluations.jsonl},
+    \texttt{per\_episode\_returns.jsonl},
+    \texttt{detailed/*.json}
+  \item Optional video recording (\texttt{--record-video}) for
+    selected runs only
+\end{itemize}
+
+\textbf{Two-tier assessment:} Video recording adds
+$\sim$3$\times$ overhead (frame rendering on every step). Fast
+assessment without video runs first for all runs. Selective video
+recording runs second on chosen checkpoints for thesis figures.
+
+
+\section{Configuration Changes}
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{l l l l}
+\toprule
+\textbf{Parameter} & \textbf{Before} & \textbf{After}
+  & \textbf{File} \\
+\midrule
+\texttt{eval\_every}   & 40000   & 999999
+  & \texttt{atari100k\_base.yaml} \\
+\texttt{save\_every}   & 100000  & 40000
+  & \texttt{atari100k\_base.yaml} \\
+\texttt{keep\_last\_n} & 5       & 10
+  & \texttt{atari100k\_base.yaml} \\
+\bottomrule
+\end{tabular}
+\caption{Atari-100K base config changes. Rainbow per-game configs
+already had matching settings.}
+\end{table}
+
+
+\section{Script Fixes}
+
+Seven issues were identified and fixed:
+
+\medskip
+\textbf{1. Missing sticky actions} (critical). The
+\texttt{make\_atari\_env()} call did not pass
+\texttt{repeat\_action\_probability}. Atari-100K training uses
+0.25, but assessment defaulted to 0.0. Scores would have been
+incomparable.
+
+\medskip
+\textbf{2. NoisyNets mode}. Rainbow with NoisyNets should use
+greedy assessment (\texttt{epsilon=0.0}) with noise disabled via
+\texttt{model.eval()}. The script used 0.05 for all models.
+
+\medskip
+\textbf{3. No video recording}. Added \texttt{--record-video}
+flag with best-episode MP4 per checkpoint.
+
+\medskip
+\textbf{4. Missing per-episode data}. Added output of
+\texttt{per\_episode\_returns.jsonl} and detailed JSON files.
+
+\medskip
+\textbf{5. Hardcoded CPU}. Added \texttt{--device} flag for T4
+inference.
+
+\medskip
+\textbf{6. Missing render mode}. Video recording requires
+\texttt{render\_mode="rgb\_array"} passed to the environment.
+
+\medskip
+\textbf{7. Missing SPR checkpoint state} (critical).
+\texttt{train\_dqn.py} did not pass \texttt{spr\_components} to
+checkpoint save calls. Transition model weights, projection heads,
+and EMA encoder state were not saved. Without these, transition
+model analysis is impossible.
+
+
+\section{Validation Results}
+
+Tested on Colab T4 (2026-03-14).
+
+\subsection{DQN Boxing}
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{l r r l}
+\toprule
+\textbf{Setting} & \textbf{Inline} & \textbf{Reeval}
+  & \textbf{Status} \\
+\midrule
+epsilon        & 0.05           & 0.05
+  & \ok \\
+sticky actions & 0.0            & 0.0
+  & \ok{} (pre-fix run) \\
+Score (400K)   & $-3.0 \pm 5.3$ & $-2.1 \pm 5.2$
+  & \ok \\
+\bottomrule
+\end{tabular}
+\caption{DQN Boxing: reeval vs.\ inline results.}
+\end{table}
+
+\noindent\textit{Timing:} $\sim$1 min/checkpoint without video,
+$\sim$3 min with video (30 episodes).
+
+\subsection{Rainbow Crazy Climber}
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{l r r l}
+\toprule
+\textbf{Setting} & \textbf{Training} & \textbf{Reeval}
+  & \textbf{Status} \\
+\midrule
+epsilon        & --     & 0.0
+  & \ok{} (NoisyNets) \\
+sticky actions & 0.25   & 0.25
+  & \ok \\
+Score (400K)   & 26013  & $24117 \pm 6002$
+  & \ok \\
+\bottomrule
+\end{tabular}
+\caption{Rainbow Crazy Climber: reeval vs.\ training output.}
+\end{table}
+
+\noindent\textit{Timing:} $\sim$5 min for 30 episodes.
+
+
+\section{Status}
+
+\begin{itemize}[leftmargin=2em, itemsep=0.3em]
+  \item \ok{} Config changes applied
+  \item \ok{} Sticky actions correctly read from config
+  \item \ok{} NoisyNets greedy mode (epsilon=0.0)
+  \item \ok{} Video recording produces valid MP4 files
+  \item \ok{} All output formats match inline output
+  \item \ok{} DQN and Rainbow scores consistent
+  \item \ok{} SPR checkpoint state now saved
+\end{itemize}
+
+Pipeline is ready for batch runs. See
+\texttt{notes/training-strategy.md} for execution plan and
+\texttt{reports/eval.tex} for the figure catalog.
+
+\end{document}
