@@ -205,86 +205,22 @@ These figures answer: \textit{Does SPR need a capable base agent
 to produce useful representations?}
 Reproduction: Appendix~\ref{app:perf-figs}.
 
-\subsection{B1. Learning Curves -- Rainbow Comparison [PLACEHOLDER]}
+\noindent Pending figures (require completed batch runs):
 
-\noindent\textbf{Purpose:} Compare SPR's effect on DQN vs Rainbow.
-The core capability comparison figure.
-
-\noindent\textbf{Format:} 6 subplots, 3 lines each: DQN+SPR,
-Rainbow, Rainbow+SPR.
-
-\noindent\textbf{Data:} \texttt{evaluations.csv} from Rainbow
-and Rainbow+SPR runs.
-
-\noindent\textbf{Thesis section:} 4.2.
-
-
-\subsection{B2. SPR Lift: DQN vs Rainbow [PLACEHOLDER]}
-
-\noindent\textbf{Purpose:} Directly compare the magnitude of
-SPR's improvement on a weak agent vs a strong agent, per game.
-
-\noindent\textbf{Format:} Paired bar chart. Per game: SPR lift on
-DQN vs SPR lift on Rainbow.
-
-\noindent\textbf{Data:} Final scores from DQN, DQN+SPR, Rainbow,
-Rainbow+SPR.
-
-\noindent\textbf{Thesis section:} 4.2.
-
-
-\subsection{B3. Capability Scatter [PLACEHOLDER]}
-
-\noindent\textbf{Purpose:} Visualize the raw performance gap
-between DQN and Rainbow across games.
-
-\noindent\textbf{Format:} Scatter plot. x = DQN score, y = Rainbow
-score, one point per game. Diagonal line marks parity.
-
-\noindent\textbf{Data:} Final scores from all conditions.
-
-\noindent\textbf{Thesis section:} 4.2.
-
-
-\subsection{B4. Full Score Table [PLACEHOLDER]}
-
-\noindent\textbf{Purpose:} Comprehensive results table including
-all 6 conditions.
-
-\noindent\textbf{Format:} 6 games (rows) $\times$ 6 conditions
-(columns) with multi-seed CI.
-
-\noindent\textbf{Data:} \texttt{evaluations.csv} from all runs.
-
-\noindent\textbf{Thesis section:} 4.2.
-
-
-\subsection{B5. Human-Normalized Scores [PLACEHOLDER]}
-
-\noindent\textbf{Purpose:} Standardized comparison using
-HNS = (agent $-$ random) / (human $-$ random). Standard
-Atari-100K reporting format.
-
-\noindent\textbf{Format:} Same as B4, normalized. Requires
-published human and random baselines per game.
-
-\noindent\textbf{Data:} Final scores + baselines from Kaiser
-et al.\ (2020).
-
-\noindent\textbf{Thesis section:} 4.2.
-
-
-\subsection{B6. Aggregate Bar Chart [PLACEHOLDER]}
-
-\noindent\textbf{Purpose:} Summary of overall performance across
-games. Shows which conditions improve on average.
-
-\noindent\textbf{Format:} Mean HNS across 6 games per condition.
-Error bars for cross-game variance.
-
-\noindent\textbf{Data:} Derived from B5.
-
-\noindent\textbf{Thesis section:} 4.2.
+\begin{description}[leftmargin=2em, itemsep=0.4em]
+  \item[B1. Rainbow learning curves] 6 subplots with DQN+SPR,
+    Rainbow, Rainbow+SPR. The core capability comparison.
+  \item[B2. SPR lift: DQN vs Rainbow] Paired bars per game
+    comparing SPR's improvement on a weak vs strong agent.
+  \item[B3. Capability scatter] x = DQN score, y = Rainbow score,
+    one point per game. Diagonal marks parity.
+  \item[B4. Full score table] 6 games $\times$ 6 conditions with
+    multi-seed CI.
+  \item[B5. Human-normalized scores] Same as B4, normalized by
+    HNS = (agent $-$ random) / (human $-$ random).
+  \item[B6. Aggregate bar chart] Mean HNS across 6 games per
+    condition with cross-game error bars.
+\end{description}
 
 
 % ================================================================
@@ -299,75 +235,23 @@ probing pipeline (Tasks 47--52). Checkpoints with
 \texttt{spr\_state} will be available after batch runs.
 Reproduction: Appendix~\ref{app:interp-figs}.
 
-\subsection{C1. Linear Probe Accuracy [PLACEHOLDER]}
-
-\noindent\textbf{Purpose:} Show whether SPR encoders learn more
-game-relevant features than vanilla encoders.
-
-\noindent\textbf{Format:} Grouped bar chart. Per game, per
-condition: F1 for each probe target (player position, score, etc.).
-
-\noindent\textbf{Data:} Extracted features + RAM labels +
-sklearn probes.
-
-\noindent\textbf{Thesis section:} 4.3.
-
-
-\subsection{C2. Probe Accuracy Over Training [PLACEHOLDER]}
-
-\noindent\textbf{Purpose:} Show how representation quality develops
-during training. Do SPR representations improve steadily or plateau
-early?
-
-\noindent\textbf{Format:} x = checkpoint step, y = probe F1. Lines
-per condition, one plot per game.
-
-\noindent\textbf{Data:} Probes run at each of 10 checkpoints.
-
-\noindent\textbf{Thesis section:} 4.3.
-
-
-\subsection{C3. Latent Space PCA/t-SNE [PLACEHOLDER]}
-
-\noindent\textbf{Purpose:} Visualize whether SPR produces more
-structured representations.
-
-\noindent\textbf{Format:} 2D scatter plots colored by probe target.
-Grid: rows = conditions, columns = games.
-
-\noindent\textbf{Data:} Extracted encoder features + labels.
-
-\noindent\textbf{Thesis section:} 4.3.
-
-
-\subsection{C4. Transition Model Cosine Similarity [PLACEHOLDER]}
-
-\noindent\textbf{Purpose:} Show how accurately the SPR transition
-model predicts future states, and whether prediction quality
-differs between DQN+SPR and Rainbow+SPR.
-
-\noindent\textbf{Format:} x = prediction step K (1--5), y = cosine
-similarity. Lines for DQN+SPR vs Rainbow+SPR.
-
-\noindent\textbf{Data:} Checkpoint \texttt{spr\_state} (transition
-model weights). Requires fix from 2026-03-14.
-
-\noindent\textbf{Thesis section:} 4.3.
-
-
-\subsection{C5. Metric Correlation Heatmap [PLACEHOLDER]}
-
-\noindent\textbf{Purpose:} Identify which Rainbow training metrics
-track representation quality. Narrows down components for targeted
-ablation.
-
-\noindent\textbf{Format:} Heatmap. Rows = Rainbow metrics, columns
-= games, cells = Pearson/Spearman correlation with probe F1.
-
-\noindent\textbf{Data:} \texttt{training\_steps.csv} Rainbow
-metrics + probe F1 timeseries.
-
-\noindent\textbf{Thesis section:} 4.3 or 5.1 (Discussion).
+\begin{description}[leftmargin=2em, itemsep=0.4em]
+  \item[C1. Probe accuracy] Grouped bars: F1 per game, per
+    condition, per probe target. Shows whether SPR encoders learn
+    more game-relevant features.
+  \item[C2. Probe accuracy over training] x = checkpoint step,
+    y = probe F1, lines per condition. Shows whether representations
+    improve steadily or plateau early.
+  \item[C3. Latent PCA / t-SNE] 2D scatter colored by probe
+    target. Grid: rows = conditions, columns = games. Shows
+    structural differences in representations.
+  \item[C4. Transition model similarity] x = prediction step K
+    (1--5), y = cosine similarity. DQN+SPR vs Rainbow+SPR.
+    Requires \texttt{spr\_state} in checkpoints (fixed 2026-03-14).
+  \item[C5. Metric correlation] Heatmap: Rainbow metrics vs games,
+    cells = correlation with probe F1. Identifies which components
+    track representation quality.
+\end{description}
 
 
 % ================================================================
@@ -378,16 +262,12 @@ Figures that span multiple research questions or support the
 methods and appendix chapters.
 Reproduction: Appendix~\ref{app:perf-figs}.
 
-\subsection{D1. Score Heatmap [PLACEHOLDER]}
+\noindent Pending:
 
-\noindent\textbf{Purpose:} At-a-glance overview of all results.
-Shows which games benefit from which interventions.
-
-\noindent\textbf{Format:} Games (rows) $\times$ conditions
-(columns), color-coded by HNS.
-
-\noindent\textbf{Thesis section:} 4.4 (Cross-Game Generalization).
-
+\begin{description}[leftmargin=2em, itemsep=0.4em]
+  \item[D1. Score heatmap] Games (rows) $\times$ conditions
+    (columns), color-coded by HNS. At-a-glance overview.
+\end{description}
 
 \subsection{D2. Episode Return Distribution [LIVE]}
 
@@ -476,32 +356,16 @@ Rainbow.}
 \end{figure}
 
 
-\subsection{D6. Rainbow Training Metrics [PLACEHOLDER]}
+\noindent Pending:
 
-\noindent\textbf{Purpose:} Visualize Rainbow-specific training
-dynamics for later correlation with representation quality.
-
-\noindent\textbf{Format:} distributional\_loss, priority\_entropy,
-mean\_is\_weight over training for Rainbow and Rainbow+SPR.
-
-\noindent\textbf{Data:} \texttt{training\_steps.csv} Rainbow
-columns.
-
-\noindent\textbf{Thesis section:} 4.3 or appendix.
-
-
-\subsection{D7. Agent Behavior Videos [PLACEHOLDER]}
-
-\noindent\textbf{Purpose:} Qualitative illustration of learned
-behavior differences.
-
-\noindent\textbf{Format:} Frame sequences from best-episode MP4
-at final checkpoint. Selected games where behavior visibly differs.
-
-\noindent\textbf{Data:} \texttt{--record-video} output from
-selective reeval pass.
-
-\noindent\textbf{Thesis section:} Appendix.
+\begin{description}[leftmargin=2em, itemsep=0.4em]
+  \item[D6. Rainbow metrics] distributional\_loss,
+    priority\_entropy, mean\_is\_weight over training for Rainbow
+    and Rainbow+SPR. For metric correlation analysis.
+  \item[D7. Behavior videos] Frame sequences from best-episode MP4
+    at final checkpoint. Selected games where behavior visibly
+    differs.
+\end{description}
 
 
 \appendix
