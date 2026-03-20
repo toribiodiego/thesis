@@ -57,6 +57,7 @@ addresses, following the thesis Results chapter structure
 
 These figures answer: \textit{Does SPR improve vanilla DQN, and
 how does it interact with augmentation?}
+Reproduction: Appendix~\ref{app:perf-figs}.
 
 \subsection{A1. Learning Curves -- DQN Isolation [LIVE]}
 
@@ -156,6 +157,7 @@ multi-seed CI.}
 
 These figures answer: \textit{Does SPR need a capable base agent
 to produce useful representations?}
+Reproduction: Appendix~\ref{app:perf-figs}.
 
 \subsection{B1. Learning Curves -- Rainbow Comparison [PLACEHOLDER]}
 
@@ -249,6 +251,7 @@ and why do they differ across capability levels?}
 All figures in this section require the feature extraction and
 probing pipeline (Tasks 47--52). Checkpoints with
 \texttt{spr\_state} will be available after batch runs.
+Reproduction: Appendix~\ref{app:interp-figs}.
 
 \subsection{C1. Linear Probe Accuracy [PLACEHOLDER]}
 
@@ -327,6 +330,7 @@ metrics + probe F1 timeseries.
 
 Figures that span multiple research questions or support the
 methods and appendix chapters.
+Reproduction: Appendix~\ref{app:perf-figs}.
 
 \subsection{D1. Score Heatmap [PLACEHOLDER]}
 
@@ -454,9 +458,67 @@ selective reeval pass.
 \noindent\textbf{Thesis section:} Appendix.
 
 
-% ================================================================
+\appendix
+
+\section{Regeneration}
+\label{app:regen}
+
+All figures can be reproduced from run data on Google Drive.
+
+\subsection{Downloading run data}
+\label{app:download}
+
+\begin{verbatim}
+bash scripts/pull-run.sh --all              # all runs
+bash scripts/pull-run.sh --group base       # vanilla DQN
+bash scripts/pull-run.sh --group spr        # DQN+SPR
+bash scripts/pull-run.sh --group rainbow    # Rainbow
+bash scripts/pull-run.sh --all --no-checkpoints  # skip .pt files
+bash scripts/pull-run.sh --list             # list available
+\end{verbatim}
+
+Run directories are documented in
+\texttt{experiments/dqn\_atari/runs/INDEX.md}.
+
+\subsection{Performance figures (A, B, D1--D7)}
+\label{app:perf-figs}
+
+\begin{verbatim}
+python scripts/plot_learning_curves.py  # learning curves
+python scripts/plot_results.py          # score tables, bar charts
+\end{verbatim}
+
+\noindent Both scripts read \texttt{evaluations.csv} and
+\texttt{training\_steps.csv} from local run directories.
+
+\subsection{Post-hoc assessment}
+\label{app:reeval}
+
+\begin{verbatim}
+python scripts/reeval_checkpoints.py --device cuda  # fast
+python scripts/reeval_checkpoints.py --record-video # with video
+python scripts/reeval_checkpoints.py --force        # re-run all
+\end{verbatim}
+
+\noindent Run on Colab T4, not locally. See
+\texttt{reports/eval-pipeline.tex} for details.
+
+\subsection{Interpretability figures (C1--C5)}
+\label{app:interp-figs}
+
+Requires Tasks 47--52 infrastructure. Scripts will be:
+
+\begin{verbatim}
+python scripts/extract_features.py      # Task 47
+python scripts/run_probes.py            # Task 49
+python scripts/plot_latent_space.py     # Task 50
+python scripts/analyze_transitions.py   # Task 51
+python scripts/correlate_metrics.py     # Task 52
+\end{verbatim}
+
+
 \section{Data Source Summary}
-% ================================================================
+\label{app:data}
 
 \begin{table}[H]
 \centering
@@ -497,59 +559,5 @@ built.}
 all data sources are verified and the assessment pipeline is
 confirmed working. See \texttt{reports/eval-pipeline.tex} for
 pipeline documentation.
-
-
-% ================================================================
-\section{Regeneration}
-% ================================================================
-
-All figures can be reproduced from run data on Google Drive.
-
-\subsection{Downloading run data}
-
-\begin{verbatim}
-bash scripts/pull-run.sh --all              # all runs
-bash scripts/pull-run.sh --group base       # vanilla DQN
-bash scripts/pull-run.sh --group spr        # DQN+SPR
-bash scripts/pull-run.sh --group rainbow    # Rainbow
-bash scripts/pull-run.sh --all --no-checkpoints  # skip .pt files
-bash scripts/pull-run.sh --list             # list available
-\end{verbatim}
-
-Run directories are documented in
-\texttt{experiments/dqn\_atari/runs/INDEX.md}.
-
-\subsection{Generating performance figures (A, B, D1--D7)}
-
-\begin{verbatim}
-python scripts/plot_learning_curves.py  # learning curves
-python scripts/plot_results.py          # score tables, bar charts
-\end{verbatim}
-
-\noindent Both scripts read \texttt{evaluations.csv} and
-\texttt{training\_steps.csv} from local run directories.
-
-\subsection{Running post-hoc assessment}
-
-\begin{verbatim}
-python scripts/reeval_checkpoints.py --device cuda  # fast
-python scripts/reeval_checkpoints.py --record-video # with video
-python scripts/reeval_checkpoints.py --force        # re-run all
-\end{verbatim}
-
-\noindent Run on Colab T4, not locally. See
-\texttt{reports/eval-pipeline.tex} for details.
-
-\subsection{Generating interpretability figures (C1--C5)}
-
-Requires Tasks 47--52 infrastructure. Scripts will be:
-
-\begin{verbatim}
-python scripts/extract_features.py      # Task 47
-python scripts/run_probes.py            # Task 49
-python scripts/plot_latent_space.py     # Task 50
-python scripts/analyze_transitions.py   # Task 51
-python scripts/correlate_metrics.py     # Task 52
-\end{verbatim}
 
 \end{document}
