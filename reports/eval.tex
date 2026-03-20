@@ -107,16 +107,18 @@ Reproduction: Appendix~\ref{app:perf-figs}.
 
 \subsection*{A1. Learning Curves -- DQN Isolation [LIVE]}
 
-\noindent\textbf{Purpose:} Show how each DQN condition learns over
-the 100K-step budget. The primary performance figure for Part~1.
+\textit{Purpose.} Show how each DQN condition's evaluation return
+evolves over the 100K-step training budget across all six games.
+This is the main figure for assessing whether SPR or augmentation
+changes the learning trajectory on vanilla DQN.
 
-\noindent\textbf{Format:} 6 subplots (one per game), 4 lines per
-subplot (DQN, +Aug, +SPR, +Both). Shaded bands show $\pm 1$ std
-from 30 episodes (single seed) or 95\% CI (multi-seed).
-
-\noindent\textbf{Data:} \texttt{evaluations.csv} from each run.
-
-\noindent\textbf{Thesis section:} 4.1 (DQN Isolation Study).
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item 6 subplots (one per game), 4 lines per subplot
+  \item Conditions: DQN, +Aug, +SPR, +Both
+  \item x = environment frames (0--400K), y = mean return
+  \item Shaded $\pm 1$ std (single seed) or 95\% CI (multi-seed)
+  \item 10 evaluation checkpoints per run, 30 episodes each
+\end{itemize}
 
 \begin{figure}[H]
 \centering
