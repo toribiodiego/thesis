@@ -46,10 +46,68 @@ in the thesis, its data source, the thesis section it supports,
 and its current status. Entries marked \textbf{[LIVE]} include
 example outputs from existing Boxing data. Entries marked
 \textbf{[PLACEHOLDER]} require completed batch runs.
+Data sources and reproduction commands are in
+Appendix~\ref{app:data} and~\ref{app:regen}.
 
-The catalog is organized by the research question each figure
-addresses, following the thesis Results chapter structure
-(Chapter~4).
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.35}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{3.2cm} p{4.8cm} l l}
+\toprule
+\textbf{Goal} & \textbf{Figures} & \textbf{Thesis}
+  & \textbf{Status} \\
+\midrule
+\textit{What happened?}
+  \newline Raw performance
+  & A1. DQN learning curves
+  \newline A4. DQN score table
+  \newline B1. Rainbow learning curves
+  \newline B4. Full score table
+  \newline B5. Human-normalized scores
+  \newline B6. Aggregate bar chart
+  & 4.1--4.2
+  & 2 live, 4 pending \\
+\midrule
+\textit{What caused it?}
+  \newline Attribution
+  & A2. SPR/augmentation lift
+  \newline A3. Interaction plot
+  \newline B2. SPR lift: DQN vs Rainbow
+  \newline B3. Capability scatter
+  \newline D1. Score heatmap
+  & 4.1--4.2, 4.4
+  & 2 live, 3 pending \\
+\midrule
+\textit{What was learned?}
+  \newline Representations
+  & C1. Linear probe accuracy
+  \newline C2. Probe accuracy over training
+  \newline C3. Latent space PCA/t-SNE
+  \newline C4. Transition model similarity
+  \newline C5. Metric correlation heatmap
+  & 4.3
+  & All pending \\
+\midrule
+\textit{How did training}
+  \newline \textit{unfold?}
+  \newline Process
+  & D2. Episode return distributions
+  \newline D3. SPR training dynamics
+  \newline D4. Training stability
+  \newline D5. Computational overhead
+  \newline D6. Rainbow training metrics
+  \newline D7. Agent behavior videos
+  & 3.3--3.4,
+  \newline Appendix
+  & 4 live, 2 pending \\
+\bottomrule
+\end{tabular}
+\caption{Figure catalog grouped by analytical goal. 22 total:
+8 live from Boxing data, 14 pending batch runs or
+interpretability pipeline.}
+\end{table}
 
 % ================================================================
 \section{Part 1: DQN Isolation Study (Thesis 4.1)}
