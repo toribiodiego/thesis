@@ -101,23 +101,21 @@ interpretability pipeline.}
 \section{Part 1: DQN Isolation Study (Thesis 4.1)}
 % ================================================================
 
-These figures answer: \textit{Does SPR improve vanilla DQN, and
-how does it interact with augmentation?}
+\noindent These figures answer: \textit{Does SPR improve vanilla
+DQN, and how does it interact with augmentation?}
 Reproduction: Appendix~\ref{app:perf-figs}.
 
 \subsection*{A1. Learning Curves -- DQN Isolation [LIVE]}
 
-\textit{Purpose.} Show how each DQN condition's evaluation return
-evolves over the 100K-step training budget across all six games.
-This is the main figure for assessing whether SPR or augmentation
-changes the learning trajectory on vanilla DQN.
+\noindent\textit{Purpose.} Does SPR or augmentation change how
+vanilla DQN learns over 100K steps? One subplot per game shows
+the evaluation return at each checkpoint for all four DQN
+conditions.
 
 \begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
-  \item 6 subplots (one per game), 4 lines per subplot
-  \item Conditions: DQN, +Aug, +SPR, +Both
-  \item x = environment frames (0--400K), y = mean return
-  \item Shaded $\pm 1$ std (single seed) or 95\% CI (multi-seed)
-  \item 10 evaluation checkpoints per run, 30 episodes each
+  \item Four conditions: DQN, +Aug, +SPR, +Both
+  \item Shaded bands: $\pm 1$ std (single seed) or cross-seed
+    confidence interval (multi-seed)
 \end{itemize}
 
 \begin{figure}[H]
@@ -203,8 +201,8 @@ multi-seed CI.}
 \section{Part 2: Rainbow Capability Comparison (Thesis 4.2)}
 % ================================================================
 
-These figures answer: \textit{Does SPR need a capable base agent
-to produce useful representations?}
+\noindent These figures answer: \textit{Does SPR need a capable
+base agent to produce useful representations?}
 Reproduction: Appendix~\ref{app:perf-figs}.
 
 \noindent Pending figures (require completed batch runs):
@@ -229,10 +227,10 @@ Reproduction: Appendix~\ref{app:perf-figs}.
 \section{Part 3: Interpretability Analysis (Thesis 4.3)}
 % ================================================================
 
-These figures answer: \textit{What do the representations encode,
-and why do they differ across capability levels?}
+\noindent These figures answer: \textit{What do the representations
+encode, and why do they differ across capability levels?}
 
-All figures in this section require the feature extraction and
+\noindent All figures in this section require the feature extraction and
 probing pipeline (Tasks 47--52). Checkpoints with
 \texttt{spr\_state} will be available after batch runs.
 Reproduction: Appendix~\ref{app:interp-figs}.
@@ -260,7 +258,7 @@ Reproduction: Appendix~\ref{app:interp-figs}.
 \section{Cross-Cutting Figures (Thesis 4.4, Methods, Appendix)}
 % ================================================================
 
-Figures that span multiple research questions or support the
+\noindent Figures that span multiple research questions or support the
 methods and appendix chapters.
 Reproduction: Appendix~\ref{app:perf-figs}.
 
