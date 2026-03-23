@@ -1145,9 +1145,15 @@ RL~\citep{bellemare2017distributional} models the full distribution
 of possible returns. The C51 variant used in Rainbow represents this
 distribution as a probability mass function over 51 evenly spaced
 values. The network outputs probabilities for each value, and the
-loss minimizes the KL divergence between the predicted and target
-distributions. This richer learning signal can improve feature
-learning even though the policy still acts on the expected value.
+loss minimizes the KL divergence -- a measure of how different two
+probability distributions are -- between the predicted and target
+distributions. Modeling the full distribution provides a richer
+training signal than predicting the mean alone: two states might
+have the same expected return of $+5$, but very different risk
+profiles -- one always yielding $+5$, the other yielding $+10$ or
+$0$ with equal probability. The distributional loss forces the
+encoder to distinguish these states, even though the policy still
+acts on the expected value.
 \Cref{fig:distributional-output} illustrates the difference in
 output structure.
 
