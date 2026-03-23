@@ -19,13 +19,14 @@ high-dimensional inputs like images.
 \subsection{Markov Decision Processes}
 \label{subsec:mdp}
 
-In reinforcement learning, an agent learns by interacting with its
-environment -- observing situations, taking actions, and receiving
-feedback. The \emph{Markov decision process} (MDP) is the
-mathematical framework that makes this interaction
+Reinforcement learning is about learning from interaction: a
+learner observes its surroundings, chooses an action, receives
+numerical feedback, and repeats. The learner is called the
+\emph{agent} and its surroundings are called the
+\emph{environment}. The \emph{Markov decision process}
+(MDP) is the mathematical framework that makes this interaction
 precise~\citep{sutton2018reinforcement}, and nearly every
-reinforcement learning algorithm -- from tabular methods to deep
-neural network approaches -- is built on it.
+reinforcement learning algorithm is built on it.
 
 \smallskip
 To make the framework concrete, consider the grid-world in
