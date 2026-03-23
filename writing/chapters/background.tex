@@ -1,25 +1,20 @@
 \chapter{Background}
 \label{ch:background}
 
-The first sections lay the groundwork: how agents learn to make
-decisions through trial and error, and the architectures used to
-scale these ideas to high-dimensional inputs like game frames. From
-there we describe the two agents in our comparison -- DQN and
-Rainbow -- the benchmark used to evaluate them, and the two
-techniques for improving data efficiency that our experiments aim to
-separate: data augmentation and self-supervised representation
-learning.
+This chapter builds from foundations to application. The first
+sections introduce the problem of learning from trial and error and
+the neural network architectures used to solve it at scale. The
+later sections narrow to the specific setting of this thesis: the
+benchmark, the methods under study, and where this work fits in the
+field.
 
 \section{Reinforcement Learning Foundations}
 \label{sec:rl-foundations}
 
-Consider a learner that must make a sequence of decisions, observing
-the outcome of each one before choosing the next. This section
-formalizes that setup, develops the tools for evaluating and
-improving a decision-making strategy, and shows why scaling these
-ideas to high-dimensional inputs requires replacing exact solutions
-with learned approximations -- a step that brings new instabilities
-the following sections must address.
+This section formalizes the problem of learning from interaction
+and develops the algorithms used to solve it. It then shows why
+these algorithms need to be extended before they can handle
+high-dimensional inputs like images.
 
 \subsection{Markov Decision Processes}
 \label{subsec:mdp}
@@ -704,22 +699,18 @@ estimates to diverge.
 
 \smallskip
 Before describing the specific network architecture used in
-practice, we need to understand what neural networks are, how they
-are trained, and what representations they learn.
-\Cref{sec:deep-learning} introduces these foundations, and
-\cref{sec:dqn} then assembles them into a concrete agent.
+practice, we need to understand the building blocks it is made from.
 
 \section{Deep Learning Foundations}
 \label{sec:deep-learning}
 
-The previous section showed that Q-learning needs a function
-approximator that can generalize across states -- for
-high-dimensional inputs like images, that function is a neural
-network. This section introduces the building blocks: what neural
-networks compute, how they learn from data, and what it means
-for a network to learn a representation. \Cref{sec:dqn} then
-assembles these building blocks into a concrete reinforcement
-learning agent.
+The previous section ended with an open question: what kind of
+function should replace the Q-table? For high-dimensional inputs
+like images, the answer is a neural network -- a parameterized
+function that can learn to extract useful features directly from
+raw pixels. This section covers how neural networks are structured,
+how they are trained, and what it means for a network to learn a
+\emph{representation} of its input.
 
 \subsection{Neural Networks}
 \label{subsec:neural-networks}
