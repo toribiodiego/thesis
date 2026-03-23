@@ -1527,7 +1527,11 @@ The specific augmentation used in data-efficient RL is the
 \emph{random shift}. Starting from the preprocessed
 $84 \times 84$ grayscale frame, the operation pads the image by 4
 pixels on each side using reflection padding, creating a
-$92 \times 92$ image where the border mirrors the edge pixels. A
+$92 \times 92$ image where the border mirrors the edge pixels.
+Reflection is used rather than zero padding because it fills the
+border with plausible image content -- mirrored textures and edges
+-- rather than artificial black pixels that the encoder could learn
+to detect as a padding signal rather than game content. A
 random $84 \times 84$ crop is then taken from this padded image,
 with the crop position sampled uniformly at random. The result is
 the original game frame shifted by up to $\pm 4$ pixels in both the
