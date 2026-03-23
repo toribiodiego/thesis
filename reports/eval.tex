@@ -171,18 +171,21 @@ combination is additive, redundant, or interfering.
 \end{figure}
 
 
-\subsection*{A4. Summary Score Table [LIVE]}
+\subsection*{A4. Score Table}
 
-\noindent\textbf{Purpose:} Comprehensive results table for all
-DQN conditions across all games.
+\noindent\textit{Purpose.} What are the final scores for every
+DQN condition on every game? A single table with all numerical
+results at the 400K-frame checkpoint, serving as the primary
+reference for cross-game and cross-condition comparisons.
 
-\noindent\textbf{Format:} 6 games (rows) $\times$ 4 conditions
-(columns). Final scores with std or CI.
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item 6 games (rows) $\times$ 4 conditions (columns)
+  \item Scores at 400K frames with std or multi-seed CI
+  \item Status: example from Boxing (seed 42); full version
+    after batch runs
+\end{itemize}
 
-\noindent\textbf{Data:} \texttt{evaluations.csv} at 400K step.
-
-\noindent\textbf{Thesis section:} 4.1.
-
+\vspace{0.5em}
 \begin{table}[H]
 \centering
 \small
@@ -192,13 +195,18 @@ DQN conditions across all games.
 \textbf{Game} & \textbf{DQN} & \textbf{+ Aug}
   & \textbf{+ SPR} & \textbf{+ Both} \\
 \midrule
-Boxing & $-3.0$ & $-16.4$ & $-21.1$ & $-19.4$ \\
-\textit{5 more games} & & & & \\
+Boxing        & $-3.0$ & $-16.4$ & $-21.1$ & $-19.4$ \\
+Crazy Climber & ---    & ---     & ---     & ---     \\
+Frostbite     & ---    & ---     & ---     & ---     \\
+Kangaroo      & ---    & ---     & ---     & ---     \\
+Road Runner   & ---    & ---     & ---     & ---     \\
+Up N Down     & ---    & ---     & ---     & ---     \\
 \bottomrule
 \end{tabular}
 \caption{Example: Boxing only. Full version: all 6 games with
 multi-seed CI.}
 \end{table}
+\vspace{0.5em}
 
 
 % ================================================================
