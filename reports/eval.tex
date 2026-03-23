@@ -346,12 +346,27 @@ captures more game-relevant structure.
 \end{itemize}
 
 \vspace{0.5em}
+\subsection*{C2. Probe Accuracy Over Training}
+
+\noindent\textit{Purpose.} When during training do the
+representations become useful? Probing at multiple checkpoints
+shows whether feature quality improves steadily, plateaus early,
+or only emerges late -- and whether DQN and Rainbow develop
+useful representations on different timelines.
+
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item x = checkpoint step, y = probe F1, lines per condition
+  \item One plot per game, all 6 conditions overlaid
+  \item 10 checkpoints (every 40K frames) for new runs,
+    4 checkpoints for existing DQN/+Aug runs
+  \item Status: pending -- requires feature extraction and
+    probing at each checkpoint
+\end{itemize}
+
+\vspace{0.5em}
 \noindent Remaining pending figures:
 
 \begin{description}[leftmargin=2em, itemsep=0.4em]
-  \item[C2. Probe accuracy over training] x = checkpoint step,
-    y = probe F1, lines per condition. Shows whether representations
-    improve steadily or plateau early.
   \item[C3. Latent PCA / t-SNE] 2D scatter colored by probe
     target. Grid: rows = conditions, columns = games. Shows
     structural differences in representations.
