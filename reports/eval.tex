@@ -105,7 +105,7 @@ interpretability pipeline.}
 DQN, and how does it interact with augmentation?}
 Reproduction: Appendix~\ref{app:perf-figs}.
 
-\subsection*{A1. Learning Curves -- DQN Isolation [LIVE]}
+\subsection*{A1. Learning Curves}
 
 \noindent\textit{Purpose.} Does SPR or augmentation change how
 vanilla DQN learns over 100K steps? One subplot per game shows
@@ -116,6 +116,8 @@ conditions.
   \item Four conditions: DQN, +Aug, +SPR, +Both
   \item Shaded bands: $\pm 1$ std (single seed) or cross-seed
     confidence interval (multi-seed)
+  \item Status: example generated from Boxing data (seed 42);
+    full 6-game grid after batch runs
 \end{itemize}
 
 \begin{figure}[H]
