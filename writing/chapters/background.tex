@@ -1,25 +1,25 @@
-\chapter{Background and Related Work}
+\chapter{Background}
 \label{ch:background}
 
-This chapter provides the foundations needed to understand the
-experiments and analysis in the chapters that follow. We begin with
-reinforcement learning -- the problem setting and the algorithms
-that operate within it -- then introduce the deep learning tools
-used to scale these algorithms to high-dimensional inputs.
-With both in hand, we describe the two agents used in our
-experiments (DQN and Rainbow) and the benchmark on which they are
-evaluated (Atari-100K). The final sections cover the two methods
-under study -- data augmentation and self-supervised representation
-learning -- and position this work relative to the broader field.
+The first sections lay the groundwork: how agents learn to make
+decisions through trial and error, and the architectures used to
+scale these ideas to high-dimensional inputs like game frames. From
+there we describe the two agents in our comparison -- DQN and
+Rainbow -- the benchmark used to evaluate them, and the two
+techniques for improving data efficiency that our experiments aim to
+separate: data augmentation and self-supervised representation
+learning.
 
 \section{Reinforcement Learning Foundations}
 \label{sec:rl-foundations}
 
-This section introduces the core concepts of reinforcement
-learning. We start with the Markov decision process framework that
-defines the problem, then develop value functions and Q-learning as
-the solution approach, and finally show why function approximation
-is needed to scale these ideas to high-dimensional environments.
+Consider a learner that must make a sequence of decisions, observing
+the outcome of each one before choosing the next. This section
+formalizes that setup, develops the tools for evaluating and
+improving a decision-making strategy, and shows why scaling these
+ideas to high-dimensional inputs requires replacing exact solutions
+with learned approximations -- a step that brings new instabilities
+the following sections must address.
 
 \subsection{Markov Decision Processes}
 \label{subsec:mdp}
