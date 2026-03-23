@@ -1438,17 +1438,22 @@ random seeds are included.
 (IQM) as the primary aggregate metric. IQM is a 25\% trimmed mean:
 pool the normalized scores from all game-run combinations, discard
 the bottom 25\% and top 25\%, and take the mean of the remaining
-50\%. This makes IQM more robust than the mean (outliers are
-trimmed) and more statistically efficient than the median (it uses
-half the data rather than a single point), producing tighter
-confidence intervals for the same number of runs.
+50\%. Discarding the top and bottom quartiles removes the outliers
+that inflate the mean, while averaging the remaining half uses far
+more of the data than the median's single central value. The result
+is a metric that is more robust than the mean and more statistically
+efficient than the median, producing tighter confidence intervals
+for the same number of runs.
 
 \smallskip
 Point estimates of any aggregate metric are unreliable when the
 number of runs is small. \citet{agarwal2021deep} proposed reporting
-\emph{stratified bootstrap confidence intervals}: for each game,
-resample the available runs with replacement; compute the aggregate
-metric on each bootstrap sample; report the 95\% interval. This
+\emph{stratified bootstrap confidence intervals}: the resampling is
+stratified by game -- for each game, the available runs are
+resampled with replacement independently, so every game contributes
+to every bootstrap sample rather than some games being over- or
+under-represented by chance. The aggregate metric is computed on
+each bootstrap sample, and the 95\% interval is reported. This
 tells the reader how much the aggregate could shift with different
 random seeds. A difference between two agents is meaningful only if
 their confidence intervals show clear separation.
@@ -1458,8 +1463,11 @@ A complementary tool is the \emph{performance profile}: a curve
 showing the fraction of game-run combinations where the agent
 exceeds a given normalized score threshold. Higher curves indicate
 stronger algorithms, and a curve that lies strictly above another
-indicates stochastic dominance across the full range of thresholds.
-Performance profiles provide a richer picture than any single
+indicates stochastic dominance across the full range of thresholds
+-- a stronger statement than a higher aggregate score, because it
+means the better agent outperforms not just on average but at every
+performance level. Performance profiles provide a richer picture
+than any single
 aggregate metric because they reveal the full distribution of
 performance -- not just a summary statistic.
 
