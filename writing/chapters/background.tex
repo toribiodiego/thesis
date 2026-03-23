@@ -1089,7 +1089,13 @@ probability proportional to their TD error -- the magnitude of the
 difference between the predicted and target Q-values. Transitions
 where the agent's prediction was furthest off are replayed more
 often, focusing learning on the most surprising or informative
-experiences.
+experiences. Non-uniform sampling introduces a bias, however: the
+gradient is weighted toward high-priority transitions, distorting
+the loss landscape. Importance sampling weights correct this by
+down-weighting transitions that are sampled more frequently than
+they would be under uniform sampling. The correction strength is
+controlled by a parameter~$\beta$ that increases during training,
+gradually shifting from a partial correction toward full correction.
 
 \smallskip
 \textbf{Dueling networks.}\quad Rather than estimating $Q(s, a)$
