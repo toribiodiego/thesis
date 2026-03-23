@@ -364,12 +364,26 @@ useful representations on different timelines.
 \end{itemize}
 
 \vspace{0.5em}
+\subsection*{C3. Latent Space Visualization}
+
+\noindent\textit{Purpose.} What does the representation space
+look like? PCA and t-SNE projections reveal whether SPR produces
+clusters that correspond to game-relevant features (e.g., player
+position) or whether the encoder learns unstructured
+representations regardless of the training objective.
+
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item 2D scatter plots colored by probe target
+  \item Grid layout: rows = conditions, columns = games
+  \item PCA for reproducibility (primary), t-SNE for local
+    structure (supplementary)
+  \item Status: pending -- requires feature extraction
+\end{itemize}
+
+\vspace{0.5em}
 \noindent Remaining pending figures:
 
 \begin{description}[leftmargin=2em, itemsep=0.4em]
-  \item[C3. Latent PCA / t-SNE] 2D scatter colored by probe
-    target. Grid: rows = conditions, columns = games. Shows
-    structural differences in representations.
   \item[C4. Transition model similarity] x = prediction step K
     (1--5), y = cosine similarity. DQN+SPR vs Rainbow+SPR.
     Requires \texttt{spr\_state} in checkpoints (fixed 2026-03-14).
