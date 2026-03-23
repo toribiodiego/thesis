@@ -284,9 +284,25 @@ the isolation study and the capability comparison in one table.
 \vspace{0.5em}
 \noindent Remaining pending figures:
 
+\subsection*{B5. Human-Normalized Scores}
+
+\noindent\textit{Purpose.} How do our conditions compare when
+scores are standardized across games? Raw scores are not
+comparable between games (Boxing ranges $\pm$100, Crazy Climber
+reaches 30,000+), so normalizing by human and random baselines
+puts all games on the same scale.
+
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item Same structure as B4, scores normalized:
+    HNS = (agent $-$ random) / (human $-$ random)
+  \item Requires published human and random baselines per game
+  \item Status: pending -- requires batch runs and baseline lookup
+\end{itemize}
+
+\vspace{0.5em}
+\noindent Remaining pending figures:
+
 \begin{description}[leftmargin=2em, itemsep=0.4em]
-  \item[B5. Human-normalized scores] Same as B4, normalized by
-    HNS = (agent $-$ random) / (human $-$ random).
   \item[B6. Aggregate bar chart] Mean HNS across 6 games per
     condition with cross-game error bars.
 \end{description}
