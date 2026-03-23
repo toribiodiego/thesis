@@ -442,18 +442,20 @@ are easier to spot than in a numeric table.
   \item Status: pending -- requires B5 data
 \end{itemize}
 
-\subsection*{D2. Episode Return Distribution [LIVE]}
+\subsection*{D2. Return Distribution}
 
-\noindent\textbf{Purpose:} Show variance structure beyond mean
-$\pm$ std. Reveals whether some conditions have bimodal returns,
-long tails, or outliers.
+\noindent\textit{Purpose.} How variable are the scores within a
+single evaluation? The mean hides a lot -- some conditions may
+have tight distributions while others have long tails or outliers
+that change the interpretation of the results.
 
-\noindent\textbf{Format:} Strip plot with box overlay, 30 data
-points per condition. Mean annotated.
-
-\noindent\textbf{Data:} \texttt{per\_episode\_returns.jsonl}.
-
-\noindent\textbf{Thesis section:} Appendix or 4.1.
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item Strip plot: each of 30 evaluation episodes as a point
+  \item Box overlay: median, IQR, whiskers
+  \item Diamond marker with label: mean return
+  \item Status: example from Boxing (seed 42); full version has
+    one subplot per game
+\end{itemize}
 
 \begin{figure}[H]
 \centering
