@@ -75,14 +75,16 @@ Appendix~\ref{app:data} and~\ref{app:regen}.
   & B3 & Capability scatter        & 4.2 & Pending \\
   & D1 & Score heatmap             & 4.4 & Pending \\
 \midrule
-\multirow{5}{*}{\shortstack[l]{\textit{What was learned?}\\Representations}}
+\multirow{7}{*}{\shortstack[l]{\textit{What was learned?}\\Representations}}
   & C1 & Probe accuracy            & 4.3 & Pending \\
   & C2 & Probe accuracy over time  & 4.3 & Pending \\
   & C3 & Latent PCA / t-SNE        & 4.3 & Pending \\
   & C4 & Transition model sim.     & 4.3 & Pending \\
   & C5 & Metric correlation        & 4.3 & Pending \\
+  & C6 & Representation similarity & 4.3 & Pending \\
+  & C7 & Probe target breakdown    & 4.3 & Pending \\
 \midrule
-\multirow{6}{*}{\shortstack[l]{\textit{How did training}\\
+\multirow{8}{*}{\shortstack[l]{\textit{How did training}\\
   \textit{unfold?} Process}}
   & D2 & Return distributions      & 4.1 & Live \\
   & D3 & SPR convergence           & 3.4 & Live \\
@@ -90,9 +92,11 @@ Appendix~\ref{app:data} and~\ref{app:regen}.
   & D5 & Computational overhead    & 3.3 & Live \\
   & D6 & Rainbow metrics           & 4.3 & Pending \\
   & D7 & Behavior videos           & App.& Pending \\
+  & D8 & Game difficulty profile   & 4.4 & Pending \\
+  & D9 & Wall-clock efficiency     & 3.3 & Pending \\
 \bottomrule
 \end{tabular}
-\caption{Figure catalog (22 total). Live = generated from
+\caption{Figure catalog (26 total). Live = generated from
 existing Boxing data. Pending = requires batch runs or
 interpretability pipeline.}
 \end{table}
@@ -419,6 +423,45 @@ most connected to what the encoder learns.
     and Rainbow training logs
 \end{itemize}
 
+\vspace{0.5em}
+
+\subsection*{C6. Representation Similarity}
+
+\noindent\textit{Purpose.} Does SPR fundamentally change what the
+encoder learns, or does it refine similar features? Comparing
+representations across conditions (e.g., DQN vs DQN+SPR vs
+Rainbow vs Rainbow+SPR) using CKA or similar metrics reveals
+whether the interventions produce structurally different
+representations or just sharper versions of the same ones.
+
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item Similarity matrix: conditions $\times$ conditions,
+    cells = CKA score
+  \item One matrix per game, or averaged across games
+  \item High similarity = same features learned, low = different
+    representations
+  \item Status: pending -- requires feature extraction, computed
+    from extracted encoder outputs
+\end{itemize}
+
+\vspace{0.5em}
+
+\subsection*{C7. Probe Target Breakdown}
+
+\noindent\textit{Purpose.} Which game features are easiest and
+hardest to decode from the encoder? Player position might be
+trivially decodable by all conditions while score or level
+information may only emerge with SPR -- this breakdown reveals
+what specifically SPR adds to the representation.
+
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item Same data as C1, sliced by probe target instead of
+    condition
+  \item Grouped bars: one group per target, bars per condition
+  \item Status: pending -- produced alongside C1 from the same
+    probe results
+\end{itemize}
+
 
 % ================================================================
 \section{Cross-Cutting Figures (Thesis 4.4, Methods, Appendix)}
@@ -568,6 +611,42 @@ strategies may differ.
     evaluation pass
 \end{itemize}
 
+\vspace{0.5em}
+
+\subsection*{D8. Game Difficulty Profile}
+
+\noindent\textit{Purpose.} Why does SPR help on some games but
+not others? Characterizing each game by reward density, typical
+episode length, and score range provides context for interpreting
+cross-game patterns -- if SPR only helps on dense-reward games,
+that constrains the generality of the findings.
+
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item Table or scatter: game properties vs SPR lift
+  \item Properties: mean episode length, reward frequency,
+    score range, human/random gap
+  \item Status: pending -- episode lengths from episodes.csv,
+    reward properties from game documentation
+\end{itemize}
+
+\vspace{0.5em}
+
+\subsection*{D9. Wall-Clock Efficiency}
+
+\noindent\textit{Purpose.} Is a sample efficiency gain worth the
+computational cost? SPR runs ~3x slower per frame than vanilla
+DQN (D5), so an improvement in score-per-frame may be a loss in
+score-per-hour. Plotting learning curves against wall-clock time
+instead of frames shows the practical tradeoff.
+
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item Same data as A1, x-axis = elapsed time instead of frames
+  \item Directly comparable to A1 -- same curves, different
+    perspective
+  \item Status: pending -- elapsed time from training CSVs or
+    progress.json
+\end{itemize}
+
 
 \newpage
 \appendix
@@ -617,7 +696,7 @@ python scripts/reeval_checkpoints.py --force        # re-run all
 \noindent Run on Colab T4, not locally. See
 \texttt{reports/eval-pipeline.tex} for details.
 
-\subsection{Interpretability figures (C1--C5)}
+\subsection{Interpretability figures (C1--C7)}
 \label{app:interp-figs}
 
 Requires interpretability infrastructure. Scripts will be:
@@ -646,10 +725,11 @@ python scripts/correlate_metrics.py     # metric correlation
 \midrule
 A1--A4, B1--B6 & evaluations.csv & Yes & Colab T4 \\
 D2 & per\_episode\_returns.jsonl & Yes & Colab T4 \\
-D3--D5 & training\_steps.csv & Yes & Locally \\
+D3--D5, D9 & training\_steps.csv & Yes & Locally \\
 D6 & training\_steps.csv (Rainbow) & Yes & Locally \\
-C1--C2 & checkpoints + probes & Partial & Pending \\
-C3 & checkpoints + features & Partial & Pending \\
+D8 & episodes.csv + game docs & Yes & Locally \\
+C1--C2, C7 & checkpoints + probes & Partial & Pending \\
+C3, C6 & checkpoints + features & Partial & Pending \\
 C4 & spr\_state in checkpoints & Fixed & Was missing \\
 C5 & training CSV + probes & Partial & Pending \\
 D7 & reeval --record-video & Yes & Colab T4 \\
