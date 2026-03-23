@@ -205,6 +205,21 @@ agent needs a way to assign a numerical score to each state,
 capturing how much reward it can expect from that point onward.
 
 \smallskip
+But what does ``expect'' mean when outcomes are uncertain? If the
+agent is in a state where going right leads to reward $+1$ with
+probability $0.8$ (it reaches the goal) and reward $0$ with
+probability $0.2$ (it slips and stays put), the
+\emph{expected value} of that action's reward is
+$0.8 \times (+1) + 0.2 \times 0 = 0.8$ -- the average outcome,
+weighted by the probability of each possibility. The agent does
+not actually receive $0.8$; it gets either $+1$ or $0$. But $0.8$
+is the long-run average if this situation were repeated many times.
+We write $\mathbb{E}[X]$ for the expected value of a random
+quantity~$X$. When the expectation depends on a specific
+policy~$\pi$, we write $\mathbb{E}_\pi[\cdot]$ to indicate that
+the probabilities come from following that policy.
+
+\smallskip
 The \emph{state-value function} $v_\pi(s)$ answers exactly this
 question: it gives the expected return when starting in state~$s$
 and following policy~$\pi$ thereafter:
