@@ -604,12 +604,17 @@ with representation quality across games.
 For each game, we record per-condition metrics that reflect each
 Rainbow extension's contribution: the distribution of replay
 priorities (prioritized replay), the variance of $n$-step returns,
-the entropy of the distributional value estimates (C51), and the
-magnitude of noisy network parameters. We then compute Spearman
-rank correlations between these per-game metrics and the per-game
+the entropy of the distributional value estimates -- a measure of
+how spread out the distribution is, with low entropy indicating a
+concentrated, confident estimate and high entropy indicating
+uncertainty -- and the magnitude of noisy network parameters. We
+then compute Spearman rank correlations -- which measure whether two
+variables increase together monotonically, without assuming a linear
+relationship -- between these per-game metrics and the per-game
 improvement in probe accuracy that SPR produces on Rainbow versus
-DQN. Extensions whose metrics correlate strongly with representation
-quality are candidates for targeted ablation.
+DQN. A strong correlation indicates that the extension's behavior
+tracks representation quality across games, making it a candidate
+for targeted ablation.
 
 \subsection{Targeted Ablations}
 \label{subsec:targeted-ablations}
