@@ -944,7 +944,97 @@ in \cref{subsec:spr}.
 \subsection{Representations and Latent Spaces}
 \label{subsec:representations}
 
-\vspace{2em}
+A neural network does not just map input to output. Each
+intermediate layer computes a transformation of the input, and
+these intermediate activations -- the values produced by the
+neurons in a given layer -- are themselves a description of the
+input. A different description from the raw pixels, expressed in
+a new coordinate system that (ideally) makes the task easier. These
+intermediate activations are the network's \emph{representation}
+of the input.
+
+\smallskip
+In many architectures, the early layers progressively compress the
+input into a lower-dimensional intermediate form, and the later
+layers read from this compressed form to produce the output. The
+early layers are the \emph{encoder}; the later layers are the
+\emph{task head}. The compressed intermediate form is the
+\emph{representation} or \emph{latent vector}, and the space of
+all possible such vectors is the \emph{latent space}.
+
+\smallskip
+To make this concrete: an $84 \times 84 \times 4$ image has
+$28{,}224$ pixel values. After passing through an encoder -- several
+layers that progressively reduce the spatial dimensions -- the
+result might be a vector of 512 values. Those 512 numbers are the
+representation: a summary of whatever the encoder has learned to
+extract from the image. The full input lives in a $28{,}224$-dimensional
+space; the representation lives in a $512$-dimensional space. Every
+input maps to one point in this latent space, and -- if the encoder
+has learned well -- inputs that are similar in task-relevant ways
+map to nearby points.
+
+\smallskip
+What makes a representation good? A good representation captures
+the structure that matters for the task and discards what does not.
+Consider a network trained to classify handwritten digits. The raw
+input is a grid of pixel intensities, but the classification
+depends on stroke topology -- the spatial arrangement of lines and
+curves -- not on ink thickness, pen angle, or exact pixel positions.
+If the encoder's 512-dimensional representation separates the ten
+digit classes into distinct clusters in latent space, then the task
+head -- even a single linear layer -- can easily draw boundaries
+between them. If the representation is a jumble where different
+digits overlap, no task head can reliably classify them.
+
+\smallskip
+This is why representations matter so much: they determine what
+information is available to the task head. A powerful task head
+cannot compensate for a poor representation, because the
+information was lost during encoding. Conversely, a good
+representation makes the task head's job easy, even if the task
+head is simple. This principle motivates \emph{linear probing} --
+attaching a single linear layer to a frozen representation and
+measuring what it can predict. High accuracy means the information
+is linearly accessible in the representation; low accuracy means it
+is either absent or encoded in a way that requires nonlinear
+decoding.
+
+\smallskip
+When comparing two representations -- for instance, checking
+whether a predicted future representation matches an actual future
+representation -- we often care about direction rather than
+magnitude. Two vectors might differ in length but point in the same
+direction, indicating they encode the same information at different
+scales. \emph{Cosine similarity} measures this:
+%
+\begin{equation}
+\label{eq:cosine-similarity}
+\text{cos}(\mathbf{a}, \mathbf{b})
+  = \frac{\mathbf{a} \cdot \mathbf{b}}
+         {\|\mathbf{a}\|\;\|\mathbf{b}\|}.
+\end{equation}
+%
+A cosine similarity of $1$ means the two vectors point in the same
+direction (identical encoding); $0$ means they are orthogonal
+(completely unrelated); $-1$ means they point in opposite
+directions. For example, two 512-dimensional representations with
+cosine similarity $0.95$ encode nearly the same information, while
+a pair with similarity $0.1$ share almost nothing. Cosine
+similarity appears throughout this work: it is the loss function
+for SPR (\cref{subsec:spr}), the metric for transition model
+analysis, and a tool for comparing representations across
+experimental conditions.
+
+\smallskip
+In the DQN architecture described in the next section, the
+convolutional layers are the encoder and the 512-dimensional
+activation of the fully connected layer is the representation.
+The Q-values are computed from this representation by the task head
+-- a single linear output layer. Whether the Q-learning loss alone
+shapes this representation well enough for the agent to learn
+effectively, or whether additional training signals can improve it,
+is the central question of this thesis.
 
 \section{Deep Q-Networks}
 \label{sec:dqn}
