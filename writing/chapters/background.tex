@@ -811,6 +811,24 @@ computing a weighted sum at each position to produce one output value.
 \input{figures/conv-operations}
 
 \smallskip
+A key property of convolutions is \emph{weight sharing}: the same
+kernel is applied at every spatial position, so the network detects
+the same pattern regardless of where it appears in the image. A
+vertical edge detector fires whether the edge is in the top-left or
+the bottom-right of the frame. This is unlike a fully connected
+layer, where each output has its own dedicated set of weights --
+convolutions reuse the same small set of weights across the entire
+input, drastically reducing the number of parameters.
+
+\smallskip
+Each convolutional layer applies many such kernels in parallel, each
+learning to detect a different pattern. The first layer's 32 kernels
+produce 32 \emph{feature maps} -- one per kernel -- each showing
+where that particular pattern was detected across the spatial extent
+of the input. The output dimension $32 \times 20 \times 20$ means
+32 feature maps, each of size $20 \times 20$.
+
+\smallskip
 The three convolutional layers use 32, 64, and 64 filters with
 kernel sizes of $8 \times 8$, $4 \times 4$, and $3 \times 3$ and
 strides of 4, 2, and 1, respectively. The large kernel and stride in
