@@ -7,7 +7,9 @@
 Our DQN agent follows \citet{mnih2015human}. The architecture is the
 Nature CNN described in \cref{subsec:conv-encoder}, trained with
 RMSProp (learning rate $2.5 \times 10^{-4}$), a batch size of 32,
-discount $\gamma = 0.99$, and gradient clipping at norm 10. The
+discount $\gamma = 0.99$, and gradient clipping at norm 10 (if the
+gradient's magnitude exceeds 10, it is scaled down to prevent
+excessively large updates). The
 replay buffer samples uniformly, and the target network is updated
 via hard copy. Rewards are clipped to $[-1, +1]$. All of these
 match the original paper; we make no changes to the base algorithm.
