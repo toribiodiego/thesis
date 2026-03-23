@@ -234,11 +234,24 @@ more than the representation objective itself.
 \end{itemize}
 
 \vspace{0.5em}
+\subsection*{B2. SPR Lift Comparison}
+
+\noindent\textit{Purpose.} How much does SPR improve DQN compared
+to how much it improves Rainbow? Pairs the SPR lift on each base
+agent side by side per game -- if the bars are consistently larger
+for Rainbow, SPR's value depends on what the base agent provides.
+
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item Paired bars per game: (DQN+SPR $-$ DQN) vs
+    (Rainbow+SPR $-$ Rainbow)
+  \item Same color scheme as A2 (light fill, dark edge)
+  \item Status: pending -- requires completed Rainbow+SPR runs
+\end{itemize}
+
+\vspace{0.5em}
 \noindent Remaining pending figures:
 
 \begin{description}[leftmargin=2em, itemsep=0.4em]
-  \item[B2. SPR lift: DQN vs Rainbow] Paired bars per game
-    comparing SPR's improvement on a weak vs strong agent.
   \item[B3. Capability scatter] x = DQN score, y = Rainbow score,
     one point per game. Diagonal marks parity.
   \item[B4. Full score table] 6 games $\times$ 6 conditions with
