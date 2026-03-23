@@ -983,7 +983,12 @@ extract from the image. The full input lives in a $28{,}224$-dimensional
 space; the representation lives in a $512$-dimensional space. Every
 input maps to one point in this latent space, and -- if the encoder
 has learned well -- inputs that are similar in task-relevant ways
-map to nearby points.
+map to nearby points. \Cref{fig:encoder-latent-space} illustrates
+this decomposition: the encoder narrows the input into a compact
+representation, and the task head reads from it to produce the
+output.
+
+\input{figures/encoder-latent-space}
 
 \smallskip
 What makes a representation good? A good representation captures
