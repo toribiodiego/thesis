@@ -534,19 +534,45 @@ Rainbow.}
 \end{figure}
 
 
-\noindent Pending:
+\subsection*{D6. Rainbow Training Metrics}
 
-\begin{description}[leftmargin=2em, itemsep=0.4em]
-  \item[D6. Rainbow metrics] distributional\_loss,
-    priority\_entropy, mean\_is\_weight over training for Rainbow
-    and Rainbow+SPR. For metric correlation analysis.
-  \item[D7. Behavior videos] Frame sequences from best-episode MP4
-    at final checkpoint. Selected games where behavior visibly
-    differs.
-\end{description}
+\noindent\textit{Purpose.} How do Rainbow's internal training
+dynamics differ from DQN's, and does adding SPR change them?
+These metrics feed into the correlation analysis (C5) but are
+also independently useful for understanding how the distributional
+objective, prioritized replay, and importance weighting evolve
+during training.
+
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item Metrics: distributional loss, priority entropy,
+    mean importance sampling weight
+  \item Lines for Rainbow vs Rainbow+SPR per game
+  \item Status: pending -- requires completed Rainbow batch runs
+\end{itemize}
+
+\vspace{0.5em}
+
+\subsection*{D7. Agent Behavior Videos}
+
+\noindent\textit{Purpose.} Do the agents actually play
+differently? Frame sequences from recorded episodes provide
+qualitative evidence that complements the quantitative figures
+-- particularly useful for games where scores are similar but
+strategies may differ.
+
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item Best-episode MP4 at final checkpoint
+  \item Selected games where behavior visibly differs across
+    conditions
+  \item Status: pending -- recorded during selective video
+    evaluation pass
+\end{itemize}
 
 
+\newpage
 \appendix
+\section*{Appendices}
+\addcontentsline{toc}{section}{Appendices}
 
 \section{Regeneration}
 \label{app:regen}
@@ -638,14 +664,14 @@ built.}
 \begin{itemize}[leftmargin=2em, itemsep=0.2em]
   \item Human/random baselines for HNS (B5): lookup from
     Kaiser et al.\ (2020)
-  \item Feature extraction pipeline (C1--C5): not yet built
-  \item SPR checkpoint state (C4): fixed 2026-03-14, existing SPR
-    runs need re-training
+  \item Feature extraction and probing pipeline (C1--C5):
+    not yet built
+  \item SPR checkpoint state (C4): now saved in checkpoints,
+    existing SPR runs need re-training
 \end{itemize}
 
 \noindent\textbf{No gaps for performance figures (A1--A4, B1--B6):}
 all data sources are verified and the assessment pipeline is
-confirmed working. See \texttt{reports/eval-pipeline.tex} for
-pipeline documentation.
+confirmed working.
 
 \end{document}
