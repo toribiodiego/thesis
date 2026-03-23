@@ -130,9 +130,9 @@ conditions.
 \subsection*{A2. Intervention Lift}
 
 \noindent\textit{Purpose.} How much does adding SPR or
-augmentation change the final score? Paired bar charts isolate
-each intervention's effect -- positive means it helped, negative
-means it hurt.
+augmentation change the final score? Shows the magnitude of each
+intervention's effect as a score delta -- positive means it
+helped, negative means it hurt.
 
 \begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
   \item Left panel: score change from adding SPR (with and
@@ -150,18 +150,19 @@ means it hurt.
 \end{figure}
 
 
-\subsection*{A3. Augmentation $\times$ SPR Interaction [LIVE]}
+\subsection*{A3. Interaction Plot}
 
-\noindent\textbf{Purpose:} Show whether augmentation and SPR are
-independent, redundant, or interfering. Parallel lines mean
-independent effects; crossing lines mean interaction.
+\noindent\textit{Purpose.} Do augmentation and SPR help
+independently, or does one change the other's effect? Plots
+absolute scores for all four conditions to reveal whether the
+combination is additive, redundant, or interfering.
 
-\noindent\textbf{Format:} Interaction plot with augmentation on
-x-axis, separate lines for with/without SPR.
-
-\noindent\textbf{Data:} Final scores from \texttt{evaluations.csv}.
-
-\noindent\textbf{Thesis section:} 4.1.
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item Parallel lines = independent effects
+  \item Crossing lines = the two interventions interact
+  \item Status: example from Boxing (seed 42); full version has
+    one subplot per game
+\end{itemize}
 
 \begin{figure}[H]
 \centering
