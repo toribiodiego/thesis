@@ -140,8 +140,9 @@ Prediction $q$
 the spatial feature maps ($64 \times 7 \times 7$ after Conv3) rather
 than the flattened FC output. This preserves spatial structure,
 allowing the model to condition on actions via spatial broadcasting
--- the one-hot action vector is replicated across all spatial
-positions and concatenated along the channel dimension. The
+-- the one-hot action vector (a vector with one entry set to~1 for the
+selected action and all others set to~0) is replicated across all
+spatial positions and concatenated along the channel dimension. The
 transition model itself is a two-layer convolutional network with
 batch normalization, keeping the same spatial resolution as its
 input.
