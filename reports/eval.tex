@@ -251,9 +251,24 @@ for Rainbow, SPR's value depends on what the base agent provides.
 \vspace{0.5em}
 \noindent Remaining pending figures:
 
+\subsection*{B3. Capability Scatter}
+
+\noindent\textit{Purpose.} How large is the performance gap
+between DQN and Rainbow across games? A scatter plot with one
+point per game reveals which games Rainbow dominates and which
+are close -- context for interpreting where SPR's contribution
+matters.
+
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item x = DQN final score, y = Rainbow final score
+  \item Diagonal line marks parity (above = Rainbow better)
+  \item Status: pending -- requires completed Rainbow runs
+\end{itemize}
+
+\vspace{0.5em}
+\noindent Remaining pending figures:
+
 \begin{description}[leftmargin=2em, itemsep=0.4em]
-  \item[B3. Capability scatter] x = DQN score, y = Rainbow score,
-    one point per game. Diagonal marks parity.
   \item[B4. Full score table] 6 games $\times$ 6 conditions with
     multi-seed CI.
   \item[B5. Human-normalized scores] Same as B4, normalized by
