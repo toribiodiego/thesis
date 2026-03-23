@@ -320,18 +320,35 @@ games.
 \section{Part 3: Interpretability Analysis (Thesis 4.3)}
 % ================================================================
 
-\noindent These figures answer: \textit{What do the representations
-encode, and why do they differ across capability levels?}
+\noindent These figures answer: \textit{What do the learned
+representations actually encode, and does that change between
+DQN and Rainbow?}
 
-\noindent All figures in this section require the feature extraction and
-probing pipeline (Tasks 47--52). Checkpoints with
+\noindent All figures in this section require the feature
+extraction and probing pipeline. Checkpoints with
 \texttt{spr\_state} will be available after batch runs.
 Reproduction: Appendix~\ref{app:interp-figs}.
 
+\subsection*{C1. Probe Accuracy}
+
+\noindent\textit{Purpose.} Do SPR-trained encoders learn more
+about the game state than vanilla encoders? Linear probes on
+frozen encoder outputs test whether features like player position
+and score are decodable -- higher accuracy means the encoder
+captures more game-relevant structure.
+
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item Grouped bars: F1 per game, per condition, per probe target
+  \item Probe targets: player position, score, lives (from ALE RAM)
+  \item All 6 conditions compared on same axes
+  \item Status: pending -- requires feature extraction and
+    probing pipeline
+\end{itemize}
+
+\vspace{0.5em}
+\noindent Remaining pending figures:
+
 \begin{description}[leftmargin=2em, itemsep=0.4em]
-  \item[C1. Probe accuracy] Grouped bars: F1 per game, per
-    condition, per probe target. Shows whether SPR encoders learn
-    more game-relevant features.
   \item[C2. Probe accuracy over training] x = checkpoint step,
     y = probe F1, lines per condition. Shows whether representations
     improve steadily or plateau early.
@@ -509,14 +526,14 @@ python scripts/reeval_checkpoints.py --force        # re-run all
 \subsection{Interpretability figures (C1--C5)}
 \label{app:interp-figs}
 
-Requires Tasks 47--52 infrastructure. Scripts will be:
+Requires interpretability infrastructure. Scripts will be:
 
 \begin{verbatim}
-python scripts/extract_features.py      # Task 47
-python scripts/run_probes.py            # Task 49
-python scripts/plot_latent_space.py     # Task 50
-python scripts/analyze_transitions.py   # Task 51
-python scripts/correlate_metrics.py     # Task 52
+python scripts/extract_features.py      # feature extraction
+python scripts/run_probes.py            # linear probes
+python scripts/plot_latent_space.py     # latent visualization
+python scripts/analyze_transitions.py   # transition model
+python scripts/correlate_metrics.py     # metric correlation
 \end{verbatim}
 
 
@@ -537,10 +554,10 @@ A1--A4, B1--B6 & evaluations.csv & Yes & Colab T4 \\
 D2 & per\_episode\_returns.jsonl & Yes & Colab T4 \\
 D3--D5 & training\_steps.csv & Yes & Locally \\
 D6 & training\_steps.csv (Rainbow) & Yes & Locally \\
-C1--C2 & checkpoints + probes & Partial & Task 47--49 \\
-C3 & checkpoints + features & Partial & Task 47, 50 \\
+C1--C2 & checkpoints + probes & Partial & Pending \\
+C3 & checkpoints + features & Partial & Pending \\
 C4 & spr\_state in checkpoints & Fixed & Was missing \\
-C5 & training CSV + probes & Partial & Task 49, 52 \\
+C5 & training CSV + probes & Partial & Pending \\
 D7 & reeval --record-video & Yes & Colab T4 \\
 \bottomrule
 \end{tabular}
@@ -553,7 +570,7 @@ built.}
 \begin{itemize}[leftmargin=2em, itemsep=0.2em]
   \item Human/random baselines for HNS (B5): lookup from
     Kaiser et al.\ (2020)
-  \item Feature extraction pipeline (C1--C5): Tasks 47--52
+  \item Feature extraction pipeline (C1--C5): not yet built
   \item SPR checkpoint state (C4): fixed 2026-03-14, existing SPR
     runs need re-training
 \end{itemize}
