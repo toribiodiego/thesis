@@ -188,8 +188,18 @@ def evaluate(
     >>> print(f"Mean return: {results['mean_return']:.2f}")
     """
     import numpy as np
+    import random
 
-    # Set model to eval mode
+    # Save RNG state so evaluation does not affect training's
+    # random number sequence. Without this, epsilon-greedy action
+    # selection consumes from the global PyTorch RNG, causing
+    # training to diverge based on whether evaluation ran.
+    _rng_torch = torch.random.get_rng_state()
+    _rng_cuda = torch.cuda.get_rng_state() if torch.cuda.is_available() else None
+    _rng_numpy = np.random.get_state()
+    _rng_python = random.getstate()
+
+    # Set model to inference mode
     model.eval()
 
     # Infer num_actions if not provided
@@ -351,6 +361,14 @@ def evaluate(
 
     # Set model back to train mode
     model.train()
+
+    # Restore RNG state so training continues as if evaluation
+    # never happened
+    torch.random.set_rng_state(_rng_torch)
+    if _rng_cuda is not None:
+        torch.cuda.set_rng_state(_rng_cuda)
+    np.random.set_state(_rng_numpy)
+    random.setstate(_rng_python)
 
     return results
 
