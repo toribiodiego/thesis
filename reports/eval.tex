@@ -511,19 +511,20 @@ TD error but converge.}
 \end{figure}
 
 
-\subsection*{D5. Computational Overhead [LIVE]}
+\subsection*{D5. Computational Overhead}
 
-\noindent\textbf{Purpose:} Document the cost of each addition.
-Important for practical recommendations.
+\noindent\textit{Purpose.} What is the runtime cost of each
+addition? SPR adds a transition model, projection heads, and
+an EMA update on every step -- this figure quantifies the
+throughput impact so readers can weigh performance gains against
+training cost.
 
-\noindent\textbf{Format:} Bar chart of mean training FPS per
-condition, with percentage relative to baseline.
-
-\noindent\textbf{Data:} \texttt{training\_steps.csv} column
-\texttt{fps}.
-
-\noindent\textbf{Thesis section:} 3.3 (Experimental Setup) or
-appendix.
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item Bar chart: mean training FPS per condition
+  \item Percentage relative to vanilla DQN baseline
+  \item Status: example from Boxing DQN conditions (seed 42);
+    full version includes Rainbow
+\end{itemize}
 
 \begin{figure}[H]
 \centering
