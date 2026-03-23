@@ -2178,8 +2178,9 @@ through a fundamentally different paradigm.
 A third family of methods improves data efficiency not by learning
 a model or adding auxiliary objectives, but by training the
 existing agent more effectively.
-BBF~\citep{schwarzer2023bigger} scales the encoder from the Nature
-CNN to a larger ResNet architecture and introduces periodic network
+BBF~\citep{schwarzer2023bigger} scales the encoder from the
+five-layer Nature CNN to a substantially deeper architecture
+(a residual network, or ResNet) and introduces periodic network
 resets to combat \emph{plasticity loss} -- the phenomenon where
 neural networks gradually lose the ability to learn new features as
 training progresses. BBF also uses SPR as part of its training
