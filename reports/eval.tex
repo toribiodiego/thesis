@@ -383,14 +383,41 @@ representations regardless of the training objective.
 \vspace{0.5em}
 \noindent Remaining pending figures:
 
-\begin{description}[leftmargin=2em, itemsep=0.4em]
-  \item[C4. Transition model similarity] x = prediction step K
-    (1--5), y = cosine similarity. DQN+SPR vs Rainbow+SPR.
-    Requires \texttt{spr\_state} in checkpoints (fixed 2026-03-14).
-  \item[C5. Metric correlation] Heatmap: Rainbow metrics vs games,
-    cells = correlation with probe F1. Identifies which components
-    track representation quality.
-\end{description}
+\subsection*{C4. Transition Model Prediction Quality}
+
+\noindent\textit{Purpose.} How accurately does SPR's transition
+model predict future states, and does that differ between DQN
+and Rainbow? If Rainbow+SPR predicts further ahead than DQN+SPR,
+the base agent's representations give the transition model
+better material to work with.
+
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item x = prediction step K (1--5), y = cosine similarity
+    between predicted and actual latent states
+  \item Lines for DQN+SPR vs Rainbow+SPR
+  \item Steeper degradation = less accurate multi-step predictions
+  \item Status: pending -- requires \texttt{spr\_state} in
+    checkpoints (fixed 2026-03-14)
+\end{itemize}
+
+\vspace{0.5em}
+
+\subsection*{C5. Metric Correlation}
+
+\noindent\textit{Purpose.} Which Rainbow training metrics track
+representation quality? Correlating metrics like distributional
+loss, priority entropy, and importance sampling weights with
+probe accuracy identifies which of Rainbow's components are
+most connected to what the encoder learns.
+
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item Heatmap: rows = Rainbow metrics, columns = games
+  \item Cells = Pearson/Spearman correlation with probe F1
+  \item Strongest correlations point to candidates for targeted
+    ablation
+  \item Status: pending -- requires probe accuracy timeseries
+    and Rainbow training logs
+\end{itemize}
 
 
 % ================================================================
