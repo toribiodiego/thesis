@@ -1107,8 +1107,15 @@ the convolutional encoder but have separate fully connected heads.
 This separation lets the network learn ``how good is this state''
 independently from ``how much better is this action than average,''
 which is beneficial in states where the choice of action matters
-little. \Cref{fig:dueling-architecture} contrasts the two
-architectures.
+little. In Pong, when the ball is far away, all actions have
+roughly equal value -- the important thing is whether the state
+itself is safe or dangerous, which the value stream captures.
+When the ball is close and the paddle must move, one action is
+clearly better, and the advantage stream activates. By separating
+these two judgments, the network can learn ``this is a good state''
+without needing to differentiate actions in states where the
+difference is small. \Cref{fig:dueling-architecture} contrasts the
+two architectures.
 
 \input{figures/dueling-architecture}
 
