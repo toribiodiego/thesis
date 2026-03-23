@@ -906,6 +906,11 @@ propagates backward through each layer, telling each weight how
 to change to reduce the error. Layers closer to the output receive
 the signal first; layers closer to the input receive it last, after
 the signal has passed through every intermediate layer.
+\Cref{fig:forward-backward} illustrates both passes: data flows
+left to right through the network (forward), and gradients flow
+right to left from the loss back to the first layer (backward).
+
+\input{figures/forward-backward-pass}
 
 \smallskip
 Computing the gradient over the entire dataset is expensive.
