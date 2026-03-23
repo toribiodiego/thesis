@@ -129,77 +129,70 @@ We answer this in three parts:
 \section{Background and Related Work}
 
 Everything the reader needs to follow the experiment design and
-interpret the results. We build from RL basics through the two agents
-that define the capability comparison, then the benchmark, the two
-methods under study, and where this work fits in the field.
+interpret the results. We build from RL basics through deep learning
+foundations, the two agents that define the capability comparison,
+the benchmark, the two methods under study, and where this work fits
+in the field.
 
 \subsection{Reinforcement Learning Foundations}
 
 \begin{itemize}
 \item Markov decision processes: states, actions, rewards, transitions,
   discount factor
+\item Expected value and the $\mathbb{E}[\cdot]$ notation
 \item Value functions and the Bellman equation
 \item Q-learning and temporal difference updates
 \item Why function approximation is needed for large state spaces
+\item The deadly triad: bootstrapping, off-policy, function
+  approximation
+\end{itemize}
+
+\subsection{Deep Learning Foundations}
+
+General-purpose deep learning background, independent of RL. Gives
+the reader the tools needed to understand DQN, SPR, and the methods
+chapter.
+
+\begin{itemize}
+\item Neural networks: neurons, weighted sum plus activation, layers,
+  depth, fully connected layers
+\item Convolutional layers: why FC fails for images, convolution
+  operation, weight sharing, feature maps, stride
+\item Training: loss functions (MSE, cross-entropy), gradient descent,
+  backpropagation, SGD, optimizers (momentum, Adam), batch
+  normalization
+\item Representations and latent spaces: encoder/task head
+  decomposition, what makes a representation good, cosine similarity
 \end{itemize}
 
 \subsection{Deep Q-Networks}
 
-DQN is the simple agent in our comparison. It brought three ideas to
-Q-learning that made it work on raw pixels: a convolutional encoder,
-experience replay, and a target network.
+DQN is the simple agent in our comparison. It combines the RL
+foundations from 2.1 with the deep learning tools from 2.2.
 
 \begin{itemize}
-\item Nature CNN architecture: convolutional layers over stacked frames
-\item Experience replay: breaking correlation between consecutive
-  samples
+\item Preprocessing pipeline: frame max, grayscale, resize, stack
+\item Nature CNN architecture: specific layer sizes and strides
+\item Experience replay: breaking correlation, data efficiency,
+  smoothing
 \item Target network: stabilizing learning with a frozen copy
-\item Frame stacking and preprocessing pipeline
+\item Rainbow DQN: six extensions (Double DQN, prioritized replay,
+  dueling, multi-step, distributional C51, noisy networks)
+\item The encoder is unchanged across all Rainbow extensions
 \end{itemize}
 
-\subsection{Rainbow DQN}
-
-Rainbow is the capable agent in our comparison -- not a contribution,
-but the instrument that lets us test whether SPR needs a strong base
-agent. It combines six improvements over vanilla DQN.
-
-\begin{itemize}
-\item Six extensions: distributional values (C51), prioritized replay,
-  dueling architecture, n-step returns, noisy exploration, Double DQN
-\item What each extension changes about learning dynamics
-\item Why Rainbow became the standard base agent for SPR and other
-  representation learning methods
-\end{itemize}
-
-\subsection{The Atari-100K Benchmark}
+\subsection{The Arcade Learning Environment}
 
 Atari-100K is the standard testbed for data-efficient RL. The agent
 gets 100K environment steps per game -- two orders of magnitude less
 than the standard protocol used to train the original DQN.
 
 \begin{itemize}
-\item 100K environment steps vs the standard 200M -- what the
-  constraint means in practice
-\item Evaluation protocol: sticky actions, frame skip, evaluation
-  schedule
-\item Metrics: human-normalized score, IQM
-\item Why Atari-100K rather than other benchmarks
-\end{itemize}
-
-\subsection{Self-Predictive Representations}
-
-SPR is the representation learning method we are studying. It adds a
-self-supervised objective that trains the encoder to predict its own
-future representations, encouraging richer features even when reward
-is scarce.
-
-\begin{itemize}
-\item Architecture: transition model, EMA target encoder, projection
-  and prediction heads
-\item Training objective: cosine similarity loss over multi-step
-  predictions
-\item Originally evaluated only on Rainbow -- the attribution problem
-  introduced in Chapter 1
+\item Standard protocol and the revised protocol (sticky actions,
+  game-over termination)
+\item 100K constraint: a qualitatively different learning regime
+\item Metrics: human-normalized score, IQM with stratified bootstrap
+  confidence intervals, performance profiles
 \end{itemize}
 
 \subsection{Data Augmentation for RL}
@@ -209,10 +202,29 @@ game frames act as an implicit regularizer, helping the agent
 generalize from limited data.
 
 \begin{itemize}
-\item DrQ random shift: pad and crop game frames
-\item Why augmentation helps in low-data regimes
-\item The CURL finding: gains attributed to contrastive learning
-  actually came from the augmentation
+\item DrQ random shift: pad with reflection, random crop
+\item Why random shift works and other augmentations do not
+\item Augmentation as implicit regularization at the representation
+  level
+\item The CURL finding: augmentation alone accounts for the gains
+\end{itemize}
+
+\subsection{Self-Supervised Representation Learning}
+
+SPR is the representation learning method we are studying. It adds a
+self-supervised objective that trains the encoder to predict its own
+future representations, encouraging richer features even when reward
+is scarce.
+
+\begin{itemize}
+\item Why the Q-learning loss alone is insufficient in the 100K regime
+\item The collapse problem and anti-collapse mechanisms (EMA target
+  encoder, asymmetric predictor)
+\item SPR architecture: transition model, projection and prediction
+  heads, multi-step chained predictions
+\item Training objective: cosine similarity loss, dual-objective
+  training
+\item Originally evaluated only on Rainbow -- the attribution problem
 \end{itemize}
 
 \subsection{Related Work and Positioning}
@@ -220,13 +232,14 @@ generalize from limited data.
 Where this thesis sits in the landscape of data-efficient RL.
 
 \begin{itemize}
-\item World models: SimPLe, Dreamer -- learn a model of the
-  environment
-\item Planning methods: EfficientZero, MuZero -- combine model
-  learning with search
-\item Training efficiency: BBF, SR-SPR -- scale up existing methods
-\item Why no prior work has isolated SPR from its base agent or
-  compared representations across capability levels
+\item World models: SimPLe, Dreamer -- predictions for experience
+  generation
+\item Planning methods: EfficientZero, MuZero -- model plus search at
+  test time
+\item Training efficiency: BBF, SR-SPR -- scaling and training
+  improvements (also use SPR)
+\item No prior work has isolated SPR from its base agent or compared
+  representations across capability levels
 \end{itemize}
 
 \section{Methods}
