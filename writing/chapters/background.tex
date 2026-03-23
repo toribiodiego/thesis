@@ -670,22 +670,10 @@ update treats the target as if it were a fixed label.
 \input{figures/semi-gradient}
 
 \smallskip
-For high-dimensional inputs such as images, neural networks are the
-natural choice of function approximator. A neural network can learn
-hierarchical features -- from edges and textures to shapes and
-spatial arrangements -- directly from raw pixel values, without
-requiring hand-crafted feature engineering.
-
-\smallskip
-In the architecture most relevant to what follows, the network takes
-a raw image as input, processes it through convolutional layers that
-extract spatial features, and feeds the result into fully connected
-layers that output one Q-value per action. The entire network is
-trained end-to-end by minimizing the loss in \cref{eq:fa-loss}, with
-the gradient flowing from the output Q-values back through every
-layer -- including the convolutional feature extractor. This means
-the network does not just approximate Q-values; it also learns its
-own representation of the state.
+For high-dimensional inputs such as images, the function
+approximator needs to be powerful enough to learn directly from raw
+pixels. Neural networks are the standard choice; the next section
+introduces the building blocks needed to understand them.
 
 \smallskip
 Function approximation makes Q-learning applicable to problems that
@@ -711,11 +699,129 @@ and these coupled changes can reinforce each other and cause the
 estimates to diverge.
 
 \smallskip
-The next section introduces the deep Q-network (DQN), which
-overcomes this instability through two stabilization
-techniques -- experience replay and target networks -- producing
-the first reinforcement learning agent to learn directly from raw
-pixels.
+Before describing the specific network architecture used in
+practice, we need to understand what neural networks are, how they
+are trained, and what representations they learn.
+\Cref{sec:deep-learning} introduces these foundations, and
+\cref{sec:dqn} then assembles them into a concrete agent.
+
+\section{Deep Learning Foundations}
+\label{sec:deep-learning}
+
+The previous section showed that Q-learning needs a function
+approximator that can generalize across states -- for
+high-dimensional inputs like images, that function is a neural
+network. This section introduces the building blocks: what neural
+networks compute, how they learn from data, and what it means
+for a network to learn a representation. \Cref{sec:dqn} then
+assembles these building blocks into a concrete reinforcement
+learning agent.
+
+\subsection{Neural Networks}
+\label{subsec:neural-networks}
+
+A neural network is built from simple computational units called
+\emph{neurons}. A single neuron takes several input values,
+multiplies each by a learned \emph{weight}, adds a \emph{bias}
+term, and passes the result through an \emph{activation function}:
+%
+\begin{equation}
+\label{eq:neuron}
+z = \sigma\!\big(w_1 x_1 + w_2 x_2 + w_3 x_3 + b\big),
+\end{equation}
+%
+where $x_1, x_2, x_3$ are the inputs, $w_1, w_2, w_3$ are the
+weights, $b$ is the bias, and $\sigma$ is the activation function.
+The weights and bias are the neuron's \emph{parameters} -- the
+values that change during training.
+
+\smallskip
+To see this concretely, suppose a neuron has three inputs with
+values $x_1 = 2.0$, $x_2 = -1.0$, $x_3 = 0.5$, weights
+$w_1 = 0.4$, $w_2 = 0.6$, $w_3 = -0.2$, and bias $b = 0.1$.
+The weighted sum is
+$0.4 \times 2.0 + 0.6 \times (-1.0) + (-0.2) \times 0.5 + 0.1
+= 0.8 - 0.6 - 0.1 + 0.1 = 0.2$.
+The activation function then transforms this value to produce the
+neuron's output.
+
+\smallskip
+The activation function is what gives neural networks their power.
+Without it, a neuron computes a linear function of its inputs --
+a weighted sum. Stacking multiple layers of linear functions
+produces nothing more than another linear function:
+$\text{linear}(\text{linear}(\mathbf{x})) = \text{linear}(\mathbf{x})$,
+regardless of how many layers are added. The activation function
+introduces nonlinearity after each layer, allowing the network to
+compute features that no single linear transformation could
+capture. Without nonlinearity, depth is pointless; with it, each
+layer can build on the features of the previous one.
+
+\smallskip
+The most widely used activation function is the \emph{rectified
+linear unit} (ReLU):
+%
+\begin{equation}
+\label{eq:relu}
+\text{ReLU}(x) = \max(0,\, x).
+\end{equation}
+%
+Positive values pass through unchanged; negative values become
+zero. In the example above, $\text{ReLU}(0.2) = 0.2$ -- the
+output is the same as the input because the weighted sum was
+positive. If the weighted sum had been $-0.3$, the output would
+be $0$. ReLU is simple, computationally cheap, and works well in
+practice. Earlier activation functions such as the sigmoid and
+hyperbolic tangent (tanh) map inputs to the ranges $(0, 1)$ and
+$(-1, 1)$ respectively; ReLU has largely replaced them in modern
+architectures.
+
+\smallskip
+Neurons are organized into \emph{layers}. Each neuron in a layer
+receives the same set of inputs but learns different weights, so
+the layer as a whole computes multiple features simultaneously.
+The number of neurons in a layer is its \emph{width}. A layer with
+32 neurons produces 32 output values, each responding to a
+different pattern in the input.
+
+\smallskip
+Stacking multiple layers is what makes a network ``deep.'' Each
+layer transforms the output of the previous layer, building
+progressively more abstract features. The first layer might detect
+simple patterns such as edges and textures; the second combines
+these into shapes and parts; the third combines parts into
+higher-level structures such as objects. This compositional
+structure is why deep networks are expressive -- each layer adds
+a level of abstraction that the previous layers could not
+represent on their own.
+
+\smallskip
+When every neuron in one layer connects to every neuron in the
+next, the arrangement is called a \emph{fully connected} (or
+\emph{dense}) layer. This is the most general connectivity
+pattern: each output depends on every input, and each connection
+has its own learned weight. Fully connected layers are the
+default building block of neural networks, and they are what the
+function approximator in \cref{subsec:func-approx} uses. Other
+connectivity patterns exist -- \emph{convolutional layers}, which
+exploit the spatial structure of images, are introduced in
+\cref{subsec:conv-encoder}.
+
+\smallskip
+Width and depth are the two axes of a network's capacity. Wider
+layers compute more features at each level of abstraction; deeper
+networks compose more levels. In practice, both are tuned to match
+the complexity of the task.
+
+\subsection{Training}
+\label{subsec:training}
+
+\vspace{2em}
+
+\subsection{Representations and Latent Spaces}
+\label{subsec:representations}
+
+\vspace{2em}
 
 \section{Deep Q-Networks}
 \label{sec:dqn}
@@ -723,23 +829,25 @@ pixels.
 The deep Q-network (DQN) demonstrated that Q-learning with
 function approximation could work at scale, learning to play
 dozens of video games directly from raw pixels at
-human-competitive levels~\citep{mnih2015human}. The algorithm
-is Q-learning with a convolutional neural network as the
-function approximator, plus two techniques that tame the
-instability flagged in the previous section: \emph{experience
-replay}, which breaks the correlations between consecutive
-training samples, and a \emph{target network}, which stabilizes
-the learning target. This section describes each component in
-turn.
+human-competitive levels~\citep{mnih2015human}. With the neural
+network foundations from \cref{sec:deep-learning} in hand, we can
+now describe the specific architecture and training techniques
+that made this possible. DQN is Q-learning with a convolutional
+neural network as the function approximator, plus two techniques
+that tame the instability flagged in \cref{subsec:func-approx}:
+\emph{experience replay}, which breaks the correlations between
+consecutive training samples, and a \emph{target network}, which
+stabilizes the learning target. This section describes each
+component in turn.
 
 \subsection{Convolutional Encoder}
 \label{subsec:conv-encoder}
 
-The previous section described function approximation in general
-terms: replace the Q-table with a neural network that processes
-observations and outputs Q-values. This section makes that
-concrete -- what does the network look like, and what does it
-actually see?
+\Cref{subsec:func-approx} introduced the idea of replacing the
+Q-table with a parameterized function, and \cref{sec:deep-learning}
+described the building blocks of neural networks -- neurons, layers,
+activations, and training. This section makes these concrete: what
+does the network look like, and what does it actually see?
 
 \smallskip
 The raw output of a video game environment is a sequence of color
