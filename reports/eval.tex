@@ -488,19 +488,20 @@ DQN+Both comparison per game.}
 \end{figure}
 
 
-\subsection*{D4. Training Stability [LIVE]}
+\subsection*{D4. Training Stability}
 
-\noindent\textbf{Purpose:} Show whether SPR or augmentation
-destabilizes training. Higher TD error = less stable value
-estimates.
+\noindent\textit{Purpose.} Does adding SPR or augmentation
+destabilize the learning process? TD error measures how far off
+the value estimates are -- if SPR conditions show persistently
+higher error, the auxiliary objective may be interfering with
+Q-learning rather than helping it.
 
-\noindent\textbf{Format:} Smoothed TD error over training, all
-conditions overlaid.
-
-\noindent\textbf{Data:} \texttt{training\_steps.csv} column
-\texttt{td\_error}.
-
-\noindent\textbf{Thesis section:} 4.1 or appendix.
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item Smoothed TD error over training, all conditions overlaid
+  \item Higher = less stable value estimates
+  \item Status: example from Boxing (seed 42); full version
+    includes all games and Rainbow conditions
+\end{itemize}
 
 \begin{figure}[H]
 \centering
