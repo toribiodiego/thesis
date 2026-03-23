@@ -806,6 +806,12 @@ function approximator in \cref{subsec:func-approx} uses. Other
 connectivity patterns exist -- \emph{convolutional layers}, which
 exploit the spatial structure of images, are introduced in
 \cref{subsec:conv-encoder}.
+\Cref{fig:feedforward-network} illustrates a fully connected
+network: each layer's neurons connect to every neuron in the next,
+and the callout shows the weighted-sum-plus-activation computation
+inside a single neuron.
+
+\input{figures/feedforward-network}
 
 \smallskip
 Width and depth are the two axes of a network's capacity. Wider
