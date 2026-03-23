@@ -1129,7 +1129,14 @@ $\sum_{k=0}^{n-1} \gamma^k R_{t+k+1}
   + \gamma^n \max_a Q(S_{t+n}, a)$.
 This propagates reward information faster and shifts the
 bias--variance trade-off: more real rewards and less bootstrapping
-reduces bias at the cost of higher variance. Rainbow uses $n = 3$.
+reduces bias at the cost of higher variance. The bias reduction
+comes from relying less on the bootstrap estimate
+$Q(S_{t+n}, a)$, which may be inaccurate early in training: by
+substituting real observed rewards for the first~$n$ steps, the
+target is grounded in actual experience rather than the network's
+current estimates. The variance increase is the cost: real rewards
+depend on the specific trajectory the agent happened to take, which
+varies from episode to episode. Rainbow uses $n = 3$.
 
 \smallskip
 \textbf{Distributional RL.}\quad Instead of estimating the expected
