@@ -647,8 +647,12 @@ This is the function approximation counterpart of the tabular
 Q-learning update. The TD error -- the bracketed term -- plays the
 same role as before, but instead of directly adjusting one table
 entry, it is scaled by the gradient
-$\nabla_{\mathbf{w}}\, Q(S_t, A_t;\, \mathbf{w})$, which
-distributes the correction across all parameters.
+$\nabla_{\mathbf{w}}\, Q(S_t, A_t;\, \mathbf{w})$ -- a vector of
+partial derivatives that points in the direction of steepest
+increase in~$Q$, with one entry for each weight
+in~$\mathbf{w}$. This vector distributes the correction across all
+parameters: weights that contribute more to the current prediction
+receive larger adjustments.
 
 \smallskip
 There is a subtlety: the TD target itself depends on $\mathbf{w}$,
