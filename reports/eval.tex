@@ -217,11 +217,26 @@ multi-seed CI.}
 base agent to produce useful representations?}
 Reproduction: Appendix~\ref{app:perf-figs}.
 
-\noindent Pending figures (require completed batch runs):
+\subsection*{B1. Learning Curves -- Rainbow Comparison}
+
+\noindent\textit{Purpose.} Does SPR need a stronger base agent
+to be effective? Compares learning trajectories for DQN+SPR,
+Rainbow, and Rainbow+SPR on the same six games -- if SPR only
+helps Rainbow, the base agent's learning infrastructure matters
+more than the representation objective itself.
+
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item Three conditions: DQN+SPR, Rainbow, Rainbow+SPR
+  \item 6 subplots (one per game), same format as A1
+  \item Shaded bands: $\pm 1$ std or cross-seed confidence interval
+  \item Status: pending -- requires completed Rainbow and
+    Rainbow+SPR batch runs
+\end{itemize}
+
+\vspace{0.5em}
+\noindent Remaining pending figures:
 
 \begin{description}[leftmargin=2em, itemsep=0.4em]
-  \item[B1. Rainbow learning curves] 6 subplots with DQN+SPR,
-    Rainbow, Rainbow+SPR. The core capability comparison.
   \item[B2. SPR lift: DQN vs Rainbow] Paired bars per game
     comparing SPR's improvement on a weak vs strong agent.
   \item[B3. Capability scatter] x = DQN score, y = Rainbow score,
@@ -234,6 +249,7 @@ Reproduction: Appendix~\ref{app:perf-figs}.
     condition with cross-game error bars.
 \end{description}
 
+\vspace{0.5em}
 
 % ================================================================
 \section{Part 3: Interpretability Analysis (Thesis 4.3)}
