@@ -464,20 +464,21 @@ that change the interpretation of the results.
 \end{figure}
 
 
-\subsection*{D3. SPR Training Dynamics [LIVE]}
+\subsection*{D3. SPR Training Dynamics}
 
-\noindent\textbf{Purpose:} Show whether the SPR objective
-converges and how quickly. Useful for understanding whether SPR is
-actually learning representations or just optimizing a trivial
-objective.
+\noindent\textit{Purpose.} Does the SPR objective actually
+converge, or does it saturate trivially? If cosine similarity
+hits 1.0 almost immediately, the loss may not be driving
+meaningful representation learning -- an important sanity check
+before interpreting probe and visualization results.
 
-\noindent\textbf{Format:} Two panels: SPR loss (full range) and
-cosine similarity (zoomed to 0.999--1.0 range).
-
-\noindent\textbf{Data:} \texttt{training\_steps.csv} columns
-\texttt{spr\_loss}, \texttt{cosine\_similarity}.
-
-\noindent\textbf{Thesis section:} 3.4 (SPR Implementation) or 4.1.
+\begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
+  \item Left panel: SPR loss (negative cosine similarity) over
+    training
+  \item Right panel: cosine similarity zoomed to 0.999--1.0
+  \item Status: example from Boxing DQN+SPR (seed 42); full
+    version compares DQN+SPR vs DQN+Both per game
+\end{itemize}
 
 \begin{figure}[H]
 \centering
