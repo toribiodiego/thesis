@@ -33,41 +33,33 @@ The player is the \emph{agent}, and the grid is the
 \emph{environment}. At each step, the agent observes which cell it
 occupies (its \emph{state}), chooses a direction to move (an
 \emph{action}), and receives a score (the \emph{reward}). This
-cycle of state, action, and reward repeats, and the agent's goal is
-to discover a strategy that accumulates as much reward as possible
-over time.
-
-\smallskip
-The framework that formalizes the relationship between states,
-actions, and rewards is the \emph{Markov decision process}
-(MDP)~\citep{sutton2018reinforcement}. An MDP describes a loop
-between an agent and an environment (\cref{fig:mdp-loop}): at each
-step, the agent observes its current situation, picks an action, and
-receives a reward as the environment moves to a new situation. This
-loop repeats at discrete time steps $t = 0, 1, 2, \ldots$.
+cycle of state, action, and reward repeats
+(\cref{fig:mdp-loop}), and the agent's goal is to discover a
+strategy that accumulates as much reward as possible over time.
 
 \input{figures/mdp-loop}
 
 \smallskip
-We now assign symbols to each part of this loop. The state at
-time~$t$ is written $S_t$ -- in the grid-world, the cell the agent
-occupies. The action chosen is $A_t$ -- the direction of movement.
-The reward received is $R_{t+1}$ -- the score after the move. And
-$S_{t+1}$ is the new state the agent lands in. One complete cycle
--- the state, the action, the reward, and the next state -- is
-called a \emph{transition} and is written as the tuple
-$(S_t, A_t, R_{t+1}, S_{t+1})$.
+The \emph{Markov decision process}
+(MDP)~\citep{sutton2018reinforcement} is the mathematical framework
+that formalizes this cycle. Each repetition occurs at a discrete
+time step $t = 0, 1, 2, \ldots$.
 
 \smallskip
-These components -- states, actions, transitions, and how much
-the agent cares about future rewards -- are collected into a
-single mathematical object: the MDP tuple
-$(\mathcal{S},\allowbreak \mathcal{A},\allowbreak p,\allowbreak \gamma)$, where $\mathcal{S}$
-is the set of states, $\mathcal{A}$ the set of actions, $p$ a
-dynamics function, and $\gamma$ a discount factor. The dynamics
-function captures both the transition probabilities and the
-reward structure -- it gives the probability of each possible
-next state and reward, given the current state and action:
+We now assign symbols to each part of this loop. The cell the agent
+occupies is its \emph{state}, written $S_t$. The direction it
+chooses is an \emph{action}, $A_t$. After moving, the agent
+receives a \emph{reward} $R_{t+1}$ and arrives in a new state
+$S_{t+1}$. One complete cycle of these four quantities is called a
+\emph{transition}: $(S_t, A_t, R_{t+1}, S_{t+1})$.
+
+\smallskip
+An MDP collects these components into a formal object. The set of
+all possible states is $\mathcal{S}$, the set of all possible
+actions is $\mathcal{A}$, and a \emph{dynamics function}~$p$
+describes what happens when the agent acts: given that the agent is
+in state~$s$ and takes action~$a$, the function~$p$ gives the
+probability of landing in state~$s'$ and receiving reward~$r$:
 %
 \begin{equation}
 \label{eq:mdp-dynamics}
@@ -76,12 +68,9 @@ p(s', r \mid s, a)
   \Pr\{S_t = s',\, R_t = r \mid S_{t-1} = s,\, A_{t-1} = a\}.
 \end{equation}
 %
-In words: given that the agent is in state~$s$ and takes
-action~$a$, the function~$p$ gives the probability of ending up
-in state~$s'$ with reward~$r$. It is a conditional probability
-distribution -- for any state--action pair $(s, a)$, the values
-$p(s', r \mid s, a)$ sum to one over all possible next states
-$s'$ and rewards $r$.
+For any state--action pair $(s, a)$, these probabilities sum to one
+over all possible next states and rewards -- exactly one outcome
+must occur.
 
 \smallskip
 In the grid-world, moving right from a given cell always takes
