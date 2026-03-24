@@ -33,25 +33,21 @@ The player is the \emph{agent}, and the grid is the
 \emph{environment}. At each step, the agent observes which cell it
 occupies (its \emph{state}), chooses a direction to move (an
 \emph{action}), and receives a score (the \emph{reward}). This
-cycle of state, action, and reward repeats
-(\cref{fig:mdp-loop}), and the agent's goal is to discover a
-strategy that accumulates as much reward as possible over time.
+cycle repeats (\cref{fig:mdp-loop}), and the agent's goal is to
+discover a strategy that accumulates as much reward as possible over
+time. The \emph{Markov decision process}
+(MDP)~\citep{sutton2018reinforcement} is the mathematical framework
+that formalizes this cycle.
 
 \input{figures/mdp-loop}
 
 \smallskip
-The \emph{Markov decision process}
-(MDP)~\citep{sutton2018reinforcement} is the mathematical framework
-that formalizes this cycle. Each repetition occurs at a discrete
-time step $t = 0, 1, 2, \ldots$.
-
-\smallskip
-We now assign symbols to each part of this loop. The cell the agent
-occupies is its \emph{state}, written $S_t$. The direction it
-chooses is an \emph{action}, $A_t$. After moving, the agent
-receives a \emph{reward} $R_{t+1}$ and arrives in a new state
-$S_{t+1}$. One complete cycle of these four quantities is called a
-\emph{transition}: $(S_t, A_t, R_{t+1}, S_{t+1})$.
+In the MDP notation, each step is indexed by a time step
+$t = 0, 1, 2, \ldots$. The agent's current cell is $S_t$, its
+chosen direction is $A_t$, the score it receives is $R_{t+1}$, and
+the cell it lands in is $S_{t+1}$. One complete cycle of these four
+quantities is called a \emph{transition}:
+$(S_t, A_t, R_{t+1}, S_{t+1})$.
 
 \smallskip
 An MDP collects these components into a formal object. The set of
