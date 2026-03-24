@@ -120,14 +120,21 @@ conditions.
   \item Four conditions: DQN, +Aug, +SPR, +Both
   \item Shaded bands: $\pm 1$ std (single seed) or cross-seed
     confidence interval (multi-seed)
-  \item Status: example generated from Boxing data (seed 42);
+  \item Status: Boxing and Crazy Climber shown (seed 42);
     full 6-game grid after batch runs
 \end{itemize}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.82\textwidth]{../output/plots/boxing_learning_curves.png}
-\caption{Example: Boxing, seed 42. Full version uses 6-game grid.}
+\caption{Boxing (seed 42). All conditions score near zero.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{../output/plots/crazy_climber_learning_curves.png}
+\caption{Crazy Climber (seed 42). SPR provides modest lift over
+baseline; augmentation hurts.}
 \end{figure}
 
 
@@ -150,7 +157,14 @@ helped, negative means it hurt.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.82\textwidth]{../output/plots/boxing_spr_aug_lift.png}
-\caption{Example: Boxing, seed 42. Full version groups all 6 games.}
+\caption{Boxing (seed 42).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{../output/plots/crazy_climber_spr_aug_lift.png}
+\caption{Crazy Climber (seed 42). SPR adds +2087 without aug,
+augmentation hurts in both cases.}
 \end{figure}
 
 
@@ -171,7 +185,14 @@ combination is additive, redundant, or interfering.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.52\textwidth]{../output/plots/boxing_interaction.png}
-\caption{Example: Boxing, seed 42. Full version: one subplot per game.}
+\caption{Boxing (seed 42).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.52\textwidth]{../output/plots/crazy_climber_interaction.png}
+\caption{Crazy Climber (seed 42). Lines converge -- augmentation
+and SPR interact.}
 \end{figure}
 
 
@@ -200,7 +221,7 @@ reference for cross-game and cross-condition comparisons.
   & \textbf{+ SPR} & \textbf{+ Both} \\
 \midrule
 Boxing        & $-3.0$ & $-16.4$ & $-21.1$ & $-19.4$ \\
-Crazy Climber & ---    & ---     & ---     & ---     \\
+Crazy Climber & 3540   & 100     & 5627    & 1360    \\
 Frostbite     & ---    & ---     & ---     & ---     \\
 Kangaroo      & ---    & ---     & ---     & ---     \\
 Road Runner   & ---    & ---     & ---     & ---     \\
@@ -233,11 +254,18 @@ more than the representation objective itself.
   \item Three conditions: DQN+SPR, Rainbow, Rainbow+SPR
   \item 6 subplots (one per game), same format as A1
   \item Shaded bands: $\pm 1$ std or cross-seed confidence interval
-  \item Status: pending -- requires completed Rainbow and
-    Rainbow+SPR batch runs
+  \item Status: Crazy Climber shown (seed 42); full 6-game
+    grid after batch runs
 \end{itemize}
 
-\vspace{0.5em}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{../output/plots/crazy_climber_rainbow_comparison.png}
+\caption{Crazy Climber (seed 42). Rainbow dominates DQN+SPR by
+$\sim$5$\times$. Rainbow+SPR is comparable to Rainbow alone on
+this game.}
+\end{figure}
+
 \subsection*{B2. SPR Lift Comparison}
 
 \noindent\textit{Purpose.} How much does SPR improve DQN compared
@@ -503,7 +531,14 @@ that change the interpretation of the results.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{../output/plots/boxing_return_distribution.png}
-\caption{Example: Boxing, seed 42. Full version: one subplot per game.}
+\caption{Boxing (seed 42).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{../output/plots/crazy_climber_return_distribution.png}
+\caption{Crazy Climber (seed 42). DQN+SPR has high variance with
+scores ranging from 0 to 15,000.}
 \end{figure}
 
 
@@ -526,8 +561,13 @@ before interpreting probe and visualization results.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.82\textwidth]{../output/plots/boxing_spr_convergence.png}
-\caption{Example: Boxing DQN+SPR, seed 42. Full version includes
-DQN+Both comparison per game.}
+\caption{Boxing DQN+SPR (seed 42).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{../output/plots/crazy_climber_spr_convergence.png}
+\caption{Crazy Climber DQN+SPR (seed 42).}
 \end{figure}
 
 
@@ -549,8 +589,13 @@ Q-learning rather than helping it.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{../output/plots/boxing_training_stability.png}
-\caption{Example: Boxing, seed 42. SPR conditions start with higher
-TD error but converge.}
+\caption{Boxing (seed 42).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{../output/plots/crazy_climber_training_stability.png}
+\caption{Crazy Climber (seed 42).}
 \end{figure}
 
 
@@ -572,8 +617,13 @@ training cost.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.52\textwidth]{../output/plots/boxing_fps_comparison.png}
-\caption{Example: Boxing DQN conditions. Full version includes
-Rainbow.}
+\caption{Boxing (seed 42).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.52\textwidth]{../output/plots/crazy_climber_fps_comparison.png}
+\caption{Crazy Climber (seed 42).}
 \end{figure}
 
 
