@@ -39,6 +39,19 @@
     \node[dg cell] (g11) at (\ds, \ds) {};
     \node[dg cell] (g21) at (2*\ds, \ds) {};
     \node[dg cell] (g31) at (3*\ds, \ds) {};
+    % State labels (subtle, top-left)
+    \node[font=\tiny, text=black!30, anchor=north west]
+        at (g00.north west) {$s_{00}$};
+    \node[font=\tiny, text=black!30, anchor=north west]
+        at (g10.north west) {$s_{10}$};
+    \node[font=\tiny, text=black!30, anchor=north west]
+        at (g01.north west) {$s_{01}$};
+    \node[font=\tiny, text=black!30, anchor=north west]
+        at (g11.north west) {$s_{11}$};
+    \node[font=\tiny, text=black!30, anchor=north west]
+        at (g21.north west) {$s_{21}$};
+    \node[font=\tiny, text=black!30, anchor=north west]
+        at (g31.north west) {$s_{31}$};
     % Rewards
     \node[dg reward, text=rewardgreen] at (g10) {$+1$};
     \node[dg reward, text=rewardgreen] at (g31) {$+3$};
@@ -54,11 +67,11 @@
 \begin{minipage}[c]{0.55\textwidth}
 \centering
 \begin{tikzpicture}
-    \node[dt node] (s0) at (0, 0) {};
+    \node[dt node] (s0) at (0, 0) {$s_{00}$};
     \node[dt reward, text=rewardgreen] (r1) at (1.6, -1.0) {$+1$};
-    \node[dt node] (t1) at (1.6, 1.0) {};
-    \node[dt node] (t2) at (2.8, 1.0) {};
-    \node[dt node] (t3) at (4.0, 1.0) {};
+    \node[dt node] (t1) at (1.6, 1.0) {$s_{01}$};
+    \node[dt node] (t2) at (2.8, 1.0) {$s_{11}$};
+    \node[dt node] (t3) at (4.0, 1.0) {$s_{21}$};
     \node[dt reward, text=rewardgreen] (r3) at (5.2, 1.0) {$+3$};
     % Faded long path
     \draw[dt path] (s0) -- (t1);
@@ -99,6 +112,19 @@
     \node[dg cell] (g11) at (\ds, \ds) {};
     \node[dg cell] (g21) at (2*\ds, \ds) {};
     \node[dg cell] (g31) at (3*\ds, \ds) {};
+    % State labels (subtle, top-left)
+    \node[font=\tiny, text=black!30, anchor=north west]
+        at (g00.north west) {$s_{00}$};
+    \node[font=\tiny, text=black!30, anchor=north west]
+        at (g01.north west) {$s_{01}$};
+    \node[font=\tiny, text=black!30, anchor=north west]
+        at (g11.north west) {$s_{11}$};
+    \node[font=\tiny, text=black!30, anchor=north west]
+        at (g21.north west) {$s_{21}$};
+    \node[font=\tiny, text=black!30, anchor=north west]
+        at (g10.north west) {$s_{10}$};
+    \node[font=\tiny, text=black!30, anchor=north west]
+        at (g31.north west) {$s_{31}$};
     % Rewards
     \node[dg reward, text=rewardgreen] at (g10) {$+1$};
     \node[dg reward, text=rewardgreen] at (g31) {$+3$};
@@ -131,11 +157,11 @@
 \begin{minipage}[c]{0.55\textwidth}
 \centering
 \begin{tikzpicture}
-    \node[dt node] (s0) at (0, 0) {};
+    \node[dt node] (s0) at (0, 0) {$s_{00}$};
     \node[dt reward, text=rewardgreen] (r1) at (1.6, -1.0) {$+1$};
-    \node[dt node] (t1) at (1.6, 1.0) {};
-    \node[dt node] (t2) at (2.8, 1.0) {};
-    \node[dt node] (t3) at (4.0, 1.0) {};
+    \node[dt node] (t1) at (1.6, 1.0) {$s_{01}$};
+    \node[dt node] (t2) at (2.8, 1.0) {$s_{11}$};
+    \node[dt node] (t3) at (4.0, 1.0) {$s_{21}$};
     \node[dt reward, text=rewardgreen] (r3) at (5.2, 1.0) {$+3$};
     % Faded short path
     \draw[dt path] (s0) -- (r1);
