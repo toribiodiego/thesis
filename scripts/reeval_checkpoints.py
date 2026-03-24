@@ -255,6 +255,14 @@ def parse_args():
         action="store_true",
         help="Re-run all checkpoints even if data exists",
     )
+    parser.add_argument(
+        "--drive-dir",
+        default=None,
+        help="Google Drive thesis-runs directory. If set, copies "
+             "eval output to Drive after each run completes. "
+             "Auto-detected from /content/drive/MyDrive/thesis-runs "
+             "if that path exists.",
+    )
     return parser.parse_args()
 
 
@@ -274,10 +282,20 @@ def main():
         print("CUDA not available, falling back to CPU")
         device = "cpu"
 
+    # Auto-detect Google Drive mount
+    drive_dir = args.drive_dir
+    if drive_dir is None:
+        default_drive = "/content/drive/MyDrive/thesis-runs"
+        if os.path.isdir(default_drive):
+            drive_dir = default_drive
+            print(f"Drive auto-detected: {drive_dir}")
+
     print(f"Device: {device}")
     print(f"Episodes per checkpoint: {EVAL_EPISODES}")
     print(f"Record video: {args.record_video}")
     print(f"Force re-run: {args.force}")
+    if drive_dir:
+        print(f"Drive save: {drive_dir}")
     print(f"Runs to process: {len(run_names)}")
     print()
 
@@ -385,6 +403,30 @@ def main():
 
         # Sort CSV by step after processing all checkpoints
         sort_csv(run_dir)
+
+        # Copy eval output to Drive if configured
+        if drive_dir:
+            import shutil
+            drive_run_dir = os.path.join(drive_dir, run_name)
+            if os.path.isdir(drive_run_dir):
+                drive_eval_dir = os.path.join(drive_run_dir, "eval")
+                src_eval_dir = os.path.join(run_dir, "eval")
+                if os.path.isdir(src_eval_dir):
+                    if os.path.isdir(drive_eval_dir):
+                        shutil.rmtree(drive_eval_dir)
+                    shutil.copytree(src_eval_dir, drive_eval_dir)
+                    print(f"     Saved eval to Drive: {drive_run_dir}/eval/")
+                # Also copy videos if they were recorded
+                src_videos = os.path.join(run_dir, "videos")
+                if args.record_video and os.path.isdir(src_videos):
+                    drive_videos = os.path.join(drive_run_dir, "videos")
+                    if os.path.isdir(drive_videos):
+                        shutil.rmtree(drive_videos)
+                    shutil.copytree(src_videos, drive_videos)
+                    print(f"     Saved videos to Drive")
+            else:
+                print(f"     WARN: {drive_run_dir} not found on Drive")
+
         print()
 
     print("Done.")
