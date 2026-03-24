@@ -50,12 +50,11 @@ quantities is called a \emph{transition}:
 $(S_t, A_t, R_{t+1}, S_{t+1})$.
 
 \smallskip
-An MDP collects these components into a formal object. The set of
-all possible states is $\mathcal{S}$, the set of all possible
-actions is $\mathcal{A}$, and a \emph{dynamics function}~$p$
-describes what happens when the agent acts: given that the agent is
-in state~$s$ and takes action~$a$, the function~$p$ gives the
-probability of landing in state~$s'$ and receiving reward~$r$:
+Writing $\mathcal{S}$ for the set of states and $\mathcal{A}$ for
+the set of actions, the remaining piece of the MDP is the
+\emph{dynamics function}~$p$. It describes what happens when the
+agent acts: given state~$s$ and action~$a$, the function~$p$ gives
+the probability of landing in state~$s'$ and receiving reward~$r$:
 %
 \begin{equation}
 \label{eq:mdp-dynamics}
@@ -137,13 +136,14 @@ today because it is discounted twice.
 \smallskip
 Discounting also serves a mathematical purpose: because
 $\gamma < 1$, the infinite sum in \cref{eq:return} converges as
-long as individual rewards are bounded. Without discounting
-($\gamma = 1$), the return could be infinite, making it impossible
-to compare strategies meaningfully.
-\Cref{fig:discounting} shows how this plays out: with a low
-discount rate, a nearby small reward is preferred over a distant
-large one; with a high discount rate, the agent walks further to
-collect the larger reward.
+long as individual rewards are bounded. Without discounting, the
+return could grow without limit.
+
+\smallskip
+\Cref{fig:discounting} illustrates the trade-off: with a low
+discount rate, the agent prefers a small reward nearby over a
+larger reward further away; with a high discount rate, the agent
+is willing to take more steps to collect the larger reward.
 
 \input{figures/discounting}
 
@@ -164,10 +164,9 @@ deterministic policy always picks the same action in a given state,
 while a stochastic policy samples from a distribution over actions.
 
 \smallskip
-In the grid-world, a policy might say: ``go right in the
-bottom-left cell, then go up, then go up again, then go right.''
-This deterministic policy commits to a fixed direction in each
-cell, tracing a specific path through the grid. A different
+In the grid-world, a policy assigns a direction to each cell:
+``go right when in the bottom-left cell, go up when in the cell
+above it,'' and so on for every cell in the grid. A different
 policy -- choosing different directions in some cells -- would
 trace a different path and potentially collect different rewards.
 
