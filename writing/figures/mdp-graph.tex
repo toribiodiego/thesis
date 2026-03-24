@@ -36,6 +36,16 @@
 \node[reward, text=rewardgreen] at (c22) {$+1$};
 \node[reward, text=penaltyred] at (c11) {$-1$};
 
+% State labels (path-relevant cells only, top-left corner)
+\node[font=\tiny, text=black!30, anchor=north west]
+    at (c01.north west) {$s_{01}$};
+\node[font=\tiny, text=black!30, anchor=north west]
+    at (c02.north west) {$s_{02}$};
+\node[font=\tiny, text=black!30, anchor=north west]
+    at (c12.north west) {$s_{12}$};
+\node[font=\tiny, text=black!30, anchor=north west]
+    at (c11.north west) {$s_{11}$};
+
 % Path: c01 -> c02 -> c12 (three transitions shown)
 % Ghost at c01 (faded)
 \node[ghost, draw=agentblue!40, fill=agentblue!6] at (c01) {};

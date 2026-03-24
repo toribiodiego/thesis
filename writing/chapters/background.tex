@@ -40,11 +40,19 @@ mathematical framework that formalizes this cycle.
 
 \smallskip
 In the MDP notation, each step is indexed by a time step
-$t = 0, 1, 2, \ldots$. The agent's current cell is $S_t$, its
-chosen direction is $A_t$, the score it receives is $R_{t+1}$, and
-the cell it lands in is $S_{t+1}$. One complete cycle of these four
-quantities is called a \emph{transition}:
+$t = 0, 1, 2, \ldots$. The agent's current cell is $S_t$ (the
+state at time~$t$), its chosen direction is $A_t$ (the action),
+the score it receives is $R_{t+1}$ (the reward), and the cell it
+lands in is $S_{t+1}$ (the next state). One complete cycle of these
+four quantities is called a \emph{transition}:
 $(S_t, A_t, R_{t+1}, S_{t+1})$.
+
+\smallskip
+When we need to refer to a specific cell rather than a time step,
+we label it by its position in the grid: $s_{01}$ is the cell in
+column~0, row~1 (the left-center cell). Capital~$S_t$ means ``the
+state at time~$t$, whichever cell that happens to be'';
+lowercase~$s_{01}$ names a fixed cell.
 
 \smallskip
 Writing $\mathcal{S}$ for the set of states and $\mathcal{A}$ for
