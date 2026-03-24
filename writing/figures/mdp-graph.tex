@@ -1,129 +1,123 @@
 \begin{figure}[h!]
 \centering
+\input{figures/palette}
+\definecolor{agentblue}{HTML}{4C72B0}
+\definecolor{rewardgreen}{HTML}{55A868}
+\definecolor{penaltyred}{HTML}{C44E52}
 
 %% Left: grid-world with a short path highlighted
-\begin{subfigure}[b]{0.47\textwidth}
+\begin{subfigure}[b]{0.42\textwidth}
 \centering
 \begin{tikzpicture}[
-    cell/.style={minimum size=1.15cm, draw=black!40, thick,
-                 font=\scriptsize},
-    wall/.style={cell, fill=black!15},
-    reward/.style={font=\scriptsize\bfseries},
-    agent/.style={circle, fill=blue!45, inner sep=3.5pt},
-    ghost/.style={circle, fill=blue!45, inner sep=3.5pt, opacity=0.25},
-    slabel/.style={font=\tiny, text=black!45},
+    cell/.style={minimum size=1.3cm, draw=black!40, thick},
+    reward/.style={font=\small\bfseries},
+    agent/.style={circle, draw=agentblue, thick,
+                  fill=agentblue!20, inner sep=3.5pt},
+    ghost/.style={circle, draw=agentblue, thick,
+                  fill=agentblue!12, inner sep=3.5pt},
+    chev/.style={semithick, agentblue},
 ]
-\def\s{1.15}
+\def\s{1.3}
 
 % Row 0 (bottom)
 \node[cell] (c00) at (0, 0) {};
 \node[cell] (c10) at (\s, 0) {};
 \node[cell] (c20) at (2*\s, 0) {};
-\node[cell] (c30) at (3*\s, 0) {};
 % Row 1 (middle)
 \node[cell] (c01) at (0, \s) {};
-\node[wall] (c11) at (\s, \s) {};
+\node[cell] (c11) at (\s, \s) {};
 \node[cell] (c21) at (2*\s, \s) {};
-\node[cell] (c31) at (3*\s, \s) {};
 % Row 2 (top)
 \node[cell] (c02) at (0, 2*\s) {};
 \node[cell] (c12) at (\s, 2*\s) {};
 \node[cell] (c22) at (2*\s, 2*\s) {};
-\node[cell] (c32) at (3*\s, 2*\s) {};
 
-% Reward labels (plain black)
-\node[reward] at (c32) {$+1$};
-\node[reward] at (c31) {$-1$};
+% Reward labels
+\node[reward, text=rewardgreen] at (c22) {$+1$};
+\node[reward, text=penaltyred] at (c11) {$-1$};
 
-% State labels in top-left corner
-\node[slabel, anchor=north west] at (c21.north west) {$s_{21}$};
-\node[slabel, anchor=north west] at (c22.north west) {$s_{22}$};
-\node[slabel, anchor=north west] at (c32.north west) {$s_{32}$};
-\node[slabel, anchor=north west] at (c31.north west) {$s_{31}$};
+% Path: c01 -> c02 -> c12 (three transitions shown)
+% Ghost at c01 (faded)
+\node[ghost, draw=agentblue!40, fill=agentblue!6] at (c01) {};
+\draw[chev, agentblue!45]
+    ([yshift=7pt, xshift=-2.5pt]c01.center) --
+    ([yshift=10pt]c01.center) --
+    ([yshift=7pt, xshift=2.5pt]c01.center);
 
-% Agent trail: oldest ghost most faded, recent ghost less faded,
-% solid dot at current position
-\node[ghost] at (c21) {};
-\node[circle, fill=blue!45, inner sep=3.5pt, opacity=0.55] at (c22) {};
-\node[agent] at (c32) {};
+% Ghost at c02 (less faded)
+\node[ghost, draw=agentblue!55, fill=agentblue!10] at (c02) {};
+\draw[chev, agentblue!55]
+    ([xshift=7pt, yshift=2.5pt]c02.center) --
+    ([xshift=10pt]c02.center) --
+    ([xshift=7pt, yshift=-2.5pt]c02.center);
 
-% Bare chevrons showing direction (no stem)
-\draw[semithick, blue!65]
-      ([yshift=8pt, xshift=-2.5pt]c21.center) --
-      ([yshift=11pt]c21.center) --
-      ([yshift=8pt, xshift=2.5pt]c21.center);
-\draw[semithick, blue!65]
-      ([xshift=8pt, yshift=2.5pt]c22.center) --
-      ([xshift=11pt]c22.center) --
-      ([xshift=8pt, yshift=-2.5pt]c22.center);
+% Agent at c12 (current position)
+\node[agent] at (c12) {};
 
 \end{tikzpicture}
-\vspace{1.8em}
-\subcaption{Grid-world path: $s_{21} \to s_{22} \to s_{32}$.}
+\vspace{0.5em}
+\subcaption{A path through the grid.}
 \label{fig:mdp-grid}
 \end{subfigure}
 \hfill
 %% Right: same path as a state-transition graph
-\begin{subfigure}[b]{0.47\textwidth}
+\begin{subfigure}[b]{0.52\textwidth}
 \centering
 \begin{tikzpicture}[
-    state/.style={circle, draw=black!60, thick,
-                  minimum size=1.15cm, font=\small},
-    terminal/.style={state, double, double distance=1.5pt},
-    active/.style={->, thick, >=stealth, blue!50,
-                   shorten >=1pt, shorten <=1pt},
-    faded/.style={->, thick, >=stealth, black!20,
-                  shorten >=1pt, shorten <=1pt},
-    alabel/.style={font=\footnotesize, text=black!70},
+    state/.style={circle, draw=black!50, thick,
+                  minimum size=1.1cm, font=\small},
+    active/.style={->, thick, >=stealth, agentblue!65,
+                   shorten >=2pt, shorten <=2pt},
+    faded/.style={->, thick, >=stealth, black!18,
+                  shorten >=2pt, shorten <=2pt},
+    alabel/.style={font=\footnotesize, text=black!65},
     rlabel/.style={font=\footnotesize, text=black!45},
-    fadea/.style={font=\footnotesize, text=black!25},
-    fader/.style={font=\footnotesize, text=black!18},
+    fadea/.style={font=\footnotesize, text=black!22},
 ]
 
-% Nodes -- centered horizontally
-\node[state]    (s21) at (0, 0)     {$s_{21}$};
-\node[state]    (s22) at (0, 2.6)   {$s_{22}$};
-\node[terminal] (s32) at (3.0, 2.6) {$s_{32}$};
-\node[terminal] (s31) at (3.0, 0)   {$s_{31}$};
+% States
+\node[state] (s01) at (0, 0)     {$s_{01}$};
+\node[state] (s02) at (0, 2.4)   {$s_{02}$};
+\node[state] (s12) at (3.2, 2.4) {$s_{12}$};
+\node[state] (s11) at (3.2, 0)   {$s_{11}$};
 
-% Goal/penalty annotations
-\node[font=\footnotesize, text=black!60,
-      above=2pt] at (s32.north) {goal};
-\node[font=\footnotesize, text=black!60,
-      below=2pt] at (s31.south) {penalty};
+% Labels
+\node[font=\scriptsize, text=black!45,
+      above=2pt] at (s12.north) {toward goal};
+\node[font=\scriptsize, text=penaltyred,
+      below=2pt] at (s11.south) {penalty};
 
-% Active path: s21 -> s22 (up, bent left)
-\draw[active] (s21) to[bend left=20]
-              node[alabel, left] {up}
-              node[rlabel, left, yshift=-12pt] {$r\!=\!0$}
-              (s22);
+% Active path: s01 -> s02 (up)
+\draw[active] (s01) to[bend left=15]
+    node[alabel, left] {up}
+    node[rlabel, left, yshift=-10pt] {$r\!=\!0$}
+    (s02);
 
-% Active path: s22 -> s32 (right, bent left)
-\draw[active] (s22) to[bend left=12]
-              node[alabel, above] {right}
-              node[rlabel, below] {$r\!=\!+1$}
-              (s32);
+% Active path: s02 -> s12 (right)
+\draw[active] (s02) to[bend left=10]
+    node[alabel, above] {right}
+    node[rlabel, below] {$r\!=\!0$}
+    (s12);
 
-% Faded: s22 -> s21 (down, bent left)
-\draw[faded] (s22) to[bend left=20]
-             node[fadea, right] {down}
-             node[fader, right, yshift=12pt] {$r\!=\!0$}
-             (s21);
+% Faded: s01 -> s11 (right, toward penalty)
+\draw[faded] (s01) to[bend right=10]
+    node[fadea, below] {right}
+    (s11);
 
-% Faded: s21 -> s31 (right, bent right)
-\draw[faded] (s21) to[bend right=12]
-             node[fadea, below] {right}
-             node[fader, above] {$r\!=\!-1$}
-             (s31);
+% Faded: s02 -> s01 (down, back)
+\draw[faded] (s02) to[bend left=15]
+    node[fadea, right] {down}
+    (s01);
 
 \end{tikzpicture}
-\subcaption{The same path as a state-transition graph.}
+\vspace{0.5em}
+\subcaption{The same transitions as a directed graph.}
 \label{fig:mdp-graph}
 \end{subfigure}
 
-\vspace{0.8em}
-\caption{Two views of the same MDP fragment. Left: a path through
-  the grid-world from $s_{21}$ to the goal. Right: the same
-  states and transitions as a directed graph.}
+\vspace{0.5em}
+\caption{Two views of a sequence of transitions. Left: the agent
+  moves through the grid, leaving a fading trail. Right: the same
+  states and actions as a graph, with alternative transitions faded.}
 \label{fig:mdp-views}
 \end{figure}
