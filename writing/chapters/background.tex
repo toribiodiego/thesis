@@ -19,14 +19,12 @@ high-dimensional inputs like images.
 \subsection{Markov Decision Processes}
 \label{subsec:mdp}
 
-Consider a classic reinforcement learning problem, the grid-world
-(\cref{fig:grid-world}): a player starts in the bottom-left cell
-of a $3 \times 3$ grid and must reach a goal in the top-right
-corner. At each step, the player chooses to move up, down, left, or
-right. Some cells carry rewards -- $+1$ for reaching the goal, $-1$
-for stepping on the penalty in the center -- and the player has no
-map and no instructions. The only guide is the score received after
-each move.
+Consider the grid-world in \cref{fig:grid-world}: a player starts
+in the bottom-left cell of a $3 \times 3$ grid and must reach the
+top-right corner. At each step, the player chooses to move up,
+down, left, or right. Most moves score zero, but reaching the goal
+scores $+1$ and stepping on the center cell scores $-1$. The player
+has no map and no instructions -- only the score after each move.
 
 \input{figures/grid-world}
 
