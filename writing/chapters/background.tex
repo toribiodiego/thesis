@@ -73,22 +73,21 @@ over all possible next states and rewards -- exactly one outcome
 must occur.
 
 \smallskip
-In the grid-world, moving right from a given cell always takes
+In our grid-world, moving right from a given cell always takes
 the agent to the cell on its right -- the dynamics are
-deterministic. But many environments are not: wind can push a
-robot off course, a slippery surface can send it sliding past
-its target, or an opponent's response can change the outcome.
-The dynamics function $p$ is a probability distribution rather
-than a deterministic mapping precisely because it must handle
-these uncertain outcomes.
+deterministic. But imagine a slippery version of the same grid:
+choosing ``right'' usually moves right but occasionally slides
+the agent up or down instead. The dynamics function~$p$ is a
+probability distribution rather than a deterministic mapping
+because it must handle this kind of uncertainty.
 
 \smallskip
-The key assumption underlying this framework is the \emph{Markov
+The framework rests on one key assumption, the \emph{Markov
 property}: the probability of reaching any next state and reward
-depends only on the current state and action -- not on the history
-of states and actions that came before. In the grid-world, knowing
-the agent is in cell~$s_{21}$ is enough to determine what happens
-when it moves up; it does not matter whether the agent arrived from
+depends only on the current state and action, not on the history of
+states and actions that came before. In the grid-world, knowing
+which cell the agent is in right now is enough to determine what
+happens next. It does not matter whether the agent arrived from
 below, from the left, or by a longer winding path.
 
 \smallskip
