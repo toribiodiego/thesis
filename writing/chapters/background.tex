@@ -19,27 +19,33 @@ high-dimensional inputs like images.
 \subsection{Markov Decision Processes}
 \label{subsec:mdp}
 
-In reinforcement learning, a learner observes its surroundings,
-chooses an action, receives numerical feedback, and repeats. The
-learner is called the \emph{agent} and its surroundings are called
-the \emph{environment}. The \emph{Markov decision process}
-(MDP) is the mathematical framework that makes this interaction
-precise~\citep{sutton2018reinforcement}, and nearly every
-reinforcement learning algorithm is built on it.
-
-\smallskip
-To make the framework concrete, consider the grid-world in
-\cref{fig:grid-world}: an agent starts in one cell and must
-navigate to a goal by choosing to move up, down, left, or right
-at each step. Each cell the agent can occupy is a \emph{state},
-each movement direction is an \emph{action}, and the numerical
-feedback it receives after moving -- such as $+1$ for reaching the
-goal or $-1$ for reaching a penalty -- is a \emph{reward}. The
-grid-world is deliberately simple, but every MDP, no matter how
-complex, has exactly these three ingredients: states, actions, and
-rewards.
+Consider a classic reinforcement learning problem, the grid-world
+(\cref{fig:grid-world}): a player starts in the bottom-left cell
+of a $3 \times 3$ grid and must reach a goal in the top-right
+corner. At each step, the player chooses to move up, down, left, or
+right. Some cells carry rewards -- $+1$ for reaching the goal, $-1$
+for stepping on the penalty in the center -- and the player has no
+map and no instructions. The only guide is the score received after
+each move.
 
 \input{figures/grid-world}
+
+\smallskip
+The player is the \emph{agent}, and the grid is the
+\emph{environment}. At each step, the agent observes which cell it
+occupies (its \emph{state}), chooses a direction to move (an
+\emph{action}), and receives a score (the \emph{reward}). This
+cycle of state, action, and reward repeats, and the agent's goal is
+to discover a strategy that accumulates as much reward as possible
+over time.
+
+\smallskip
+The grid-world is deliberately simple, but every reinforcement
+learning problem -- no matter how complex -- has exactly these three
+ingredients. The \emph{Markov decision process} (MDP) is the
+mathematical framework that formalizes this
+structure~\citep{sutton2018reinforcement}, and nearly every
+reinforcement learning algorithm is built on it.
 
 \smallskip
 More generally, an MDP describes a loop between an agent and an
