@@ -2,6 +2,8 @@
 \centering
 \input{figures/palette}
 \definecolor{agentblue}{HTML}{4C72B0}
+\definecolor{rewardgreen}{HTML}{55A868}
+\definecolor{penaltyred}{HTML}{C44E52}
 \vspace{0.5em}
 
 \begin{tikzpicture}[
@@ -64,8 +66,8 @@
 \node[gw agent] at (c00) {};
 
 % --- Reward labels (on top of everything) ---
-\node[gw reward, text=palC!80!black] at (c22) {$+1$};
-\node[gw reward, text=palB!80!black] at (c11) {$-1$};
+\node[gw reward, text=rewardgreen] at (c22) {$+1$};
+\node[gw reward, text=penaltyred] at (c11) {$-1$};
 
 % --- Labels ---
 \node[font=\scriptsize, text=black!50, below=4pt] at (c00.south)

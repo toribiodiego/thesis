@@ -40,28 +40,25 @@ to discover a strategy that accumulates as much reward as possible
 over time.
 
 \smallskip
-The grid-world is deliberately simple, but every reinforcement
-learning problem -- no matter how complex -- has exactly these three
-ingredients. The \emph{Markov decision process} (MDP) is the
-mathematical framework that formalizes this
-structure~\citep{sutton2018reinforcement}, and nearly every
-reinforcement learning algorithm is built on it.
-
-\smallskip
-More generally, an MDP describes a loop between an agent and an
-environment (\cref{fig:mdp-loop}). At each discrete time step
-$t = 0, 1, 2, \ldots$, the agent observes a state
-$S_t \in \mathcal{S}$, chooses an action
-$A_t \in \mathcal{A}(S_t)$, and receives a scalar reward
-$R_{t+1} \in \mathbb{R}$ as the environment transitions to a new
-state $S_{t+1}$. In the grid-world, $S_t$ is the agent's current
-cell, $A_t$ is the chosen direction, and $R_{t+1}$ is the score
-received after the move. One complete cycle of this loop -- the
-state the agent was in, the action it chose, the reward it received,
-and the state it landed in -- is called a \emph{transition} and is
-written as the tuple $(S_t, A_t, R_{t+1}, S_{t+1})$.
+The framework that formalizes the relationship between states,
+actions, and rewards is the \emph{Markov decision process}
+(MDP)~\citep{sutton2018reinforcement}. An MDP describes a loop
+between an agent and an environment (\cref{fig:mdp-loop}): at each
+step, the agent observes its current situation, picks an action, and
+receives a reward as the environment moves to a new situation. This
+loop repeats at discrete time steps $t = 0, 1, 2, \ldots$.
 
 \input{figures/mdp-loop}
+
+\smallskip
+We now assign symbols to each part of this loop. The state at
+time~$t$ is written $S_t$ -- in the grid-world, the cell the agent
+occupies. The action chosen is $A_t$ -- the direction of movement.
+The reward received is $R_{t+1}$ -- the score after the move. And
+$S_{t+1}$ is the new state the agent lands in. One complete cycle
+-- the state, the action, the reward, and the next state -- is
+called a \emph{transition} and is written as the tuple
+$(S_t, A_t, R_{t+1}, S_{t+1})$.
 
 \smallskip
 These components -- states, actions, transitions, and how much
