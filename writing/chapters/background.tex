@@ -33,13 +33,10 @@ The player is the \emph{agent}, and the grid is the
 \emph{environment}. At each step, the agent observes which cell it
 occupies (its \emph{state}), chooses a direction to move (an
 \emph{action}), and receives a score (the \emph{reward}). This
-cycle repeats (\cref{fig:mdp-loop}), and the agent's goal is to
-discover a strategy that accumulates as much reward as possible over
-time. The \emph{Markov decision process}
-(MDP)~\citep{sutton2018reinforcement} is the mathematical framework
-that formalizes this cycle.
-
-\input{figures/mdp-loop}
+cycle repeats, and the agent's goal is to discover a strategy that
+accumulates as much reward as possible over time. The \emph{Markov
+decision process} (MDP)~\citep{sutton2018reinforcement} is the
+mathematical framework that formalizes this cycle.
 
 \smallskip
 In the MDP notation, each step is indexed by a time step
