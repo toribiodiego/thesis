@@ -110,19 +110,25 @@ corresponding to $a$, $s'$, and $r$.
 The agent's goal is to collect as much reward as possible over
 time -- but rewards at different times are not equally valuable.
 A reward received now is worth more than the same reward received
-far in the future, both because the future is uncertain and because
-earlier rewards can be built upon sooner. The \emph{return} makes
-this precise -- it is the cumulative discounted reward from time
-step $t$ onward:
+far in the future, because the future is uncertain and because
+early rewards compound. A parameter $\gamma \in [0, 1)$, called
+the \emph{discount rate}, controls this trade-off. When
+$\gamma = 0$, the agent cares only about the very next reward.
+As $\gamma$ approaches~$1$, the agent weighs future rewards more
+heavily.
+
+\smallskip
+The \emph{return} makes this precise -- it is the total discounted
+reward from time step~$t$ onward:
 %
 \begin{equation}
 \label{eq:return}
 G_t \;\doteq\; R_{t+1} + \gamma\, R_{t+2} + \gamma^2 R_{t+3} + \cdots
-  = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1},
+  = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1}.
 \end{equation}
 %
 Each term $\gamma^k R_{t+k+1}$ weights a future reward by how
-far away it is -- rewards received sooner count more, and very
+far away it is. Rewards received sooner count more, and very
 distant rewards fade toward zero.
 
 \smallskip
@@ -133,19 +139,12 @@ from the first step is $G_0 = 0 + 0.9 \cdot 0 + 0.81 \cdot 1
 today because it is discounted twice.
 
 \smallskip
-The parameter $\gamma \in [0, 1)$ is the \emph{discount rate}. When
-$\gamma = 0$, the agent cares only about the very next reward and
-ignores everything after -- a myopic strategy. As $\gamma$
-approaches 1, the agent plans further ahead, weighing future
-rewards more heavily.
-
-\smallskip
 Discounting also serves a mathematical purpose: because
 $\gamma < 1$, the infinite sum in \cref{eq:return} converges as
 long as individual rewards are bounded. Without discounting
 ($\gamma = 1$), the return could be infinite, making it impossible
-to compare policies meaningfully.
-\cref{fig:discounting} shows how this plays out: with a low
+to compare strategies meaningfully.
+\Cref{fig:discounting} shows how this plays out: with a low
 discount rate, a nearby small reward is preferred over a distant
 large one; with a high discount rate, the agent walks further to
 collect the larger reward.
@@ -156,7 +155,7 @@ collect the larger reward.
 In many problems, the interaction breaks naturally into
 \emph{episodes} -- finite sequences that end in a terminal state
 and then reset. The grid-world is episodic: the agent starts in
-cell $s_{00}$, takes a sequence of moves, and the episode ends
+the bottom-left cell, takes a sequence of moves, and the episode ends
 when it reaches the goal or the penalty. Most reinforcement
 learning benchmark environments are episodic, so in practice the
 return reduces to a finite sum over the steps within each episode.
