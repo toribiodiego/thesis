@@ -120,8 +120,8 @@ conditions.
   \item Four conditions: DQN, +Aug, +SPR, +Both
   \item Shaded bands: $\pm 1$ std (single seed) or cross-seed
     confidence interval (multi-seed)
-  \item Status: Boxing and Crazy Climber shown (seed 42);
-    full 6-game grid after batch runs
+  \item Status: Boxing and Crazy Climber (seed 42) plus
+    DQN vs Aug 6-game grid; full 4-condition grid after batch runs
 \end{itemize}
 
 \begin{figure}[H]
@@ -135,6 +135,14 @@ conditions.
 \includegraphics[width=0.82\textwidth]{../output/plots/crazy_climber_learning_curves.png}
 \caption{Crazy Climber (seed 42). SPR provides modest lift over
 baseline; augmentation hurts.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{../output/plots/all_games_dqn_vs_aug.png}
+\caption{DQN vs DQN+Aug across all 6 games (seed 42).
+Augmentation helps on Kangaroo and Up N Down, hurts on Crazy
+Climber and Road Runner.}
 \end{figure}
 
 
@@ -165,6 +173,14 @@ helped, negative means it hurt.
 \includegraphics[width=0.82\textwidth]{../output/plots/crazy_climber_spr_aug_lift.png}
 \caption{Crazy Climber (seed 42). SPR adds +2087 without aug,
 augmentation hurts in both cases.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{../output/plots/all_games_aug_effect.png}
+\caption{Augmentation effect across all 6 games (seed 42).
+Mixed results: helps Kangaroo and Up N Down, hurts Crazy Climber
+and Road Runner.}
 \end{figure}
 
 
@@ -222,10 +238,10 @@ reference for cross-game and cross-condition comparisons.
 \midrule
 Boxing        & $-3.0$ & $-16.4$ & $-21.1$ & $-19.4$ \\
 Crazy Climber & 3540   & 100     & 5627    & 1360    \\
-Frostbite     & ---    & ---     & ---     & ---     \\
-Kangaroo      & ---    & ---     & ---     & ---     \\
-Road Runner   & ---    & ---     & ---     & ---     \\
-Up N Down     & ---    & ---     & ---     & ---     \\
+Frostbite     & 147    & 2       & ---     & ---     \\
+Kangaroo      & 27     & 467     & ---     & ---     \\
+Road Runner   & 1440   & 3       & ---     & ---     \\
+Up N Down     & 141    & 1085    & ---     & ---     \\
 \bottomrule
 \end{tabular}
 \caption{Example: Boxing only. Full version: all 6 games with
@@ -277,11 +293,18 @@ for Rainbow, SPR's value depends on what the base agent provides.
   \item Paired bars per game: (DQN+SPR $-$ DQN) vs
     (Rainbow+SPR $-$ Rainbow)
   \item Same color scheme as A2 (light fill, dark edge)
-  \item Status: pending -- requires completed Rainbow+SPR runs
+  \item Status: Crazy Climber shown (seed 42); full version
+    after batch runs
 \end{itemize}
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.55\textwidth]{../output/plots/crazy_climber_spr_lift_comparison.png}
+\caption{Crazy Climber (seed 42). SPR helps DQN (+2087) but
+slightly hurts Rainbow ($-$1637) on this game/seed.}
+\end{figure}
+
 \vspace{0.5em}
-\noindent Remaining pending figures:
 
 \subsection*{B3. Capability Scatter}
 
@@ -675,9 +698,15 @@ that constrains the generality of the findings.
   \item Table or scatter: game properties vs SPR lift
   \item Properties: mean episode length, reward frequency,
     score range, human/random gap
-  \item Status: pending -- episode lengths from episodes.csv,
-    reward properties from game documentation
+  \item Status: DQN baseline profile shown (seed 42)
 \end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{../output/plots/game_difficulty_profile.png}
+\caption{Game difficulty profile from DQN baseline (seed 42).
+Episode length and return vary widely across games.}
+\end{figure}
 
 \vspace{0.5em}
 
