@@ -102,11 +102,13 @@
 % Faded: s01 -> s11 (right, toward penalty)
 \draw[faded] (s01) to[bend right=10]
     node[fadea, below] {right}
+    node[fadea, above, yshift=2pt] {$r\!=\!-1$}
     (s11);
 
 % Faded: s02 -> s01 (down, back)
 \draw[faded] (s02) to[bend left=15]
     node[fadea, right] {down}
+    node[fadea, right, yshift=10pt] {$r\!=\!0$}
     (s01);
 
 \end{tikzpicture}
@@ -118,6 +120,8 @@
 \vspace{0.5em}
 \caption{Two views of a sequence of transitions. Left: the agent
   moves through the grid, leaving a fading trail. Right: the same
-  states and actions as a graph, with alternative transitions faded.}
+  states and actions as a graph, where each cell is labeled
+  $s_{\text{column},\text{row}}$. Alternative transitions are
+  faded; every arrow carries an action and a reward.}
 \label{fig:mdp-views}
 \end{figure}
