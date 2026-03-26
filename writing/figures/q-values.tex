@@ -1,61 +1,98 @@
 \begin{figure}[ht]
 \centering
 \input{figures/palette}
+\definecolor{agentblue}{HTML}{4C72B0}
+\definecolor{rewardgreen}{HTML}{55A868}
+\definecolor{penaltyred}{HTML}{C44E52}
+
+%% Left: grid showing s_21
+\begin{subfigure}[b]{0.32\textwidth}
+\centering
 \begin{tikzpicture}[
-    cell/.style={minimum size=1.15cm, draw=black!40, thick,
-                 font=\scriptsize},
-    wall/.style={cell, fill=black!15},
-    terminal/.style={cell, fill=black!8},
-    qarr/.style={->, thick, >=stealth},
-    qlbl/.style={font=\scriptsize},
-    plabel/.style={font=\scriptsize\bfseries},
+    cell/.style={minimum size=1.15cm, draw=black!40, thick},
+    reward/.style={font=\scriptsize\bfseries},
+    agent/.style={circle, draw=agentblue, thick,
+                  fill=agentblue!20, inner sep=3pt},
+    slbl/.style={font=\tiny, text=black!30, anchor=north west},
 ]
 \def\s{1.15}
 
-% Draw a 4x3 grid for context (faded)
-% Row 0
-\node[cell, draw=black!15] (c00) at (0, 0) {};
-\node[cell, draw=black!15] (c10) at (\s, 0) {};
-\node[cell, draw=black!15] (c20) at (2*\s, 0) {};
-\node[cell, draw=black!15] (c30) at (3*\s, 0) {};
-% Row 1
-\node[cell, draw=black!15] (c01) at (0, \s) {};
-\node[wall, draw=black!15, fill=black!8] (c11) at (\s, \s) {};
-\node[cell, draw=black!40] (c21) at (2*\s, \s) {};
-\node[terminal] (c31) at (3*\s, \s) {};
-% Row 2
-\node[cell, draw=black!15] (c02) at (0, 2*\s) {};
-\node[cell, draw=black!15] (c12) at (\s, 2*\s) {};
-\node[cell, draw=black!15] (c22) at (2*\s, 2*\s) {};
-\node[terminal] (c32) at (3*\s, 2*\s) {};
+% Grid
+\foreach \x in {0,1,2} {
+    \foreach \y in {0,1,2} {
+        \node[cell] (c\x\y) at (\x*\s, \y*\s) {};
+    }
+}
 
-% Terminal labels
-\node[plabel, text=black!30] at (c31) {$-1$};
-\node[plabel, text=black!30] at (c32) {$+1$};
+% Rewards
+\node[reward, text=rewardgreen] at (c22) {$+1$};
+\node[reward, text=penaltyred] at (c11) {$-1$};
 
-% Highlight s_21
-\node[font=\scriptsize, text=black!60] at (c21) {$s_{21}$};
+% Labels
+\node[slbl] at (c21.north west) {$s_{21}$};
+\node[slbl] at (c22.north west) {$s_{22}$};
+\node[slbl] at (c11.north west) {$s_{11}$};
+\node[slbl] at (c20.north west) {$s_{20}$};
 
-% Q-value arrows from s_21
-% Up (high value -- good)
-\draw[qarr, palC!70] (c21.north) -- ++(0, 0.35)
-    node[qlbl, right=2pt, text=palC!80] {$0.90$};
+% Agent at s_21
+\node[agent] at (c21) {};
 
-% Right (low value -- penalty)
-\draw[qarr, palB!60] (c21.east) -- ++(0.35, 0)
-    node[qlbl, above=1pt, text=palB!70] {$-0.10$};
-
-% Down (moderate)
-\draw[qarr, black!35] (c21.south) -- ++(0, -0.35)
-    node[qlbl, right=2pt, text=black!50] {$0.73$};
-
-% Left (moderate -- toward wall, bounces back)
-\draw[qarr, black!35] (c21.west) -- ++(-0.35, 0)
-    node[qlbl, above=1pt, text=black!50] {$0.81$};
+% Goal
+\node[font=\scriptsize, text=black!50, above=2pt]
+    at (c22.north) {goal};
 
 \end{tikzpicture}
-\caption{Action values $q_\pi$ at cell~$s_{21}$. Each arrow shows
-  the Q-value for one action. Moving up (toward the goal) has the
-  highest value; moving right (into the penalty) has the lowest.}
+\vspace{0.8em}
+\subcaption{Agent in $s_{21}$.}
+\label{fig:q-grid}
+\end{subfigure}
+\hfill
+%% Right: Q-values from s_21 (star layout)
+\begin{subfigure}[b]{0.62\textwidth}
+\centering
+\begin{tikzpicture}[
+    state/.style={circle, draw=black!45, thick,
+                  minimum size=0.85cm, font=\scriptsize},
+    center/.style={state, draw=agentblue,
+                   font=\scriptsize\bfseries, text=agentblue},
+    arr/.style={->, thick, >=stealth, black!40,
+                shorten >=2pt, shorten <=2pt},
+    qlbl/.style={font=\scriptsize},
+    dirlbl/.style={font=\scriptsize, text=black!50},
+]
+
+% Center state
+\node[center] (s21) at (0, 0) {$s_{21}$};
+
+% Up -> s_22 (goal, Q = +1.00)
+\node[state] (s22) at (0, 1.7) {$s_{22}$};
+\draw[arr] (s21) -- (s22);
+\node[dirlbl, right=3pt] at (0, 0.85) {up};
+\node[qlbl, text=rewardgreen!80!black, left=3pt]
+    at (s22.west) {$+1.00$};
+
+% Left -> s_11 (penalty, Q = -1.00)
+\node[state] (s11) at (-2.8, 0) {$s_{11}$};
+\draw[arr] (s21) -- (s11);
+\node[dirlbl, above=2pt] at (-1.4, 0) {left};
+\node[qlbl, text=penaltyred!80!black, below=2pt]
+    at (s11.south) {$-1.00$};
+
+% Down -> s_20 (Q = 0.81)
+\node[state] (s20) at (0, -1.7) {$s_{20}$};
+\draw[arr] (s21) -- (s20);
+\node[dirlbl, right=3pt] at (0, -0.85) {down};
+\node[qlbl, text=black!55, left=3pt]
+    at (s20.west) {$0.81$};
+
+\end{tikzpicture}
+\vspace{0.8em}
+\subcaption{Q-values: same state, different actions.}
+\label{fig:q-values-star}
+\end{subfigure}
+
+\vspace{0.5em}
+\caption{Action values $q_\pi(s_{21}, a)$. From the same state,
+  different actions have dramatically different values.}
 \label{fig:q-values}
 \end{figure}
