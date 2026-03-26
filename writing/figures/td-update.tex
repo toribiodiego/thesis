@@ -1,102 +1,96 @@
 \begin{figure}[ht]
 \centering
 \input{figures/palette}
+\definecolor{agentblue}{HTML}{4C72B0}
+\definecolor{rewardgreen}{HTML}{55A868}
+\definecolor{penaltyred}{HTML}{C44E52}
 
-%% Panel (a): The transition on the grid
-\begin{subfigure}[t]{0.42\textwidth}
+%% Left: grid showing the transition
+\begin{subfigure}[b]{0.42\textwidth}
 \centering
 \begin{tikzpicture}[
     cell/.style={minimum size=1.15cm, draw=black!40, thick},
-    wall/.style={cell, fill=black!15},
-    terminal/.style={cell, fill=black!8},
-    highlight/.style={cell, fill=palA!12},
-    arr/.style={->, thick, >=stealth},
-    plabel/.style={font=\scriptsize\bfseries},
-    slabel/.style={font=\tiny, text=black!45, anchor=north west},
+    reward/.style={font=\scriptsize\bfseries},
+    agent/.style={circle, draw=agentblue, thick,
+                  fill=agentblue!20, inner sep=3pt},
+    slbl/.style={font=\tiny, text=black!30, anchor=north west},
+    chev/.style={semithick, agentblue!50},
 ]
 \def\s{1.15}
 
-% Full 4x3 grid
-% Row 0
-\node[cell] (c00) at (0, 0) {};
-\node[cell] (c10) at (\s, 0) {};
-\node[cell] (c20) at (2*\s, 0) {};
-\node[cell] (c30) at (3*\s, 0) {};
-% Row 1
-\node[cell] (c01) at (0, \s) {};
-\node[wall] (c11) at (\s, \s) {};
-\node[highlight] (c21) at (2*\s, \s) {};
-\node[terminal] (c31) at (3*\s, \s) {};
-% Row 2
-\node[cell] (c02) at (0, 2*\s) {};
-\node[cell] (c12) at (\s, 2*\s) {};
-\node[highlight] (c22) at (2*\s, 2*\s) {};
-\node[terminal] (c32) at (3*\s, 2*\s) {};
+\foreach \x in {0,1,2} {
+    \foreach \y in {0,1,2} {
+        \node[cell] (c\x\y) at (\x*\s, \y*\s) {};
+    }
+}
 
-% State labels
-\node[slabel] at (c21.north west) {$s_{21}$};
-\node[slabel] at (c22.north west) {$s_{22}$};
+\node[reward, text=rewardgreen] at (c22) {$+1$};
+\node[reward, text=penaltyred] at (c11) {$-1$};
 
-% Terminal labels
-\node[plabel] at (c31) {$-1$};
-\node[plabel] at (c32) {$+1$};
+\node[slbl] at (c01.north west) {$s_{01}$};
+\node[slbl] at (c11.north west) {$s_{11}$};
 
-% Action arrow
-\draw[arr, palA!70, very thick]
-    ([yshift=2pt]c21.north) -- ([yshift=-2pt]c22.south)
-    node[midway, left=4pt, font=\scriptsize, text=palA!70]
-    {up};
+\node[agent] at (c01) {};
+\draw[chev]
+    ([xshift=5pt, yshift=2.5pt]c01.center) --
+    ([xshift=8pt]c01.center) --
+    ([xshift=5pt, yshift=-2.5pt]c01.center);
 
-% Reward annotation
-\node[font=\scriptsize, text=black!50, right=4pt]
-    at ([yshift=2pt]c21.north east) {$r = 0$};
+\node[font=\scriptsize, text=black!50, above=2pt]
+    at (c22.north) {goal};
 
 \end{tikzpicture}
-\subcaption{The agent in $s_{21}$ moves up to $s_{22}$,
-  receiving reward $r = 0$.}
-\label{fig:td-update-transition}
+\vspace{0.8em}
+\subcaption{Agent in $s_{01}$ goes right, hits penalty.}
+\label{fig:td-grid}
 \end{subfigure}
 \hfill
-%% Panel (b): The bootstrap update
-\begin{subfigure}[t]{0.52\textwidth}
+%% Right: number line showing Q-value movement
+\begin{subfigure}[b]{0.52\textwidth}
 \centering
+\vspace{3.5em}
 \begin{tikzpicture}[
-    state/.style={draw=black!40, thick, rounded corners=3pt,
-                  minimum width=2.2cm, minimum height=0.9cm,
-                  font=\scriptsize, align=center, fill=palA!8},
-    arr/.style={->, thick, >=stealth},
     lbl/.style={font=\scriptsize, text=black!55},
 ]
 
-% State boxes (horizontal layout)
-\node[state] (s21) at (0, 0)
-    {$s_{21}$\\[-2pt] $Q(\cdot, \text{up}) = 0.5$};
+% Number line
+\draw[black!25, thick] (-2.5, 0) -- (3.5, 0);
 
-\node[state] (s22) at (4.2, 0)
-    {$s_{22}$\\[-2pt] $\max_a Q(\cdot, a) = 1.0$};
+% Target
+\draw[penaltyred!50, thick] (-2.0, -0.15) -- (-2.0, 0.15);
+\node[font=\scriptsize, text=penaltyred!70, below=4pt]
+    at (-2.0, -0.15) {$-1.0$};
+\node[font=\tiny, text=black!40, above=4pt]
+    at (-2.0, 0.15) {target};
 
-% Forward arrow: action + reward
-\draw[arr, palA!70, very thick]
-    (s21.east) -- (s22.west)
-    node[midway, above=3pt, font=\scriptsize, text=palA!70]
-    {up,\; $r = 0$};
+% Before
+\draw[black!45, thick] (2.5, -0.15) -- (2.5, 0.15);
+\node[font=\scriptsize, text=black!55, above=4pt]
+    at (2.5, 0.15) {before: $Q = 0$};
 
-% Bootstrap arrow (curved, below)
-\draw[arr, palC!50, dashed, thick]
-    ([yshift=-4pt]s22.south west)
-    .. controls +(-0.5, -1.0) and +(0.5, -1.0) ..
-    ([yshift=-4pt]s21.south east)
-    node[midway, below=3pt, font=\scriptsize, text=palC!60]
-    {$0 + 0.9 \times 1.0 = 0.9$}
-    node[midway, below=15pt, font=\scriptsize, text=black!50]
-    {$Q \leftarrow 0.5 + 0.1 \times (0.9 - 0.5) = 0.54$};
+% After
+\draw[agentblue, thick] (2.05, -0.18) -- (2.05, 0.18);
+\node[font=\scriptsize, text=agentblue, below=4pt]
+    at (2.05, -0.18) {after: $Q = -0.10$};
+
+% Arrow showing nudge
+\draw[->, thick, agentblue!50]
+    (2.4, -0.35) -- (2.15, -0.35);
+
+% Single-line update equation
+\node[font=\scriptsize, text=black!55] at (0.5, -1.1) {
+    $Q \leftarrow 0 + 0.1 \times (-1.0) = -0.10$
+};
 
 \end{tikzpicture}
-\subcaption{The estimate at $s_{22}$ bootstraps back.
-  The target updates $Q(s_{21}, \text{up})$ toward $0.9$.}
-\label{fig:td-update-bootstrap}
+\vspace{0.8em}
+\subcaption{The Q-value drops toward the target.}
+\label{fig:td-update-step}
 \end{subfigure}
 
-\caption{One Q-learning update step in the grid-world.}
+\vspace{0.5em}
+\caption{One Q-learning update after hitting the penalty.
+  The computation is in the text; the number line shows
+  where the Q-value moved.}
 \label{fig:td-update}
 \end{figure}
