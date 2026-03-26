@@ -68,21 +68,28 @@
 \centering
 \begin{tikzpicture}
     \node[dt node] (s0) at (0, 0) {$s_{00}$};
-    \node[dt reward, text=rewardgreen] (r1) at (1.6, -1.0) {$+1$};
-    \node[dt node] (t1) at (1.6, 1.0) {$s_{01}$};
-    \node[dt node] (t2) at (2.8, 1.0) {$s_{11}$};
-    \node[dt node] (t3) at (4.0, 1.0) {$s_{21}$};
-    \node[dt reward, text=rewardgreen] (r3) at (5.2, 1.0) {$+3$};
-    % Faded long path
-    \draw[dt path] (s0) -- (t1);
-    \draw[dt path] (t1) -- (t2);
-    \draw[dt path] (t2) -- (t3);
-    \draw[dt path] (t3) -- (r3);
-    % Taken short path
-    \draw[dt taken] (s0) -- (r1);
-    % Annotation
+    \node[dt reward, text=rewardgreen] (r1) at (1.8, -1.2) {$+1$};
+    \node[dt node] (t1) at (1.8, 1.0) {$s_{01}$};
+    \node[dt node] (t2) at (3.0, 1.0) {$s_{11}$};
+    \node[dt node] (t3) at (4.2, 1.0) {$s_{21}$};
+    \node[dt reward, text=rewardgreen] (r3) at (5.4, 1.0) {$+3$};
+    % Faded long path with reward labels
+    \draw[dt path] (s0) -- node[font=\tiny, text=black!30,
+        above left, pos=0.5] {$r\!=\!0$} (t1);
+    \draw[dt path] (t1) -- node[font=\tiny, text=black!30,
+        above, pos=0.5] {$r\!=\!0$} (t2);
+    \draw[dt path] (t2) -- node[font=\tiny, text=black!30,
+        above, pos=0.5] {$r\!=\!0$} (t3);
+    \draw[dt path] (t3) -- node[font=\tiny, text=black!30,
+        above, pos=0.5] {$r\!=\!+3$} (r3);
+    % Taken short path with reward label
+    \draw[dt taken] (s0) -- node[font=\tiny, text=black!55,
+        below left, pos=0.5] {$r\!=\!+1$} (r1);
+    % Annotations: both returns
     \node[font=\footnotesize, text=black!60]
-          at (2.8, -0.5) {$G_0 = 1.0$};
+          at (1.8, -1.9) {$G_0 = 1.0$};
+    \node[font=\footnotesize, text=black!30]
+          at (3.6, 1.7) {$G_0 = 0.19$};
     % Start label
     \node[font=\scriptsize, text=black!45, left=2pt] at (s0.west)
         {start};
