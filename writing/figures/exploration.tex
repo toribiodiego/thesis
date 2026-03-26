@@ -1,65 +1,103 @@
 \begin{figure}[h!]
 \centering
 \input{figures/palette}
+\definecolor{agentblue}{HTML}{4C72B0}
+\definecolor{rewardgreen}{HTML}{55A868}
+\definecolor{penaltyred}{HTML}{C44E52}
 
-%% Panel (a): Pure exploitation
+%% Panel (a): Greedy -- always goes left
 \begin{subfigure}[t]{0.45\textwidth}
 \centering
 \begin{tikzpicture}[
-    snode/.style={circle, draw=black!50, thick, fill=palA!12,
-                  minimum size=0.9cm, font=\small},
-    rnode/.style={circle, draw=black!40, thick,
-                  minimum size=0.9cm, font=\small\bfseries},
-    chosen/.style={very thick, palA, -Stealth},
-    unchosen/.style={thick, black!25, dashed, -Stealth},
-    qlabel/.style={font=\scriptsize},
+    cell/.style={minimum size=1.15cm, draw=black!40, thick},
+    reward/.style={font=\scriptsize\bfseries},
+    agent/.style={circle, draw=agentblue, thick,
+                  fill=agentblue!20, inner sep=3pt},
+    slbl/.style={font=\tiny, text=black!30, anchor=north west},
+    chev/.style={semithick, agentblue!50},
+    unknown/.style={font=\scriptsize, text=black!25},
 ]
+\def\s{1.15}
 
-\node[snode] (s) at (0, 0) {$s$};
-\node[rnode, fill=palA!8] (r1) at (-1.6, -2) {$+1$};
-\node[rnode, fill=black!5] (r2) at ( 1.6, -2) {?};
+\foreach \x in {0,1,2} {
+    \foreach \y in {0,1,2} {
+        \node[cell] (c\x\y) at (\x*\s, \y*\s) {};
+    }
+}
 
-\draw[chosen] (s) -- node[qlabel, left, pos=0.4]
-    {$Q\!=\!1$} (r1);
-\draw[unchosen] (s) -- node[qlabel, right, pos=0.4,
-    text=black!35] {$Q\!=\!0$} (r2);
+\node[reward, text=rewardgreen] at (c22) {$+1$};
+\node[reward, text=penaltyred] at (c11) {$-1$};
+
+\node[slbl] at (c20.north west) {$s_{20}$};
+\node[slbl] at (c10.north west) {$s_{10}$};
+\node[slbl] at (c21.north west) {$s_{21}$};
+
+% Unknown cell above
+\node[unknown] at (c21) {?};
+
+% Agent at s_20 with left chevron
+\node[agent] at (c20) {};
+\draw[chev]
+    ([xshift=-5pt, yshift=2pt]c20.center) --
+    ([xshift=-8pt]c20.center) --
+    ([xshift=-5pt, yshift=-2pt]c20.center);
+
+\node[font=\scriptsize, text=black!50, above=2pt]
+    at (c22.north) {goal};
 
 \end{tikzpicture}
-\vspace{0.5em}
-\subcaption{Greedy: always picks the known $+1$.}
+\vspace{0.8em}
+\subcaption{Greedy: always goes left ($Q = 0.73$).}
 \label{fig:exploration-greedy}
 \end{subfigure}
 \hfill
-%% Panel (b): After exploration
+%% Panel (b): After exploring up
 \begin{subfigure}[t]{0.45\textwidth}
 \centering
 \begin{tikzpicture}[
-    snode/.style={circle, draw=black!50, thick, fill=palA!12,
-                  minimum size=0.9cm, font=\small},
-    rnode/.style={circle, draw=black!40, thick,
-                  minimum size=0.9cm, font=\small\bfseries},
-    chosen/.style={very thick, palC, -Stealth},
-    unchosen/.style={thick, black!25, -Stealth},
-    qlabel/.style={font=\scriptsize},
+    cell/.style={minimum size=1.15cm, draw=black!40, thick},
+    reward/.style={font=\scriptsize\bfseries},
+    agent/.style={circle, draw=agentblue, thick,
+                  fill=agentblue!20, inner sep=3pt},
+    slbl/.style={font=\tiny, text=black!30, anchor=north west},
+    chev/.style={semithick, rewardgreen!60},
+    val/.style={font=\tiny, text=black!50},
 ]
+\def\s{1.15}
 
-\node[snode] (s) at (0, 0) {$s$};
-\node[rnode, fill=black!5] (r1) at (-1.6, -2) {$+1$};
-\node[rnode, fill=palC!10] (r2) at ( 1.6, -2) {$+3$};
+\foreach \x in {0,1,2} {
+    \foreach \y in {0,1,2} {
+        \node[cell] (c\x\y) at (\x*\s, \y*\s) {};
+    }
+}
 
-\draw[unchosen] (s) -- node[qlabel, left, pos=0.4,
-    text=black!45] {$Q\!=\!1$} (r1);
-\draw[chosen] (s) -- node[qlabel, right, pos=0.4]
-    {$Q\!=\!3$} (r2);
+\node[reward, text=rewardgreen] at (c22) {$+1$};
+\node[reward, text=penaltyred] at (c11) {$-1$};
+
+\node[slbl] at (c21.north west) {$s_{21}$};
+\node[slbl] at (c22.north west) {$s_{22}$};
+
+% Value at s_21 now known (centered in cell)
+\node[font=\scriptsize, text=black!55] at (c21) {1.00};
+
+% Agent at s_20 now goes up
+\node[agent] at (c20) {};
+\draw[chev]
+    ([yshift=5pt, xshift=-2pt]c20.center) --
+    ([yshift=8pt]c20.center) --
+    ([yshift=5pt, xshift=2pt]c20.center);
+
+\node[font=\scriptsize, text=black!50, above=2pt]
+    at (c22.north) {goal};
 
 \end{tikzpicture}
-\vspace{0.5em}
-\subcaption{Exploring discovers the $+3$ reward.}
+\vspace{0.8em}
+\subcaption{Exploring up finds $s_{21}$ near the goal.}
 \label{fig:exploration-discovered}
 \end{subfigure}
 
-\vspace{0.8em}
-\caption{Without exploration, the agent settles for the first
-  rewarding action it finds and never discovers better alternatives.}
+\vspace{0.5em}
+\caption{The agent at $s_{20}$ always goes left until exploration
+  reveals that going up leads closer to the goal.}
 \label{fig:exploration}
 \end{figure}
