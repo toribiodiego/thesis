@@ -824,6 +824,15 @@ receiving all outputs from the previous layer as its inputs.
 \input{figures/mlp}
 
 \smallskip
+A neural network maps an input to an output through a sequence of
+layers. We can write this as a function $f(\mathbf{x};\,
+\boldsymbol{\theta})$, where $\mathbf{x}$ is the input and
+$\boldsymbol{\theta}$ is the collection of all weights and biases across
+every layer. The semicolon separates the input from the parameters:
+$\mathbf{x}$ changes with each example, while $\boldsymbol{\theta}$ is
+fixed once training is complete.
+
+\smallskip
 Width and depth are the two axes of a network's capacity. Wider
 layers compute more features at each level of abstraction; deeper
 networks compose more levels. In practice, both are tuned to match
