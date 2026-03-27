@@ -41,11 +41,11 @@
 
 % --- Activation function ---
 \node[actnode] (act) at (5.2, 0) {$\sigma$};
-\draw[conn] (sum) -- (act);
+\draw[conn] (sum) -- (act) node[midway, above, font=\scriptsize, text=black!60] {$z$};
 
 % --- Output ---
 \node[outputnode] (out) at (7.0, 0) {};
-\node[nlbl, right=8pt] at (out) {output};
+\node[nlbl, right=8pt] at (out) {$a$};
 \draw[conn] (act) -- (out);
 
 % --- Labels above ---

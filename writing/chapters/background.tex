@@ -717,13 +717,16 @@ More precisely, each input is multiplied by a learned \emph{weight}, a
 \emph{bias} term is added, and the result is passed through an
 \emph{activation function}:
 %
-\begin{equation}
-\label{eq:neuron}
-z = \sigma\!\big(w_1 x_1 + w_2 x_2 + w_3 x_3 + b\big),
-\end{equation}
+\begin{align}
+\label{eq:neuron-z}
+z &= w_1 x_1 + w_2 x_2 + w_3 x_3 + b \\
+\label{eq:neuron-a}
+a &= \sigma(z)
+\end{align}
 %
 where $x_1, x_2, x_3$ are the inputs, $w_1, w_2, w_3$ are the
-weights, $b$ is the bias, and $\sigma$ is the activation function.
+weights, $b$ is the bias, $\sigma$ is the activation function, $z$ is the
+weighted sum, and $a$ is the neuron's output.
 The weights and bias are the neuron's \emph{parameters} -- the
 values that change during training.
 How these parameters are learned is the subject of
@@ -737,14 +740,13 @@ $x_3 = 0.5$, with weights $w_1 = 0.4$, $w_2 = 0.6$, $w_3 = -0.2$, and
 bias $b = 0.1$. The weighted sum is:
 %
 \begin{align*}
-z &= w_1 x_1 + w_2 x_2 + w_3 x_3 + b \\
-  &= (0.4)(2.0) + (0.6)(-1.0) + (-0.2)(0.5) + 0.1 \\
-  &= 0.8 - 0.6 - 0.1 + 0.1 \\
-  &= 0.2
+  &(0.4)(2.0) + (0.6)(-1.0) + (-0.2)(0.5) + 0.1 \\
+= {} &0.8 - 0.6 - 0.1 + 0.1 \\
+= {} &0.2
 \end{align*}
 %
-The activation function then transforms this value to produce the
-neuron's output.
+The weighted sum is $z = 0.2$. Applying the activation function gives
+the neuron's output $a = \sigma(0.2)$.
 \end{example}
 
 \smallskip
