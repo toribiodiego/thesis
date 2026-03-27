@@ -784,15 +784,11 @@ The layers between the input and the output are called \emph{hidden
 layers}. They carry out the intermediate steps of the computation.
 
 \smallskip
-Stacking multiple layers is what makes a network ``deep.'' Each
-layer transforms the output of the previous layer, building
-progressively more abstract features. The first layer might detect
-simple patterns such as edges and textures; the second combines
-these into shapes and parts; the third combines parts into
-higher-level structures such as objects. This compositional
-structure is why deep networks are expressive -- each layer adds
-a level of abstraction that the previous layers could not
-represent on their own.
+Stacking multiple layers is what makes a network ``deep.'' Each layer
+transforms the output of the previous layer, building on what earlier
+layers have already computed. A single layer can only capture simple
+relationships in the input; with more layers, the network can combine
+these into progressively more complex ones.
 
 \smallskip
 Without the activation function, stacking layers would be pointless. A
