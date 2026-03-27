@@ -697,19 +697,7 @@ means for them to learn a \emph{representation} of their input.
 The simplest component of a neural network is the \emph{neuron}. It
 takes several input values, multiplies each one by a different number,
 adds the results together, and passes the total through a function that
-determines its output. More precisely, each input is multiplied by a
-learned \emph{weight}, a \emph{bias} term is added, and the result is
-passed through an \emph{activation function}:
-%
-\begin{equation}
-\label{eq:neuron}
-z = \sigma\!\big(w_1 x_1 + w_2 x_2 + w_3 x_3 + b\big),
-\end{equation}
-%
-where $x_1, x_2, x_3$ are the inputs, $w_1, w_2, w_3$ are the
-weights, $b$ is the bias, and $\sigma$ is the activation function.
-The weights and bias are the neuron's \emph{parameters} -- the
-values that change during training.
+determines its output.
 For instance, $x_1$, $x_2$, and $x_3$ might be the height, weight, and
 age of a person.
 
@@ -720,6 +708,21 @@ means it is mostly ignored. By adjusting these weights, the neuron
 learns which combinations of inputs are relevant. Its output is a single
 number that summarizes the inputs, which can then be passed to other
 neurons.
+
+\smallskip
+More precisely, each input is multiplied by a learned \emph{weight}, a
+\emph{bias} term is added, and the result is passed through an
+\emph{activation function}:
+%
+\begin{equation}
+\label{eq:neuron}
+z = \sigma\!\big(w_1 x_1 + w_2 x_2 + w_3 x_3 + b\big),
+\end{equation}
+%
+where $x_1, x_2, x_3$ are the inputs, $w_1, w_2, w_3$ are the
+weights, $b$ is the bias, and $\sigma$ is the activation function.
+The weights and bias are the neuron's \emph{parameters} -- the
+values that change during training.
 How these parameters are learned is the subject of
 \cref{subsec:training}; for now, it is enough to know that they are
 adjustable.
