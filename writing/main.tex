@@ -18,6 +18,17 @@
 
 % --- Math and symbols ---
 \usepackage{amsmath, amssymb, amsthm}
+% Example environment styled to match figure/table captions
+\newtheoremstyle{examplestyle}%
+  {\topsep}{\topsep}%            space above/below
+  {\normalfont}%                  body font (upright)
+  {}%                             indent
+  {\small\bfseries}%              head font (small + bold, matches captions)
+  {.}%                            punctuation after head (period, matches captions)
+  { }%                            space after head
+  {}%                             head spec (default)
+\theoremstyle{examplestyle}
+\newtheorem{example}{Example}[chapter]
 
 % --- Figures and tables ---
 \usepackage{graphicx}
