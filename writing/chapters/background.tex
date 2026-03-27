@@ -710,9 +710,16 @@ where $x_1, x_2, x_3$ are the inputs, $w_1, w_2, w_3$ are the
 weights, $b$ is the bias, and $\sigma$ is the activation function.
 The weights and bias are the neuron's \emph{parameters} -- the
 values that change during training.
-In \cref{eq:neuron}, each input represents a different feature. For a
-simple case with three features, $x_1$, $x_2$, and $x_3$ might be the
-height, weight, and age of the same object.
+For instance, $x_1$, $x_2$, and $x_3$ might be the height, weight, and
+age of a person.
+
+\smallskip
+Each weight controls how much its corresponding input influences the
+result. A large weight means that input matters more; a weight near zero
+means it is mostly ignored. By adjusting these weights, the neuron
+learns which combinations of inputs are relevant. Its output is a single
+number that summarizes the inputs, which can then be passed to other
+neurons.
 How these parameters are learned is the subject of
 \cref{subsec:training}; for now, it is enough to know that they are
 adjustable.
