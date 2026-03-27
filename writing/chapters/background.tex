@@ -730,16 +730,22 @@ How these parameters are learned is the subject of
 \cref{subsec:training}; for now, it is enough to know that they are
 adjustable.
 
-\smallskip
-To see how the computation works, consider a simple example with small
-numbers. Suppose the three inputs have values $x_1 = 2.0$, $x_2 = -1.0$,
+\begin{example}
+\label{ex:neuron}
+Suppose the three inputs have values $x_1 = 2.0$, $x_2 = -1.0$,
 $x_3 = 0.5$, with weights $w_1 = 0.4$, $w_2 = 0.6$, $w_3 = -0.2$, and
-bias $b = 0.1$.
-The weighted sum is
-$0.4 \times 2.0 + 0.6 \times (-1.0) + (-0.2) \times 0.5 + 0.1
-= 0.8 - 0.6 - 0.1 + 0.1 = 0.2$.
+bias $b = 0.1$. The weighted sum is:
+%
+\begin{align*}
+z &= w_1 x_1 + w_2 x_2 + w_3 x_3 + b \\
+  &= (0.4)(2.0) + (0.6)(-1.0) + (-0.2)(0.5) + 0.1 \\
+  &= 0.8 - 0.6 - 0.1 + 0.1 \\
+  &= 0.2
+\end{align*}
+%
 The activation function then transforms this value to produce the
 neuron's output.
+\end{example}
 
 \smallskip
 The activation function is what gives neural networks their power.
