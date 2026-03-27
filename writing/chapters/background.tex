@@ -760,10 +760,9 @@ linear unit} (ReLU):
 \end{equation}
 %
 Positive values pass through unchanged; negative values become
-zero. In the example above, $\text{ReLU}(0.2) = 0.2$ -- the
-output is the same as the input because the weighted sum was
-positive. If the weighted sum had been $-0.3$, the output would
-be $0$. ReLU is simple, computationally cheap, and works well in
+zero. In the example above, $\text{ReLU}(0.2) = 0.2$, so $a = 0.2$.
+The weighted sum was positive, so the value passes through. If the
+weighted sum had been $-0.3$, the output would be $a = 0$. ReLU is simple, computationally cheap, and works well in
 practice. Earlier activation functions such as the sigmoid and
 hyperbolic tangent (tanh) map inputs to the ranges $(0, 1)$ and
 $(-1, 1)$ respectively; ReLU has largely replaced them in modern
@@ -784,11 +783,10 @@ The layers between the input and the output are called \emph{hidden
 layers}. They carry out the intermediate steps of the computation.
 
 \smallskip
-Stacking multiple layers is what makes a network ``deep.'' Each layer
+A network with more than one hidden layer is called ``deep.'' Each layer
 transforms the output of the previous layer, building on what earlier
-layers have already computed. A single layer can only capture simple
-relationships in the input; with more layers, the network can combine
-these into progressively more complex ones.
+layers have already computed. A single layer captures simple relationships in the input; with more
+layers, the network combines these into progressively more complex ones.
 
 \smallskip
 Without the activation function, stacking layers would be pointless. A
