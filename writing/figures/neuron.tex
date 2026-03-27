@@ -5,54 +5,48 @@
 \definecolor{nodeborder}{HTML}{5A87B5}
 \begin{tikzpicture}[
     inputnode/.style={circle, draw=black!30, thick, fill=black!4,
-                      minimum size=22pt, inner sep=0pt},
+                      minimum size=26pt, inner sep=0pt},
     sumnode/.style={circle, draw=nodeborder, thick, fill=nodeblue,
-                    minimum size=28pt, inner sep=0pt},
+                    minimum size=30pt, inner sep=0pt},
     actnode/.style={rectangle, draw=nodeborder, thick, fill=nodeblue!30,
-                    minimum width=24pt, minimum height=24pt,
+                    minimum width=28pt, minimum height=28pt,
                     inner sep=2pt, rounded corners=2pt},
     outputnode/.style={circle, draw=black!30, thick, fill=black!8,
-                       minimum size=22pt, inner sep=0pt},
-    conn/.style={->, thick, >=stealth, black!50},
-    wlbl/.style={font=\scriptsize, text=black!60, midway},
-    nlbl/.style={font=\small, text=black!70},
+                       minimum size=26pt, inner sep=0pt},
+    conn/.style={->, thick, >=stealth, black!60},
+    mathlbl/.style={font=\small, text=black!70},
+    seclbl/.style={font=\small, text=black!40},
 ]
 
-% --- Input nodes ---
-\node[inputnode] (x1) at (0, 1.5)  {};
-\node[inputnode] (x2) at (0, 0)    {};
-\node[inputnode] (x3) at (0, -1.5) {};
-
-% Input labels (plain language)
-\node[nlbl, left=16pt] at (x1) {height};
-\node[nlbl, left=16pt] at (x2) {weight};
-\node[nlbl, left=16pt] at (x3) {age};
+% --- Input nodes (math variable inside) ---
+\node[inputnode] (x1) at (0, 1.5)  {\small $x_1$};
+\node[inputnode] (x2) at (0, 0)    {\small $x_2$};
+\node[inputnode] (x3) at (0, -1.5) {\small $x_3$};
 
 % --- Summation node ---
-\node[sumnode] (sum) at (3.2, 0) {$\Sigma$};
+\node[sumnode] (sum) at (3.5, 0) {\small $\Sigma$};
+
+% --- Bias label (below-right of sum node) ---
+\node[mathlbl] at (4.4, -0.9) {$+\; b$};
 
 % --- Connections with weight labels ---
-\draw[conn] (x1) -- (sum) node[wlbl, above, sloped] {$w_1$};
-\draw[conn] (x2) -- (sum) node[wlbl, above, sloped] {$w_2$};
-\draw[conn] (x3) -- (sum) node[wlbl, above, sloped] {$w_3$};
-
-% --- Bias ---
-\node[nlbl, above=10pt] at (sum) {$+\; b$};
+\draw[conn, shorten >=4pt, shorten <=4pt] (x1) -- (sum) node[mathlbl, midway, above, sloped] {$w_1$};
+\draw[conn, shorten >=4pt, shorten <=4pt] (x2) -- (sum) node[mathlbl, midway, above, sloped] {$w_2$};
+\draw[conn, shorten >=4pt, shorten <=4pt] (x3) -- (sum) node[mathlbl, midway, above, sloped] {$w_3$};
 
 % --- Activation function ---
-\node[actnode] (act) at (5.2, 0) {$\sigma$};
-\draw[conn] (sum) -- (act) node[midway, above, font=\scriptsize, text=black!60] {$z$};
+\node[actnode] (act) at (6.5, 0) {\small $\sigma$};
+\draw[conn, shorten >=4pt, shorten <=4pt] (sum) -- (act) node[mathlbl, midway, above] {$z$};
 
 % --- Output ---
-\node[outputnode] (out) at (7.0, 0) {};
-\node[nlbl, right=8pt] at (out) {$a$};
-\draw[conn] (act) -- (out);
+\node[outputnode] (out) at (9.0, 0) {\small $a$};
+\draw[conn, shorten >=4pt, shorten <=4pt] (act) -- (out);
 
-% --- Labels above ---
-\node[font=\scriptsize, text=black!40] at (0, 2.3) {inputs};
-\node[font=\scriptsize, text=black!40] at (3.2, 2.3) {weighted sum};
-\node[font=\scriptsize, text=black!40] at (5.2, 2.3) {activation};
-\node[font=\scriptsize, text=black!40] at (7.0, 2.3) {output};
+% --- Section labels above ---
+\node[seclbl] at (0, 2.8) {inputs};
+\node[seclbl] at (3.5, 2.8) {weighted sum};
+\node[seclbl] at (6.5, 2.8) {activation};
+\node[seclbl] at (9.0, 2.8) {output};
 
 \end{tikzpicture}
 \caption{A single neuron. Each input is multiplied by a weight, the
