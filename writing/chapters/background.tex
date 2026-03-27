@@ -787,6 +787,9 @@ A network with more than one hidden layer is called ``deep.'' Each layer
 transforms the output of the previous layer, building on what earlier
 layers have already computed. A single layer captures simple relationships in the input; with more
 layers, the network combines these into progressively more complex ones.
+In theory, a single hidden layer with enough neurons could learn any
+relationship in the data. In practice, ``enough'' may mean millions of
+neurons. Adding layers achieves the same result with far fewer.
 
 \smallskip
 Without the activation function, stacking layers would be pointless. A
