@@ -780,7 +780,10 @@ different pattern in the input.
 A network has three kinds of layers. The \emph{input layer} holds the
 raw input values. The \emph{output layer} produces the network's result.
 The layers between the input and the output are called \emph{hidden
-layers}. They carry out the intermediate steps of the computation.
+layers}. They carry out the intermediate steps of the computation. Each
+neuron in a hidden layer performs the same operation described earlier:
+it computes a weighted sum of its inputs, adds a bias, and applies the
+activation function.
 
 \smallskip
 A network with more than one hidden layer is called ``deep.'' Each layer
@@ -814,12 +817,11 @@ perceptron} (MLP). Other
 connectivity patterns exist -- \emph{convolutional layers}, which
 exploit the spatial structure of images, are introduced in the
 next subsection.
-\Cref{fig:feedforward-network} illustrates a fully connected
-network: each layer's neurons connect to every neuron in the next,
-and the callout shows the weighted-sum-plus-activation computation
-inside a single neuron.
+\Cref{fig:mlp} illustrates a fully connected network.
+Each node in the hidden layers is a neuron (\cref{fig:neuron}),
+receiving all outputs from the previous layer as its inputs.
 
-\input{figures/feedforward-network}
+\input{figures/mlp}
 
 \smallskip
 Width and depth are the two axes of a network's capacity. Wider
