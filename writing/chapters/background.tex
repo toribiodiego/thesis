@@ -710,6 +710,8 @@ learns which combinations of inputs are relevant. Its output is a single
 number that summarizes the inputs, which can then be passed to other
 neurons.
 
+\input{figures/neuron}
+
 \smallskip
 More precisely, each input is multiplied by a learned \emph{weight}, a
 \emph{bias} term is added, and the result is passed through an
@@ -729,9 +731,10 @@ How these parameters are learned is the subject of
 adjustable.
 
 \smallskip
-To see this concretely, suppose a neuron has three inputs with
-values $x_1 = 2.0$, $x_2 = -1.0$, $x_3 = 0.5$, weights
-$w_1 = 0.4$, $w_2 = 0.6$, $w_3 = -0.2$, and bias $b = 0.1$.
+To see how the computation works, consider a simple example with small
+numbers. Suppose the three inputs have values $x_1 = 2.0$, $x_2 = -1.0$,
+$x_3 = 0.5$, with weights $w_1 = 0.4$, $w_2 = 0.6$, $w_3 = -0.2$, and
+bias $b = 0.1$.
 The weighted sum is
 $0.4 \times 2.0 + 0.6 \times (-1.0) + (-0.2) \times 0.5 + 0.1
 = 0.8 - 0.6 - 0.1 + 0.1 = 0.2$.
@@ -768,6 +771,8 @@ practice. Earlier activation functions such as the sigmoid and
 hyperbolic tangent (tanh) map inputs to the ranges $(0, 1)$ and
 $(-1, 1)$ respectively; ReLU has largely replaced them in modern
 architectures.
+
+\input{figures/relu}
 
 \smallskip
 Neurons are organized into \emph{layers}. Each neuron in a layer
