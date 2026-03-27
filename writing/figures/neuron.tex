@@ -1,0 +1,62 @@
+\begin{figure}[ht]
+\centering
+\input{figures/palette}
+\definecolor{nodeblue}{HTML}{B8D2E6}
+\definecolor{nodeborder}{HTML}{5A87B5}
+\begin{tikzpicture}[
+    inputnode/.style={circle, draw=black!30, thick, fill=black!4,
+                      minimum size=22pt, inner sep=0pt},
+    sumnode/.style={circle, draw=nodeborder, thick, fill=nodeblue,
+                    minimum size=28pt, inner sep=0pt},
+    actnode/.style={rectangle, draw=nodeborder, thick, fill=nodeblue!30,
+                    minimum width=24pt, minimum height=24pt,
+                    inner sep=2pt, rounded corners=2pt},
+    outputnode/.style={circle, draw=black!30, thick, fill=black!8,
+                       minimum size=22pt, inner sep=0pt},
+    conn/.style={->, thick, >=stealth, black!50},
+    wlbl/.style={font=\scriptsize, text=black!60, midway},
+    nlbl/.style={font=\small, text=black!70},
+]
+
+% --- Input nodes ---
+\node[inputnode] (x1) at (0, 1.5)  {};
+\node[inputnode] (x2) at (0, 0)    {};
+\node[inputnode] (x3) at (0, -1.5) {};
+
+% Input labels (plain language)
+\node[nlbl, left=16pt] at (x1) {height};
+\node[nlbl, left=16pt] at (x2) {weight};
+\node[nlbl, left=16pt] at (x3) {age};
+
+% --- Summation node ---
+\node[sumnode] (sum) at (3.2, 0) {$\Sigma$};
+
+% --- Connections with weight labels ---
+\draw[conn] (x1) -- (sum) node[wlbl, above, sloped] {$w_1$};
+\draw[conn] (x2) -- (sum) node[wlbl, above, sloped] {$w_2$};
+\draw[conn] (x3) -- (sum) node[wlbl, above, sloped] {$w_3$};
+
+% --- Bias ---
+\node[nlbl, above=10pt] at (sum) {$+\; b$};
+
+% --- Activation function ---
+\node[actnode] (act) at (5.2, 0) {$\sigma$};
+\draw[conn] (sum) -- (act);
+
+% --- Output ---
+\node[outputnode] (out) at (7.0, 0) {};
+\node[nlbl, right=8pt] at (out) {output};
+\draw[conn] (act) -- (out);
+
+% --- Labels above ---
+\node[font=\scriptsize, text=black!40] at (0, 2.3) {inputs};
+\node[font=\scriptsize, text=black!40] at (3.2, 2.3) {weighted sum};
+\node[font=\scriptsize, text=black!40] at (5.2, 2.3) {activation};
+\node[font=\scriptsize, text=black!40] at (7.0, 2.3) {output};
+
+\end{tikzpicture}
+\caption{A single neuron. Each input is multiplied by a weight, the
+  results are summed with a bias, and the total is passed through an
+  activation function to produce the output.}
+\label{fig:neuron}
+\end{figure}
