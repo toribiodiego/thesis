@@ -693,10 +693,12 @@ means for them to learn a \emph{representation} of their input.
 \subsection{Neural Networks}
 \label{subsec:neural-networks}
 
-A neural network is built from simple computational units called
-\emph{neurons}. A single neuron takes several input values,
-multiplies each by a learned \emph{weight}, adds a \emph{bias}
-term, and passes the result through an \emph{activation function}:
+The simplest component of a neural network is the \emph{neuron}. It
+takes several input values, multiplies each one by a different number,
+adds the results together, and passes the total through a function that
+determines its output. More precisely, each input is multiplied by a
+learned \emph{weight}, a \emph{bias} term is added, and the result is
+passed through an \emph{activation function}:
 %
 \begin{equation}
 \label{eq:neuron}
