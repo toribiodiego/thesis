@@ -1,0 +1,38 @@
+\begin{figure}[ht]
+\centering
+\input{figures/palette}
+\begin{tikzpicture}[
+    scale=0.85,
+]
+
+% Grid
+\draw[black!8, step=1] (-3.4, -0.4) grid (3.4, 3.4);
+
+% Axes
+\draw[->, black!50, thick] (-3.5, 0) -- (3.7, 0)
+    node[right, font=\small, text=black!60] {$x$};
+\draw[->, black!50, thick] (0, -0.5) -- (0, 3.7)
+    node[above, font=\small, text=black!60] {$\text{ReLU}(x)$};
+
+% Tick marks
+\foreach \x in {-3,-2,-1,1,2,3} {
+    \draw[black!40] (\x, -0.08) -- (\x, 0.08);
+    \node[font=\scriptsize, text=black!50, below=2pt] at (\x, 0) {\x};
+}
+\foreach \y in {1,2,3} {
+    \draw[black!40] (-0.08, \y) -- (0.08, \y);
+    \node[font=\scriptsize, text=black!50, left=2pt] at (0, \y) {\y};
+}
+
+% ReLU function
+\draw[palA, very thick] (-3.4, 0) -- (0, 0);
+\draw[palA, very thick] (0, 0) -- (3.4, 3.4);
+
+% Kink marker
+\fill[palA] (0, 0) circle (2.5pt);
+
+\end{tikzpicture}
+\caption{The ReLU activation function: negative inputs are zeroed,
+  positive inputs pass through unchanged.}
+\label{fig:relu}
+\end{figure}
