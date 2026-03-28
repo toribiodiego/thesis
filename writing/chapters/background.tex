@@ -837,6 +837,10 @@ Width and depth are the two axes of a network's capacity. Wider
 layers compute more features at each level of abstraction; deeper
 networks compose more levels. In practice, both are tuned to match
 the complexity of the task.
+To see how quickly parameters add up, consider a fully connected layer
+with 64 neurons, each receiving 128 inputs. Each neuron has 128 weights
+and one bias, so the layer has $64 \times (128 + 1) = 8{,}256$
+parameters.
 
 \subsection{Convolutional Layers}
 \label{subsec:conv-layers}
