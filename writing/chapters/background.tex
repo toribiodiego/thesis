@@ -1176,13 +1176,13 @@ consecutive training samples, and a \emph{target network}, which
 stabilizes the learning target. This section describes each
 component in turn.
 
-\subsection{Convolutional Encoder}
-\label{subsec:conv-encoder}
+\subsection{Preprocessing}
+\label{subsec:preprocessing}
 
 \Cref{sec:deep-learning} introduced the building blocks of neural
 networks, including convolutional layers designed for spatial
-inputs. This section makes these concrete: what does the DQN
-network look like, and what does it actually see?
+inputs. Before the network can process a game frame, the raw
+output must be transformed into a compact input.
 
 \smallskip
 The raw output of a video game environment is a sequence of color
@@ -1239,7 +1239,9 @@ learning for visual environments -- virtually every subsequent
 method, including those discussed in later sections, uses the same
 four steps~\citep{mnih2015human}.
 
-\smallskip
+\subsection{The DQN Architecture}
+\label{subsec:dqn-architecture}
+
 The preprocessed $84 \times 84 \times 4$ tensor is the input to
 the \emph{Nature CNN}, a convolutional neural network introduced
 by~\citet{mnih2015human}. The architecture uses the convolutional
@@ -1366,6 +1368,191 @@ replay provides the answer: the expectation is approximated by
 sampling minibatches from the buffer, and each sampled transition
 contributes one term to the loss.
 
+\subsection{Data Augmentation}
+\label{subsec:data-augmentation}
+
+When training data is limited, the agent replays the same transitions
+repeatedly, risking overfitting to specific pixel patterns rather than
+learning general features. Data augmentation -- applying small,
+semantics-preserving transformations to game frames during training --
+expands the effective dataset without additional environment interaction.
+
+\smallskip
+In supervised learning, data augmentation applies label-preserving
+transformations to training inputs: random crops, horizontal flips,
+color jitter. The key requirement is that the transformation must
+not change the correct answer -- a horizontally flipped cat is
+still a cat. Augmentation is standard practice for training image
+classifiers, especially when data is limited, because it
+effectively multiplies the dataset by creating many versions of
+each training example.
+
+\smallskip
+Transferring this idea to reinforcement learning is not
+straightforward. In supervised learning, the label for an image is
+fixed: a cat is always a cat regardless of how many times the image
+is transformed. In RL, the ``label'' for an observation is the
+Q-value target, which depends on the current policy and changes
+every training step. But the observation itself is still an image.
+If a small spatial transformation does not change the game
+semantics -- the paddle is in nearly the same position, the ball
+trajectory is the same, the optimal action has not changed -- then
+the Q-values should also be unchanged. Spatial transforms that
+produce small, semantics-preserving perturbations should therefore
+be safe for RL, despite the non-stationary target problem.
+
+\smallskip
+The specific augmentation used in data-efficient RL is the
+\emph{random shift}. Starting from the preprocessed
+$84 \times 84$ grayscale frame, the operation pads the image by 4
+pixels on each side using reflection padding, creating a
+$92 \times 92$ image where the border mirrors the edge pixels.
+Reflection is used rather than zero padding because it fills the
+border with plausible image content -- mirrored textures and edges
+-- rather than artificial black pixels that the encoder could learn
+to detect as a padding signal rather than game content. A
+random $84 \times 84$ crop is then taken from this padded image,
+with the crop position sampled uniformly at random. The result is
+the original game frame shifted by up to $\pm 4$ pixels in both the
+horizontal and vertical directions. The visual content is preserved;
+only the spatial position has changed slightly.
+\Cref{fig:random-shift} illustrates the three steps. This is the
+operation used by DrQ~\citep{kostrikov2020image}; the equivalent
+operation in RAD~\citep{laskin2020reinforcement} is called ``random
+translate.''
+
+\input{figures/random-shift}
+
+\smallskip
+Because the observation is a stack of four consecutive frames, the
+same random shift -- the same horizontal and vertical offset -- is
+applied to all four frames in the stack. This consistency matters:
+the agent infers velocity and motion from pixel differences between
+consecutive frames. If each frame were shifted independently, these
+inter-frame differences would be corrupted, creating spurious
+motion signals. Consistent augmentation across the stack preserves
+temporal information while still providing spatial perturbation.
+
+\smallskip
+During training, each transition $(s, a, r, s')$ sampled from the
+replay buffer is augmented before computing the loss. The current
+state $s$ and next state $s'$ receive independent random shifts --
+different crop positions -- because they are separate observations.
+There is no need for the spatial offset of $s$ and $s'$ to match.
+Both DrQ and RAD apply augmentation in this way.
+
+\smallskip
+\citet{laskin2020reinforcement} systematically tested ten
+augmentation types on pixel-based RL: crop, translate, window,
+grayscale, cutout, cutout-color, flip, rotate, random convolution,
+and color jitter. Random crop and translate were the most effective
+by a wide margin; most other augmentations were neutral or harmful.
+The reason is that game semantics are approximately
+translation-invariant at small scales -- a paddle shifted three
+pixels is still a paddle in approximately the same place -- but
+they are not invariant to other transforms. Horizontal flips
+reverse left and right, changing the optimal action. Rotation
+disrupts spatial layout (gravity goes sideways). Color jitter
+alters object appearance in ways the encoder should remain
+sensitive to. Random shift succeeds because it perturbs position
+without breaking the game's spatial structure.
+
+\smallskip
+DrQ~\citep{kostrikov2020image} and
+RAD~\citep{laskin2020reinforcement} are concurrent papers that
+independently demonstrated image augmentation is sufficient for
+competitive data-efficient RL. DrQ additionally proposed averaging
+Q-targets across $K$ augmented versions of $s'$ and averaging
+Q-values across $M$ augmented versions of $s$, but the simplest
+setting -- $K = 1$, $M = 1$, a single random shift per observation
+-- is already sufficient for Atari-100K. No complex averaging or
+multiple forward passes are needed.
+
+\smallskip
+In the 100K regime, the replay buffer contains at most around
+100{,}000 transitions -- this is the agent's entire dataset. With a
+replay ratio of one (one gradient update per environment step),
+each transition is sampled roughly once. Data-efficient settings
+often use higher replay ratios, reusing each transition two to four
+times. When the same transitions are replayed repeatedly, the
+network risks memorizing specific pixel patterns rather than
+learning general features. This is the same overfitting problem
+that afflicts small-dataset classifiers in supervised learning, but
+amplified by the shifting target distribution in RL.
+
+\smallskip
+Consider what overfitting looks like at the representation level.
+The encoder might learn that a bright pixel at position $(42, 17)$
+predicts high Q-values -- because in the limited training data,
+that pixel happens to be bright when the ball is near the paddle.
+This feature is fragile: it breaks with any positional variation.
+A robust encoder would instead learn to represent the ball's
+position relative to the paddle, a feature that generalizes across
+spatial shifts. Without augmentation, the encoder has no pressure
+to prefer the robust feature over the fragile one, because both
+predict Q-values equally well on the exact training observations.
+\Cref{fig:fragile-vs-robust} illustrates this contrast.
+
+\input{figures/fragile-vs-robust}
+
+\smallskip
+Random shift augmentation addresses this directly. Each time a
+transition is replayed, the observation is augmented with a
+different random spatial shift. Even though the buffer contains
+only 100{,}000 transitions, the network never sees the exact same
+input twice. This effectively expands the training distribution:
+each transition generates a family of slightly different training
+examples, all sharing the same Q-value target because the game
+semantics are unchanged. The encoder is forced to learn features
+that are invariant to small spatial shifts -- features that capture
+``where the paddle is relative to the ball'' rather than ``what
+pixel values appear at specific coordinates.'' This is
+\emph{implicit regularization}: not an explicit penalty in the loss
+function, but a constraint on what the encoder can learn, imposed
+by the data distribution it trains on.
+
+\smallskip
+The same mechanism explains why augmentation helps in supervised
+learning: random crops force a classifier to recognize objects
+regardless of their position in the frame. In RL, the effect is
+amplified because the dataset is orders of magnitude smaller --
+100{,}000 transitions versus millions of labeled images -- and
+because the training distribution shifts as the policy improves,
+compounding the risk of overfitting to early, unrepresentative
+data.
+
+\smallskip
+CURL~\citep{srinivas2020curl} combined contrastive learning with
+random crop augmentation on data-efficient Rainbow, reporting
+improved performance on Atari-100K. The contrastive loss requires
+augmentation to generate positive pairs: two different random crops
+of the same observation form a positive pair, while crops of
+different observations form negative pairs. Because augmentation is
+integral to the contrastive objective, the original results could
+not distinguish whether the gains came from contrastive learning or
+from the augmentation itself. DrQ and RAD answered this question:
+augmentation alone, without any contrastive or self-supervised
+loss, achieves similar or better results. The augmentation was
+doing most of the work. This finding is important for experimental
+design: augmentation and representation learning can be studied as
+independent factors only when the representation learning method
+does not depend on augmentation for its training signal.
+
+\smallskip
+Augmentation ensures the encoder sees diverse views of each
+observation, encouraging spatial invariance and reducing
+overfitting. But it does not change what the encoder is
+\emph{trained to predict}. The Q-learning loss remains the sole
+objective shaping the encoder's representations, and in the 100K
+regime this signal is weak -- targets are bootstrapped from poor
+estimates early in training, providing noisy guidance about what
+features matter. The encoder may settle on representations that
+satisfy the current Q-targets but fail to support further learning.
+This is the gap that self-supervised representation learning
+addresses: an auxiliary training objective that shapes the
+encoder's representations to capture dynamics and structure beyond
+what the Q-learning loss alone requires.
+
 \subsection{Target Networks}
 \label{subsec:target-networks-bg}
 
@@ -1463,8 +1650,8 @@ reduce the practical instability enough for learning to succeed.
 The next section introduces Rainbow, which extends DQN with six
 additional improvements that further boost performance.
 
-\subsection{Rainbow DQN}
-\label{subsec:rainbow-dqn}
+\subsection{Rainbow Extensions}
+\label{subsec:rainbow-extensions}
 
 Between 2015 and 2018, several independent lines of research each
 identified a specific weakness in DQN and proposed a targeted fix.
@@ -1584,7 +1771,9 @@ confident, rather than exploring uniformly at random. With noisy
 networks, $\varepsilon$ is set to zero -- action selection is fully
 greedy with respect to the (noisy) Q-values.
 
-\smallskip
+\subsection{The Rainbow Agent}
+\label{subsec:rainbow-agent}
+
 Taken together, these six extensions modify nearly every component
 of DQN: the loss function changes from squared error to
 distributional KL divergence, the replay strategy from uniform to
@@ -1593,7 +1782,7 @@ multi-step with double Q-learning, the exploration strategy from
 $\varepsilon$-greedy to noisy networks, and the network head from
 a single stream to the dueling architecture. The only component
 left unchanged is the convolutional encoder -- the Nature CNN
-backbone from \cref{subsec:conv-encoder}.
+backbone from \cref{subsec:dqn-architecture}.
 \Cref{fig:rainbow-components} maps each extension to the component
 it modifies, highlighting the encoder as the sole unchanged piece.
 
@@ -1676,7 +1865,7 @@ frames effectively speeds up the game from the agent's perspective.
 \smallskip
 The preprocessing pipeline that converts raw frames into the
 $84 \times 84 \times 4$ input tensor was described in
-\cref{subsec:conv-encoder}. This pipeline -- max-pooling over
+\cref{subsec:dqn-architecture}. This pipeline -- max-pooling over
 consecutive frames, grayscale conversion, resizing, and stacking
 four frames -- is universal across methods. DQN, Rainbow, DrQ,
 and SPR all receive the same preprocessed observations.
@@ -1893,203 +2082,6 @@ ranges. The next section introduces data augmentation, the first
 of two techniques that improve data efficiency under the 100K
 constraint.
 
-\section{Data Augmentation for RL}
-\label{sec:augmentation}
-
-The previous section established the 100K constraint: agents must
-learn from roughly six minutes of play. Under such a tight data
-budget, the agent replays the same transitions repeatedly,
-risking overfitting to specific pixel patterns rather than
-learning general features. Data augmentation -- a standard
-technique in supervised learning -- has recently been shown to be
-surprisingly effective in reinforcement learning. By applying
-small, semantics-preserving transformations to game frames during
-training, augmentation expands the effective dataset without
-additional environment interaction. This section describes the
-specific augmentation used in data-efficient RL (random spatial
-shifts) and explains why it works as a form of implicit
-regularization.
-
-\subsection{Random Shift Augmentation}
-\label{subsec:random-shift}
-
-In supervised learning, data augmentation applies label-preserving
-transformations to training inputs: random crops, horizontal flips,
-color jitter. The key requirement is that the transformation must
-not change the correct answer -- a horizontally flipped cat is
-still a cat. Augmentation is standard practice for training image
-classifiers, especially when data is limited, because it
-effectively multiplies the dataset by creating many versions of
-each training example.
-
-\smallskip
-Transferring this idea to reinforcement learning is not
-straightforward. In supervised learning, the label for an image is
-fixed: a cat is always a cat regardless of how many times the image
-is transformed. In RL, the ``label'' for an observation is the
-Q-value target, which depends on the current policy and changes
-every training step. But the observation itself is still an image.
-If a small spatial transformation does not change the game
-semantics -- the paddle is in nearly the same position, the ball
-trajectory is the same, the optimal action has not changed -- then
-the Q-values should also be unchanged. Spatial transforms that
-produce small, semantics-preserving perturbations should therefore
-be safe for RL, despite the non-stationary target problem.
-
-\smallskip
-The specific augmentation used in data-efficient RL is the
-\emph{random shift}. Starting from the preprocessed
-$84 \times 84$ grayscale frame, the operation pads the image by 4
-pixels on each side using reflection padding, creating a
-$92 \times 92$ image where the border mirrors the edge pixels.
-Reflection is used rather than zero padding because it fills the
-border with plausible image content -- mirrored textures and edges
--- rather than artificial black pixels that the encoder could learn
-to detect as a padding signal rather than game content. A
-random $84 \times 84$ crop is then taken from this padded image,
-with the crop position sampled uniformly at random. The result is
-the original game frame shifted by up to $\pm 4$ pixels in both the
-horizontal and vertical directions. The visual content is preserved;
-only the spatial position has changed slightly.
-\Cref{fig:random-shift} illustrates the three steps. This is the
-operation used by DrQ~\citep{kostrikov2020image}; the equivalent
-operation in RAD~\citep{laskin2020reinforcement} is called ``random
-translate.''
-
-\input{figures/random-shift}
-
-\smallskip
-Because the observation is a stack of four consecutive frames, the
-same random shift -- the same horizontal and vertical offset -- is
-applied to all four frames in the stack. This consistency matters:
-the agent infers velocity and motion from pixel differences between
-consecutive frames. If each frame were shifted independently, these
-inter-frame differences would be corrupted, creating spurious
-motion signals. Consistent augmentation across the stack preserves
-temporal information while still providing spatial perturbation.
-
-\smallskip
-During training, each transition $(s, a, r, s')$ sampled from the
-replay buffer is augmented before computing the loss. The current
-state $s$ and next state $s'$ receive independent random shifts --
-different crop positions -- because they are separate observations.
-There is no need for the spatial offset of $s$ and $s'$ to match.
-Both DrQ and RAD apply augmentation in this way.
-
-\smallskip
-\citet{laskin2020reinforcement} systematically tested ten
-augmentation types on pixel-based RL: crop, translate, window,
-grayscale, cutout, cutout-color, flip, rotate, random convolution,
-and color jitter. Random crop and translate were the most effective
-by a wide margin; most other augmentations were neutral or harmful.
-The reason is that game semantics are approximately
-translation-invariant at small scales -- a paddle shifted three
-pixels is still a paddle in approximately the same place -- but
-they are not invariant to other transforms. Horizontal flips
-reverse left and right, changing the optimal action. Rotation
-disrupts spatial layout (gravity goes sideways). Color jitter
-alters object appearance in ways the encoder should remain
-sensitive to. Random shift succeeds because it perturbs position
-without breaking the game's spatial structure.
-
-\smallskip
-DrQ~\citep{kostrikov2020image} and
-RAD~\citep{laskin2020reinforcement} are concurrent papers that
-independently demonstrated image augmentation is sufficient for
-competitive data-efficient RL. DrQ additionally proposed averaging
-Q-targets across $K$ augmented versions of $s'$ and averaging
-Q-values across $M$ augmented versions of $s$, but the simplest
-setting -- $K = 1$, $M = 1$, a single random shift per observation
--- is already sufficient for Atari-100K. No complex averaging or
-multiple forward passes are needed.
-
-\subsection{Augmentation as Regularization}
-\label{subsec:aug-regularization}
-
-In the 100K regime, the replay buffer contains at most around
-100{,}000 transitions -- this is the agent's entire dataset. With a
-replay ratio of one (one gradient update per environment step),
-each transition is sampled roughly once. Data-efficient settings
-often use higher replay ratios, reusing each transition two to four
-times. When the same transitions are replayed repeatedly, the
-network risks memorizing specific pixel patterns rather than
-learning general features. This is the same overfitting problem
-that afflicts small-dataset classifiers in supervised learning, but
-amplified by the shifting target distribution in RL.
-
-\smallskip
-Consider what overfitting looks like at the representation level.
-The encoder might learn that a bright pixel at position $(42, 17)$
-predicts high Q-values -- because in the limited training data,
-that pixel happens to be bright when the ball is near the paddle.
-This feature is fragile: it breaks with any positional variation.
-A robust encoder would instead learn to represent the ball's
-position relative to the paddle, a feature that generalizes across
-spatial shifts. Without augmentation, the encoder has no pressure
-to prefer the robust feature over the fragile one, because both
-predict Q-values equally well on the exact training observations.
-\Cref{fig:fragile-vs-robust} illustrates this contrast.
-
-\input{figures/fragile-vs-robust}
-
-\smallskip
-Random shift augmentation addresses this directly. Each time a
-transition is replayed, the observation is augmented with a
-different random spatial shift. Even though the buffer contains
-only 100{,}000 transitions, the network never sees the exact same
-input twice. This effectively expands the training distribution:
-each transition generates a family of slightly different training
-examples, all sharing the same Q-value target because the game
-semantics are unchanged. The encoder is forced to learn features
-that are invariant to small spatial shifts -- features that capture
-``where the paddle is relative to the ball'' rather than ``what
-pixel values appear at specific coordinates.'' This is
-\emph{implicit regularization}: not an explicit penalty in the loss
-function, but a constraint on what the encoder can learn, imposed
-by the data distribution it trains on.
-
-\smallskip
-The same mechanism explains why augmentation helps in supervised
-learning: random crops force a classifier to recognize objects
-regardless of their position in the frame. In RL, the effect is
-amplified because the dataset is orders of magnitude smaller --
-100{,}000 transitions versus millions of labeled images -- and
-because the training distribution shifts as the policy improves,
-compounding the risk of overfitting to early, unrepresentative
-data.
-
-\smallskip
-CURL~\citep{srinivas2020curl} combined contrastive learning with
-random crop augmentation on data-efficient Rainbow, reporting
-improved performance on Atari-100K. The contrastive loss requires
-augmentation to generate positive pairs: two different random crops
-of the same observation form a positive pair, while crops of
-different observations form negative pairs. Because augmentation is
-integral to the contrastive objective, the original results could
-not distinguish whether the gains came from contrastive learning or
-from the augmentation itself. DrQ and RAD answered this question:
-augmentation alone, without any contrastive or self-supervised
-loss, achieves similar or better results. The augmentation was
-doing most of the work. This finding is important for experimental
-design: augmentation and representation learning can be studied as
-independent factors only when the representation learning method
-does not depend on augmentation for its training signal.
-
-\smallskip
-Augmentation ensures the encoder sees diverse views of each
-observation, encouraging spatial invariance and reducing
-overfitting. But it does not change what the encoder is
-\emph{trained to predict}. The Q-learning loss remains the sole
-objective shaping the encoder's representations, and in the 100K
-regime this signal is weak -- targets are bootstrapped from poor
-estimates early in training, providing noisy guidance about what
-features matter. The encoder may settle on representations that
-satisfy the current Q-targets but fail to support further learning.
-This is the gap that self-supervised representation learning
-addresses: an auxiliary training objective that shapes the
-encoder's representations to capture dynamics and structure beyond
-what the Q-learning loss alone requires.
-
 \section{Self-Supervised Representation Learning}
 \label{sec:ssl}
 
@@ -2112,7 +2104,7 @@ experiments: Self-Predictive Representations
 \subsection{Learning Without Labels}
 \label{subsec:learning-without-labels}
 
-Recall the DQN architecture from \cref{subsec:conv-encoder}: raw
+Recall the DQN architecture from \cref{subsec:dqn-architecture}: raw
 frames pass through three convolutional layers and a fully
 connected layer, producing a 512-dimensional vector. This vector
 is the agent's internal representation of the game state --
@@ -2385,7 +2377,7 @@ By default, SPR uses $K = 5$.
 SPR adds several components on top of the base agent's
 architecture. The \emph{online encoder} is the standard CNN
 encoder from DQN (the Nature CNN described in
-\cref{subsec:conv-encoder}). It takes the observation $s_t$ and
+\cref{subsec:dqn-architecture}). It takes the observation $s_t$ and
 produces a spatial feature map
 $\mathbf{y}_t = f_{\text{online}}(s_t)$. This is the same
 encoder that feeds into the Q-head; the SPR components share it
