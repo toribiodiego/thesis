@@ -841,6 +841,9 @@ To see how quickly parameters add up, consider a fully connected layer
 with 64 neurons, each receiving 128 inputs. Each neuron has 128 weights
 and one bias, so the layer has $64 \times (128 + 1) = 8{,}256$
 parameters.
+The number of layers, the width of each layer, and the choice of
+activation function are not learned during training. These design
+choices, called \emph{hyperparameters}, are fixed before training begins.
 
 \subsection{Convolutional Layers}
 \label{subsec:conv-layers}
