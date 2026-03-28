@@ -691,8 +691,8 @@ one. Starting from their simplest components, we
 show how these networks are assembled, how they are trained, and what it
 means for them to learn a \emph{representation} of their input.
 
-\subsection{Neural Networks}
-\label{subsec:neural-networks}
+\subsection{Neurons}
+\label{subsec:neurons}
 
 The simplest component of a neural network is the \emph{neuron}. It
 takes several input values, multiplies each one by a different number
@@ -730,7 +730,7 @@ weighted sum, and $a$ is the neuron's output.
 The weights and bias are the neuron's \emph{parameters} -- the
 values that change during training.
 How these parameters are learned is the subject of
-\cref{subsec:training}; for now, it is enough to know that they are
+\cref{subsec:loss-functions}; for now, it is enough to know that they are
 adjustable.
 
 \begin{example}
@@ -770,7 +770,9 @@ architectures.
 
 \input{figures/relu}
 
-\smallskip
+\subsection{Layers and Depth}
+\label{subsec:layers-depth}
+
 Neurons are organized into \emph{layers}. Each neuron in a layer
 receives the same set of inputs but learns different weights, so
 the layer as a whole computes multiple features simultaneously.
@@ -806,7 +808,9 @@ one could not. This is what makes depth useful.
 This flow of data from input through each layer to output is called a
 \emph{forward pass}.
 
-\smallskip
+\subsection{Network Architecture}
+\label{subsec:network-architecture}
+
 When every neuron in one layer connects to every neuron in the
 next, the arrangement is called a \emph{fully connected} (or
 \emph{dense}) layer. This is the most general connectivity
@@ -918,8 +922,8 @@ connected layers for the final mapping -- is the foundation of most
 image-processing neural networks, including the one used in the
 deep Q-network described in \cref{sec:dqn}.
 
-\subsection{Training}
-\label{subsec:training}
+\subsection{Loss Functions}
+\label{subsec:loss-functions}
 
 A neural network begins with random weights -- its outputs are
 meaningless. Training is the process of adjusting those weights so
@@ -953,7 +957,9 @@ low; if it assigns 50\%, the loss is higher; if it assigns 10\%,
 the loss is much higher. Cross-entropy appears later in this work
 when training linear probes to classify game-state properties.
 
-\smallskip
+\subsection{Gradient Descent and Backpropagation}
+\label{subsec:gradient-descent}
+
 Given a loss function, the network needs a way to reduce it. The
 loss defines a landscape over the space of all possible weight
 settings: each point in this space is a complete configuration of
@@ -1011,7 +1017,9 @@ right to left from the loss back to the first layer (backward).
 
 \input{figures/forward-backward-pass}
 
-\smallskip
+\subsection{Optimizers}
+\label{subsec:optimizers}
+
 Computing the gradient over the entire dataset is expensive.
 \emph{Stochastic gradient descent} (SGD) approximates the full
 gradient by computing it on a small random subset of examples
@@ -1051,7 +1059,7 @@ learning rate choices, making training faster and more stable.
 Batch normalization appears in the SPR transition model introduced
 in \cref{subsec:spr}.
 
-\subsection{Representations and Latent Spaces}
+\subsection{Representations}
 \label{subsec:representations}
 
 A neural network does not just map input to output. Each
