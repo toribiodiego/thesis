@@ -457,32 +457,65 @@ isolate the contribution of representation learning.
 \begin{itemize}
 \item \textbf{DQN Isolation Study} -- four conditions (baseline,
   +augmentation, +SPR, +both) across 6 games, 3 seeds each.
-\item \textbf{Capability Comparison} -- Rainbow and Rainbow+SPR on
-  the same 6 games, 3 seeds each.
-\item \textbf{Game Selection} -- six games spanning dense to moderate
-  reward, chosen for diverse interaction patterns.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Isolates SPR's contribution from augmentation's on a
+    simple agent.
+  \end{itemize}
+\item \textbf{Capability Comparison} -- Rainbow and Rainbow+SPR,
+  same 6 games, 3 seeds each.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Tests whether SPR's benefits depend on the base agent's
+    capability.
+  \end{itemize}
+\item \textbf{Game Selection} -- six games spanning dense to
+  moderate reward.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Chosen for diverse interaction patterns in published
+    results.
+  \end{itemize}
 \item \textbf{Evaluation and Compute} -- 30 episodes at final
-  checkpoint, mean return with standard deviation. Google Colab
-  Pro with automated Drive sync.
+  checkpoint, mean return with standard deviation.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Google Colab Pro with automated Drive sync.
+  \end{itemize}
 \end{itemize}
 
 \subsection{Interpretability Methods}
 
-Three analyses on saved checkpoints, plus two follow-up
-investigations to identify which agent properties enable useful
-representations.
+\noindent How we analyze what the learned representations encode and
+why they differ across agents.
 
 \begin{itemize}
-\item Linear probing: train classifiers on frozen encoder outputs to
-  decode game-relevant features across all conditions
-\item Latent space visualization: t-SNE/PCA of encoder outputs,
-  comparing structure across DQN and Rainbow conditions
-\item Transition model analysis: cosine similarity between predicted
-  and actual next-states over K steps
-\item Metric correlation: correlate Rainbow training metrics with
-  probe accuracy to narrow down which components matter
-\item Targeted ablations on the strongest candidates from the
-  correlation analysis
+\item \textbf{Linear Probing} -- classifiers on frozen encoder
+  outputs to decode game-relevant features.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Probe design, attachment points, and what accuracy
+    reveals.
+  \end{itemize}
+\item \textbf{Latent Space Visualization} -- t-SNE/PCA of encoder
+  outputs across conditions.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Comparing structure across DQN and Rainbow, with and
+    without SPR.
+  \end{itemize}
+\item \textbf{Transition Model Analysis} -- cosine similarity
+  between predicted and actual next-states over K steps.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item How prediction accuracy varies across agents and training
+    stages.
+  \end{itemize}
+\item \textbf{Metric Correlation} -- correlate Rainbow training
+  metrics with probe accuracy.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Narrow down which Rainbow components enable useful
+    representations.
+  \end{itemize}
+\item \textbf{Targeted Ablations} -- test the strongest candidates
+  from the correlation analysis.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Remove or add individual Rainbow components to confirm
+    their role.
+  \end{itemize}
 \end{itemize}
 
 \subsection{Representation-Informed Modification}
