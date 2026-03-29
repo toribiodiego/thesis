@@ -157,13 +157,14 @@ intervention's effect as a score delta -- positive means it
 helped, negative means it hurt.
 
 \begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
-  \item Left panel: score change from adding SPR (with and
-    without augmentation)
-  \item Right panel: score change from adding augmentation
+  \item Left panel: score change from adding augmentation
     (with and without SPR)
+  \item Right panel: score change from adding SPR (with and
+    without augmentation)
+  \item Blue = helped, orange = hurt
   \item Status: per-game lift for Boxing and Crazy Climber
-    (seed 42); cross-game augmentation table for all 6 games.
-    SPR lift across all games pending evaluation
+    (seed 42); cross-game tables for all 6 games.
+    SPR lift pending evaluation for 5 games
 \end{itemize}
 
 \begin{table}[H]
@@ -184,9 +185,8 @@ Up N Down     & $141$   & $1085$  & $+944$  & $+670\%$  \\
 \bottomrule
 \end{tabular}
 \caption{Augmentation effect across all 6 games (seed 42).
-Augmentation helps on Kangaroo (+1650\%) and Up N Down (+670\%)
-but collapses performance on the other four games. Percentage
-change is relative to DQN baseline score.}
+Helps on Kangaroo and Up N Down but collapses the other four;
+percentage change relative to DQN baseline.}
 \end{table}
 
 \begin{table}[H]
@@ -207,21 +207,22 @@ Up N Down     & $141$   & ---     & ---     & ---       \\
 \bottomrule
 \end{tabular}
 \caption{SPR effect across all 6 games (seed 42). Only Crazy
-Climber has been evaluated so far (+59\%). Remaining games
-pending evaluation on Colab T4.}
+Climber evaluated so far (+59\%); remaining games pending.}
 \end{table}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.82\textwidth]{../output/plots/boxing_spr_aug_lift.png}
-\caption{Boxing (seed 42).}
+\caption{Boxing intervention lift (seed 42). Both interventions
+hurt on this game; augmentation with SPR shows a small positive
+lift.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.82\textwidth]{../output/plots/crazy_climber_spr_aug_lift.png}
-\caption{Crazy Climber (seed 42). SPR adds +2087 without aug,
-augmentation hurts in both cases.}
+\caption{Crazy Climber intervention lift (seed 42). SPR helps
+without augmentation; augmentation hurts in both cases.}
 \end{figure}
 
 
@@ -242,14 +243,16 @@ combination is additive, redundant, or interfering.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.52\textwidth]{../output/plots/boxing_interaction.png}
-\caption{Boxing interaction (seed 42, eval at 400K frames).}
+\caption{Boxing interaction (seed 42, eval at 400K frames).
+Both lines slope down -- augmentation hurts regardless of SPR.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.52\textwidth]{../output/plots/crazy_climber_interaction.png}
 \caption{Crazy Climber interaction (seed 42, eval at 400K frames).
-Lines converge -- augmentation and SPR interact.}
+Lines converge -- augmentation and SPR interact rather than
+contributing independently.}
 \end{figure}
 
 
