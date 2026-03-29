@@ -345,8 +345,8 @@ representations we study.
     latent space, and dual-objective training.
   \item Single-objective and dual-objective architecture figures.
   \end{itemize}
-\item \textbf{The Collapse Problem} -- why prediction-based
-  objectives can learn useless representations.
+\item \textbf{The Collapse Problem} -- why prediction objectives
+  can learn useless representations.
   \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
   \item Representational collapse, EMA target encoder, asymmetric
     predictor, and connection to DQN target networks.
@@ -401,15 +401,16 @@ to analyze the learned representations.
 
 \subsection{DQN Implementation}
 
+\noindent Our vanilla DQN, implemented from scratch in PyTorch.
+
 \begin{itemize}
-\item Nature CNN encoder: three convolutional layers over 4 stacked
-  grayscale frames
-\item Training procedure: RMSProp, epsilon-greedy exploration with
-  linear decay, periodic target network updates
-\item Replay buffer with circular storage
-\item Atari preprocessing: frame skipping, grayscale conversion,
-  84x84 resizing
-\item Hyperparameter table and any deviations from Mnih 2015
+\item \textbf{Architecture} -- Nature CNN encoder over 4 stacked
+  grayscale frames.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Three conv layers, FC head, RMSProp optimizer,
+    epsilon-greedy with linear decay.
+  \item Hyperparameter table and deviations from Mnih 2015.
+  \end{itemize}
 \end{itemize}
 
 \subsection{Data Augmentation}
