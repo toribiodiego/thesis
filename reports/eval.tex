@@ -12,6 +12,7 @@
 \usepackage{multirow}
 \usepackage[font=small,labelfont=bf,labelsep=period,
   justification=raggedright,singlelinecheck=false]{caption}
+\usepackage{subcaption}
 \usepackage[colorlinks=true,linkcolor=black,urlcolor=blue!60!black,
   citecolor=black]{hyperref}
 
@@ -160,9 +161,55 @@ helped, negative means it hurt.
     without augmentation)
   \item Right panel: score change from adding augmentation
     (with and without SPR)
-  \item Status: example from Boxing (seed 42); full version
-    groups all 6 games
+  \item Status: per-game lift for Boxing and Crazy Climber
+    (seed 42); cross-game augmentation table for all 6 games.
+    SPR lift across all games pending evaluation
 \end{itemize}
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{l r r r r}
+\toprule
+\textbf{Game} & \textbf{DQN} & \textbf{+ Aug}
+  & \textbf{Delta} & \textbf{\% Change} \\
+\midrule
+Boxing        & $-3.0$  & $-16.4$ & $-13.3$ & $-440\%$  \\
+Crazy Climber & $3540$  & $100$   & $-3440$ & $-97\%$   \\
+Frostbite     & $147$   & $2$     & $-145$  & $-98\%$   \\
+Kangaroo      & $27$    & $467$   & $+440$  & $+1650\%$ \\
+Road Runner   & $1440$  & $3$     & $-1437$ & $-100\%$  \\
+Up N Down     & $141$   & $1085$  & $+944$  & $+670\%$  \\
+\bottomrule
+\end{tabular}
+\caption{Augmentation effect across all 6 games (seed 42).
+Augmentation helps on Kangaroo (+1650\%) and Up N Down (+670\%)
+but collapses performance on the other four games. Percentage
+change is relative to DQN baseline score.}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{l r r r r}
+\toprule
+\textbf{Game} & \textbf{DQN} & \textbf{+ SPR}
+  & \textbf{Delta} & \textbf{\% Change} \\
+\midrule
+Boxing        & $-3.0$  & ---     & ---     & ---       \\
+Crazy Climber & $3540$  & $5627$  & $+2087$ & $+59\%$   \\
+Frostbite     & $147$   & ---     & ---     & ---       \\
+Kangaroo      & $27$    & ---     & ---     & ---       \\
+Road Runner   & $1440$  & ---     & ---     & ---       \\
+Up N Down     & $141$   & ---     & ---     & ---       \\
+\bottomrule
+\end{tabular}
+\caption{SPR effect across all 6 games (seed 42). Only Crazy
+Climber has been evaluated so far (+59\%). Remaining games
+pending evaluation on Colab T4.}
+\end{table}
 
 \begin{figure}[H]
 \centering
@@ -175,14 +222,6 @@ helped, negative means it hurt.
 \includegraphics[width=0.82\textwidth]{../output/plots/crazy_climber_spr_aug_lift.png}
 \caption{Crazy Climber (seed 42). SPR adds +2087 without aug,
 augmentation hurts in both cases.}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.82\textwidth]{../output/plots/all_games_aug_effect.png}
-\caption{Augmentation effect across all 6 games (seed 42).
-Mixed results: helps Kangaroo and Up N Down, hurts Crazy Climber
-and Road Runner.}
 \end{figure}
 
 

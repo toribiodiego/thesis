@@ -451,18 +451,19 @@ with all six extensions from the background.
 
 \subsection{Experiment Design}
 
-We test SPR across two agents of different capability.
+\noindent Tests SPR across two agents of different capability to
+isolate the contribution of representation learning.
 
 \begin{itemize}
-\item Part 1: DQN isolation study -- four conditions (baseline,
-  +augmentation, +SPR, +both) across 6 games, 3 seeds each
-\item Part 2: Rainbow comparison -- Rainbow and Rainbow+SPR on the
-  same 6 games, 3 seeds each
-\item Game selection: six games spanning dense to moderate reward,
-  chosen for diverse interaction patterns in published results
-\item Evaluation: 30 episodes at final checkpoint, mean return with
-  standard deviation
-\item Compute: Google Colab Pro with automated Drive sync
+\item \textbf{DQN Isolation Study} -- four conditions (baseline,
+  +augmentation, +SPR, +both) across 6 games, 3 seeds each.
+\item \textbf{Capability Comparison} -- Rainbow and Rainbow+SPR on
+  the same 6 games, 3 seeds each.
+\item \textbf{Game Selection} -- six games spanning dense to moderate
+  reward, chosen for diverse interaction patterns.
+\item \textbf{Evaluation and Compute} -- 30 episodes at final
+  checkpoint, mean return with standard deviation. Google Colab
+  Pro with automated Drive sync.
 \end{itemize}
 
 \subsection{Interpretability Methods}
