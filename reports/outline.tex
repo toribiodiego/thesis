@@ -437,16 +437,16 @@ and Rainbow so the comparison is controlled.
 
 \subsection{Rainbow Implementation}
 
-Rainbow is infrastructure for the capability comparison.
+\noindent The capable agent in the comparison. Same encoder as DQN,
+with all six extensions from the background.
 
 \begin{itemize}
-\item Distributional value estimates (C51, 51 atoms)
-\item Prioritized experience replay with importance sampling weights
-\item Dueling network architecture
-\item N-step returns (n=3)
-\item Noisy exploration (factorised Gaussian)
-\item Double DQN target computation
-\item Per-game configs for all six games
+\item \textbf{Extensions} -- C51, prioritized replay, dueling,
+  n-step (n=3), noisy networks, double DQN.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Importance sampling weights for prioritized replay.
+  \item Per-game configs for all six games.
+  \end{itemize}
 \end{itemize}
 
 \subsection{Experiment Design}
