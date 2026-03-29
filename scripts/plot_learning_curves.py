@@ -38,18 +38,18 @@ RUN_NAMES = {
     ("Kangaroo", "+ Aug"): "atari100k_kangaroo_aug_42_20260310_212156",
     ("Frostbite", "+ Aug"): "atari100k_frostbite_aug_42_20260310_212155",
     ("Up N Down", "+ Aug"): "atari100k_up_n_down_aug_42_20260310_213744",
-    ("Crazy Climber", "+ SPR"): "atari100k_crazy_climber_spr_42_20260310_230914",
-    ("Road Runner", "+ SPR"): "atari100k_road_runner_spr_42_20260310_231014",
-    ("Boxing", "+ SPR"): "atari100k_boxing_spr_42_20260310_232848",
-    ("Kangaroo", "+ SPR"): "atari100k_kangaroo_spr_42_20260310_235821",
-    ("Frostbite", "+ SPR"): "atari100k_frostbite_spr_42_20260311_000206",
-    ("Up N Down", "+ SPR"): "atari100k_up_n_down_spr_42_20260311_001035",
-    ("Crazy Climber", "+ Both"): "atari100k_crazy_climber_both_42_20260311_020133",
-    ("Road Runner", "+ Both"): "atari100k_road_runner_both_42_20260311_020220",
-    ("Boxing", "+ Both"): "atari100k_boxing_both_42_20260311_022139",
-    ("Kangaroo", "+ Both"): "atari100k_kangaroo_both_42_20260311_024627",
-    ("Frostbite", "+ Both"): "atari100k_frostbite_both_42_20260311_025205",
-    ("Up N Down", "+ Both"): "atari100k_up_n_down_both_42_20260311_030203",
+    ("Crazy Climber", "+ SPR"): "atari100k_crazy_climber_spr_42_20260323_160044",
+    ("Road Runner", "+ SPR"): "atari100k_road_runner_spr_42_20260324_182505",
+    ("Boxing", "+ SPR"): "atari100k_boxing_spr_42_20260324_182503",
+    ("Kangaroo", "+ SPR"): "atari100k_kangaroo_spr_42_20260324_182504",
+    ("Frostbite", "+ SPR"): "atari100k_frostbite_spr_42_20260324_182504",
+    ("Up N Down", "+ SPR"): "atari100k_up_n_down_spr_42_20260324_182505",
+    ("Crazy Climber", "+ Both"): "atari100k_crazy_climber_both_42_20260323_160044",
+    ("Road Runner", "+ Both"): "atari100k_road_runner_both_42_20260324_185918",
+    ("Boxing", "+ Both"): "atari100k_boxing_both_42_20260324_185917",
+    ("Kangaroo", "+ Both"): "atari100k_kangaroo_both_42_20260324_185918",
+    ("Frostbite", "+ Both"): "atari100k_frostbite_both_42_20260324_185917",
+    ("Up N Down", "+ Both"): "atari100k_up_n_down_both_42_20260324_185918",
 }
 
 # INVALID: These runs used vanilla DQN with Rainbow hyperparameters,
@@ -118,54 +118,59 @@ def main():
         "legend.fontsize": 12,
     })
 
-    fig, axes = plt.subplots(2, 3, figsize=(15, 9))
-    axes = axes.flatten()
-
-    for i, game in enumerate(GAMES):
-        ax = axes[i]
-        for cond in CONDITIONS:
-            run_name = RUN_NAMES.get((game, cond))
-            if run_name is None:
-                continue
-            run_dir = os.path.join(RUNS_DIR, run_name)
-            data = load_eval_csv(run_dir)
-            if data is None:
-                print(f"  WARNING: missing eval data for {game} / {cond}")
-                continue
-            steps, means, stds = data
-            smoothed_means = smooth(means)
-            smoothed_stds = smooth(stds)
-            ax.plot(steps, smoothed_means, label=cond,
-                    color=COLORS[cond], linewidth=2.0)
-            ax.fill_between(steps,
-                            smoothed_means - smoothed_stds,
-                            smoothed_means + smoothed_stds,
-                            color=COLORS[cond], alpha=0.12)
-
-        ax.set_title(game, fontsize=13, fontweight="bold")
-        ax.set_xlabel("Env Steps (K)")
-        if i % 3 == 0:
-            ax.set_ylabel("Mean Return")
-        ax.yaxis.set_major_formatter(
-            plt.FuncFormatter(
-                lambda x, _: f"{int(x):,}" if x == int(x) else f"{x:.0f}"
-            )
-        )
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-
-    handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=4, fontsize=13,
-               bbox_to_anchor=(0.5, -0.01))
-
-    plt.tight_layout(rect=[0, 0.05, 1, 1.0])
-
+    # Split into three 1x2 figures (pairs) for readability
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    plt.savefig(os.path.join(OUTPUT_DIR, "dqn_learning_curves.png"),
-                dpi=150, bbox_inches="tight")
-    plt.savefig(os.path.join(OUTPUT_DIR, "dqn_learning_curves.pdf"),
-                bbox_inches="tight")
-    print(f"Saved to {OUTPUT_DIR}/dqn_learning_curves.{{png,pdf}}")
+    pairs = [GAMES[0:2], GAMES[2:4], GAMES[4:6]]
+
+    for pair_idx, pair_games in enumerate(pairs):
+        fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+        for i, game in enumerate(pair_games):
+            ax = axes[i]
+            for cond in CONDITIONS:
+                run_name = RUN_NAMES.get((game, cond))
+                if run_name is None:
+                    continue
+                run_dir = os.path.join(RUNS_DIR, run_name)
+                data = load_eval_csv(run_dir)
+                if data is None:
+                    print(f"  WARNING: missing eval data for {game} / {cond}")
+                    continue
+                steps, means, stds = data
+                smoothed_means = smooth(means)
+                smoothed_stds = smooth(stds)
+                ax.plot(steps, smoothed_means, label=cond,
+                        color=COLORS[cond], linewidth=2.2)
+                ax.fill_between(steps,
+                                smoothed_means - smoothed_stds,
+                                smoothed_means + smoothed_stds,
+                                color=COLORS[cond], alpha=0.12)
+
+            ax.set_title(game, fontsize=15, fontweight="bold")
+            ax.set_xlabel("Env Steps (K)", fontsize=13)
+            ax.set_ylabel("Mean Return", fontsize=13)
+            ax.tick_params(labelsize=12)
+            ax.yaxis.set_major_formatter(
+                plt.FuncFormatter(
+                    lambda x, _: f"{int(x):,}" if x == int(x) else f"{x:.0f}"
+                )
+            )
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
+
+        handles, labels = axes[0].get_legend_handles_labels()
+        fig.legend(handles, labels, loc="lower center", ncol=4, fontsize=13,
+                   bbox_to_anchor=(0.5, -0.02))
+
+        plt.tight_layout(rect=[0, 0.08, 1, 1.0])
+
+        suffix = chr(ord("a") + pair_idx)
+        plt.savefig(os.path.join(OUTPUT_DIR, f"dqn_learning_curves_{suffix}.png"),
+                    dpi=300, bbox_inches="tight")
+        plt.savefig(os.path.join(OUTPUT_DIR, f"dqn_learning_curves_{suffix}.pdf"),
+                    bbox_inches="tight")
+        plt.close()
+        print(f"Saved dqn_learning_curves_{suffix}.{{png,pdf}}")
 
 
 def plot_rainbow_comparison():

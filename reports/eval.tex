@@ -120,29 +120,31 @@ conditions.
   \item Four conditions: DQN, +Aug, +SPR, +Both
   \item Shaded bands: $\pm 1$ std (single seed) or cross-seed
     confidence interval (multi-seed)
-  \item Status: Boxing and Crazy Climber (seed 42) plus
-    DQN vs Aug 6-game grid; full 4-condition grid after batch runs
+  \item Status: all four conditions shown for Crazy Climber;
+    DQN and +Aug for remaining five games. SPR and Both lines
+    will appear after evaluating 10 runs on Colab T4
 \end{itemize}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.82\textwidth]{../output/plots/boxing_learning_curves.png}
-\caption{Boxing (seed 42). All conditions score near zero.}
+\includegraphics[width=0.92\textwidth]{../output/plots/dqn_learning_curves_a.png}
+\caption{Crazy Climber and Road Runner (seed 42). Crazy Climber
+shows all four conditions; Road Runner shows DQN and +Aug
+(SPR/Both pending evaluation).}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.82\textwidth]{../output/plots/crazy_climber_learning_curves.png}
-\caption{Crazy Climber (seed 42). SPR provides modest lift over
-baseline; augmentation hurts.}
+\includegraphics[width=0.92\textwidth]{../output/plots/dqn_learning_curves_b.png}
+\caption{Boxing and Kangaroo (seed 42). DQN and +Aug shown;
+SPR and Both pending evaluation.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{../output/plots/all_games_dqn_vs_aug.png}
-\caption{DQN vs DQN+Aug across all 6 games (seed 42).
-Augmentation helps on Kangaroo and Up N Down, hurts on Crazy
-Climber and Road Runner.}
+\includegraphics[width=0.92\textwidth]{../output/plots/dqn_learning_curves_c.png}
+\caption{Frostbite and Up N Down (seed 42). DQN and +Aug shown;
+SPR and Both pending evaluation.}
 \end{figure}
 
 
