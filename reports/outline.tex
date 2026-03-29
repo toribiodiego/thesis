@@ -364,17 +364,33 @@ representations we study.
 
 \subsection{Related Work and Positioning}
 
-Where this thesis sits in the landscape of data-efficient RL.
+\noindent Where this thesis sits relative to other data-efficient RL
+approaches.
 
 \begin{itemize}
-\item World models: SimPLe, Dreamer -- predictions for experience
-  generation
-\item Planning methods: EfficientZero, MuZero -- model plus search at
-  test time
-\item Training efficiency: BBF, SR-SPR -- scaling and training
-  improvements (also use SPR)
-\item No prior work has isolated SPR from its base agent or compared
-  representations across capability levels
+\item \textbf{World Models} -- SimPLe, Dreamer: predictions for
+  experience generation.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Differs from SPR: predictions generate experience, not
+    shape representations.
+  \end{itemize}
+\item \textbf{Planning Methods} -- MuZero, EfficientZero: model
+  plus search at test time.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Differs from SPR: model used at test time, SPR is
+    model-free at test time.
+  \end{itemize}
+\item \textbf{Training Efficiency} -- BBF, SR-SPR: scaling and
+  training improvements.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Both use SPR, so their results cannot be attributed to
+    SPR alone.
+  \end{itemize}
+\item \textbf{Positioning} -- no prior work isolates SPR from its
+  base agent or compares representations across capability levels.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Method landscape figure.
+  \end{itemize}
 \end{itemize}
 
 \section{Methods}
