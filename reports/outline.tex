@@ -421,17 +421,18 @@ to analyze the learned representations.
 
 \subsection{Self-Predictive Representations}
 
-SPR is integrated identically on both DQN and Rainbow so the
-comparison is controlled.
+\noindent Our SPR implementation, integrated identically on both DQN
+and Rainbow so the comparison is controlled.
 
 \begin{itemize}
-\item Transition model: two convolutional layers with action
-  conditioning via one-hot broadcast
-\item EMA target encoder with momentum 0.99
-\item Projection and prediction heads (MLP)
-\item Cosine similarity loss over K-step predicted representations
-\item Combined loss: TD loss + weighted SPR loss
-\item Encoder dropout (0.5) for regularization
+\item \textbf{Architecture} -- transition model, EMA target encoder,
+  projection and prediction heads.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Two conv layers with action conditioning via one-hot
+    broadcast, momentum 0.99, encoder dropout (0.5).
+  \item Combined loss: TD loss + weighted SPR cosine similarity
+    over K-step predictions.
+  \end{itemize}
 \end{itemize}
 
 \subsection{Rainbow Implementation}
