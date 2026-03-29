@@ -138,17 +138,55 @@ foundations, the two agents that define the capability comparison,
 the benchmark, the two methods under study, and where this work fits
 in the field.
 
-\subsection{Reinforcement Learning Foundations}
+\subsection{Reinforcement Learning}
+
+\noindent Formalizes the problem of learning from interaction and builds
+to the algorithms used in DQN. The grid-world serves as a running
+example throughout.
 
 \begin{itemize}
-\item Markov decision processes: states, actions, rewards, transitions,
-  discount factor
-\item Expected value and the $\mathbb{E}[\cdot]$ notation
-\item Value functions and the Bellman equation
-\item Q-learning and temporal difference updates
-\item Why function approximation is needed for large state spaces
-\item The deadly triad: bootstrapping, off-policy, function
-  approximation
+\item \textbf{Markov Decision Processes} -- the problem framework:
+  agent, environment, states, actions, rewards, and policies.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Transitions, dynamics, Markov property, discount,
+    return, episodes, and policies.
+  \item Grid-world running example, discounting worked example,
+    and three figures.
+  \end{itemize}
+\item \textbf{Value Functions} -- how to evaluate a policy.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Expected value, state-value v(s), action-value q(s,a),
+    and why q is more useful for decision-making.
+  \item Value grid and Q-value figures with grid-world examples.
+  \end{itemize}
+\item \textbf{The Bellman Equation} -- the recursive structure
+  of value.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item One-step lookahead and backup operation.
+  \item Bellman backup figure and grid-world worked example.
+  \end{itemize}
+\item \textbf{Optimal Policies} -- what the best policy looks
+  like and the Bellman optimality equation.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Optimal value functions, greedy policy, and Bellman
+    optimality for both v* and q*.
+  \item Grid-world example showing optimal Q-values.
+  \end{itemize}
+\item \textbf{Q-Learning} -- learning optimal Q-values from
+  experience without knowing the dynamics.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item TD updates, bootstrapping, learning rate, exploration
+    vs exploitation, and epsilon-greedy.
+  \item TD update figure, exploration figure, and worked
+    arithmetic.
+  \end{itemize}
+\item \textbf{Function Approximation} -- why tables fail for large
+  state spaces and how parameterized functions replace them.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Parameterized Q(s,a;w), generalization, semi-gradient
+    updates, and the deadly triad.
+  \item Table-vs-network and semi-gradient figures.
+  \end{itemize}
 \end{itemize}
 
 \subsection{Deep Learning}
