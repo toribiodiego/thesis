@@ -520,16 +520,26 @@ why they differ across agents.
 
 \subsection{Representation-Informed Modification}
 
-Using the interpretability findings to motivate a targeted change and
-test whether it improves performance.
+\noindent Uses the interpretability findings to motivate a targeted
+change and test whether it improves performance.
 
 \begin{itemize}
-\item What the probes and visualizations reveal about the bottleneck
-  on vanilla DQN -- which missing property to address
-\item The specific modification: a change to SPR, the training
-  configuration, or the addition of a single Rainbow component
-\item Experimental setup: same six games, same evaluation protocol,
-  controlled comparison against the unmodified conditions
+\item \textbf{Bottleneck Identification} -- what the probes and
+  visualizations reveal about vanilla DQN's limitations.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Which missing property to address.
+  \end{itemize}
+\item \textbf{The Modification} -- a change to SPR, the training
+  configuration, or a single Rainbow component.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Motivated by the interpretability analysis, not by
+    tuning.
+  \end{itemize}
+\item \textbf{Validation} -- same six games, same evaluation
+  protocol, controlled comparison against unmodified conditions.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Tests whether the finding generalizes.
+  \end{itemize}
 \end{itemize}
 
 \section{Results}
