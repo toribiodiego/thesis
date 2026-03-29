@@ -333,20 +333,33 @@ agents across games.
 
 \subsection{Self-Supervised Representation Learning}
 
-SPR is the representation learning method we are studying. It adds a
-self-supervised objective that trains the encoder to predict its own
-future representations, encouraging richer features even when reward
-is scarce.
+\noindent The central topic of the thesis. Introduces self-supervised
+learning, the collapse problem, and the specific method (SPR) whose
+representations we study.
 
 \begin{itemize}
-\item Why the Q-learning loss alone is insufficient in the 100K regime
-\item The collapse problem and anti-collapse mechanisms (EMA target
-  encoder, asymmetric predictor)
-\item SPR architecture: transition model, projection and prediction
-  heads, multi-step chained predictions
-\item Training objective: cosine similarity loss, dual-objective
-  training
-\item Originally evaluated only on Rainbow -- the attribution problem
+\item \textbf{Learning Without Labels} -- why the Q-loss alone is
+  insufficient and how self-supervised objectives help.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Pretext tasks, temporal structure in RL, predicting in
+    latent space, and dual-objective training.
+  \item Single-objective and dual-objective architecture figures.
+  \end{itemize}
+\item \textbf{The Collapse Problem} -- why prediction-based
+  objectives can learn useless representations.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Representational collapse, EMA target encoder, asymmetric
+    predictor, and connection to DQN target networks.
+  \item Collapse illustration figure.
+  \end{itemize}
+\item \textbf{Self-Predictive Representations} -- SPR's architecture
+  and training procedure.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Transition model, projection and prediction heads,
+    multi-step chained predictions, and cosine similarity loss.
+  \item SPR architecture and loss figures. Bridges to the thesis
+    question: SPR only evaluated on Rainbow.
+  \end{itemize}
 \end{itemize}
 
 \subsection{Related Work and Positioning}
