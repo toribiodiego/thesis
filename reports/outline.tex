@@ -411,18 +411,12 @@ to analyze the learned representations.
     epsilon-greedy with linear decay.
   \item Hyperparameter table and deviations from Mnih 2015.
   \end{itemize}
-\end{itemize}
-
-\subsection{Data Augmentation}
-
-DrQ-style random shift applied to sampled batches during training.
-
-\begin{itemize}
-\item Pad frames to 92x92, random crop back to 84x84
-\item Applied independently to both observations and
-  next-observations
-\item Configurable via YAML -- same toggle for DQN and Rainbow
-  conditions
+\item \textbf{Data Augmentation} -- DrQ-style random shift (pad to
+  92x92, random crop to 84x84).
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Applied independently to observations and next-observations.
+  \item Configurable via YAML, same toggle for DQN and Rainbow.
+  \end{itemize}
 \end{itemize}
 
 \subsection{Self-Predictive Representations}
