@@ -1,7 +1,9 @@
 \documentclass[11pt]{article}
 \usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{lineno}
 \usepackage{enumitem}
-\setlist{nosep, before=\vspace{0.5em}, after=\vspace{0.5em}}
+\setlist{itemsep=0.4em, parsep=0pt, before=\vspace{0.5em}, after=\vspace{0.5em}}
 \usepackage{xcolor}
 \usepackage{titling}
 \usepackage{titlesec}
@@ -29,6 +31,8 @@
 \begin{document}
 \maketitle
 \thispagestyle{empty}
+\leftlinenumbers
+\linenumbers
 
 \section{Introduction}
 
@@ -147,22 +151,66 @@ in the field.
   approximation
 \end{itemize}
 
-\subsection{Deep Learning Foundations}
+\subsection{Deep Learning}
 
-General-purpose deep learning background, independent of RL. Gives
-the reader the tools needed to understand DQN, SPR, and the methods
-chapter.
+\noindent Builds from the single neuron to full network architectures, covering
+training and representations. The reader leaves with everything needed
+to understand DQN (2.3) and SPR (2.5).
 
 \begin{itemize}
-\item Neural networks: neurons, weighted sum plus activation, layers,
-  depth, fully connected layers
-\item Convolutional layers: why FC fails for images, convolution
-  operation, weight sharing, feature maps, stride
-\item Training: loss functions (MSE, cross-entropy), gradient descent,
-  backpropagation, SGD, optimizers (momentum, Adam), batch
-  normalization
-\item Representations and latent spaces: encoder/task head
-  decomposition, what makes a representation good, cosine similarity
+\item \textbf{Neurons} -- what a single neuron computes.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Weighted sum, bias, activation function, and ReLU.
+  \item Neuron diagram, concrete example, and step-by-step
+    arithmetic.
+  \end{itemize}
+\item \textbf{Layers and Depth} -- how neurons compose into
+  networks and what depth achieves.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Layers, width, layer types (input, hidden, output), depth,
+    and the forward pass.
+  \item Why activation functions are essential for depth to be
+    useful.
+  \end{itemize}
+\item \textbf{Network Architecture} -- how the pieces fit together
+  into a complete network.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Fully connected layers, MLP, and parameters vs
+    hyperparameters.
+  \item MLP diagram and parameter count example.
+  \end{itemize}
+\item \textbf{Convolutional Layers} -- why FC layers fail for
+  images and how convolutions fix it.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Kernels, weight sharing, feature maps, and stride.
+  \item Convolution operation and stride comparison figures.
+  \end{itemize}
+\item \textbf{Loss Functions} -- how the network measures its
+  errors.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item MSE for value prediction, cross-entropy for classification.
+  \item MSE equation with worked example, cross-entropy equation.
+  \end{itemize}
+\item \textbf{Gradient Descent and Backpropagation} -- how the
+  network reduces its errors.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Gradient descent, learning rate, and how backpropagation
+    computes gradients layer by layer.
+  \item Forward and backward pass figure.
+  \end{itemize}
+\item \textbf{Optimizers} -- practical tools for training.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item SGD, minibatches, momentum, Adam, and batch normalization.
+  \item Connects SGD to the replay buffer sampling from 2.1.
+  \end{itemize}
+\item \textbf{Representations} -- what the network learns
+  internally and why it matters.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Encoder, task head, latent space, what makes a good
+    representation, linear probing, and cosine similarity.
+  \item Encoder diagram. Bridges to the thesis question about
+    representation quality.
+  \end{itemize}
 \end{itemize}
 
 \subsection{Deep Q-Networks}
