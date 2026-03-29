@@ -251,46 +251,84 @@ to understand DQN (2.3) and SPR (2.5).
 
 \subsection{Deep Q-Networks}
 
-DQN is the simple agent in our comparison. It combines the RL
-foundations from 2.1 with the deep learning tools from 2.2.
+\noindent Combines RL from 2.1 with the deep learning tools from 2.2
+into a working agent. Covers the full pipeline from raw frames to
+Q-values, then extends to Rainbow.
 
 \begin{itemize}
-\item Preprocessing pipeline: frame max, grayscale, resize, stack
-\item Nature CNN architecture: specific layer sizes and strides
-\item Experience replay: breaking correlation, data efficiency,
-  smoothing
-\item Target network: stabilizing learning with a frozen copy
-\item Rainbow DQN: six extensions (Double DQN, prioritized replay,
-  dueling, multi-step, distributional C51, noisy networks)
-\item The encoder is unchanged across all Rainbow extensions
+\item \textbf{Preprocessing} -- how raw game frames become network
+  input.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Frame max, grayscale, resize, and frame stacking.
+  \item Preprocessing pipeline figure and step-by-step visuals.
+  \end{itemize}
+\item \textbf{The DQN Architecture} -- the network that maps
+  frames to Q-values.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Nature CNN: three conv layers, FC head, one Q-value per
+    action.
+  \item Architecture figure and layer specification table.
+  \end{itemize}
+\item \textbf{Experience Replay} -- how the agent reuses past
+  transitions to break correlation.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Replay buffer, uniform sampling, and data reuse.
+  \item Replay buffer diagram.
+  \end{itemize}
+\item \textbf{Data Augmentation} -- how random spatial shifts
+  reduce overfitting when data is limited.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Random shift (pad + crop), why it works in RL, and
+    augmentation as implicit regularization.
+  \item Random shift and fragile-vs-robust figures.
+  \end{itemize}
+\item \textbf{Target Networks} -- how a frozen copy of the network
+  stabilizes learning.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Moving target problem, frozen copy, periodic updates.
+  \item Target network diagram.
+  \end{itemize}
+\item \textbf{Rainbow Extensions} -- six improvements that address
+  different weaknesses in DQN.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Double DQN, prioritized replay, dueling, multi-step,
+    distributional (C51), and noisy networks.
+  \item Extensions table, dueling and distributional figures.
+  \end{itemize}
+\item \textbf{The Rainbow Agent} -- how the extensions combine and
+  why the encoder is unchanged.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Complementary gains, encoder as the sole unchanged piece.
+  \item Rainbow components figure. Bridges to the thesis question
+    about base agent capability.
+  \end{itemize}
 \end{itemize}
 
 \subsection{The Arcade Learning Environment}
 
-Atari-100K is the standard testbed for data-efficient RL. The agent
-gets 100K environment steps per game -- two orders of magnitude less
-than the standard protocol used to train the original DQN.
+\noindent The benchmark for evaluating data-efficient RL. Introduces
+the standard and 100K protocols, and the metrics used to compare
+agents across games.
 
 \begin{itemize}
-\item Standard protocol and the revised protocol (sticky actions,
-  game-over termination)
-\item 100K constraint: a qualitatively different learning regime
-\item Metrics: human-normalized score, IQM with stratified bootstrap
-  confidence intervals, performance profiles
-\end{itemize}
-
-\subsection{Data Augmentation for RL}
-
-Data augmentation is the second method we study. Random shifts to
-game frames act as an implicit regularizer, helping the agent
-generalize from limited data.
-
-\begin{itemize}
-\item DrQ random shift: pad with reflection, random crop
-\item Why random shift works and other augmentations do not
-\item Augmentation as implicit regularization at the representation
-  level
-\item The CURL finding: augmentation alone accounts for the gains
+\item \textbf{The Standard Protocol} -- the original 200M-frame
+  evaluation that established DQN's results.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item ALE interface, frame skip, sticky actions, and game-over
+    termination.
+  \end{itemize}
+\item \textbf{The 100K Protocol} -- 100K steps per game, a
+  qualitatively different learning regime.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item 400K frames (~6 minutes), 26-game subset, evaluation
+    procedure, and hyperparameter sensitivity.
+  \end{itemize}
+\item \textbf{Metrics} -- how to compare agents across games with
+  different score ranges.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Human-normalized score, IQM, stratified bootstrap
+    confidence intervals, and performance profiles.
+  \end{itemize}
 \end{itemize}
 
 \subsection{Self-Supervised Representation Learning}
