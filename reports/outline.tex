@@ -631,13 +631,13 @@ performance.
 
 \section{Discussion}
 
-\noindent Interprets the capability gap, the interaction between
-augmentation and SPR, what the representations encode, and the
-limitations of the study.
+\noindent Interprets why SPR's effectiveness depends on the base
+agent, what the representations reveal about this dependency, and
+the limitations of the study.
 
 \subsection{The Capability Threshold}
 
-\noindent What the capable agent provides that makes self-supervised
+\noindent What the base agent provides that makes self-supervised
 representations useful.
 
 \begin{itemize}
@@ -645,28 +645,16 @@ representations useful.
   when representation learning works.
 \item \textbf{Component Analysis} -- whether a single Rainbow
   component explains the gap or the combination matters.
+\item \textbf{Augmentation Interaction} -- whether augmentation and
+  SPR are independent or redundant, and the CURL connection.
 \item \textbf{Mechanism} -- how metric correlation and ablation
   results narrow down what enables useful representations.
 \end{itemize}
 
-\subsection{Augmentation and Representation Learning}
-
-\noindent Whether augmentation and SPR help for the same reasons or
-different ones.
-
-\begin{itemize}
-\item \textbf{Independence} -- whether the two improvements are
-  independent or redundant.
-\item \textbf{CURL Connection} -- if augmentation is what matters,
-  does adding SPR change anything?
-\item \textbf{Per-Game Variation} -- what drives the differences
-  across games.
-\end{itemize}
-
 \subsection{What Representations Encode}
 
-\noindent What SPR actually learns on each base agent, going beyond
-performance numbers.
+\noindent The core interpretability contribution: what SPR actually
+learns on each base agent, going beyond performance numbers.
 
 \begin{itemize}
 \item \textbf{Probe Results} -- what linear probes reveal about
@@ -675,6 +663,8 @@ performance numbers.
   representations only on capable agents, or always.
 \item \textbf{Bottleneck} -- what transition model accuracy says
   about representation quality vs downstream policy.
+\item \textbf{Per-Game Variation} -- what drives the differences
+  across games.
 \end{itemize}
 
 \subsection{Limitations}
@@ -691,8 +681,6 @@ establish.
   parallelism.
 \item \textbf{Interpretability} -- limited probe features,
   qualitative t-SNE.
-\item \textbf{Augmentation} -- only random shift, no comparison
-  across types.
 \end{itemize}
 
 \subsection{Broader Context}
@@ -702,8 +690,6 @@ establish.
 \begin{itemize}
 \item \textbf{Self-Supervised Learning in RL} -- our results as a
   data point about when self-supervised pre-training works in RL.
-\item \textbf{Positioning} -- understanding when representation
-  learning helps, not competing with SOTA.
 \item \textbf{Practitioner Implications} -- when SPR is worth
   adding to an agent.
 \end{itemize}
