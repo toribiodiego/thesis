@@ -745,31 +745,36 @@ conditions show slightly higher TD error than baseline.}
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{../output/plots/road_runner_training_stability.png}
-\caption{Road Runner training stability (seed 42).}
+\caption{Road Runner training stability (seed 42). DQN stays
+highest; +SPR and +Both settle to lower TD error than baseline.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{../output/plots/boxing_training_stability.png}
-\caption{Boxing training stability (seed 42).}
+\caption{Boxing training stability (seed 42). All conditions
+converge to similar TD error by 300K frames.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{../output/plots/kangaroo_training_stability.png}
-\caption{Kangaroo training stability (seed 42).}
+\caption{Kangaroo training stability (seed 42). DQN baseline
+shows the most instability; +Both reaches lowest TD error.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{../output/plots/frostbite_training_stability.png}
-\caption{Frostbite training stability (seed 42).}
+\caption{Frostbite training stability (seed 42). +Aug settles
+lowest; DQN and +SPR remain more volatile throughout.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{../output/plots/up_n_down_training_stability.png}
-\caption{Up N Down training stability (seed 42).}
+\caption{Up N Down training stability (seed 42). +Aug reaches
+lowest error; +SPR starts high but converges by 200K.}
 \end{figure}
 
 
