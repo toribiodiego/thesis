@@ -2087,14 +2087,15 @@ The metrics above measure performance, but to understand what the
 agent's representations encode, we need to know what is actually
 happening in the game. The agent sees the game as pixels, but the
 emulator tracks the actual state: where each player is, what the score
-is, how many lives remain. This information is stored in the console's
-memory, called RAM, which on the Atari 2600 holds just 128 values.
-Each value is one byte, a number between 0 and 255, stored at a fixed
-location called an address. Each address stores one game variable: one
-always holds the player's horizontal position, another always holds the
-score. The agent never sees these values, but as researchers, we can
-read them to check what the agent's representation has learned to
-capture.
+is, how many lives remain.
+
+\smallskip
+The Atari 2600 stores this state in the console's random-access memory
+(RAM), which holds just 128 values. Each value is one byte, a number
+between 0 and 255, stored at a fixed location called an address. Each
+address stores one game variable: one always holds the player's
+horizontal position, another always holds the score. The agent never
+sees these values, but we can read them directly from the emulator.
 
 \smallskip
 \citet{anand2019unsupervised} created the AtariARI benchmark by
