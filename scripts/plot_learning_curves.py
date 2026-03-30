@@ -19,63 +19,13 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
+from run_registry import COLORS, GAMES, RUNS, RUNS_DIR
+
 matplotlib.use("Agg")
 
-RUNS_DIR = "experiments/dqn_atari/runs"
 OUTPUT_DIR = "output/plots"
 
-# Map (game, condition) -> run directory name
-RUN_NAMES = {
-    ("Crazy Climber", "Baseline"): "atari100k_crazy_climber_42_20260310_164841",
-    ("Road Runner", "Baseline"): "atari100k_road_runner_42_20260310_165021",
-    ("Boxing", "Baseline"): "atari100k_boxing_42_20260310_170320",
-    ("Kangaroo", "Baseline"): "atari100k_kangaroo_42_20260310_173011",
-    ("Frostbite", "Baseline"): "atari100k_frostbite_42_20260310_173243",
-    ("Up N Down", "Baseline"): "atari100k_up_n_down_42_20260310_174441",
-    ("Crazy Climber", "+ Aug"): "atari100k_crazy_climber_aug_42_20260310_201115",
-    ("Road Runner", "+ Aug"): "atari100k_road_runner_aug_42_20260310_201202",
-    ("Boxing", "+ Aug"): "atari100k_boxing_aug_42_20260310_202944",
-    ("Kangaroo", "+ Aug"): "atari100k_kangaroo_aug_42_20260310_212156",
-    ("Frostbite", "+ Aug"): "atari100k_frostbite_aug_42_20260310_212155",
-    ("Up N Down", "+ Aug"): "atari100k_up_n_down_aug_42_20260310_213744",
-    ("Crazy Climber", "+ SPR"): "atari100k_crazy_climber_spr_42_20260323_160044",
-    ("Road Runner", "+ SPR"): "atari100k_road_runner_spr_42_20260324_182505",
-    ("Boxing", "+ SPR"): "atari100k_boxing_spr_42_20260324_182503",
-    ("Kangaroo", "+ SPR"): "atari100k_kangaroo_spr_42_20260324_182504",
-    ("Frostbite", "+ SPR"): "atari100k_frostbite_spr_42_20260324_182504",
-    ("Up N Down", "+ SPR"): "atari100k_up_n_down_spr_42_20260324_182505",
-    ("Crazy Climber", "+ Both"): "atari100k_crazy_climber_both_42_20260323_160044",
-    ("Road Runner", "+ Both"): "atari100k_road_runner_both_42_20260324_185918",
-    ("Boxing", "+ Both"): "atari100k_boxing_both_42_20260324_185917",
-    ("Kangaroo", "+ Both"): "atari100k_kangaroo_both_42_20260324_185918",
-    ("Frostbite", "+ Both"): "atari100k_frostbite_both_42_20260324_185917",
-    ("Up N Down", "+ Both"): "atari100k_up_n_down_both_42_20260324_185918",
-}
-
-# INVALID: These runs used vanilla DQN with Rainbow hyperparameters,
-# not actual Rainbow (train_dqn.py ignored config.rainbow.enabled).
-# Moved to invalid/ subfolder. Will be replaced after Task 42.
-RAINBOW_RUN_NAMES = {
-    ("Crazy Climber", "Rainbow"): "invalid/atari100k_crazy_climber_rainbow_42_20260311_035227",
-    ("Road Runner", "Rainbow"): "invalid/atari100k_road_runner_rainbow_42_20260311_033324",
-    ("Boxing", "Rainbow"): "invalid/atari100k_boxing_rainbow_42_20260311_034322",
-    ("Kangaroo", "Rainbow"): "invalid/atari100k_kangaroo_rainbow_42_20260311_041254",
-    ("Frostbite", "Rainbow"): "invalid/atari100k_frostbite_rainbow_42_20260311_041254",
-    ("Up N Down", "Rainbow"): "invalid/atari100k_up_n_down_rainbow_42_20260311_042140",
-}
-
-GAMES = [
-    "Crazy Climber", "Road Runner", "Boxing",
-    "Kangaroo", "Frostbite", "Up N Down",
-]
-CONDITIONS = ["Baseline", "+ Aug", "+ SPR", "+ Both"]
-COLORS = {
-    "Baseline": "#4C72B0",
-    "+ Aug": "#DD8452",
-    "+ SPR": "#55A868",
-    "+ Both": "#C44E52",
-    "Rainbow": "#8172B3",
-}
+CONDITIONS = ["DQN", "+ Aug", "+ SPR", "+ Both"]
 
 
 def smooth(values, window=3):
@@ -128,10 +78,10 @@ def main():
         for i, game in enumerate(pair_games):
             ax = axes[i]
             for cond in CONDITIONS:
-                run_name = RUN_NAMES.get((game, cond))
-                if run_name is None:
+                run_dir = os.path.join(
+                    RUNS_DIR, RUNS.get((game, cond), ""))
+                if not os.path.isdir(run_dir):
                     continue
-                run_dir = os.path.join(RUNS_DIR, run_name)
                 data = load_eval_csv(run_dir)
                 if data is None:
                     print(f"  WARNING: missing eval data for {game} / {cond}")
@@ -192,8 +142,7 @@ def plot_rainbow_comparison():
         "legend.fontsize": 12,
     })
 
-    conditions = ["Baseline", "Rainbow"]
-    all_runs = {**RUN_NAMES, **RAINBOW_RUN_NAMES}
+    conditions = ["DQN", "Rainbow"]
 
     # Pair 1: Games where Rainbow helps (Crazy Climber, Up N Down)
     pairs = [
@@ -210,10 +159,10 @@ def plot_rainbow_comparison():
         for i, game in enumerate(games):
             ax = axes[i]
             for cond in conditions:
-                run_name = all_runs.get((game, cond))
-                if run_name is None:
+                run_dir = os.path.join(
+                    RUNS_DIR, RUNS.get((game, cond), ""))
+                if not os.path.isdir(run_dir):
                     continue
-                run_dir = os.path.join(RUNS_DIR, run_name)
                 data = load_eval_csv(run_dir)
                 if data is None:
                     print(f"  WARNING: missing eval data for {game} / {cond}")

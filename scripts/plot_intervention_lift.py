@@ -20,48 +20,16 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
+from run_registry import GAMES, RUNS, RUNS_DIR
+
 matplotlib.use("Agg")
 
-RUNS_DIR = "experiments/dqn_atari/runs"
 OUTPUT_DIR = "output/plots"
-
-# Map (game, condition) -> run directory name
-RUN_NAMES = {
-    ("Boxing", "Baseline"): "atari100k_boxing_42_20260310_170320",
-    ("Boxing", "+ Aug"): "atari100k_boxing_aug_42_20260310_202944",
-    ("Boxing", "+ SPR"): "atari100k_boxing_spr_42_20260312_022320",
-    ("Boxing", "+ Both"): "atari100k_boxing_both_42_20260312_030847",
-    ("Crazy Climber", "Baseline"): "atari100k_crazy_climber_42_20260310_164841",
-    ("Crazy Climber", "+ Aug"): "atari100k_crazy_climber_aug_42_20260310_201115",
-    ("Crazy Climber", "+ SPR"): "atari100k_crazy_climber_spr_42_20260323_160044",
-    ("Crazy Climber", "+ Both"): "atari100k_crazy_climber_both_42_20260323_160044",
-    ("Frostbite", "Baseline"): "atari100k_frostbite_42_20260310_173243",
-    ("Frostbite", "+ Aug"): "atari100k_frostbite_aug_42_20260310_212155",
-    ("Frostbite", "+ SPR"): "atari100k_frostbite_spr_42_20260324_182504",
-    ("Frostbite", "+ Both"): "atari100k_frostbite_both_42_20260324_185917",
-    ("Kangaroo", "Baseline"): "atari100k_kangaroo_42_20260310_173011",
-    ("Kangaroo", "+ Aug"): "atari100k_kangaroo_aug_42_20260310_212156",
-    ("Kangaroo", "+ SPR"): "atari100k_kangaroo_spr_42_20260324_182504",
-    ("Kangaroo", "+ Both"): "atari100k_kangaroo_both_42_20260324_185918",
-    ("Road Runner", "Baseline"): "atari100k_road_runner_42_20260310_165021",
-    ("Road Runner", "+ Aug"): "atari100k_road_runner_aug_42_20260310_201202",
-    ("Road Runner", "+ SPR"): "atari100k_road_runner_spr_42_20260324_182505",
-    ("Road Runner", "+ Both"): "atari100k_road_runner_both_42_20260324_185918",
-    ("Up N Down", "Baseline"): "atari100k_up_n_down_42_20260310_174441",
-    ("Up N Down", "+ Aug"): "atari100k_up_n_down_aug_42_20260310_213744",
-    ("Up N Down", "+ SPR"): "atari100k_up_n_down_spr_42_20260324_182505",
-    ("Up N Down", "+ Both"): "atari100k_up_n_down_both_42_20260324_185918",
-}
-
-GAMES = [
-    "Crazy Climber", "Road Runner", "Boxing",
-    "Kangaroo", "Frostbite", "Up N Down",
-]
 
 
 def get_final_score(game, condition):
     """Get the mean_return at the last checkpoint."""
-    run_name = RUN_NAMES.get((game, condition))
+    run_name = RUNS.get((game, condition))
     if run_name is None:
         return None
     csv_path = os.path.join(RUNS_DIR, run_name, "eval", "evaluations.csv")
@@ -76,7 +44,7 @@ def get_final_score(game, condition):
 
 def plot_game_lift(game):
     """Generate the two-panel intervention lift figure for one game."""
-    baseline = get_final_score(game, "Baseline")
+    baseline = get_final_score(game, "DQN")
     aug = get_final_score(game, "+ Aug")
     spr = get_final_score(game, "+ SPR")
     both = get_final_score(game, "+ Both")
@@ -204,7 +172,7 @@ def plot_all_games_aug_effect():
     deltas = []
     labels = []
     for game in GAMES:
-        baseline = get_final_score(game, "Baseline")
+        baseline = get_final_score(game, "DQN")
         aug = get_final_score(game, "+ Aug")
         if baseline is None or aug is None:
             continue

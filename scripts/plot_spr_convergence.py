@@ -18,34 +18,19 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
+from run_registry import GAMES, RUNS, RUNS_DIR
+
 matplotlib.use("Agg")
 
-RUNS_DIR = "experiments/dqn_atari/runs"
 OUTPUT_DIR = "output/plots"
 
-# (game, condition) -> run directory
-# Only include runs that have SPR (cosine_similarity column)
-RUN_NAMES = {
-    ("Boxing", "DQN+SPR"): "atari100k_boxing_spr_42_20260324_182503",
-    ("Boxing", "DQN+Both"): "atari100k_boxing_both_42_20260324_185917",
-    ("Crazy Climber", "DQN+SPR"): "atari100k_crazy_climber_spr_42_20260323_160044",
-    ("Crazy Climber", "DQN+Both"): "atari100k_crazy_climber_both_42_20260323_160044",
-    ("Crazy Climber", "Rainbow+SPR"): "atari100k_crazy_climber_rainbow_spr_42_20260323_160045",
-    ("Frostbite", "DQN+SPR"): "atari100k_frostbite_spr_42_20260324_182504",
-    ("Frostbite", "DQN+Both"): "atari100k_frostbite_both_42_20260324_185917",
-    ("Kangaroo", "DQN+SPR"): "atari100k_kangaroo_spr_42_20260324_182504",
-    ("Kangaroo", "DQN+Both"): "atari100k_kangaroo_both_42_20260324_185918",
-    ("Road Runner", "DQN+SPR"): "atari100k_road_runner_spr_42_20260324_182505",
-    ("Road Runner", "DQN+Both"): "atari100k_road_runner_both_42_20260324_185918",
-    ("Up N Down", "DQN+SPR"): "atari100k_up_n_down_spr_42_20260324_182505",
-    ("Up N Down", "DQN+Both"): "atari100k_up_n_down_both_42_20260324_185918",
+# Display labels -> registry condition keys
+# This script shows SPR-related conditions with full config names
+SPR_LABEL_MAP = {
+    "DQN+SPR": "+ SPR",
+    "DQN+Both": "+ Both",
+    "Rainbow+SPR": "Rainbow+SPR",
 }
-
-GAMES = [
-    "Crazy Climber", "Road Runner", "Boxing",
-    "Kangaroo", "Frostbite", "Up N Down",
-]
-
 CONDITIONS = ["DQN+SPR", "DQN+Both", "Rainbow+SPR"]
 COLORS = {
     "DQN+SPR": "#55A868",
@@ -100,7 +85,8 @@ def plot_game(game):
     all_mins = []
 
     for cond in CONDITIONS:
-        run_name = RUN_NAMES.get((game, cond))
+        registry_key = SPR_LABEL_MAP.get(cond, cond)
+        run_name = RUNS.get((game, registry_key))
         if run_name is None:
             continue
         run_dir = os.path.join(RUNS_DIR, run_name)
