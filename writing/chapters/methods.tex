@@ -384,6 +384,15 @@ experimental conditions.
 \subsection{Linear Probing}
 \label{subsec:linear-probing}
 
+The evaluation metrics from \cref{subsec:metrics} measure how well the
+agent plays, but not what its encoder has learned to represent. A high
+score does not guarantee that the encoder encodes specific game-state
+variables like positions, scores, or
+lives~(\cref{subsec:game-state-access}). To ask what information the
+representation actually captures, we need a method that tests it
+directly.
+
+\smallskip
 To evaluate what information the encoder captures, we apply linear
 probing~(\cref{subsec:representations}). The encoder $f_\theta$ is
 first trained end-to-end via reinforcement learning, then its weights
