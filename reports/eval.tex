@@ -617,23 +617,51 @@ meaningful representation learning -- an important sanity check
 before interpreting probe and visualization results.
 
 \begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
-  \item Left panel: SPR loss (negative cosine similarity) over
-    training
-  \item Right panel: cosine similarity zoomed to 0.999--1.0
-  \item Status: example from Boxing DQN+SPR (seed 42); full
-    version compares DQN+SPR vs DQN+Both per game
+  \item Cosine similarity over training, y-axis zoomed to show
+    variation between conditions
+  \item Lines for DQN+SPR, DQN+Both, and Rainbow+SPR (where
+    available)
+  \item Status: all 6 games shown (seed 42). Rainbow+SPR line
+    available for Crazy Climber only; remaining 5 games pending
 \end{itemize}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.82\textwidth]{../output/plots/boxing_spr_convergence.png}
-\caption{Boxing DQN+SPR (seed 42).}
+\includegraphics[width=0.72\textwidth]{../output/plots/crazy_climber_spr_convergence.png}
+\caption{Crazy Climber SPR convergence (seed 42). Rainbow+SPR
+drifts lower after 200K; DQN+Both stays highest.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.82\textwidth]{../output/plots/crazy_climber_spr_convergence.png}
-\caption{Crazy Climber DQN+SPR (seed 42).}
+\includegraphics[width=0.72\textwidth]{../output/plots/road_runner_spr_convergence.png}
+\caption{Road Runner SPR convergence (seed 42). DQN+SPR and
+DQN+Both diverge slightly in the second half.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{../output/plots/boxing_spr_convergence.png}
+\caption{Boxing SPR convergence (seed 42). Both conditions
+converge to near 1.0 with minimal variation.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{../output/plots/kangaroo_spr_convergence.png}
+\caption{Kangaroo SPR convergence (seed 42).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{../output/plots/frostbite_spr_convergence.png}
+\caption{Frostbite SPR convergence (seed 42).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{../output/plots/up_n_down_spr_convergence.png}
+\caption{Up N Down SPR convergence (seed 42).}
 \end{figure}
 
 
