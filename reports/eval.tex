@@ -699,19 +699,22 @@ converge to near 1.0 with minimal variation.}
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{../output/plots/kangaroo_spr_convergence.png}
-\caption{Kangaroo SPR convergence (seed 42).}
+\caption{Kangaroo SPR convergence (seed 42). Both conditions
+converge rapidly and remain near 1.0.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{../output/plots/frostbite_spr_convergence.png}
-\caption{Frostbite SPR convergence (seed 42).}
+\caption{Frostbite SPR convergence (seed 42). DQN+SPR drifts
+downward after 250K while DQN+Both stays near 1.0.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{../output/plots/up_n_down_spr_convergence.png}
-\caption{Up N Down SPR convergence (seed 42).}
+\caption{Up N Down SPR convergence (seed 42). Both conditions
+diverge after 200K; augmentation helps maintain stability.}
 \end{figure}
 
 
