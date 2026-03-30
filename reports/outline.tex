@@ -580,20 +580,20 @@ against the DQN conditions.
 
 \subsection{Interpretability Analysis}
 
-What the learned representations look like across conditions.
+\noindent What the learned representations encode across conditions.
 
 \begin{itemize}
-\item Linear probe accuracy: can frozen encoder outputs decode
-  game-relevant features? How does this differ across DQN, DQN+SPR,
-  Rainbow, Rainbow+SPR?
-\item Latent space visualization: t-SNE/PCA comparing representation
-  structure across conditions
-\item Transition model predictions: how accurately does the model
-  predict future states, and does this differ between DQN+SPR and
-  Rainbow+SPR?
-\item Metric correlations: which Rainbow training metrics track
-  representation quality?
-\item Targeted ablation results, if conducted
+\item \textbf{Linear Probe Accuracy} -- can frozen encoder outputs
+  decode game-relevant features, and how does this differ across
+  conditions?
+\item \textbf{Latent Space Visualization} -- t-SNE/PCA comparing
+  representation structure across DQN and Rainbow.
+\item \textbf{Transition Model Predictions} -- how accurately the
+  model predicts future states across agents.
+\item \textbf{Metric Correlations} -- which Rainbow training
+  metrics track representation quality.
+\item \textbf{Targeted Ablations} -- results from removing or
+  adding individual components.
 \end{itemize}
 
 \subsection{Cross-Game Generalization}
