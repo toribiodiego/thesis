@@ -544,22 +544,22 @@ change and test whether it improves performance.
 
 \section{Results}
 
-\noindent Covers the DQN isolation study, Rainbow comparison,
-representation analysis, and whether the modification improves
-performance. Interpretation is deferred to the Discussion chapter.
+\noindent Presents performance results across DQN and Rainbow
+conditions, then analyzes the learned representations to understand
+why SPR's effectiveness depends on the base agent.
 
 \subsection{DQN Isolation Study}
 
-\noindent Four conditions on vanilla DQN across six games, three
-seeds each.
+\noindent Does SPR improve vanilla DQN under the 100K constraint,
+and how does augmentation interact?
 
 \begin{itemize}
 \item \textbf{Baseline DQN} -- per-game performance under the
   100K constraint.
-\item \textbf{Augmentation Effect} -- which games benefit, which
-  collapse.
-\item \textbf{SPR Effect} -- modest overall, strong in one game,
-  flat or negative in most.
+\item \textbf{Augmentation Effect} -- which games benefit and by
+  how much.
+\item \textbf{SPR Effect} -- does SPR help on a simple agent
+  without Rainbow's extensions?
 \item \textbf{Combined Condition} -- whether augmentation and SPR
   together outperform either alone.
 \end{itemize}
@@ -570,17 +570,18 @@ seeds each.
 against the DQN conditions.
 
 \begin{itemize}
-\item \textbf{Rainbow vs DQN} -- where the capable agent helps
-  and where it does not under 100K steps.
+\item \textbf{Rainbow vs DQN} -- where Rainbow's extensions
+  improve performance under 100K steps.
 \item \textbf{Rainbow+SPR vs DQN+SPR} -- the capability gap and
   its magnitude per game.
-\item \textbf{Scaling} -- whether SPR's contribution scales with
-  base agent capability.
+\item \textbf{Capability Dependence} -- whether SPR's contribution
+  depends on the base agent.
 \end{itemize}
 
 \subsection{Interpretability Analysis}
 
-\noindent What the learned representations encode across conditions.
+\noindent The core analysis: what the representations encode and how
+they differ across DQN and Rainbow conditions.
 
 \begin{itemize}
 \item \textbf{Linear Probe Accuracy} -- can frozen encoder outputs
