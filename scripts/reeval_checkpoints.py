@@ -447,7 +447,10 @@ def main():
         if drive_dir:
             import shutil
             drive_run_dir = os.path.join(drive_dir, run_name)
-            if os.path.isdir(drive_run_dir):
+            # Skip copy when runs-dir is already on Drive (src == dest)
+            if os.path.realpath(run_dir) == os.path.realpath(drive_run_dir):
+                print("     Drive copy skipped (runs-dir is Drive)")
+            elif os.path.isdir(drive_run_dir):
                 drive_eval_dir = os.path.join(drive_run_dir, "eval")
                 src_eval_dir = os.path.join(run_dir, "eval")
                 if os.path.isdir(src_eval_dir):
