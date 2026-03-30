@@ -260,9 +260,22 @@ combination is additive, redundant, or interfering.
 \begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
   \item Parallel lines = independent effects
   \item Crossing lines = the two interventions interact
-  \item Status: Boxing and Crazy Climber (seed 42); remaining
-    four games pending SPR/Both evaluation
+  \item Status: all 6 games complete (seed 42)
 \end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.52\textwidth]{../output/plots/crazy_climber_interaction.png}
+\caption{Crazy Climber interaction (seed 42, eval at 400K frames).
+Lines converge -- augmentation and SPR interact.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.52\textwidth]{../output/plots/road_runner_interaction.png}
+\caption{Road Runner interaction (seed 42, eval at 400K frames).
+Both lines slope down; SPR partially buffers augmentation's harm.}
+\end{figure}
 
 \begin{figure}[H]
 \centering
@@ -273,10 +286,25 @@ Both lines slope down -- augmentation hurts regardless of SPR.}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.52\textwidth]{../output/plots/crazy_climber_interaction.png}
-\caption{Crazy Climber interaction (seed 42, eval at 400K frames).
-Lines converge -- augmentation and SPR interact rather than
-contributing independently.}
+\includegraphics[width=0.52\textwidth]{../output/plots/kangaroo_interaction.png}
+\caption{Kangaroo interaction (seed 42, eval at 400K frames).
+Lines cross -- strong interaction where each helps alone but
+combining them cancels gains.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.52\textwidth]{../output/plots/frostbite_interaction.png}
+\caption{Frostbite interaction (seed 42, eval at 400K frames).
+Near-parallel downward slopes -- augmentation hurts regardless.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.52\textwidth]{../output/plots/up_n_down_interaction.png}
+\caption{Up N Down interaction (seed 42, eval at 400K frames).
+Near-parallel lines -- SPR and augmentation contribute roughly
+independently.}
 \end{figure}
 
 
@@ -290,9 +318,7 @@ reference for cross-game and cross-condition comparisons.
 \begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
   \item 6 games (rows) $\times$ 4 conditions (columns)
   \item Scores at 400K frames with std or multi-seed CI
-  \item Status: DQN and +Aug for all 6 games; SPR and Both
-    for Boxing and Crazy Climber. Remaining 8 cells pending
-    evaluation
+  \item Status: all 24 cells complete (seed 42)
 \end{itemize}
 
 \begin{table}[H]
@@ -304,16 +330,16 @@ reference for cross-game and cross-condition comparisons.
 \textbf{Game} & \textbf{DQN} & \textbf{+ Aug}
   & \textbf{+ SPR} & \textbf{+ Both} \\
 \midrule
-Boxing        & $-3.0$  & $-16.4$ & $-21.1$ & $-19.4$ \\
 Crazy Climber & $3540$  & $100$   & $5627$  & $1197$  \\
-Frostbite     & $147$   & $2$     & ---     & ---     \\
-Kangaroo      & $27$    & $467$   & ---     & ---     \\
-Road Runner   & $1440$  & $3$     & ---     & ---     \\
-Up N Down     & $141$   & $1085$  & ---     & ---     \\
+Road Runner   & $1440$  & $3$     & $1307$  & $810$   \\
+Boxing        & $-3.0$  & $-16.4$ & $-30.5$ & $-21.8$ \\
+Kangaroo      & $27$    & $467$   & $373$   & $0$     \\
+Frostbite     & $147$   & $2$     & $136$   & $22$    \\
+Up N Down     & $141$   & $1085$  & $1357$  & $1269$  \\
 \bottomrule
 \end{tabular}
-\caption{DQN isolation scores at 400K frames (seed 42).
-SPR and Both pending evaluation for 4 games.}
+\caption{DQN isolation scores at 400K frames (seed 42). Mean
+return over 30 evaluation episodes per checkpoint.}
 \end{table}
 
 
