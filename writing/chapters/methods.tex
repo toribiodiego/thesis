@@ -427,12 +427,12 @@ using the same set of states across all conditions to ensure
 comparability.
 
 \smallskip
-The probe targets are game-state properties that a capable agent
-should represent: object positions, score-relevant features, and
-spatial relationships. The specific targets vary by game and are
-defined in \cref{sec:experiment-design}. For each target, we report
-probe accuracy (classification) or $R^2$ (regression) on a held-out
-test set. \Cref{tab:probe-training} summarizes the probe training
+The probe targets are the game-state variables labeled by
+AtariARI~(\cref{subsec:game-state-access}), including positions,
+scores, and lives. For each target, we report probe accuracy
+(classification) or $R^2$ (regression) on a held-out test set. The
+specific targets vary by game and are defined in
+\cref{sec:experiment-design}. \Cref{tab:probe-training} summarizes the probe training
 configuration.
 
 \smallskip
