@@ -160,9 +160,8 @@ helped, negative means it hurt.
   \item Right panel: score change from adding SPR (with and
     without augmentation)
   \item Blue = helped, orange = hurt
-  \item Status: per-game lift for Boxing and Crazy Climber
-    (seed 42); cross-game tables for all 6 games.
-    SPR lift pending evaluation for 5 games
+  \item Status: per-game lift figures and cross-game tables
+    complete for all 6 games (seed 42)
 \end{itemize}
 
 \begin{table}[H]
@@ -196,31 +195,58 @@ percentage change relative to DQN baseline.}
 \textbf{Game} & \textbf{DQN} & \textbf{+ SPR}
   & \textbf{Delta} & \textbf{\% Change} \\
 \midrule
-Boxing        & $-3.0$  & ---     & ---     & ---       \\
+Boxing        & $-3.0$  & $-30.5$ & $-27.5$ & $-905\%$  \\
 Crazy Climber & $3540$  & $5627$  & $+2087$ & $+59\%$   \\
-Frostbite     & $147$   & ---     & ---     & ---       \\
-Kangaroo      & $27$    & ---     & ---     & ---       \\
-Road Runner   & $1440$  & ---     & ---     & ---       \\
-Up N Down     & $141$   & ---     & ---     & ---       \\
+Frostbite     & $147$   & $136$   & $-11$   & $-7\%$    \\
+Kangaroo      & $27$    & $373$   & $+347$  & $+1300\%$ \\
+Road Runner   & $1440$  & $1307$  & $-133$  & $-9\%$    \\
+Up N Down     & $141$   & $1357$  & $+1216$ & $+863\%$  \\
 \bottomrule
 \end{tabular}
-\caption{SPR effect across all 6 games (seed 42). Only Crazy
-Climber evaluated so far (+59\%); remaining games pending.}
+\caption{SPR effect across all 6 games (seed 42). Large gains on
+Kangaroo and Up N Down; modest loss or neutral on the rest.}
 \end{table}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.82\textwidth]{../output/plots/boxing_spr_aug_lift.png}
-\caption{Boxing intervention lift (seed 42). Both interventions
-hurt on this game; augmentation with SPR shows a small positive
-lift.}
-\end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.82\textwidth]{../output/plots/crazy_climber_spr_aug_lift.png}
 \caption{Crazy Climber intervention lift (seed 42). SPR helps
 without augmentation; augmentation hurts in both cases.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{../output/plots/road_runner_spr_aug_lift.png}
+\caption{Road Runner intervention lift (seed 42). Augmentation
+collapses performance; SPR helps only with augmentation present.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{../output/plots/boxing_spr_aug_lift.png}
+\caption{Boxing intervention lift (seed 42). Both interventions
+hurt; augmentation with SPR shows a small positive lift.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{../output/plots/kangaroo_spr_aug_lift.png}
+\caption{Kangaroo intervention lift (seed 42). Augmentation and
+SPR each help alone but cancel when combined.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{../output/plots/frostbite_spr_aug_lift.png}
+\caption{Frostbite intervention lift (seed 42). Augmentation
+collapses performance; SPR is roughly neutral.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{../output/plots/up_n_down_spr_aug_lift.png}
+\caption{Up N Down intervention lift (seed 42). Both interventions
+help individually; SPR effect diminishes with augmentation.}
 \end{figure}
 
 
