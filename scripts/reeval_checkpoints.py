@@ -26,6 +26,8 @@ import os
 import re
 import sys
 
+import time
+
 import torch
 import yaml
 
@@ -208,6 +210,32 @@ def save_results(run_dir, step, results, run_eval_epsilon, training_epsilon):
         json.dump(detailed_results, f, indent=2)
 
 
+def write_reeval_progress(run_dir, run_name, step, steps_done, steps_total,
+                          start_time, mean_return):
+    """Write progress file for monitoring via Colab runner."""
+    elapsed = time.time() - start_time
+    remaining = steps_total - steps_done
+    per_step = elapsed / steps_done if steps_done > 0 else 0
+    eta = per_step * remaining
+
+    progress = {
+        "run": run_name,
+        "step": step,
+        "checkpoints_done": steps_done,
+        "checkpoints_total": steps_total,
+        "percent": round(100 * steps_done / steps_total, 1),
+        "last_mean_return": mean_return,
+        "elapsed_seconds": round(elapsed, 1),
+        "eta_seconds": round(eta, 1),
+        "status": "evaluating",
+    }
+
+    progress_path = os.path.join(run_dir, "eval", "reeval_progress.json")
+    os.makedirs(os.path.dirname(progress_path), exist_ok=True)
+    with open(progress_path, "w") as f:
+        json.dump(progress, f, indent=2)
+
+
 def sort_csv(run_dir):
     """Sort evaluations.csv by step number."""
     csv_path = os.path.join(run_dir, "eval", "evaluations.csv")
@@ -360,7 +388,10 @@ def main():
         if video_dir:
             os.makedirs(video_dir, exist_ok=True)
 
-        for step in sorted(missing_steps):
+        sorted_steps = sorted(missing_steps)
+        run_start_time = time.time()
+
+        for step_idx, step in enumerate(sorted_steps):
             cp_path = os.path.join(checkpoint_dir, f"checkpoint_{step}.pt")
             print(f"     step {step // 1000}K ... ", end="", flush=True)
 
@@ -389,6 +420,14 @@ def main():
 
             save_results(
                 run_dir, step, results, run_eval_epsilon, training_epsilon
+            )
+
+            write_reeval_progress(
+                run_dir, run_name, step,
+                steps_done=step_idx + 1,
+                steps_total=len(sorted_steps),
+                start_time=run_start_time,
+                mean_return=results["mean_return"],
             )
 
             video_msg = ""
