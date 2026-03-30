@@ -266,11 +266,11 @@ reference for cross-game and cross-condition comparisons.
 \begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
   \item 6 games (rows) $\times$ 4 conditions (columns)
   \item Scores at 400K frames with std or multi-seed CI
-  \item Status: example from Boxing (seed 42); full version
-    after batch runs
+  \item Status: DQN and +Aug for all 6 games; SPR and Both
+    for Boxing and Crazy Climber. Remaining 8 cells pending
+    evaluation
 \end{itemize}
 
-\vspace{0.5em}
 \begin{table}[H]
 \centering
 \small
@@ -280,18 +280,17 @@ reference for cross-game and cross-condition comparisons.
 \textbf{Game} & \textbf{DQN} & \textbf{+ Aug}
   & \textbf{+ SPR} & \textbf{+ Both} \\
 \midrule
-Boxing        & $-3.0$ & $-16.4$ & $-21.1$ & $-19.4$ \\
-Crazy Climber & 3540   & 100     & 5627    & 1360    \\
-Frostbite     & 147    & 2       & ---     & ---     \\
-Kangaroo      & 27     & 467     & ---     & ---     \\
-Road Runner   & 1440   & 3       & ---     & ---     \\
-Up N Down     & 141    & 1085    & ---     & ---     \\
+Boxing        & $-3.0$  & $-16.4$ & $-21.1$ & $-19.4$ \\
+Crazy Climber & $3540$  & $100$   & $5627$  & $1197$  \\
+Frostbite     & $147$   & $2$     & ---     & ---     \\
+Kangaroo      & $27$    & $467$   & ---     & ---     \\
+Road Runner   & $1440$  & $3$     & ---     & ---     \\
+Up N Down     & $141$   & $1085$  & ---     & ---     \\
 \bottomrule
 \end{tabular}
-\caption{Example: Boxing only. Full version: all 6 games with
-multi-seed CI.}
+\caption{DQN isolation scores at 400K frames (seed 42).
+SPR and Both pending evaluation for 4 games.}
 \end{table}
-\vspace{0.5em}
 
 
 % ================================================================
