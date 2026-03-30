@@ -2102,12 +2102,18 @@ sees these values, but we can read them directly from the emulator.
 manually mapping addresses to semantic variable names for 22
 Atari games. For example, in Boxing, address 32 stores the player's x
 position and address 34 stores the opponent's x position. In Pong,
-address 49 stores the ball's y position. Each game has between 4 and 20 labeled
-variables, grouped into categories: agent localization, small object
-localization, other localization, score, and miscellaneous. These
-labeled variables serve as ground-truth targets for linear probing --
-the interpretability method described in \cref{ch:methods} that tests
-what the encoder's representation has learned to encode.
+address 49 stores the ball's y position. Each game has between 4 and 20
+labeled variables, grouped into categories: agent localization, small
+object localization, other localization, score, and miscellaneous.
+
+\smallskip
+For example, to test whether the representation captures the ball's
+position, we need to know where the ball actually is. RAM provides that
+answer, and AtariARI's labels tell us which address to read. Without
+these labels, we could measure how well the agent plays, but not what it
+has learned to see. Linear probing
+(\cref{subsec:representations}) uses these labeled values to test
+exactly that.
 
 \section{Self-Supervised Representation Learning}
 \label{sec:ssl}
