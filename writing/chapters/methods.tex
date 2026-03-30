@@ -424,7 +424,9 @@ $y \in \mathbb{R}^k$, trained with mean squared error for
 continuous targets and cross-entropy for categorical targets. We
 train probes on states sampled from completed evaluation episodes,
 using the same set of states across all conditions to ensure
-comparability.
+comparability. During each episode, we record the encoder's output
+$h_t$ and the corresponding RAM values at each step, producing paired
+observations for probe training.
 
 \smallskip
 The probe targets are the game-state variables labeled by
