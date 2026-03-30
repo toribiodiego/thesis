@@ -709,54 +709,54 @@ establish.
 
 \section{Conclusion}
 
-Short chapter. Restates the research question, summarizes what we
-found, and looks forward.
+\noindent Restates the research question, summarizes each
+contribution, and looks forward.
 
 \subsection{Summary of Contributions}
 
-Restate the research question and summarize each contribution with
-actual findings.
+\noindent Each contribution with actual findings.
 
 \begin{itemize}
-\item Isolation: what SPR contributes on vanilla DQN without
-  Rainbow's confounds
-\item Interaction: whether augmentation and SPR are independent or
-  redundant on a simple agent
-\item Interpretability: what the representations encode and why
-  capability matters
-\item Component attribution (if applicable): which Rainbow property
-  enables useful representations
-\item Representation-informed modification: whether understanding the
-  capability gap leads to a concrete improvement on the simple agent
+\item \textbf{Isolation} -- what SPR contributes on vanilla DQN
+  without Rainbow's confounds.
+\item \textbf{Interaction} -- whether augmentation and SPR are
+  independent or redundant on a simple agent.
+\item \textbf{Interpretability} -- what the representations encode
+  and why capability matters.
+\item \textbf{Component Attribution} -- which Rainbow property
+  enables useful representations (if applicable).
+\item \textbf{Modification} -- whether understanding the capability
+  gap leads to a concrete improvement.
 \end{itemize}
 
 \subsection{Implications}
 
-What the findings mean for people building RL agents and for
-researchers studying representation learning.
+\noindent What the findings mean for practitioners and researchers.
 
 \begin{itemize}
-\item For practitioners: when SPR is worth adding, whether
-  augmentation alone is sufficient on simple agents, what to expect
-  under tight data budgets
-\item For researchers: what interpretability reveals about
-  self-supervised objectives in RL, and the isolation study as a
-  reference point for future work on SPR
+\item \textbf{For Practitioners} -- when SPR is worth adding,
+  whether augmentation alone suffices on simple agents.
+\item \textbf{For Researchers} -- what interpretability reveals
+  about self-supervised objectives in RL, and the isolation study
+  as a reference point.
 \end{itemize}
 
 \subsection{Future Work}
 
-Concrete directions motivated by what we found and what we could not
-cover.
+\noindent Concrete directions motivated by what we found and what
+we could not cover.
 
 \begin{itemize}
-\item Expanded game set: the full 26-game Atari-100K benchmark
-\item Intermediate agents: testing DQN with individual Rainbow
-  components to map the capability threshold more precisely
-\item Contrastive comparison: CURL vs SPR on the same conditions
-\item Cross-game transfer: whether representations learned on one
-  game help on another
-\item Scaling: larger encoders, more seeds, cloud compute
+\item \textbf{Expanded Game Set} -- the full 26-game Atari-100K
+  benchmark.
+\item \textbf{Intermediate Agents} -- DQN with individual Rainbow
+  components to map the capability threshold.
+\item \textbf{Contrastive Comparison} -- CURL vs SPR on the same
+  conditions.
+\item \textbf{Cross-Game Transfer} -- whether representations
+  learned on one game help on another.
+\item \textbf{Scaling} -- larger encoders, more seeds, cloud
+  compute.
 \end{itemize}
 
 \end{document}
