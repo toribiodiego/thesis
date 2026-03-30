@@ -2091,8 +2091,8 @@ is, how many lives remain.
 
 \smallskip
 The Atari 2600 stores this state in the console's random-access memory
-(RAM), which holds just 128 values. Each value is one byte, a number
-between 0 and 255, stored at a fixed location called an address. Each
+(RAM), which holds just 128 values. Each value is a single number between 0 and 255, called a byte. Each
+byte is stored at a fixed location in the memory, called an address. Each
 address stores one game variable: one always holds the player's
 horizontal position, another always holds the score. The agent never
 sees these values, but we can read them directly from the emulator.
