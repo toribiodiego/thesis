@@ -2077,10 +2077,41 @@ performance -- not just a summary statistic.
 \smallskip
 These metrics -- human-normalized scores aggregated via IQM with
 bootstrap confidence intervals -- provide a principled framework
-for comparing agents across games with very different score
-ranges. The next section introduces data augmentation, the first
-of two techniques that improve data efficiency under the 100K
-constraint.
+for comparing agents across games with very different score ranges.
+
+\subsection{Game-State Access}
+\label{subsec:game-state-access}
+
+The ALE provides more than frames and rewards. Because the
+environment is a software emulator, it also exposes the Atari 2600's
+internal memory -- 128 bytes of RAM that contain the true game state.
+While the agent sees only pixels, the RAM holds the actual values: the
+player's position, the enemy's position, the score, the number of
+remaining lives, and dozens of other variables, each stored at a
+specific memory address.
+
+\smallskip
+This distinction matters for evaluating representations. The agent's
+encoder compresses an $84 \times 84 \times 4$ image into a
+512-dimensional vector. We want to know what information that vector
+captures about the game. Pixel-level comparisons cannot answer this
+question -- two visually similar frames might represent very different
+game states, and two visually different frames might represent the
+same underlying situation from a different camera angle or animation
+frame. RAM provides the ground truth: the actual positions and scores
+that the representation should ideally encode.
+
+\smallskip
+\citet{anand2019unsupervised} created the AtariARI benchmark by
+manually mapping RAM addresses to semantic variable names for 22
+Atari games. For example, in Boxing, byte 32 stores the player's x
+position and byte 34 stores the opponent's x position. In Pong, byte
+49 stores the ball's y position. Each game has between 4 and 20 labeled
+variables, grouped into categories: agent localization, small object
+localization, other localization, score, and miscellaneous. These
+labeled variables serve as ground-truth targets for linear probing --
+the interpretability method described in \cref{ch:methods} that tests
+what the encoder's representation has learned to encode.
 
 \section{Self-Supervised Representation Learning}
 \label{sec:ssl}
