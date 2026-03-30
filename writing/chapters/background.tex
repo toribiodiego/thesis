@@ -2096,17 +2096,6 @@ read them to check what the agent's representation has learned to
 capture.
 
 \smallskip
-This distinction matters for evaluating representations. The agent's
-encoder compresses an $84 \times 84 \times 4$ image into a
-512-dimensional vector. We want to know what information that vector
-captures about the game. Pixel-level comparisons cannot answer this
-question -- two visually similar frames might represent very different
-game states, and two visually different frames might represent the
-same underlying situation from a different camera angle or animation
-frame. RAM provides the ground truth: the actual positions and scores
-that the representation should ideally encode.
-
-\smallskip
 \citet{anand2019unsupervised} created the AtariARI benchmark by
 manually mapping RAM addresses to semantic variable names for 22
 Atari games. For example, in Boxing, byte 32 stores the player's x
