@@ -410,6 +410,13 @@ fixed and vary only the encoder that produced the representations.
 Differences in probe accuracy reflect differences in what the
 encoder has learned to represent, not differences in probe capacity.
 
+\smallskip
+Concretely, if DQN+SPR achieves higher probe accuracy than DQN for ball
+position, that means SPR has helped the encoder capture ball position. If
+both conditions achieve similar accuracy, SPR has not changed what the
+encoder captures for that variable. We repeat this comparison for each
+labeled variable and each experimental condition in \cref{ch:results}.
+
 \subsection{Probe Design}
 \label{subsec:probe-design}
 
