@@ -696,24 +696,23 @@ establish.
 
 \section{Conclusion}
 
-\noindent Restates the research question, summarizes each
-contribution, and looks forward.
+\noindent Summarizes what we learned about when self-supervised
+representation learning works and what determines whether the
+learned representations are useful.
 
 \subsection{Summary of Contributions}
 
 \noindent Each contribution with actual findings.
 
 \begin{itemize}
-\item \textbf{Isolation} -- what SPR contributes on vanilla DQN
-  without Rainbow's confounds.
-\item \textbf{Interaction} -- whether augmentation and SPR are
-  independent or redundant on a simple agent.
+\item \textbf{SPR on Vanilla DQN} -- what SPR contributes without
+  Rainbow's extensions, and how augmentation interacts.
 \item \textbf{Interpretability} -- what the representations encode
-  and why capability matters.
+  and why the base agent's capability matters.
 \item \textbf{Component Attribution} -- which Rainbow property
   enables useful representations (if applicable).
-\item \textbf{Modification} -- whether understanding the capability
-  gap leads to a concrete improvement.
+\item \textbf{Representation-Informed Improvement} -- whether
+  understanding the capability gap leads to a concrete improvement.
 \end{itemize}
 
 \subsection{Implications}
@@ -721,8 +720,8 @@ contribution, and looks forward.
 \noindent What the findings mean for practitioners and researchers.
 
 \begin{itemize}
-\item \textbf{For Practitioners} -- when SPR is worth adding,
-  whether augmentation alone suffices on simple agents.
+\item \textbf{For Practitioners} -- when SPR is worth adding and
+  what base agent capability is needed.
 \item \textbf{For Researchers} -- what interpretability reveals
   about self-supervised objectives in RL, and the isolation study
   as a reference point.
