@@ -676,20 +676,47 @@ Q-learning rather than helping it.
 \begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
   \item Smoothed TD error over training, all conditions overlaid
   \item Higher = less stable value estimates
-  \item Status: example from Boxing (seed 42); full version
-    includes all games and Rainbow conditions
+  \item DQN conditions only -- Rainbow uses distributional loss
+    on a different scale (see D6)
+  \item Colors match A1 learning curves
+  \item Status: all 6 games shown (seed 42)
 \end{itemize}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.72\textwidth]{../output/plots/boxing_training_stability.png}
-\caption{Boxing (seed 42).}
+\includegraphics[width=0.72\textwidth]{../output/plots/crazy_climber_training_stability.png}
+\caption{Crazy Climber training stability (seed 42). SPR
+conditions show slightly higher TD error than baseline.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.72\textwidth]{../output/plots/crazy_climber_training_stability.png}
-\caption{Crazy Climber (seed 42).}
+\includegraphics[width=0.72\textwidth]{../output/plots/road_runner_training_stability.png}
+\caption{Road Runner training stability (seed 42).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{../output/plots/boxing_training_stability.png}
+\caption{Boxing training stability (seed 42).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{../output/plots/kangaroo_training_stability.png}
+\caption{Kangaroo training stability (seed 42).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{../output/plots/frostbite_training_stability.png}
+\caption{Frostbite training stability (seed 42).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{../output/plots/up_n_down_training_stability.png}
+\caption{Up N Down training stability (seed 42).}
 \end{figure}
 
 
