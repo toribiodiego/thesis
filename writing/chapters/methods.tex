@@ -384,15 +384,12 @@ experimental conditions.
 \subsection{Linear Probing}
 \label{subsec:linear-probing}
 
-To evaluate what information the encoder captures, we use linear
-probing~(\cref{fig:linear-probe}). The encoder $f_\theta$ is first
-trained end-to-end via reinforcement learning, then its weights are
-frozen. A single linear layer is trained on the frozen
-representations to predict known game-state properties. Because the
-probe is restricted to a linear mapping, any structure it recovers
-must already be present in the representation -- the probe cannot
-learn new features of its own. Probe accuracy therefore measures
-what information $f_\theta$ has made linearly accessible.
+To evaluate what information the encoder captures, we apply linear
+probing~(\cref{subsec:representations}). The encoder $f_\theta$ is
+first trained end-to-end via reinforcement learning, then its weights
+are frozen~(\cref{fig:linear-probe}). A single linear layer is trained
+on the frozen representations to predict the game-state variables
+labeled by AtariARI~(\cref{subsec:game-state-access}).
 
 \input{figures/linear-probe}
 
