@@ -702,52 +702,50 @@ before interpreting probe and visualization results.
 \begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
   \item Cosine similarity over training, y-axis zoomed to show
     variation between conditions
-  \item Lines for DQN+SPR, DQN+Both, and Rainbow+SPR (where
-    available)
-  \item Status: all 6 games shown (seed 42). Rainbow+SPR line
-    available for Crazy Climber only; remaining 5 games pending
+  \item Lines for DQN+SPR, DQN+Both, and Rainbow+SPR
+  \item Status: all 6 games complete (seed 42)
 \end{itemize}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{../output/plots/crazy_climber_spr_convergence.png}
-\caption{Crazy Climber SPR convergence (seed 42). Rainbow+SPR
-drifts lower after 200K; DQN+Both stays highest.}
+\caption{Crazy Climber SPR convergence (seed 42). DQN+Both stays
+highest; Rainbow+SPR and DQN+SPR both drift lower after 200K.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{../output/plots/road_runner_spr_convergence.png}
-\caption{Road Runner SPR convergence (seed 42). DQN+SPR and
-DQN+Both diverge slightly in the second half.}
+\caption{Road Runner SPR convergence (seed 42). Rainbow+SPR
+drops below both DQN conditions after 250K.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{../output/plots/boxing_spr_convergence.png}
-\caption{Boxing SPR convergence (seed 42). Both conditions
-converge to near 1.0 with minimal variation.}
+\caption{Boxing SPR convergence (seed 42). DQN conditions
+converge to 1.0; Rainbow+SPR collapses after 100K.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{../output/plots/kangaroo_spr_convergence.png}
-\caption{Kangaroo SPR convergence (seed 42). Both conditions
-converge rapidly and remain near 1.0.}
+\caption{Kangaroo SPR convergence (seed 42). DQN conditions
+reach 1.0; Rainbow+SPR settles lower around 0.989.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{../output/plots/frostbite_spr_convergence.png}
-\caption{Frostbite SPR convergence (seed 42). DQN+SPR drifts
-downward after 250K while DQN+Both stays near 1.0.}
+\caption{Frostbite SPR convergence (seed 42). DQN+Both stays
+near 1.0; both DQN+SPR and Rainbow+SPR drift downward.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{../output/plots/up_n_down_spr_convergence.png}
-\caption{Up N Down SPR convergence (seed 42). Both conditions
-diverge after 200K; augmentation helps maintain stability.}
+\caption{Up N Down SPR convergence (seed 42). All three
+conditions diverge after 200K; Rainbow+SPR drops the most.}
 \end{figure}
 
 
