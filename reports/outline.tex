@@ -36,17 +36,11 @@
 
 \section{Introduction}
 
-\noindent Deep RL agents need hundreds of millions of interactions to
-learn, but in many domains -- robotics, autonomous driving, clinical
-decision-making -- collecting that much experience is expensive, slow,
-or dangerous. The Atari-100K benchmark distills this challenge into a
-controlled setting where agents must learn from 100K steps instead of
-200 million. At this scale, the standard training signal is too weak to
-shape useful representations on its own, making the encoder the
-bottleneck. This thesis studies self-supervised representation learning
-(SPR) as a way to address that bottleneck: when it helps, what
-determines whether the learned representations are useful, and whether
-the base agent's capability is a prerequisite.
+\noindent Under the Atari-100K constraint, agents must learn from 100K
+steps instead of 200 million, and the encoder becomes the bottleneck.
+This thesis studies self-supervised representation learning (SPR): when
+it helps, what the learned representations encode, and whether the base
+agent's capability is a prerequisite.
 
 \subsection{The Data Efficiency Problem}
 
@@ -116,7 +110,7 @@ the learned representations are useful?
 \item \textbf{Isolation} -- does SPR improve vanilla DQN when separated
   from Rainbow's extensions?\\[0.1em]
   \hspace*{1.5em}$\circ$\hspace{0.5em}DQN with and without SPR across
-    six games, three seeds each. Augmentation included as a control.
+    six games, three seeds each.
 \item \textbf{Capability} -- does SPR need a capable base agent?\\[0.1em]
   \hspace*{1.5em}$\circ$\hspace{0.5em}Rainbow+SPR on the same games
     provides the contrasting case.
@@ -134,8 +128,6 @@ the learned representations are useful?
 \item \textbf{Isolation study} -- first evaluation of SPR on vanilla
   DQN, separating representation learning from algorithmic
   improvements.
-\item \textbf{Interaction study} -- augmentation and SPR alone and in
-  combination, testing whether they are independent or redundant.
 \item \textbf{Interpretability analysis} -- probing and visualization
   across capability levels, producing a finding about when and why
   self-supervised representations become useful.
@@ -446,12 +438,6 @@ to analyze the learned representations.
     epsilon-greedy with linear decay.
   \item Hyperparameter table and deviations from Mnih 2015.
   \end{itemize}
-\item \textbf{Data Augmentation} -- DrQ-style random shift (pad to
-  92x92, random crop to 84x84).
-  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
-  \item Applied independently to observations and next-observations.
-  \item Configurable via YAML, same toggle for DQN and Rainbow.
-  \end{itemize}
 \end{itemize}
 
 \subsection{Self-Predictive Representations}
@@ -490,11 +476,11 @@ with all six extensions from the background.
 isolate the contribution of representation learning.
 
 \begin{itemize}
-\item \textbf{DQN Isolation Study} -- four conditions (baseline,
-  +augmentation, +SPR, +both) across 6 games, 3 seeds each.
+\item \textbf{DQN Isolation Study} -- DQN and DQN+SPR across 6 games,
+  3 seeds each.
   \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
-  \item Isolates SPR's contribution from augmentation's on a
-    simple agent.
+  \item Isolates SPR's contribution on a simple agent, separated
+    from Rainbow's extensions.
   \end{itemize}
 \item \textbf{Capability Comparison} -- Rainbow and Rainbow+SPR,
   same 6 games, 3 seeds each.
@@ -586,18 +572,13 @@ so, what do the representations reveal about why?
 
 \subsection{DQN Isolation Study}
 
-\noindent Does SPR improve vanilla DQN under the 100K constraint,
-and how does augmentation interact?
+\noindent Does SPR improve vanilla DQN under the 100K constraint?
 
 \begin{itemize}
 \item \textbf{Baseline DQN} -- per-game performance under the
   100K constraint.
-\item \textbf{Augmentation Effect} -- which games benefit and by
-  how much.
 \item \textbf{SPR Effect} -- does SPR help on a simple agent
-  without Rainbow's extensions?
-\item \textbf{Combined Condition} -- whether augmentation and SPR
-  together outperform either alone.
+  without Rainbow's extensions? Per-game breakdown.
 \end{itemize}
 
 \subsection{Rainbow Capability Comparison}
@@ -682,8 +663,6 @@ representations useful.
   when representation learning works.
 \item \textbf{Component Analysis} -- whether a single Rainbow
   component explains the gap or the combination matters.
-\item \textbf{Augmentation Interaction} -- whether augmentation and
-  SPR are independent or redundant, and the CURL connection.
 \item \textbf{Mechanism} -- how metric correlation and ablation
   results narrow down what enables useful representations.
 \end{itemize}
@@ -743,7 +722,7 @@ learned representations are useful.
 
 \begin{itemize}
 \item \textbf{SPR on Vanilla DQN} -- what SPR contributes without
-  Rainbow's extensions, and how augmentation interacts.
+  Rainbow's extensions.
 \item \textbf{Interpretability} -- what the representations encode
   and why the base agent's capability matters.
 \item \textbf{Component Attribution} -- which Rainbow property

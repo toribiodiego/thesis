@@ -37,6 +37,7 @@ RUNS = {
     ("Boxing", "+ SPR"):        "atari100k_boxing_spr_42_20260324_182503",
     ("Boxing", "+ Both"):       "atari100k_boxing_both_42_20260324_185917",
     ("Boxing", "Rainbow"):      "atari100k_boxing_rainbow_42_20260327_192211",
+    ("Boxing", "Rainbow+SPR"):  "atari100k_boxing_rainbow_spr_42_20260330_212206",
 
     # Crazy Climber
     ("Crazy Climber", "DQN"):          "atari100k_crazy_climber_42_20260310_164841",
@@ -52,6 +53,7 @@ RUNS = {
     ("Frostbite", "+ SPR"):        "atari100k_frostbite_spr_42_20260324_182504",
     ("Frostbite", "+ Both"):       "atari100k_frostbite_both_42_20260324_185917",
     ("Frostbite", "Rainbow"):      "atari100k_frostbite_rainbow_42_20260327_192213",
+    ("Frostbite", "Rainbow+SPR"):  "atari100k_frostbite_rainbow_spr_42_20260330_212206",
 
     # Kangaroo
     ("Kangaroo", "DQN"):          "atari100k_kangaroo_42_20260310_173011",
@@ -59,6 +61,7 @@ RUNS = {
     ("Kangaroo", "+ SPR"):        "atari100k_kangaroo_spr_42_20260324_182504",
     ("Kangaroo", "+ Both"):       "atari100k_kangaroo_both_42_20260324_185918",
     ("Kangaroo", "Rainbow"):      "atari100k_kangaroo_rainbow_42_20260327_192214",
+    ("Kangaroo", "Rainbow+SPR"):  "atari100k_kangaroo_rainbow_spr_42_20260330_212206",
 
     # Road Runner
     ("Road Runner", "DQN"):          "atari100k_road_runner_42_20260310_165021",
@@ -66,6 +69,7 @@ RUNS = {
     ("Road Runner", "+ SPR"):        "atari100k_road_runner_spr_42_20260324_182505",
     ("Road Runner", "+ Both"):       "atari100k_road_runner_both_42_20260324_185918",
     ("Road Runner", "Rainbow"):      "atari100k_road_runner_rainbow_42_20260327_192215",
+    ("Road Runner", "Rainbow+SPR"):  "atari100k_road_runner_rainbow_spr_42_20260330_212207",
 
     # Up N Down
     ("Up N Down", "DQN"):          "atari100k_up_n_down_42_20260310_174441",
@@ -73,6 +77,7 @@ RUNS = {
     ("Up N Down", "+ SPR"):        "atari100k_up_n_down_spr_42_20260324_182505",
     ("Up N Down", "+ Both"):       "atari100k_up_n_down_both_42_20260324_185918",
     ("Up N Down", "Rainbow"):      "atari100k_up_n_down_rainbow_42_20260327_192217",
+    ("Up N Down", "Rainbow+SPR"):  "atari100k_up_n_down_rainbow_spr_42_20260330_212207",
 }
 # fmt: on
 

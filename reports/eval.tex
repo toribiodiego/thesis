@@ -360,33 +360,31 @@ helps Rainbow, the base agent's learning infrastructure matters
 more than the representation objective itself.
 
 \begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
-  \item DQN vs Rainbow paired comparison per game
-  \item Shaded bands: $\pm 1$ std or cross-seed confidence interval
-  \item Status: all 6 games shown (seed 42), grouped by outcome.
-    Rainbow+SPR line pending A100 training for 5 games
+  \item Three conditions: DQN+SPR, Rainbow, Rainbow+SPR
+  \item Shaded bands: $\pm 1$ std (single seed)
+  \item Status: all 6 games complete (seed 42)
 \end{itemize}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.82\textwidth]{../output/plots/rainbow_helps.png}
-\caption{Games where Rainbow outperforms DQN (seed 42). Rainbow
-reaches higher scores on both Crazy Climber and Up N Down.}
+\includegraphics[width=0.92\textwidth]{../output/plots/spr_rainbow_comparison_a.png}
+\caption{Crazy Climber and Road Runner (seed 42). SPR boosts
+Rainbow on both games (+1103 and +3197). DQN+SPR lags far behind
+both Rainbow variants.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.82\textwidth]{../output/plots/rainbow_hurts.png}
-\caption{Games where Rainbow regresses from DQN (seed 42). Road
-Runner and Frostbite show lower Rainbow scores despite richer
-architecture.}
+\includegraphics[width=0.92\textwidth]{../output/plots/spr_rainbow_comparison_b.png}
+\caption{Boxing and Kangaroo (seed 42). SPR lifts Rainbow on
+Kangaroo (+857); Boxing is near zero for all three conditions.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.82\textwidth]{../output/plots/rainbow_flat.png}
-\caption{Games where neither agent learns well (seed 42). Both
-Kangaroo and Boxing stay near zero for DQN; Rainbow improves
-Kangaroo but not Boxing.}
+\includegraphics[width=0.92\textwidth]{../output/plots/spr_rainbow_comparison_c.png}
+\caption{Frostbite and Up N Down (seed 42). SPR helps Rainbow on
+Up N Down (+1589) but hurts on Frostbite ($-$398).}
 \end{figure}
 
 \subsection*{B2. SPR Lift Comparison}

@@ -205,6 +205,77 @@ def plot_rainbow_comparison():
         print(f"Saved {filename}.{{png,pdf}}")
 
 
+def plot_spr_rainbow_comparison():
+    """Generate paired figures: DQN+SPR vs Rainbow vs Rainbow+SPR."""
+    plt.rcParams.update({
+        "font.size": 12, "axes.titlesize": 14, "axes.labelsize": 12,
+        "xtick.labelsize": 11, "ytick.labelsize": 11,
+        "axes.linewidth": 0.8, "grid.linewidth": 0.5,
+        "lines.linewidth": 2.0, "figure.facecolor": "white",
+        "axes.facecolor": "white", "axes.grid": True, "grid.alpha": 0.3,
+        "legend.frameon": False, "legend.fontsize": 12,
+    })
+
+    conditions = ["+ SPR", "Rainbow", "Rainbow+SPR"]
+    colors = {
+        "+ SPR": COLORS["+ SPR"],
+        "Rainbow": COLORS["Rainbow"],
+        "Rainbow+SPR": COLORS["Rainbow+SPR"],
+    }
+    labels = {"+ SPR": "DQN+SPR", "Rainbow": "Rainbow",
+              "Rainbow+SPR": "Rainbow+SPR"}
+
+    pairs = [GAMES[0:2], GAMES[2:4], GAMES[4:6]]
+    for pair_idx, pair_games in enumerate(pairs):
+        fig, axes = plt.subplots(1, 2, figsize=(12, 4.5))
+        for i, game in enumerate(pair_games):
+            ax = axes[i]
+            for cond in conditions:
+                run_dir = os.path.join(
+                    RUNS_DIR, RUNS.get((game, cond), ""))
+                if not os.path.isdir(run_dir):
+                    continue
+                data = load_eval_csv(run_dir)
+                if data is None:
+                    print(f"  WARNING: missing eval for {game} / {cond}")
+                    continue
+                steps, means, stds = data
+                sm = smooth(means)
+                ss = smooth(stds)
+                ax.plot(steps, sm, label=labels[cond],
+                        color=colors[cond], linewidth=2.0)
+                ax.fill_between(steps, sm - ss, sm + ss,
+                                color=colors[cond], alpha=0.12)
+
+            ax.set_title(game, fontsize=13, fontweight="bold")
+            ax.set_xlabel("Env Steps (K)")
+            if i == 0:
+                ax.set_ylabel("Mean Return")
+            ax.yaxis.set_major_formatter(
+                plt.FuncFormatter(
+                    lambda x, _: f"{int(x):,}" if x == int(x)
+                    else f"{x:.0f}"))
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
+
+        handles, labels_list = axes[0].get_legend_handles_labels()
+        fig.legend(handles, labels_list, loc="lower center", ncol=3,
+                   fontsize=13, bbox_to_anchor=(0.5, -0.03))
+        plt.tight_layout(rect=[0, 0.08, 1, 1.0])
+
+        suffix = chr(ord("a") + pair_idx)
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+        plt.savefig(os.path.join(OUTPUT_DIR,
+                    f"spr_rainbow_comparison_{suffix}.png"),
+                    dpi=300, bbox_inches="tight")
+        plt.savefig(os.path.join(OUTPUT_DIR,
+                    f"spr_rainbow_comparison_{suffix}.pdf"),
+                    bbox_inches="tight")
+        plt.close()
+        print(f"Saved spr_rainbow_comparison_{suffix}.{{png,pdf}}")
+
+
 if __name__ == "__main__":
     main()
     plot_rainbow_comparison()
+    plot_spr_rainbow_comparison()
