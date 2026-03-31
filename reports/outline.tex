@@ -37,97 +37,132 @@
 \section{Introduction}
 
 \noindent Deep RL agents need hundreds of millions of interactions to
-learn, but data is not always cheap. The Atari-100K benchmark cuts that
-budget to 100K steps, and most standard agents struggle. This thesis
-studies self-supervised representation learning (SPR): when it helps,
-what determines whether the learned representations are useful, and
-what the base agent's capability contributes.
+learn, but in many domains -- robotics, autonomous driving, clinical
+decision-making -- collecting that much experience is expensive, slow,
+or dangerous. The Atari-100K benchmark distills this challenge into a
+controlled setting where agents must learn from 100K steps instead of
+200 million. At this scale, the standard training signal is too weak to
+shape useful representations on its own, making the encoder the
+bottleneck. This thesis studies self-supervised representation learning
+(SPR) as a way to address that bottleneck: when it helps, what
+determines whether the learned representations are useful, and whether
+the base agent's capability is a prerequisite.
 
 \subsection{The Data Efficiency Problem}
 
+\noindent Motivates the research setting: why data efficiency matters
+and what approaches exist.
+
 \begin{itemize}
-\item The gap between human and agent data requirements
-\item Why data efficiency matters beyond games: sim-to-real, costly
-  environments, safety-critical domains
-\item Four families of approaches: data augmentation, representation
-  learning, world models, algorithmic improvements
-\item This thesis focuses on the first two
+\item \textbf{The gap} -- deep RL agents need hundreds of millions of
+  interactions; humans learn from minutes of play.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item Practical cost beyond games: sim-to-real transfer, costly
+    environments, safety-critical domains.
+  \end{itemize}
+\item \textbf{Why 100K is different} -- not just less data, but a
+  qualitatively different learning regime.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item The agent barely explores; the encoder sees a narrow slice
+    of the game. The Q-learning signal alone is too weak and noisy
+    to shape good representations from so little experience.
+  \end{itemize}
+\item \textbf{Existing approaches} -- four families: data augmentation,
+  representation learning, world models, algorithmic improvements.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item This thesis focuses on representation learning and what
+    determines whether it works in the low-data regime.
+  \end{itemize}
 \end{itemize}
 
 \subsection{The Attribution Problem}
 
-SPR trains the encoder to predict its own future representations, and
-it achieved strong results on Atari-100K -- but only on top of Rainbow,
-a complex agent with six extensions that each change how the agent
-learns. We cannot tell whether SPR's gains came from representation
-learning or from Rainbow doing the heavy lifting. Our early results
-confirm this matters: SPR on vanilla DQN barely helps in most games.
+\noindent SPR achieved strong results on Atari-100K, but only on top
+of Rainbow. We cannot tell whether SPR's gains came from representation
+learning or from Rainbow's components doing the heavy lifting.
 
 \begin{itemize}
-\item Rainbow's components (distributional values, prioritized replay,
-  n-step returns, etc.) confound the result
-\item Our early DQN+SPR results: only 1 of 6 games shows a strong
-  lift, 4 games are flat or negative
-\item Not a failure of SPR -- it shows the base agent matters, and
-  nobody has studied when or why
+\item \textbf{The confound} -- Rainbow has six extensions (distributional
+  values, prioritized replay, n-step returns, dueling, noisy nets,
+  double DQN) that each change how the agent learns.
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item SPR's improvement over Rainbow could come from representation
+    learning, or from Rainbow providing a foundation that makes
+    representation learning possible.
+  \end{itemize}
+\item \textbf{Our evidence} -- does SPR help vanilla DQN consistently,
+  inconsistently, or not at all?
+  \begin{itemize}[label=$\circ$, itemsep=0.2em, parsep=0pt, topsep=0pt, partopsep=0pt]
+  \item DQN+SPR results across six games and the pattern they reveal.
+  \item If SPR helps inconsistently or not at all, that shows
+    the base agent matters -- and nobody has studied when or why.
+  \end{itemize}
 \end{itemize}
 
 \subsection{Research Question and Approach}
 
-\vspace{0.5em}
+\noindent States the research question and the three-part approach to
+answering it.
+
 \begin{quote}
+\vspace{-0.3em}
 When does self-supervised representation learning improve
 data-efficient reinforcement learning, and what determines whether
 the learned representations are useful?
+\vspace{-0.3em}
 \end{quote}
-\vspace{0.5em}
-
-We answer this in three parts:
-
+\vspace{-0.5em}
 \begin{itemize}
-\item \textbf{Isolation} -- Does SPR improve vanilla DQN? How does it
-  interact with data augmentation? We test each method alone and in
-  combination across six games, three seeds each.
-\item \textbf{Capability} -- Does SPR need a capable base agent?
-  Rainbow+SPR on the same games provides the contrasting case.
-\item \textbf{Interpretability} -- What do the representations
-  actually encode, and why do they differ across capability levels?
-  Linear probing, latent visualization, and transition model analysis
-  on saved checkpoints.
+\item \textbf{Isolation} -- does SPR improve vanilla DQN when separated
+  from Rainbow's extensions?\\[0.1em]
+  \hspace*{1.5em}$\circ$\hspace{0.5em}DQN with and without SPR across
+    six games, three seeds each. Augmentation included as a control.
+\item \textbf{Capability} -- does SPR need a capable base agent?\\[0.1em]
+  \hspace*{1.5em}$\circ$\hspace{0.5em}Rainbow+SPR on the same games
+    provides the contrasting case.
+\item \textbf{Interpretability} -- what do the representations encode,
+  and why do they differ across capability levels?\\[0.1em]
+  \hspace*{1.5em}$\circ$\hspace{0.5em}Linear probing, latent
+    visualization, and transition model analysis on saved checkpoints.
 \end{itemize}
 
 \subsection{Contributions}
 
+\noindent Lists the specific contributions this thesis makes.
+
 \begin{itemize}
 \item \textbf{Isolation study} -- first evaluation of SPR on vanilla
   DQN, separating representation learning from algorithmic
-  improvements
-\item \textbf{Interaction study} -- testing augmentation and SPR alone
-  and in combination to see whether they are independent or redundant
+  improvements.
+\item \textbf{Interaction study} -- augmentation and SPR alone and in
+  combination, testing whether they are independent or redundant.
 \item \textbf{Interpretability analysis} -- probing and visualization
   across capability levels, producing a finding about when and why
-  self-supervised representations become useful
-\item \textbf{Component attribution} (if the investigation yields
-  clean results) -- identifying which Rainbow component enables
-  useful representations
-\item \textbf{Representation-informed modification} -- a targeted
-  change to SPR or the training configuration motivated by the
-  interpretability findings, testing whether understanding the
-  capability gap leads to a concrete improvement
+  self-supervised representations become useful.
+\item \textbf{Component attribution} -- identifying which Rainbow
+  component enables useful representations (if the investigation
+  yields clean results).
+\item \textbf{Representation-informed modification} -- a targeted change
+  motivated by the interpretability findings, testing whether
+  understanding the capability gap leads to a concrete improvement.
 \end{itemize}
 
 \subsection{Thesis Outline}
 
+\noindent Previews the remaining chapters.
+
 \begin{itemize}
-\item Chapter 2 -- Background: RL, DQN, Rainbow, Atari-100K, SPR,
-  augmentation, related work
-\item Chapter 3 -- Methods: implementations, experiment design,
-  interpretability methods
-\item Chapter 4 -- Results: DQN isolation study, capability
-  comparison, interpretability findings, cross-game generalization
-\item Chapter 5 -- Discussion: interpretation, limitations, broader
-  positioning
-\item Chapter 6 -- Conclusion: contributions, implications, future work
+\item \textbf{Chapter 2 -- Background:} RL foundations, deep learning,
+  DQN, Rainbow, Atari-100K benchmark, self-supervised representation
+  learning, related work.
+\item \textbf{Chapter 3 -- Methods:} implementations, experiment
+  design, interpretability methods, modification approach.
+\item \textbf{Chapter 4 -- Results:} DQN isolation study, capability
+  comparison, interpretability findings, cross-game generalization.
+\item \textbf{Chapter 5 -- Discussion:} interpretation, limitations,
+  broader positioning.
+\item \textbf{Chapter 6 -- Conclusion:} contributions, implications,
+  future work.
 \end{itemize}
 
 \section{Background}
@@ -545,8 +580,9 @@ change and test whether it improves performance.
 \section{Results}
 
 \noindent Presents performance results across DQN and Rainbow
-conditions, then analyzes the learned representations to understand
-why SPR's effectiveness depends on the base agent.
+conditions, then analyzes the learned representations. The central
+question: does SPR's effectiveness depend on the base agent, and if
+so, what do the representations reveal about why?
 
 \subsection{DQN Isolation Study}
 
@@ -631,9 +667,10 @@ performance.
 
 \section{Discussion}
 
-\noindent Interprets why SPR's effectiveness depends on the base
-agent, what the representations reveal about this dependency, and
-the limitations of the study.
+\noindent Interprets the experimental findings: what the performance
+and representation results tell us about SPR, base agent capability,
+and the conditions under which representation learning helps. Addresses
+limitations and positions the work relative to the broader field.
 
 \subsection{The Capability Threshold}
 
