@@ -45,11 +45,9 @@
 This document catalogs every figure and table to be produced from
 experimental results. Each entry specifies the figure's purpose
 in the thesis, its data source, the thesis section it supports,
-and its current status. Entries marked \textbf{[LIVE]} include
-example outputs from existing Boxing data. Entries marked
-\textbf{[PLACEHOLDER]} require completed batch runs.
-Data sources and reproduction commands are in
-Appendix~\ref{app:data} and~\ref{app:regen}.
+and its current status. Seed 42 is fully complete (36 runs, 6
+games $\times$ 6 conditions). Data sources and reproduction
+commands are in Appendix~\ref{app:data} and~\ref{app:regen}.
 
 \begin{table}[H]
 \centering
@@ -64,16 +62,16 @@ Appendix~\ref{app:data} and~\ref{app:regen}.
 \multirow{6}{*}{\shortstack[l]{\textit{What happened?}\\Performance}}
   & A1 & DQN learning curves       & 4.1 & Live \\
   & A4 & DQN score table           & 4.1 & Live \\
-  & B1 & Rainbow learning curves   & 4.2 & Pending \\
-  & B4 & Full score table (6x6)    & 4.2 & Pending \\
+  & B1 & Rainbow learning curves   & 4.2 & Live \\
+  & B4 & Full score table (6x6)    & 4.2 & Live \\
   & B5 & Human-normalized scores   & 4.2 & Pending \\
   & B6 & Aggregate bar chart       & 4.2 & Pending \\
 \midrule
 \multirow{5}{*}{\shortstack[l]{\textit{What caused it?}\\Attribution}}
   & A2 & SPR / aug lift bars       & 4.1 & Live \\
   & A3 & Interaction plot          & 4.1 & Live \\
-  & B2 & SPR lift: DQN vs Rainbow  & 4.2 & Pending \\
-  & B3 & Capability scatter        & 4.2 & Pending \\
+  & B2 & SPR lift: DQN vs Rainbow  & 4.2 & Live \\
+  & B3 & Capability scatter        & 4.2 & Live \\
   & D1 & Score heatmap             & 4.4 & Pending \\
 \midrule
 \multirow{7}{*}{\shortstack[l]{\textit{What was learned?}\\Representations}}
@@ -98,8 +96,8 @@ Appendix~\ref{app:data} and~\ref{app:regen}.
 \bottomrule
 \end{tabular}
 \caption{Figure catalog (26 total). Live = generated from
-existing Boxing data. Pending = requires batch runs or
-interpretability pipeline.}
+seed 42 data (all 36 runs). Pending = requires multi-seed
+runs, baseline lookup, or interpretability pipeline.}
 \end{table}
 
 % ================================================================
@@ -850,7 +848,7 @@ during training.
   \item Metrics: distributional loss, priority entropy,
     mean importance sampling weight
   \item Lines for Rainbow vs Rainbow+SPR per game
-  \item Status: pending -- requires completed Rainbow batch runs
+  \item Status: pending -- training data available, script needed
 \end{itemize}
 
 \vspace{0.5em}
@@ -943,12 +941,18 @@ Run directories are documented in
 \label{app:perf-figs}
 
 \begin{verbatim}
-python scripts/plot_learning_curves.py  # learning curves
-python scripts/plot_results.py          # score tables, bar charts
+python scripts/plot_learning_curves.py    # A1, B1 learning curves
+python scripts/plot_intervention_lift.py  # A2 lift bars
+python scripts/plot_interaction.py        # A3 interaction plots
+python scripts/plot_capability_scatter.py # B3 DQN vs Rainbow
+python scripts/plot_rainbow_lift.py       # B2 SPR lift comparison
+python scripts/plot_spr_convergence.py    # D3 cosine similarity
+python scripts/plot_training_stability.py # D4 TD error
 \end{verbatim}
 
-\noindent Both scripts read \texttt{evaluations.csv} and
-\texttt{training\_steps.csv} from local run directories.
+\noindent All scripts import run names from
+\texttt{scripts/run\_registry.py} and read from local run
+directories.
 
 \subsection{Post-hoc assessment}
 \label{app:reeval}
