@@ -397,17 +397,15 @@ for Rainbow, SPR's value depends on what the base agent provides.
 \begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
   \item Paired bars per game: (DQN+SPR $-$ DQN) vs
     (Rainbow+SPR $-$ Rainbow)
-  \item Status: DQN SPR lift shown for all 6 games; Rainbow
-    SPR lift for Crazy Climber only. Remaining 5 games pending
-    Rainbow+SPR training
+  \item Status: all 6 games complete (seed 42)
 \end{itemize}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.92\textwidth]{../output/plots/all_games_spr_lift_comparison.png}
-\caption{SPR lift comparison across all 6 games (seed 42). SPR
-helps DQN on 3 games but hurts on 3; Rainbow+SPR data available
-for Crazy Climber only.}
+\caption{SPR lift on DQN vs Rainbow (seed 42). SPR helps Rainbow
+on 5 of 6 games but helps DQN on only 3; the base agent's
+capability shapes SPR's effectiveness.}
 \end{figure}
 
 \subsection*{B3. Capability Scatter}
@@ -441,8 +439,7 @@ the isolation study and the capability comparison in one table.
 \begin{itemize}[leftmargin=2em, itemsep=0.1em, topsep=0.3em]
   \item 6 games (rows) $\times$ 6 conditions (columns)
   \item Multi-seed mean $\pm$ confidence interval
-  \item Status: 5 of 6 conditions complete (seed 42). Rainbow+SPR
-    column pending A100 training for 5 games
+  \item Status: all 36 cells complete (seed 42)
 \end{itemize}
 
 \begin{table}[H]
@@ -456,16 +453,16 @@ the isolation study and the capability comparison in one table.
   & \textbf{Rainbow} & \textbf{Rb+SPR} \\
 \midrule
 Crazy Climber & $3540$  & $100$   & $5627$  & $1197$  & $22357$ & $23460$ \\
-Road Runner   & $1440$  & $3$     & $1307$  & $810$   & $7147$  & ---     \\
-Boxing        & $-3.0$  & $-16.4$ & $-30.5$ & $-21.8$ & $-1.2$  & ---     \\
-Kangaroo      & $27$    & $467$   & $373$   & $0$     & $4267$  & ---     \\
-Frostbite     & $147$   & $2$     & $136$   & $22$    & $2179$  & ---     \\
-Up N Down     & $141$   & $1085$  & $1357$  & $1269$  & $1334$  & ---     \\
+Road Runner   & $1440$  & $3$     & $1307$  & $810$   & $7147$  & $10343$ \\
+Boxing        & $-3.0$  & $-16.4$ & $-30.5$ & $-21.8$ & $-1.2$  & $1.0$   \\
+Kangaroo      & $27$    & $467$   & $373$   & $0$     & $4267$  & $5123$  \\
+Frostbite     & $147$   & $2$     & $136$   & $22$    & $2179$  & $1781$  \\
+Up N Down     & $141$   & $1085$  & $1357$  & $1269$  & $1334$  & $2923$  \\
 \bottomrule
 \end{tabular}
 \caption{Full score table at 400K frames (seed 42). Rainbow
-outperforms all DQN conditions on every game. Rainbow+SPR
-available for Crazy Climber only; remaining 5 pending.}
+outperforms all DQN conditions on every game. SPR helps Rainbow
+on 5 of 6 games, with Frostbite the only exception.}
 \end{table}
 
 \subsection*{B5. Human-Normalized Scores}
