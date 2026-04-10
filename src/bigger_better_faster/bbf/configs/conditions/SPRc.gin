@@ -1,0 +1,10 @@
+# SPRc condition override (load after SPR.gin base config)
+# Lineage control: SPR without the SPR self-predictive system.
+# Sets spr_weight=0 and jumps=0 to disable SPR loss and
+# transition model rollout. No resets under either SPR or SPRc.
+import bigger_better_faster.bbf.agents.metric_agent
+
+BBFAgent.log_every = 1
+BBFAgent.data_augmentation = False
+BBFAgent.spr_weight = 0
+BBFAgent.jumps = 0
