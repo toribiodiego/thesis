@@ -68,8 +68,8 @@ EXPECTED = {
     "SR-SPRc": {"spr_weight": 0, "jumps": 0, "log_every": 1, "data_augmentation": False, "reset_every": 20_000, "replay_ratio": 64},
     "SPR":     {"spr_weight": 5, "jumps": 5, "log_every": 1, "data_augmentation": False, "noisy": True},
     "SPRc":    {"spr_weight": 0, "jumps": 0, "log_every": 1, "data_augmentation": False, "noisy": True},
-    "DER":     {"spr_weight": 5, "jumps": 5, "log_every": 1, "data_augmentation": False, "replay_ratio": 1, "update_horizon": 20},
-    "DERc":    {"spr_weight": 0, "jumps": 0, "log_every": 1, "data_augmentation": False, "replay_ratio": 1, "update_horizon": 20},
+    "DER":     {"spr_weight": 5, "jumps": 5, "log_every": 1, "data_augmentation": False, "replay_ratio": 1, "update_horizon": 20, "target_update_period": 8000, "target_update_tau": 1.0, "JaxDQNAgent.min_replay_history": 1600},
+    "DERc":    {"spr_weight": 0, "jumps": 0, "log_every": 1, "data_augmentation": False, "replay_ratio": 1, "update_horizon": 20, "target_update_period": 8000, "target_update_tau": 1.0, "JaxDQNAgent.min_replay_history": 1600},
 }
 
 
@@ -112,8 +112,11 @@ class TestConditionParameterValues:
     def test_expected_values(self, condition):
         _load_config(condition, "boxing.gin")
         for param, expected in EXPECTED[condition].items():
-            selector = "BBFAgent" if param != "noisy" else "BBFAgent"
-            resolved = gin.query_parameter(f"{selector}.{param}")
+            if "." in param:
+                query = param
+            else:
+                query = f"BBFAgent.{param}"
+            resolved = gin.query_parameter(query)
             assert resolved == expected, (
                 f"{condition}: {param} expected {expected}, got {resolved}"
             )
