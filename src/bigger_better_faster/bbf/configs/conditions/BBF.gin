@@ -1,0 +1,8 @@
+# BBF condition override (load after BBF.gin base config)
+# Full BBF agent with dense logging and no augmentation.
+# Inherits all published BBF.gin parameters: spr_weight=5, jumps=5,
+# reset_every=20000, shrink_perturb_keys="encoder,transition_model".
+import bigger_better_faster.bbf.agents.metric_agent
+
+BBFAgent.log_every = 1
+BBFAgent.data_augmentation = False
