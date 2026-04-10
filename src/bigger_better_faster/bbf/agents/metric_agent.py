@@ -201,9 +201,11 @@ class MetricBBFAgent(BBFAgent):
             if self.dynamic_scale:
                 metrics["Dynamic Scale"] = self.dynamic_scale.scale
 
-            # ---- BEGIN ADDITION ----
+            diff_tree = jax.tree_util.tree_map(
+                lambda a, b: a - b, new_online_params, new_target_params)
+            metrics["TargetDivergence"] = float(tree_norm(diff_tree))
+
             self._last_metrics = metrics
-            # ---- END ADDITION ----
 
             if self.summary_writer is not None:
                 with self.summary_writer.as_default():
