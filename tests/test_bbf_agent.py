@@ -116,8 +116,28 @@ class TestMetricBBFAgent:
         assert isinstance(agent, MetricBBFAgent)
         assert isinstance(agent, spr_agent.BBFAgent)
         assert agent._last_metrics == {}
+        assert agent._reset_log == []
 
     def test_is_gin_configurable(self):
         """MetricBBFAgent is registered as a gin configurable."""
         configurables = [c[0] for c in gin.config._REGISTRY.items()]
         assert any("MetricBBFAgent" in str(c) for c in configurables)
+
+    def test_reset_log_fields(self, agent):
+        """reset_weights appends an event with the expected fields."""
+        # Force a reset to be allowed by setting training_steps low.
+        agent.training_steps = 100
+        agent.reset_every = 50
+        agent.next_reset = 50
+        agent.no_resets_after = 200
+        agent.reset_offset = 0
+        agent.reset_weights()
+        assert len(agent._reset_log) == 1
+        entry = agent._reset_log[0]
+        assert entry["training_step"] == 100
+        assert "cumulative_resets" in entry
+        assert "shrink_factor" in entry
+        assert "perturb_factor" in entry
+        assert "keys_shrink_perturbed" in entry
+        assert isinstance(entry["keys_shrink_perturbed"], list)
+        assert "next_reset" in entry

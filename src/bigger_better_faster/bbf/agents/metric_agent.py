@@ -26,6 +26,27 @@ class MetricBBFAgent(BBFAgent):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._last_metrics = {}
+        self._reset_log = []
+
+    def reset_weights(self):
+        """Call parent reset_weights and log the event for JSON serialization."""
+        step_before = self.training_steps
+        resets_before = self.cumulative_resets
+        super().reset_weights()
+        # If the reset was skipped (too late in training), cumulative_resets
+        # still incremented but next_reset was not updated and the method
+        # returned early after logging. Detect actual resets by checking
+        # whether cycle_grad_steps was zeroed.
+        if self.cycle_grad_steps == 0:
+            self._reset_log.append({
+                "training_step": step_before,
+                "reset_index": resets_before,
+                "cumulative_resets": self.cumulative_resets,
+                "shrink_factor": self.shrink_factor,
+                "perturb_factor": self.perturb_factor,
+                "keys_shrink_perturbed": list(self.shrink_perturb_keys),
+                "next_reset": self.next_reset,
+            })
 
     # ------------------------------------------------------------------
     # Verbatim copy of BBFAgent._training_step_update with one addition:
