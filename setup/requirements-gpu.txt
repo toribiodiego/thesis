@@ -29,3 +29,15 @@ omegaconf==2.3.0
 
 # W&B (optional, for experiment tracking)
 wandb==0.18.1
+
+# JAX ecosystem (for BBF agent conditions)
+# On Colab, jax and jaxlib with CUDA support are pre-installed.
+# These minimums ensure compatibility if installing from scratch.
+jax>=0.4.20
+jaxlib>=0.4.20
+flax>=0.7.0
+optax>=0.1.7
+dopamine-rl>=4.0.9
+gin-config>=0.5.0
+tensorflow>=2.15.0
+etils>=1.5.0
