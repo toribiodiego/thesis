@@ -11,6 +11,7 @@ BBFAgent.jumps = 5
 BBFAgent.replay_ratio = 1
 BBFAgent.update_horizon = 20
 BBFAgent.target_update_period = 8000
+BBFAgent.target_update_tau = 1.0
 BBFAgent.learning_rate = 6.25e-5
 BBFAgent.encoder_learning_rate = 6.25e-5
 JaxDQNAgent.min_replay_history = 1600
