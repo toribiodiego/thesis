@@ -1,0 +1,16 @@
+# DER condition override (load after SPR.gin base config)
+# DERc plus SPR self-predictive learning (spr_weight=5, jumps=5).
+# Tests whether adding SPR to the published DER baseline improves
+# representation quality at the Nature CNN gradient tier.
+import bigger_better_faster.bbf.agents.metric_agent
+
+BBFAgent.log_every = 1
+BBFAgent.data_augmentation = False
+BBFAgent.spr_weight = 5
+BBFAgent.jumps = 5
+BBFAgent.replay_ratio = 1
+BBFAgent.update_horizon = 20
+BBFAgent.target_update_period = 8000
+BBFAgent.learning_rate = 6.25e-5
+BBFAgent.encoder_learning_rate = 6.25e-5
+JaxDQNAgent.min_replay_history = 1600
