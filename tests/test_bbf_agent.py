@@ -43,6 +43,7 @@ if "baselines" not in sys.modules:
     sys.modules["baselines.common.atari_wrappers"] = MagicMock()
 
 from bigger_better_faster.bbf.agents import spr_agent  # noqa: E402
+from bigger_better_faster.bbf.agents.metric_agent import MetricBBFAgent  # noqa: E402
 
 _GIN_CONFIG = os.path.join(
     os.path.dirname(__file__),
@@ -93,3 +94,30 @@ class TestBBFAgentSmoke:
             rng=jax.random.PRNGKey(0),
         )
         assert 0 <= int(action[0]) < 18
+
+
+class TestMetricBBFAgent:
+    """Tests for the MetricBBFAgent subclass."""
+
+    @pytest.fixture()
+    def agent(self, tmp_path):
+        """Instantiate a MetricBBFAgent from the ported BBF.gin config."""
+        import bigger_better_faster.bbf.eval_run_experiment  # noqa: F401
+        gin.parse_config_file(_GIN_CONFIG)
+        gin.bind_parameter("Runner.training_steps", 10)
+        return MetricBBFAgent(
+            num_actions=18,
+            seed=42,
+            summary_writer=str(tmp_path),
+        )
+
+    def test_subclass_instantiates(self, agent):
+        """MetricBBFAgent creates successfully and has _last_metrics."""
+        assert isinstance(agent, MetricBBFAgent)
+        assert isinstance(agent, spr_agent.BBFAgent)
+        assert agent._last_metrics == {}
+
+    def test_is_gin_configurable(self):
+        """MetricBBFAgent is registered as a gin configurable."""
+        configurables = [c[0] for c in gin.config._REGISTRY.items()]
+        assert any("MetricBBFAgent" in str(c) for c in configurables)
