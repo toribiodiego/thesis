@@ -1,0 +1,11 @@
+# SR-SPR condition override (load after SR_SPR.gin base config)
+# SR-SPR(2) variant: reduced replay ratio and reset cadence matching
+# BBF (reset_every=20000) instead of the published SR-SPR schedule.
+# Nature CNN encoder, spr_weight=5, gamma=0.99 (no scheduler).
+import bigger_better_faster.bbf.agents.metric_agent
+
+BBFAgent.log_every = 1
+BBFAgent.data_augmentation = False
+BBFAgent.replay_ratio = 64
+BBFAgent.batches_to_group = 2
+BBFAgent.reset_every = 20000
