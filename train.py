@@ -244,6 +244,28 @@ CHECKPOINT_INTERVAL = 10_000
 PROGRESS_INTERVAL = 100
 
 
+def validate_checkpoint(params_path, meta_path):
+    """Verify checkpoint files exist and have nonzero size.
+
+    Returns a dict with 'valid' (bool), 'files' (per-file details),
+    and 'errors' (list of failure descriptions). Never raises -- logs
+    errors so training can continue.
+    """
+    files = {}
+    errors = []
+    for path, label in [(params_path, "params"), (meta_path, "metadata")]:
+        if not os.path.isfile(path):
+            errors.append(f"{label} missing: {path}")
+            files[label] = {"path": path, "exists": False, "size": 0}
+        else:
+            size = os.path.getsize(path)
+            files[label] = {"path": path, "exists": True, "size": size}
+            if size == 0:
+                errors.append(f"{label} empty: {path}")
+
+    return {"valid": len(errors) == 0, "files": files, "errors": errors}
+
+
 def save_checkpoint(agent, step, run_dir):
     """Save online_params as msgpack and metadata as JSON."""
     from flax.serialization import msgpack_serialize, to_state_dict
@@ -278,10 +300,18 @@ def save_checkpoint(agent, step, run_dir):
         with open(resets_path, "w") as f:
             json.dump(agent._reset_log, f, indent=2)
 
+    # Validate checkpoint files exist and have nonzero size
+    validation = validate_checkpoint(params_path, meta_path)
+
     # Incremental Drive sync (Colab only)
     sync_to_drive(run_dir)
 
-    print(f"Checkpoint saved at step {step}: {params_path}")
+    status = "OK" if validation["valid"] else "FAILED"
+    print(f"Checkpoint saved at step {step}: {params_path} [{status}]")
+    if not validation["valid"]:
+        print(f"  Validation errors: {validation['errors']}")
+
+    return validation
 
 
 DRIVE_BASE = "/content/drive/MyDrive/thesis-runs"
