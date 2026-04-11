@@ -15,6 +15,7 @@ Usage:
 """
 
 import argparse
+import csv
 import json
 import os
 import sys
@@ -102,6 +103,52 @@ def set_seed(seed):
     os.environ["PYTHONHASHSEED"] = str(seed)
 
 
+# Core fields (7) + extension columns (16) from MetricBBFAgent._last_metrics.
+CSV_CORE = ["step", "fps", "loss", "grad_norm", "learning_rate",
+            "epsilon", "replay_size"]
+CSV_EXTENSIONS = [
+    "TotalLoss", "DQNLoss", "TD Error", "SPRLoss", "GradNorm",
+    "PNorm", "Inter-batch time", "Training time", "Sampling time",
+    "Set priority time", "Online Churn", "Target Churn",
+    "Online-Target Agreement", "Online Off-Policy Rate",
+    "Target Off-Policy Rate", "TargetDivergence",
+]
+CSV_HEADER = CSV_CORE + CSV_EXTENSIONS
+
+
+def open_csv(run_dir):
+    """Open the per-step CSV and write the header."""
+    path = os.path.join(run_dir, "steps.csv")
+    f = open(path, "w", newline="")
+    writer = csv.DictWriter(f, fieldnames=CSV_HEADER, extrasaction="ignore")
+    writer.writeheader()
+    f.flush()
+    return f, writer
+
+
+def write_step_row(writer, csv_file, step, fps, agent):
+    """Write one row to the per-step CSV using agent metrics."""
+    metrics = agent._last_metrics
+    if not metrics:
+        return
+    row = {
+        "step": step,
+        "fps": f"{fps:.1f}",
+        "loss": metrics.get("TotalLoss", ""),
+        "grad_norm": metrics.get("GradNorm", ""),
+        "learning_rate": agent.learning_rate,
+        "epsilon": 0.0 if agent._noisy else agent.epsilon_fn(
+            agent.epsilon_decay_period, agent.training_steps,
+            agent.min_replay_history, agent.epsilon_train),
+        "replay_size": int(agent._replay.add_count),
+    }
+    for col in CSV_EXTENSIONS:
+        if col not in row:
+            row[col] = metrics.get(col, "")
+    writer.writerow(row)
+    csv_file.flush()
+
+
 def main():
     args = parse_args()
     logging.set_verbosity(logging.INFO)
@@ -122,6 +169,9 @@ def main():
           f"steps={args.total_steps}, run_dir={args.run_dir}")
     print(f"Agent: spr_weight={agent.spr_weight}, jumps={agent._jumps}, "
           f"replay_ratio={agent._replay_ratio}")
+
+    # Open per-step CSV
+    csv_file, csv_writer = open_csv(args.run_dir)
 
     # Initialize: reset environment and agent
     obs = env.reset()
@@ -149,6 +199,11 @@ def main():
         episode_length += 1
         step += 1
 
+        # Write per-step CSV row (only produces output when agent has metrics)
+        elapsed = time.time() - start_time
+        fps = step / elapsed if elapsed > 0 else 0
+        write_step_row(csv_writer, csv_file, step, fps, agent)
+
         # Log transition to agent (updates internal state and replay buffer)
         terminal = done
         episode_end = done
@@ -163,8 +218,6 @@ def main():
         # Episode boundary
         if done:
             episode += 1
-            elapsed = time.time() - start_time
-            fps = step / elapsed if elapsed > 0 else 0
             print(f"Step {step}/{args.total_steps} | "
                   f"Episode {episode} | Return {episode_return:.0f} | "
                   f"Length {episode_length} | FPS {fps:.0f}")
@@ -175,6 +228,7 @@ def main():
             episode_return = 0.0
             episode_length = 0
 
+    csv_file.close()
     elapsed = time.time() - start_time
     print(f"Training complete: {step} steps in {elapsed:.1f}s "
           f"({step / elapsed:.0f} FPS)")
