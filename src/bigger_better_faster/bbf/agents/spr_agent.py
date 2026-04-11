@@ -671,6 +671,9 @@ def train(
         dqn_loss = jax.vmap(losses.softmax_cross_entropy_loss_with_logits)(
             target, chosen_action_logits)
         td_error = dqn_loss + jnp.nan_to_num(target * jnp.log(target)).sum(-1)
+        # Derive Q-values from logits for monitoring
+        probabilities = jax.nn.softmax(logits, axis=-1)
+        q_values = jnp.sum(support * probabilities, axis=-1)
       else:
         q_values, spr_predictions, _ = get_q_values(
             q_online, current_state, actions[:, :-1], use_spr, batch_rngs
@@ -701,6 +704,8 @@ def train(
           "DQNLoss": jnp.mean(dqn_loss),
           "TD Error": jnp.mean(td_error),
           "SPRLoss": jnp.mean(spr_loss),
+          "QValueMean": jnp.mean(q_values),
+          "QValueMax": jnp.max(q_values),
       }
 
       return mean_loss, (aux_losses)
