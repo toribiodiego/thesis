@@ -173,7 +173,7 @@ def save_checkpoint(agent, step, run_dir):
     ckpt_dir = os.path.join(run_dir, "checkpoints")
     arrays = {}
     for path, leaf in jax.tree_util.tree_leaves_with_path(agent.online_params):
-        key = "/".join(str(k.key) for k in path)
+        key = "/".join(str(k) for k in path)
         arrays[key] = np.asarray(leaf)
     arrays["__training_steps"] = np.array(agent.training_steps)
     arrays["__cumulative_resets"] = np.array(agent.cumulative_resets)
