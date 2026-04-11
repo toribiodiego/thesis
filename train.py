@@ -11,9 +11,11 @@ Usage:
 
 import argparse
 import csv
+import datetime
 import json
 import os
 import shutil
+import subprocess
 import sys
 import time
 
@@ -127,6 +129,30 @@ def save_config_snapshot(run_dir):
     config_path = os.path.join(run_dir, "config.gin")
     with open(config_path, "w") as f:
         f.write(gin.config_str())
+
+
+def _git_hash():
+    """Return the short git commit hash, or 'unknown' if unavailable."""
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            stderr=subprocess.DEVNULL, text=True).strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return "unknown"
+
+
+def write_meta(run_dir, condition, game, seed):
+    """Write meta.json with run provenance at startup."""
+    meta = {
+        "condition": condition,
+        "game": game,
+        "seed": seed,
+        "git_hash": _git_hash(),
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+    }
+    path = os.path.join(run_dir, "meta.json")
+    with open(path, "w") as f:
+        json.dump(meta, f, indent=2)
 
 
 def set_seed(seed):
@@ -297,6 +323,7 @@ def main():
     setup_gin(base_gin, condition_gin, game_gin, args.gin_bindings)
     setup_run_dir(run_dir)
     save_config_snapshot(run_dir)
+    write_meta(run_dir, args.condition, args.game, args.seed)
 
     # Create environment and agent
     env = create_environment()
