@@ -33,6 +33,9 @@ from absl import logging
 from dopamine.discrete_domains import atari_lib
 
 from bigger_better_faster.bbf.agents.metric_agent import MetricBBFAgent
+# Import runner so gin registers DataEfficientAtariRunner bindings
+# (used in BBF.gin for game_name, num_eval_envs, etc.)
+from bigger_better_faster.bbf.eval_run_experiment import DataEfficientAtariRunner  # noqa: F401
 
 
 GIN_ROOT = os.path.join(os.path.dirname(__file__),
