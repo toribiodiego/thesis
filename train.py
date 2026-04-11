@@ -329,7 +329,8 @@ def main():
     # Auto-generate run directory if not specified
     run_dir = args.run_dir
     if run_dir is None:
-        run_name = f"{args.condition}_{args.game}_seed{args.seed}"
+        condition_token = args.condition.lower().replace("_", "-")
+        run_name = f"{condition_token}_{args.game}_seed{args.seed}"
         run_dir = os.path.join("experiments", "dqn_atari", "runs", run_name)
 
     # Setup
