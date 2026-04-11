@@ -141,6 +141,20 @@ def open_episode_csv(run_dir):
     return f, writer
 
 
+def _get_live_lr(agent):
+    """Extract the current learning rate from the optimizer state.
+
+    When warmup is used, optax.inject_hyperparams stores the scheduled
+    LR in state.hyperparams['learning_rate']. When no warmup is used,
+    the optimizer state is a plain tuple and we fall back to the static
+    constructor value.
+    """
+    for leaf in jax.tree_util.tree_leaves(agent.optimizer_state):
+        if hasattr(leaf, 'hyperparams') and 'learning_rate' in leaf.hyperparams:
+            return float(leaf.hyperparams['learning_rate'])
+    return agent.learning_rate
+
+
 def write_step_row(writer, csv_file, step, fps, agent):
     """Write one row to the per-step CSV using agent metrics."""
     metrics = agent._last_metrics
@@ -151,7 +165,7 @@ def write_step_row(writer, csv_file, step, fps, agent):
         "fps": f"{fps:.1f}",
         "loss": metrics.get("TotalLoss", ""),
         "grad_norm": metrics.get("GradNorm", ""),
-        "learning_rate": agent.learning_rate,
+        "learning_rate": _get_live_lr(agent),
         "epsilon": 0.0 if agent._noisy else agent.epsilon_fn(
             agent.epsilon_decay_period, agent.training_steps,
             agent.min_replay_history, agent.epsilon_train),
