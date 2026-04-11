@@ -328,7 +328,8 @@ def sync_to_drive(run_dir):
 
 
 def write_progress(run_dir, step, total_steps, episode, fps,
-                   start_time, status="training"):
+                   start_time, status="training",
+                   last_checkpoint_validation=None):
     """Write progress.json for remote monitoring via the Colab runner."""
     elapsed = time.time() - start_time
     percent = (step / total_steps) * 100 if total_steps > 0 else 0
@@ -343,6 +344,11 @@ def write_progress(run_dir, step, total_steps, episode, fps,
         "eta_seconds": round(eta, 1),
         "status": status,
     }
+    if last_checkpoint_validation is not None:
+        progress["last_checkpoint_validation"] = {
+            "valid": last_checkpoint_validation["valid"],
+            "errors": last_checkpoint_validation["errors"],
+        }
     path = os.path.join(run_dir, "progress.json")
     with open(path, "w") as f:
         json.dump(progress, f, indent=2)
@@ -394,6 +400,7 @@ def main():
     episode_return = 0.0
     episode_length = 0
     start_time = time.time()
+    last_ckpt_validation = None
 
     while step < args.total_steps:
         # Agent selects action (also trains if replay buffer is ready)
@@ -418,7 +425,8 @@ def main():
         # Progress reporting
         if step % PROGRESS_INTERVAL == 0:
             write_progress(run_dir, step, args.total_steps,
-                           episode, fps, start_time)
+                           episode, fps, start_time,
+                           last_checkpoint_validation=last_ckpt_validation)
 
         # Log transition to agent (updates internal state and replay buffer)
         terminal = done
@@ -433,7 +441,7 @@ def main():
 
         # Checkpoint (after log_transition so params and buffer are consistent)
         if step % CHECKPOINT_INTERVAL == 0:
-            save_checkpoint(agent, step, run_dir)
+            last_ckpt_validation = save_checkpoint(agent, step, run_dir)
 
         # Episode boundary
         if done:
@@ -457,14 +465,15 @@ def main():
 
     # Final checkpoint if not already saved at last interval
     if step % CHECKPOINT_INTERVAL != 0:
-        save_checkpoint(agent, step, run_dir)
+        last_ckpt_validation = save_checkpoint(agent, step, run_dir)
 
     csv_file.close()
     ep_file.close()
     elapsed = time.time() - start_time
     fps = step / elapsed if elapsed > 0 else 0
     write_progress(run_dir, step, args.total_steps,
-                   episode, fps, start_time, status="complete")
+                   episode, fps, start_time, status="complete",
+                   last_checkpoint_validation=last_ckpt_validation)
     print(f"Training complete: {step} steps in {elapsed:.1f}s "
           f"({fps:.0f} FPS)")
 

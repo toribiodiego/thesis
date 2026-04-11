@@ -2,8 +2,10 @@
 
 import csv
 import io
+import json
 import os
 import sys
+import time
 import types
 from unittest.mock import MagicMock
 
@@ -40,6 +42,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from train import (  # noqa: E402
     CSV_HEADER, CSV_EXTENSIONS, write_step_row, validate_checkpoint,
+    write_progress,
 )
 
 
@@ -198,3 +201,52 @@ def test_validate_checkpoint_both_missing(tmp_path):
     )
     assert result["valid"] is False
     assert len(result["errors"]) == 2
+
+
+# =============================================================================
+# write_progress checkpoint validation tests
+# =============================================================================
+
+
+def test_write_progress_includes_validation(tmp_path):
+    """progress.json includes last_checkpoint_validation when provided."""
+    validation = {"valid": True, "errors": [], "files": {}}
+    write_progress(
+        str(tmp_path), step=5000, total_steps=100000,
+        episode=10, fps=50.0, start_time=time.time() - 100,
+        last_checkpoint_validation=validation,
+    )
+    with open(tmp_path / "progress.json") as f:
+        progress = json.load(f)
+    assert "last_checkpoint_validation" in progress
+    assert progress["last_checkpoint_validation"]["valid"] is True
+    assert progress["last_checkpoint_validation"]["errors"] == []
+
+
+def test_write_progress_includes_failed_validation(tmp_path):
+    """progress.json includes error details on failed validation."""
+    validation = {
+        "valid": False,
+        "errors": ["params missing: /tmp/x.msgpack"],
+        "files": {},
+    }
+    write_progress(
+        str(tmp_path), step=5000, total_steps=100000,
+        episode=10, fps=50.0, start_time=time.time() - 100,
+        last_checkpoint_validation=validation,
+    )
+    with open(tmp_path / "progress.json") as f:
+        progress = json.load(f)
+    assert progress["last_checkpoint_validation"]["valid"] is False
+    assert len(progress["last_checkpoint_validation"]["errors"]) == 1
+
+
+def test_write_progress_omits_validation_when_none(tmp_path):
+    """progress.json has no validation key when none is provided."""
+    write_progress(
+        str(tmp_path), step=5000, total_steps=100000,
+        episode=10, fps=50.0, start_time=time.time() - 100,
+    )
+    with open(tmp_path / "progress.json") as f:
+        progress = json.load(f)
+    assert "last_checkpoint_validation" not in progress
