@@ -71,7 +71,7 @@ class MetricBBFAgent(BBFAgent):
             loss_weights /= onp.max(loss_weights)
             indices = self.replay_elements["indices"]
         else:
-            loss_weights = onp.ones(self.replay_elements["state"].shape[0:2])
+            loss_weights = onp.ones(self.replay_elements["state"].shape[0:1])
 
         if self.log_churn and should_log:
             eval_batch = self.sample_eval_batch(256)
