@@ -103,7 +103,8 @@ def setup_gin(base_gin, condition_gin, game_gin, bindings):
 
 def create_environment():
     """Create an Atari environment via dopamine's gin-configured factory."""
-    env = atari_lib.create_atari_environment()
+    game_name = gin.query_parameter("DataEfficientAtariRunner.game_name")
+    env = atari_lib.create_atari_environment(game_name=game_name)
     return env
 
 
