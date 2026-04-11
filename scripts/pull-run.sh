@@ -4,24 +4,31 @@
 # Usage:
 #   bash scripts/pull-run.sh <run-name>         # pull one run
 #   bash scripts/pull-run.sh --all              # pull every run
-#   bash scripts/pull-run.sh --group rainbow    # pull all rainbow runs
-#   bash scripts/pull-run.sh --group spr        # pull all spr runs
+#   bash scripts/pull-run.sh --group bbf        # pull all BBF runs
+#   bash scripts/pull-run.sh --group spr        # pull all SPR runs
 #   bash scripts/pull-run.sh --dry-run <...>    # preview any of the above
 #   bash scripts/pull-run.sh --list             # list runs on Drive
+#   bash scripts/pull-run.sh --archive --list   # list archived runs
 #
-# Groups match against run directory names (substring match):
-#   base    -- runs without aug/spr/rainbow/both in the name
-#   aug     -- names containing _aug_
-#   spr     -- names containing _spr_
-#   both    -- names containing _both_
-#   rainbow -- names containing _rainbow_
-#   rainbow_spr -- names containing _rainbow_spr_
+# Groups match by condition prefix in the new naming convention
+# (<condition>_<game>_seed<seed>):
+#   derc      -- DERc runs
+#   der       -- DER runs (excludes derc)
+#   sprc      -- SPRc runs
+#   spr       -- SPR runs (excludes sprc, sr-spr, sr-sprc)
+#   sr-sprc   -- SR-SPRc runs
+#   sr-spr    -- SR-SPR runs (excludes sr-sprc)
+#   bbfc      -- BBFc runs
+#   bbf       -- BBF runs (excludes bbfc)
 #
 # Requires: rclone configured with a "gdrive" remote.
 # Setup:    brew install rclone && rclone config
 #
 # Drive path: thesis-runs/<run-name>/
 # Local path: experiments/dqn_atari/runs/<run-name>/
+#
+# Old runs (pre-2026-04 design) are archived on Drive under
+# archive/v1/ and archive/deprecated/. Use --archive to access them.
 
 set -euo pipefail
 
@@ -37,26 +44,30 @@ Download training runs from Google Drive.
 
 Options:
   --list              List all runs on Drive
-  --all               Download every run (excludes deprecated/invalid)
-  --group <pattern>   Download runs matching a group pattern
+  --all               Download every run (excludes archive/)
+  --group <condition> Download runs matching a condition
+  --archive           Operate on archive/v1/ instead of top level
   --dry-run           Preview what would be downloaded (combine with above)
-  --no-checkpoints    Skip checkpoint .pt files (faster, smaller)
+  --no-checkpoints    Skip checkpoint files (faster, smaller)
   -h, --help          Show this help
 
-Groups (substring match on run name):
-  base          Vanilla DQN (no aug/spr/rainbow/both in name)
-  aug           DQN + augmentation
-  spr           DQN + SPR (excludes rainbow_spr)
-  both          DQN + augmentation + SPR
-  rainbow       Rainbow DQN (excludes rainbow_spr)
-  rainbow_spr   Rainbow + SPR
+Condition groups (new naming convention):
+  derc        DERc (control)
+  der         DER (excludes derc)
+  sprc        SPRc (control)
+  spr         SPR (excludes sprc, sr-spr, sr-sprc)
+  sr-sprc     SR-SPRc (control)
+  sr-spr      SR-SPR (excludes sr-sprc)
+  bbfc        BBFc (control)
+  bbf         BBF (excludes bbfc)
 
 Examples:
   pull-run.sh --list
-  pull-run.sh atari100k_boxing_spr_42_20260312_022320
-  pull-run.sh --group rainbow
+  pull-run.sh bbf_boxing_seed13
+  pull-run.sh --group bbf
   pull-run.sh --all --no-checkpoints
   pull-run.sh --dry-run --group spr
+  pull-run.sh --archive --list
 EOF
     exit 1
 }
@@ -73,6 +84,7 @@ LIST=""
 ALL=""
 GROUP=""
 NO_CKPTS=""
+ARCHIVE=""
 RUN_NAME=""
 
 while [[ $# -gt 0 ]]; do
@@ -82,30 +94,42 @@ while [[ $# -gt 0 ]]; do
         --all) ALL=1; shift ;;
         --group) GROUP="$2"; shift 2 ;;
         --no-checkpoints) NO_CKPTS=1; shift ;;
+        --archive) ARCHIVE=1; shift ;;
         --help|-h) usage ;;
         -*) echo "Unknown option: $1"; usage ;;
         *) RUN_NAME="$1"; shift ;;
     esac
 done
 
+# Set Drive path based on --archive flag
+if [[ -n "$ARCHIVE" ]]; then
+    DRIVE_PATH="$DRIVE_REMOTE:$DRIVE_BASE/archive/v1"
+else
+    DRIVE_PATH="$DRIVE_REMOTE:$DRIVE_BASE"
+fi
+
 # List mode
 if [[ -n "$LIST" ]]; then
-    echo "Runs on Drive ($DRIVE_REMOTE:$DRIVE_BASE/):"
+    echo "Runs on Drive ($DRIVE_PATH/):"
     echo ""
-    rclone lsd "$DRIVE_REMOTE:$DRIVE_BASE/" 2>/dev/null || echo "  (none found)"
+    rclone lsd "$DRIVE_PATH/" 2>/dev/null || echo "  (none found)"
     exit 0
 fi
 
 # Build rclone filter flags
 RCLONE_FILTERS=()
 if [[ -n "$NO_CKPTS" ]]; then
+    # Exclude both old (.pt) and new (.msgpack) checkpoint files
     RCLONE_FILTERS+=(--exclude "checkpoints/*.pt")
+    RCLONE_FILTERS+=(--exclude "checkpoints/*.msgpack")
+    RCLONE_FILTERS+=(--exclude "checkpoints/*.json")
+    RCLONE_FILTERS+=(--exclude "replay_buffer_*.npz")
 fi
 
 # Pull a single run directory
 pull_one() {
     local name="$1"
-    local src="$DRIVE_REMOTE:$DRIVE_BASE/$name/"
+    local src="$DRIVE_PATH/$name/"
     local dst="$LOCAL_BASE/$name/"
 
     echo "--- Pulling: $name"
@@ -121,56 +145,44 @@ pull_one() {
     echo ""
 }
 
-# Filter run names by group pattern
+# Filter run names by condition group
 filter_group() {
     local pattern="$1"
     local names=("${@:2}")
     local filtered=()
 
     for name in "${names[@]}"; do
-        # Skip deprecated/invalid directories
-        [[ "$name" == "deprecated" || "$name" == "invalid" ]] && continue
+        # Skip non-run directories
+        [[ "$name" == "deprecated" || "$name" == "invalid" || "$name" == "archive" ]] && continue
 
         case "$pattern" in
-            base)
-                # No aug, spr, rainbow, or both in the name
-                if [[ "$name" != *_aug_* && "$name" != *_spr_* && "$name" != *_rainbow_* && "$name" != *_both_* ]]; then
-                    filtered+=("$name")
-                fi
+            derc)
+                [[ "$name" == derc_* ]] && filtered+=("$name")
                 ;;
-            aug)
-                # Contains _aug_ but not _both_ (both includes aug)
-                if [[ "$name" == *_aug_* && "$name" != *_both_* ]]; then
-                    filtered+=("$name")
-                fi
+            der)
+                [[ "$name" == der_* && "$name" != derc_* ]] && filtered+=("$name")
+                ;;
+            sprc)
+                [[ "$name" == sprc_* ]] && filtered+=("$name")
                 ;;
             spr)
-                # Contains _spr_ but not _rainbow_spr_ and not _both_
-                if [[ "$name" == *_spr_* && "$name" != *_rainbow_spr_* && "$name" != *_both_* ]]; then
-                    filtered+=("$name")
-                fi
+                [[ "$name" == spr_* && "$name" != sprc_* ]] && filtered+=("$name")
                 ;;
-            both)
-                if [[ "$name" == *_both_* ]]; then
-                    filtered+=("$name")
-                fi
+            sr-sprc)
+                [[ "$name" == sr-sprc_* ]] && filtered+=("$name")
                 ;;
-            rainbow)
-                # Contains _rainbow_ but not _rainbow_spr_
-                if [[ "$name" == *_rainbow_* && "$name" != *_rainbow_spr_* ]]; then
-                    filtered+=("$name")
-                fi
+            sr-spr)
+                [[ "$name" == sr-spr_* && "$name" != sr-sprc_* ]] && filtered+=("$name")
                 ;;
-            rainbow_spr)
-                if [[ "$name" == *_rainbow_spr_* ]]; then
-                    filtered+=("$name")
-                fi
+            bbfc)
+                [[ "$name" == bbfc_* ]] && filtered+=("$name")
+                ;;
+            bbf)
+                [[ "$name" == bbf_* && "$name" != bbfc_* ]] && filtered+=("$name")
                 ;;
             *)
-                # Arbitrary substring match
-                if [[ "$name" == *"$pattern"* ]]; then
-                    filtered+=("$name")
-                fi
+                # Arbitrary substring match for flexibility
+                [[ "$name" == *"$pattern"* ]] && filtered+=("$name")
                 ;;
         esac
     done
@@ -180,10 +192,11 @@ filter_group() {
 
 # Fetch run list from Drive
 get_run_names() {
-    rclone lsd "$DRIVE_REMOTE:$DRIVE_BASE/" 2>/dev/null \
+    rclone lsd "$DRIVE_PATH/" 2>/dev/null \
         | awk '{print $NF}' \
         | grep -v '^deprecated$' \
         | grep -v '^invalid$' \
+        | grep -v '^archive$' \
         | sort
 }
 
@@ -234,7 +247,7 @@ if [[ -z "$RUN_NAME" ]]; then
     usage
 fi
 
-SRC="$DRIVE_REMOTE:$DRIVE_BASE/$RUN_NAME/"
+SRC="$DRIVE_PATH/$RUN_NAME/"
 DST="$LOCAL_BASE/$RUN_NAME/"
 
 echo "Source: $SRC"
