@@ -18,6 +18,7 @@ import argparse
 import csv
 import json
 import os
+import shutil
 import sys
 import time
 
@@ -191,7 +192,23 @@ def save_checkpoint(agent, step, run_dir):
         with open(resets_path, "w") as f:
             json.dump(agent._reset_log, f, indent=2)
 
+    # Incremental Drive sync (Colab only)
+    sync_to_drive(run_dir)
+
     print(f"Checkpoint saved at step {step}: {path}")
+
+
+DRIVE_BASE = "/content/drive/MyDrive/thesis-runs"
+
+
+def sync_to_drive(run_dir):
+    """Copy run directory to Google Drive if the mount exists."""
+    if not os.path.isdir("/content/drive/MyDrive"):
+        return
+    run_name = os.path.basename(os.path.normpath(run_dir))
+    dest = os.path.join(DRIVE_BASE, run_name)
+    shutil.copytree(run_dir, dest, dirs_exist_ok=True)
+    print(f"Synced to Drive: {dest}")
 
 
 def write_progress(run_dir, step, total_steps, episode, fps,
