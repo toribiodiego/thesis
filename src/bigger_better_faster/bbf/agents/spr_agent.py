@@ -42,16 +42,10 @@ from bigger_better_faster.bbf.replay_memory import subsequence_replay_buffer
 
 def _pmap_device_order():
   """Gets JAX's default device assignments as used in pmap."""
-  if jax.process_count() == 1:
-    return [
-        d
-        for d in xb.get_backend().get_default_device_assignment(
-            jax.device_count()
-        )
-        if d.process_index == jax.process_index()
-    ]
-  else:
-    return jax.local_devices()
+  # Original used xb.get_backend().get_default_device_assignment()
+  # which was removed in JAX 0.7. jax.local_devices() is equivalent
+  # for single-process training.
+  return jax.local_devices()
 
 
 def prefetch_to_device(iterator, size, devices=None, device_axis=False):
