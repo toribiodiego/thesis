@@ -24,12 +24,15 @@ _STUB_MODULES = [
     "bigger_better_faster.bbf",
     "bigger_better_faster.bbf.agents",
     "bigger_better_faster.bbf.agents.metric_agent",
+    "bigger_better_faster.bbf.eval_run_experiment",
 ]
 for _mod in _STUB_MODULES:
     if _mod not in sys.modules:
         stub = types.ModuleType(_mod)
         if _mod == "bigger_better_faster.bbf.agents.metric_agent":
             stub.MetricBBFAgent = MagicMock()
+        if _mod == "bigger_better_faster.bbf.eval_run_experiment":
+            stub.DataEfficientAtariRunner = MagicMock()
         if _mod == "absl":
             stub.logging = types.ModuleType("absl.logging")
         if _mod == "jax":

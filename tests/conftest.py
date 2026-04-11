@@ -6,3 +6,7 @@ def pytest_configure(config):
         "markers",
         "jax: tests that require JAX/Flax (BBF agent, gin configs)",
     )
+    config.addinivalue_line(
+        "markers",
+        "slow: tests that require GPU or long JIT compilation",
+    )

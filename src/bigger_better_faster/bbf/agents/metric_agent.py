@@ -206,6 +206,12 @@ class MetricBBFAgent(BBFAgent):
                 lambda a, b: a - b, new_online_params, new_target_params)
             metrics["TargetDivergence"] = float(tree_norm(diff_tree))
 
+            metrics["effective_gamma"] = float(
+                self.gamma_scheduler(self.cycle_grad_steps))
+            metrics["effective_n_step"] = int(
+                self.update_horizon_scheduler(self.cycle_grad_steps))
+            metrics["cycle_grad_steps"] = int(self.cycle_grad_steps)
+
             self._last_metrics = metrics
 
             if self.summary_writer is not None:

@@ -166,7 +166,7 @@ def set_seed(seed):
     os.environ["PYTHONHASHSEED"] = str(seed)
 
 
-# Core fields (7) + extension columns (23) from MetricBBFAgent._last_metrics.
+# Core fields (7) + extension columns (26) from MetricBBFAgent._last_metrics.
 CSV_CORE = ["step", "fps", "loss", "grad_norm", "learning_rate",
             "epsilon", "replay_size"]
 CSV_EXTENSIONS = [
@@ -176,6 +176,7 @@ CSV_EXTENSIONS = [
     "GradNorm/encoder", "GradNorm/transition_model",
     "GradNorm/projection", "GradNorm/predictor", "GradNorm/head",
     "PNorm",
+    "effective_gamma", "effective_n_step", "cycle_grad_steps",
     "Inter-batch time", "Training time", "Sampling time",
     "Set priority time", "Online Churn", "Target Churn",
     "Online-Target Agreement", "Online Off-Policy Rate",
