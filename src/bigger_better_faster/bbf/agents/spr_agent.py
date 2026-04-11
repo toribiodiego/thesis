@@ -759,6 +759,10 @@ def train(
 
     grad_norm = tree_norm(grad)
     aux_losses["GradNorm"] = grad_norm
+    # Per-module gradient norms for diagnosing gradient flow
+    if "params" in grad:
+      for key in grad["params"]:
+        aux_losses[f"GradNorm/{key}"] = tree_norm(grad["params"][key])
     updates, new_optimizer_state = optimizer.update(
         grad, optimizer_state, params=online_params)
     new_online_params = optax.apply_updates(online_params, updates)
