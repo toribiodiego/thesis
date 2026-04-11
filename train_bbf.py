@@ -164,6 +164,7 @@ def write_step_row(writer, csv_file, step, fps, agent):
 
 
 CHECKPOINT_INTERVAL = 10_000
+PROGRESS_INTERVAL = 100
 
 
 def save_checkpoint(agent, step, run_dir):
@@ -191,6 +192,27 @@ def save_checkpoint(agent, step, run_dir):
             json.dump(agent._reset_log, f, indent=2)
 
     print(f"Checkpoint saved at step {step}: {path}")
+
+
+def write_progress(run_dir, step, total_steps, episode, fps,
+                   start_time, status="training"):
+    """Write progress.json for remote monitoring via the Colab runner."""
+    elapsed = time.time() - start_time
+    percent = (step / total_steps) * 100 if total_steps > 0 else 0
+    eta = (elapsed / step) * (total_steps - step) if step > 0 else 0
+    progress = {
+        "frame": step,
+        "total_frames": total_steps,
+        "percent": round(percent, 1),
+        "episode": episode,
+        "fps": round(fps, 1),
+        "elapsed_seconds": round(elapsed, 1),
+        "eta_seconds": round(eta, 1),
+        "status": status,
+    }
+    path = os.path.join(run_dir, "progress.json")
+    with open(path, "w") as f:
+        json.dump(progress, f, indent=2)
 
 
 def main():
@@ -249,6 +271,11 @@ def main():
         fps = step / elapsed if elapsed > 0 else 0
         write_step_row(csv_writer, csv_file, step, fps, agent)
 
+        # Progress reporting
+        if step % PROGRESS_INTERVAL == 0:
+            write_progress(args.run_dir, step, args.total_steps,
+                           episode, fps, start_time)
+
         # Checkpoint
         if step % CHECKPOINT_INTERVAL == 0:
             save_checkpoint(agent, step, args.run_dir)
@@ -291,8 +318,11 @@ def main():
     csv_file.close()
     ep_file.close()
     elapsed = time.time() - start_time
+    fps = step / elapsed if elapsed > 0 else 0
+    write_progress(args.run_dir, step, args.total_steps,
+                   episode, fps, start_time, status="complete")
     print(f"Training complete: {step} steps in {elapsed:.1f}s "
-          f"({step / elapsed:.0f} FPS)")
+          f"({fps:.0f} FPS)")
 
     env.close()
 
