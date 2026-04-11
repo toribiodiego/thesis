@@ -6,12 +6,7 @@ Train BBF-family agents (BBF, BBFc, SR-SPR, SR-SPRc, SPR, SPRc, DER, DERc)
 on Atari games using the ported BBF codebase.
 
 Usage:
-    python train.py \
-        --base_gin src/bigger_better_faster/bbf/configs/BBF.gin \
-        --condition_gin src/bigger_better_faster/bbf/configs/conditions/BBF.gin \
-        --game_gin src/bigger_better_faster/bbf/configs/games/boxing.gin \
-        --seed 42 \
-        --run_dir experiments/dqn_atari/runs/BBF_boxing_42
+    python train.py --condition BBF --game boxing --seed 42
 """
 
 import argparse
@@ -38,19 +33,55 @@ from dopamine.discrete_domains import atari_lib
 from bigger_better_faster.bbf.agents.metric_agent import MetricBBFAgent
 
 
+GIN_ROOT = os.path.join(os.path.dirname(__file__),
+                        "src", "bigger_better_faster", "bbf", "configs")
+
+# Maps each condition name to its base gin file.
+CONDITION_BASE = {
+    "BBF":     "BBF.gin",
+    "BBFc":    "BBF.gin",
+    "DER":     "SPR.gin",
+    "DERc":    "SPR.gin",
+    "SPR":     "SPR.gin",
+    "SPRc":    "SPR.gin",
+    "SR_SPR":  "SR_SPR.gin",
+    "SR_SPRc": "SR_SPR.gin",
+}
+
+VALID_CONDITIONS = sorted(CONDITION_BASE.keys())
+
+
+def resolve_gin_paths(condition, game):
+    """Resolve condition and game names to gin file paths."""
+    if condition not in CONDITION_BASE:
+        raise SystemExit(
+            f"Unknown condition '{condition}'. "
+            f"Valid conditions: {', '.join(VALID_CONDITIONS)}")
+
+    base_gin = os.path.join(GIN_ROOT, CONDITION_BASE[condition])
+    condition_gin = os.path.join(GIN_ROOT, "conditions", f"{condition}.gin")
+    game_gin = os.path.join(GIN_ROOT, "games", f"{game}.gin")
+
+    for path, label in [(base_gin, "base"), (condition_gin, "condition"),
+                        (game_gin, "game")]:
+        if not os.path.isfile(path):
+            raise SystemExit(f"{label} gin not found: {path}")
+
+    return base_gin, condition_gin, game_gin
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Train BBF-family agent")
-    parser.add_argument("--base_gin", required=True,
-                        help="Path to base gin config (e.g., BBF.gin)")
-    parser.add_argument("--condition_gin", required=True,
-                        help="Path to condition overlay gin file")
-    parser.add_argument("--game_gin", required=True,
-                        help="Path to game gin file")
+    parser.add_argument("--condition", required=True,
+                        choices=VALID_CONDITIONS,
+                        help="Experimental condition name")
+    parser.add_argument("--game", required=True,
+                        help="Atari game name (e.g., boxing)")
+    parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--gin_bindings", nargs="*", default=[],
                         help="Extra gin bindings (key=value)")
-    parser.add_argument("--seed", type=int, required=True)
-    parser.add_argument("--run_dir", required=True,
-                        help="Output directory for this run")
+    parser.add_argument("--run_dir",
+                        help="Output directory (default: auto-generated)")
     parser.add_argument("--total_steps", type=int, default=100_000,
                         help="Total environment steps (default: 100000)")
     return parser.parse_args()
@@ -251,26 +282,35 @@ def main():
     args = parse_args()
     logging.set_verbosity(logging.INFO)
 
+    # Resolve gin paths from condition and game names
+    base_gin, condition_gin, game_gin = resolve_gin_paths(
+        args.condition, args.game)
+
+    # Auto-generate run directory if not specified
+    run_dir = args.run_dir
+    if run_dir is None:
+        run_name = f"{args.condition}_{args.game}_seed{args.seed}"
+        run_dir = os.path.join("experiments", "dqn_atari", "runs", run_name)
+
     # Setup
     set_seed(args.seed)
-    setup_gin(args.base_gin, args.condition_gin, args.game_gin,
-              args.gin_bindings)
-    setup_run_dir(args.run_dir)
-    save_config_snapshot(args.run_dir)
+    setup_gin(base_gin, condition_gin, game_gin, args.gin_bindings)
+    setup_run_dir(run_dir)
+    save_config_snapshot(run_dir)
 
     # Create environment and agent
     env = create_environment()
-    agent = create_agent(env, args.seed, args.run_dir)
+    agent = create_agent(env, args.seed, run_dir)
 
     game_name = gin.query_parameter("DataEfficientAtariRunner.game_name")
     print(f"Training: game={game_name}, seed={args.seed}, "
-          f"steps={args.total_steps}, run_dir={args.run_dir}")
+          f"steps={args.total_steps}, run_dir={run_dir}")
     print(f"Agent: spr_weight={agent.spr_weight}, jumps={agent._jumps}, "
           f"replay_ratio={agent._replay_ratio}")
 
     # Open CSV files
-    csv_file, csv_writer = open_csv(args.run_dir)
-    ep_file, ep_writer = open_episode_csv(args.run_dir)
+    csv_file, csv_writer = open_csv(run_dir)
+    ep_file, ep_writer = open_episode_csv(run_dir)
 
     # Initialize: reset environment and agent
     obs = env.reset()
@@ -305,7 +345,7 @@ def main():
 
         # Progress reporting
         if step % PROGRESS_INTERVAL == 0:
-            write_progress(args.run_dir, step, args.total_steps,
+            write_progress(run_dir, step, args.total_steps,
                            episode, fps, start_time)
 
         # Log transition to agent (updates internal state and replay buffer)
@@ -321,7 +361,7 @@ def main():
 
         # Checkpoint (after log_transition so params and buffer are consistent)
         if step % CHECKPOINT_INTERVAL == 0:
-            save_checkpoint(agent, step, args.run_dir)
+            save_checkpoint(agent, step, run_dir)
 
         # Episode boundary
         if done:
@@ -345,13 +385,13 @@ def main():
 
     # Final checkpoint if not already saved at last interval
     if step % CHECKPOINT_INTERVAL != 0:
-        save_checkpoint(agent, step, args.run_dir)
+        save_checkpoint(agent, step, run_dir)
 
     csv_file.close()
     ep_file.close()
     elapsed = time.time() - start_time
     fps = step / elapsed if elapsed > 0 else 0
-    write_progress(args.run_dir, step, args.total_steps,
+    write_progress(run_dir, step, args.total_steps,
                    episode, fps, start_time, status="complete")
     print(f"Training complete: {step} steps in {elapsed:.1f}s "
           f"({fps:.0f} FPS)")
