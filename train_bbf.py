@@ -126,6 +126,19 @@ def open_csv(run_dir):
     return f, writer
 
 
+EPISODE_HEADER = ["step", "episode", "episode_return", "episode_length"]
+
+
+def open_episode_csv(run_dir):
+    """Open the per-episode CSV and write the header."""
+    path = os.path.join(run_dir, "episodes.csv")
+    f = open(path, "w", newline="")
+    writer = csv.DictWriter(f, fieldnames=EPISODE_HEADER)
+    writer.writeheader()
+    f.flush()
+    return f, writer
+
+
 def write_step_row(writer, csv_file, step, fps, agent):
     """Write one row to the per-step CSV using agent metrics."""
     metrics = agent._last_metrics
@@ -170,8 +183,9 @@ def main():
     print(f"Agent: spr_weight={agent.spr_weight}, jumps={agent._jumps}, "
           f"replay_ratio={agent._replay_ratio}")
 
-    # Open per-step CSV
+    # Open CSV files
     csv_file, csv_writer = open_csv(args.run_dir)
+    ep_file, ep_writer = open_episode_csv(args.run_dir)
 
     # Initialize: reset environment and agent
     obs = env.reset()
@@ -218,6 +232,13 @@ def main():
         # Episode boundary
         if done:
             episode += 1
+            ep_writer.writerow({
+                "step": step,
+                "episode": episode,
+                "episode_return": episode_return,
+                "episode_length": episode_length,
+            })
+            ep_file.flush()
             print(f"Step {step}/{args.total_steps} | "
                   f"Episode {episode} | Return {episode_return:.0f} | "
                   f"Length {episode_length} | FPS {fps:.0f}")
@@ -229,6 +250,7 @@ def main():
             episode_length = 0
 
     csv_file.close()
+    ep_file.close()
     elapsed = time.time() - start_time
     print(f"Training complete: {step} steps in {elapsed:.1f}s "
           f"({step / elapsed:.0f} FPS)")
