@@ -51,7 +51,7 @@ exploration:
   schedule:
     decay_frames: 200000  # Decay epsilon 1.0 -> 0.1 over 50K env steps (200K frames)
 
-# Evaluation (decoupled -- run post-training via reeval_checkpoints.py)
+# Evaluation (decoupled -- run post-training via eval_checkpoints.py)
 evaluation:
   eval_every: 999999      # Disabled during training for max throughput
   num_episodes: 30        # 30 episodes per eval checkpoint (used by reeval)

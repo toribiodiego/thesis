@@ -1,4 +1,4 @@
-"""Tests for scripts/reeval_checkpoints.py.
+"""Tests for scripts/eval_checkpoints.py.
 
 Verifies checkpoint discovery, model creation, and the full re-evaluation
 loop using a small RainbowDQN checkpoint saved to a temp directory.
@@ -17,7 +17,7 @@ import yaml
 # Ensure project root is importable
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from scripts.reeval_checkpoints import (
+from scripts.eval_checkpoints import (
     create_model,
     discover_checkpoint_steps,
     discover_runs,

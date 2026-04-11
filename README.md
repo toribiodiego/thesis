@@ -77,8 +77,8 @@ python scripts/plot_results.py \
   --output output/plots/run_name --game-name boxing
 
 # Re-evaluate checkpoints (auto-discovers runs)
-python scripts/reeval_checkpoints.py
-python scripts/reeval_checkpoints.py run_name_1 run_name_2
+python scripts/eval_checkpoints.py
+python scripts/eval_checkpoints.py run_name_1 run_name_2
 ```
 
 <br><br>

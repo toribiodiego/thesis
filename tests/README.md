@@ -79,4 +79,4 @@ pytest tests/ -k "rainbow" -v
 
 | File | Coverage |
 |------|----------|
-| `test_reeval_checkpoints.py` | Checkpoint re-evaluation: discovery, model creation, CSV output |
+| `test_eval_checkpoints.py` | Checkpoint re-evaluation: discovery, model creation, CSV output |

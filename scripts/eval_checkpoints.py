@@ -12,11 +12,11 @@ Produces the same output format as inline evaluation:
   - videos/<game>_step_<step>_best_ep<N>_r<score>.mp4 (optional)
 
 Usage:
-    python scripts/reeval_checkpoints.py                       # all runs
-    python scripts/reeval_checkpoints.py run_name_1 ...        # specific runs
-    python scripts/reeval_checkpoints.py --device cuda         # use GPU
-    python scripts/reeval_checkpoints.py --record-video        # save videos
-    python scripts/reeval_checkpoints.py --force               # re-run all
+    python scripts/eval_checkpoints.py                       # all runs
+    python scripts/eval_checkpoints.py run_name_1 ...        # specific runs
+    python scripts/eval_checkpoints.py --device cuda         # use GPU
+    python scripts/eval_checkpoints.py --record-video        # save videos
+    python scripts/eval_checkpoints.py --force               # re-run all
 """
 
 import argparse
