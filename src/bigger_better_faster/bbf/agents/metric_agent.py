@@ -1,5 +1,6 @@
 """BBFAgent subclass that captures training metrics for external logging."""
 
+import os
 import time
 
 from absl import logging
@@ -218,3 +219,28 @@ class MetricBBFAgent(BBFAgent):
         self.online_params = new_online_params
         self.optimizer_state = new_optimizer_state
         self.dynamic_scale = new_dynamic_scale
+
+    def bundle_and_checkpoint(self, checkpoint_dir, iteration_number):
+        """Save standard checkpoint then dump replay buffer contents."""
+        bundle = super().bundle_and_checkpoint(checkpoint_dir, iteration_number)
+        if bundle is None:
+            return None
+
+        replay = self._replay
+        n_valid = min(int(replay.add_count), replay._replay_capacity)
+        arrays = {}
+        for name, arr in replay._store.items():
+            arrays[name] = arr[:n_valid]
+
+        if hasattr(replay, 'sum_tree'):
+            priorities = onp.array([
+                replay.sum_tree.get(i) for i in range(n_valid)])
+            arrays['priority'] = priorities
+
+        path = os.path.join(
+            checkpoint_dir,
+            f'replay_buffer_{iteration_number}.npz')
+        onp.savez_compressed(path, **arrays)
+        logging.info('Saved replay buffer snapshot (%d entries) to %s',
+                     n_valid, path)
+        return bundle
