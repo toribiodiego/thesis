@@ -28,6 +28,7 @@ sys.stdout.reconfigure(line_buffering=True)
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 import gin
+import jax
 import numpy as np
 import tensorflow as tf
 from absl import logging
@@ -162,6 +163,30 @@ def write_step_row(writer, csv_file, step, fps, agent):
     csv_file.flush()
 
 
+CHECKPOINT_INTERVAL = 10_000
+
+
+def save_checkpoint(agent, step, run_dir):
+    """Save online_params as .npz with path-based keys plus metadata."""
+    ckpt_dir = os.path.join(run_dir, "checkpoints")
+    arrays = {}
+    for path, leaf in jax.tree_util.tree_leaves_with_path(agent.online_params):
+        key = "/".join(str(k.key) for k in path)
+        arrays[key] = np.asarray(leaf)
+    arrays["__training_steps"] = np.array(agent.training_steps)
+    arrays["__cumulative_resets"] = np.array(agent.cumulative_resets)
+    arrays["__cycle_grad_steps"] = np.array(agent.cycle_grad_steps)
+
+    path = os.path.join(ckpt_dir, f"checkpoint_{step}.npz")
+    np.savez_compressed(path, **arrays)
+
+    # Also trigger replay buffer save via the agent's bundle_and_checkpoint.
+    # This saves replay_buffer_<iteration>.npz in the same directory.
+    agent.bundle_and_checkpoint(ckpt_dir, step)
+
+    print(f"Checkpoint saved at step {step}: {path}")
+
+
 def main():
     args = parse_args()
     logging.set_verbosity(logging.INFO)
@@ -218,6 +243,10 @@ def main():
         fps = step / elapsed if elapsed > 0 else 0
         write_step_row(csv_writer, csv_file, step, fps, agent)
 
+        # Checkpoint
+        if step % CHECKPOINT_INTERVAL == 0:
+            save_checkpoint(agent, step, args.run_dir)
+
         # Log transition to agent (updates internal state and replay buffer)
         terminal = done
         episode_end = done
@@ -248,6 +277,10 @@ def main():
             agent._record_observation(np.expand_dims(obs, 0))
             episode_return = 0.0
             episode_length = 0
+
+    # Final checkpoint if not already saved at last interval
+    if step % CHECKPOINT_INTERVAL != 0:
+        save_checkpoint(agent, step, args.run_dir)
 
     csv_file.close()
     ep_file.close()
