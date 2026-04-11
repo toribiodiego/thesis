@@ -6,7 +6,7 @@ Train BBF-family agents (BBF, BBFc, SR-SPR, SR-SPRc, SPR, SPRc, DER, DERc)
 on Atari games using the ported BBF codebase.
 
 Usage:
-    python train_bbf.py \
+    python train.py \
         --base_gin src/bigger_better_faster/bbf/configs/BBF.gin \
         --condition_gin src/bigger_better_faster/bbf/configs/conditions/BBF.gin \
         --game_gin src/bigger_better_faster/bbf/configs/games/boxing.gin \
