@@ -14,6 +14,8 @@ import tempfile
 import numpy as np
 import pytest
 
+pytestmark = pytest.mark.jax
+
 # BBF internal imports use `bigger_better_faster.bbf...` so src/ must
 # be on the path. Insert once at import time.
 _src_dir = os.path.join(os.path.dirname(__file__), "..", "src")

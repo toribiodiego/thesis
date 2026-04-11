@@ -518,6 +518,7 @@ def test_discover_checkpoint_steps_mixed(tmp_path):
 # =============================================================================
 
 
+@pytest.mark.jax
 def test_load_jax_checkpoint(tmp_path):
     """Loads msgpack params and JSON metadata."""
     from flax.serialization import msgpack_serialize
