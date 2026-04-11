@@ -19,12 +19,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from scripts.eval_checkpoints import (
     create_model,
+    detect_run_backend,
     discover_checkpoint_steps,
     discover_runs,
     get_existing_steps,
     get_repeat_action_probability,
     get_run_eval_epsilon,
     load_config,
+    load_jax_checkpoint,
     save_results,
 )
 from src.models.rainbow import RainbowDQN
@@ -409,3 +411,141 @@ def test_rainbow_checkpoint_load_and_assessment(run_dir_with_rainbow_checkpoint)
     existing_after = get_existing_steps(run_dir)
     assert steps[0] in existing_after
     assert steps[1] not in existing_after
+
+
+# =============================================================================
+# detect_run_backend tests
+# =============================================================================
+
+
+def test_detect_run_backend_pytorch(tmp_path):
+    """Detects PyTorch runs by config.yaml."""
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    (run_dir / "config.yaml").touch()
+    assert detect_run_backend(str(run_dir)) == "pytorch"
+
+
+def test_detect_run_backend_jax(tmp_path):
+    """Detects JAX runs by config.gin."""
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    (run_dir / "config.gin").touch()
+    assert detect_run_backend(str(run_dir)) == "jax"
+
+
+def test_detect_run_backend_none(tmp_path):
+    """Returns None when no config file exists."""
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    assert detect_run_backend(str(run_dir)) is None
+
+
+def test_detect_run_backend_jax_takes_priority(tmp_path):
+    """JAX takes priority when both config files exist."""
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    (run_dir / "config.gin").touch()
+    (run_dir / "config.yaml").touch()
+    assert detect_run_backend(str(run_dir)) == "jax"
+
+
+# =============================================================================
+# discover_runs with JAX runs tests
+# =============================================================================
+
+
+def test_discover_runs_finds_jax_runs(tmp_path):
+    """discover_runs finds JAX runs with config.gin + checkpoints/."""
+    run_dir = tmp_path / "runs" / "BBF_boxing_seed42"
+    (run_dir / "checkpoints").mkdir(parents=True)
+    (run_dir / "config.gin").write_text("# gin config")
+    result = discover_runs(str(tmp_path / "runs"))
+    assert "BBF_boxing_seed42" in result
+
+
+def test_discover_runs_finds_both_backends(tmp_path):
+    """discover_runs finds both PyTorch and JAX runs."""
+    runs_dir = tmp_path / "runs"
+
+    # PyTorch run
+    pt_dir = runs_dir / "pytorch_run"
+    (pt_dir / "checkpoints").mkdir(parents=True)
+    (pt_dir / "config.yaml").write_text("{}")
+
+    # JAX run
+    jax_dir = runs_dir / "jax_run"
+    (jax_dir / "checkpoints").mkdir(parents=True)
+    (jax_dir / "config.gin").write_text("# gin")
+
+    result = discover_runs(str(runs_dir))
+    assert "pytorch_run" in result
+    assert "jax_run" in result
+
+
+# =============================================================================
+# discover_checkpoint_steps with msgpack tests
+# =============================================================================
+
+
+def test_discover_checkpoint_steps_msgpack(tmp_path):
+    """Discovers .msgpack checkpoint files."""
+    cp_dir = tmp_path / "checkpoints"
+    cp_dir.mkdir()
+    (cp_dir / "checkpoint_10000.msgpack").touch()
+    (cp_dir / "checkpoint_10000.json").touch()
+    (cp_dir / "checkpoint_20000.msgpack").touch()
+    (cp_dir / "checkpoint_20000.json").touch()
+
+    steps = discover_checkpoint_steps(str(cp_dir))
+    assert steps == [10000, 20000]
+
+
+def test_discover_checkpoint_steps_mixed(tmp_path):
+    """Discovers both .pt and .msgpack checkpoints."""
+    cp_dir = tmp_path / "checkpoints"
+    cp_dir.mkdir()
+    (cp_dir / "checkpoint_10000.pt").touch()
+    (cp_dir / "checkpoint_20000.msgpack").touch()
+
+    steps = discover_checkpoint_steps(str(cp_dir))
+    assert steps == [10000, 20000]
+
+
+# =============================================================================
+# load_jax_checkpoint tests
+# =============================================================================
+
+
+def test_load_jax_checkpoint(tmp_path):
+    """Loads msgpack params and JSON metadata."""
+    from flax.serialization import msgpack_serialize
+
+    cp_dir = tmp_path / "checkpoints"
+    cp_dir.mkdir()
+
+    # Write a small params dict as msgpack
+    params = {"encoder": {"conv1": {"kernel": np.ones((3, 3))}}}
+    with open(cp_dir / "checkpoint_10000.msgpack", "wb") as f:
+        f.write(msgpack_serialize(params))
+
+    # Write metadata JSON
+    import json
+    meta = {
+        "step": 10000,
+        "training_steps": 5000,
+        "cumulative_resets": 2,
+        "cycle_grad_steps": 1000,
+        "gin_config": "# resolved config",
+    }
+    with open(cp_dir / "checkpoint_10000.json", "w") as f:
+        json.dump(meta, f)
+
+    loaded_params, loaded_meta = load_jax_checkpoint(str(cp_dir), 10000)
+
+    assert loaded_meta["step"] == 10000
+    assert loaded_meta["training_steps"] == 5000
+    assert loaded_meta["cumulative_resets"] == 2
+    np.testing.assert_array_equal(
+        loaded_params["encoder"]["conv1"]["kernel"], np.ones((3, 3))
+    )

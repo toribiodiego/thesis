@@ -43,6 +43,19 @@ RUNS_DIR = "experiments/dqn_atari/runs"
 EVAL_EPISODES = 30
 
 
+def detect_run_backend(run_dir):
+    """Detect whether a run used JAX/BBF or PyTorch.
+
+    Returns "jax" if config.gin exists, "pytorch" if config.yaml exists,
+    or None if neither is found.
+    """
+    if os.path.isfile(os.path.join(run_dir, "config.gin")):
+        return "jax"
+    if os.path.isfile(os.path.join(run_dir, "config.yaml")):
+        return "pytorch"
+    return None
+
+
 def discover_runs(runs_dir):
     """Auto-discover run directories that have checkpoints and a config."""
     run_names = []
@@ -52,23 +65,45 @@ def discover_runs(runs_dir):
         run_dir = os.path.join(runs_dir, entry)
         if not os.path.isdir(run_dir):
             continue
-        config_path = os.path.join(run_dir, "config.yaml")
         checkpoint_dir = os.path.join(run_dir, "checkpoints")
-        if os.path.isfile(config_path) and os.path.isdir(checkpoint_dir):
+        if not os.path.isdir(checkpoint_dir):
+            continue
+        if detect_run_backend(run_dir) is not None:
             run_names.append(entry)
     return run_names
 
 
 def discover_checkpoint_steps(checkpoint_dir):
-    """Scan checkpoint directory and return sorted list of step numbers."""
+    """Scan checkpoint directory and return sorted list of step numbers.
+
+    Detects both PyTorch (.pt) and JAX (.msgpack) checkpoints.
+    """
     steps = []
     if not os.path.isdir(checkpoint_dir):
         return steps
     for fname in os.listdir(checkpoint_dir):
-        m = re.match(r"checkpoint_(\d+)\.pt$", fname)
+        m = re.match(r"checkpoint_(\d+)\.(pt|msgpack)$", fname)
         if m:
             steps.append(int(m.group(1)))
     return sorted(steps)
+
+
+def load_jax_checkpoint(checkpoint_dir, step):
+    """Load a JAX checkpoint from .msgpack params + .json metadata.
+
+    Returns (params_state_dict, metadata_dict).
+    """
+    from flax.serialization import msgpack_restore
+
+    params_path = os.path.join(checkpoint_dir, f"checkpoint_{step}.msgpack")
+    with open(params_path, "rb") as f:
+        params = msgpack_restore(f.read())
+
+    meta_path = os.path.join(checkpoint_dir, f"checkpoint_{step}.json")
+    with open(meta_path) as f:
+        metadata = json.load(f)
+
+    return params, metadata
 
 
 def get_existing_steps(run_dir):
