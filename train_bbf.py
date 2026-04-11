@@ -293,10 +293,6 @@ def main():
             write_progress(args.run_dir, step, args.total_steps,
                            episode, fps, start_time)
 
-        # Checkpoint
-        if step % CHECKPOINT_INTERVAL == 0:
-            save_checkpoint(agent, step, args.run_dir)
-
         # Log transition to agent (updates internal state and replay buffer)
         terminal = done
         episode_end = done
@@ -307,6 +303,10 @@ def main():
             np.array([terminal]),
             np.array([episode_end]),
         )
+
+        # Checkpoint (after log_transition so params and buffer are consistent)
+        if step % CHECKPOINT_INTERVAL == 0:
+            save_checkpoint(agent, step, args.run_dir)
 
         # Episode boundary
         if done:
