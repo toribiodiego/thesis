@@ -178,6 +178,7 @@ def save_checkpoint(agent, step, run_dir):
     arrays["__training_steps"] = np.array(agent.training_steps)
     arrays["__cumulative_resets"] = np.array(agent.cumulative_resets)
     arrays["__cycle_grad_steps"] = np.array(agent.cycle_grad_steps)
+    arrays["__gin_config_str"] = np.array(gin.config_str())
 
     path = os.path.join(ckpt_dir, f"checkpoint_{step}.npz")
     np.savez_compressed(path, **arrays)
