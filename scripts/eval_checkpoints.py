@@ -106,6 +106,94 @@ def load_jax_checkpoint(checkpoint_dir, step):
     return params, metadata
 
 
+def setup_jax_agent(run_dir, checkpoint_dir, first_step):
+    """Create a JAX/BBF agent from checkpoint metadata and gin config.
+
+    Parses the gin config stored in the checkpoint metadata, creates the
+    dopamine environment and MetricBBFAgent, and loads the checkpoint params.
+    Returns (agent, env, meta.json dict).
+    """
+    import gin
+    import numpy as np
+    from dopamine.discrete_domains import atari_lib
+    from bigger_better_faster.bbf.agents.metric_agent import MetricBBFAgent
+
+    # Load meta.json for seed
+    meta_path = os.path.join(run_dir, "meta.json")
+    with open(meta_path) as f:
+        run_meta = json.load(f)
+    seed = run_meta.get("seed", 0)
+
+    # Load first checkpoint to get gin config
+    _, ckpt_meta = load_jax_checkpoint(checkpoint_dir, first_step)
+    gin_config = ckpt_meta.get("gin_config", "")
+
+    # Parse gin config to configure agent and environment
+    gin.clear_config()
+    gin.parse_config(gin_config)
+
+    env = atari_lib.create_atari_environment()
+    agent = MetricBBFAgent(
+        num_actions=env.action_space.n,
+        seed=seed,
+        summary_writer=None,
+    )
+    agent.eval_mode = True
+
+    return agent, env, run_meta
+
+
+def evaluate_jax_checkpoint(agent, env, params, num_episodes):
+    """Run evaluation episodes with a JAX agent and loaded params.
+
+    Returns a results dict matching the PyTorch evaluate() output format.
+    """
+    import numpy as np
+
+    episode_returns = []
+    episode_lengths = []
+
+    for _ in range(num_episodes):
+        obs = env.reset()
+        agent.reset_all(np.expand_dims(obs, 0))
+        episode_return = 0.0
+        episode_length = 0
+        done = False
+
+        while not done:
+            action = agent.select_action(
+                agent.state,
+                params,
+                eval_mode=True,
+                force_zero_eps=True,
+                use_noise=False,
+            )
+            action = int(action[0])
+
+            obs, reward, done, _ = env.step(action)
+            agent._record_observation(np.expand_dims(obs, 0))
+            episode_return += reward
+            episode_length += 1
+
+        episode_returns.append(episode_return)
+        episode_lengths.append(episode_length)
+
+    returns = np.array(episode_returns)
+    lengths = np.array(episode_lengths)
+
+    return {
+        "mean_return": float(np.mean(returns)),
+        "median_return": float(np.median(returns)),
+        "std_return": float(np.std(returns)),
+        "min_return": float(np.min(returns)),
+        "max_return": float(np.max(returns)),
+        "mean_length": float(np.mean(lengths)),
+        "num_episodes": num_episodes,
+        "episode_returns": episode_returns,
+        "episode_lengths": episode_lengths,
+    }
+
+
 def get_existing_steps(run_dir):
     """Read evaluations.csv and return set of already-evaluated steps."""
     csv_path = os.path.join(run_dir, "eval", "evaluations.csv")
@@ -329,6 +417,137 @@ def parse_args():
     return parser.parse_args()
 
 
+def _process_jax_run(run_dir, run_name, checkpoint_dir, sorted_steps):
+    """Run evaluation for all checkpoints in a JAX/BBF run."""
+    agent, env, run_meta = setup_jax_agent(
+        run_dir, checkpoint_dir, sorted_steps[0])
+
+    condition = run_meta.get("condition", "unknown")
+    game = run_meta.get("game", "unknown")
+    print(f"RUN  {run_name}")
+    print(f"     backend=jax, condition={condition}, game={game}")
+    print(f"     steps: {sorted_steps}")
+
+    run_start_time = time.time()
+
+    for step_idx, step in enumerate(sorted_steps):
+        print(f"     step {step // 1000}K ... ", end="", flush=True)
+
+        params, ckpt_meta = load_jax_checkpoint(checkpoint_dir, step)
+
+        results = evaluate_jax_checkpoint(
+            agent, env, params, EVAL_EPISODES)
+
+        save_results(run_dir, step, results,
+                     run_eval_epsilon=0.0, training_epsilon=0.0)
+
+        write_reeval_progress(
+            run_dir, run_name, step,
+            steps_done=step_idx + 1,
+            steps_total=len(sorted_steps),
+            start_time=run_start_time,
+            mean_return=results["mean_return"],
+        )
+
+        print(
+            f"mean={results['mean_return']:.1f} "
+            f"+/- {results['std_return']:.1f}"
+        )
+
+    env.close()
+
+
+def _process_pytorch_run(run_dir, run_name, checkpoint_dir, sorted_steps,
+                         device, record_video):
+    """Run evaluation for all checkpoints in a PyTorch run."""
+    config = load_config(run_dir)
+    env_id = config["environment"]["env_id"]
+
+    rainbow_enabled = config.get("rainbow", {}).get("enabled", False)
+    spr_enabled = config.get("spr", {}).get("enabled", False)
+    model_type = "RainbowDQN" if rainbow_enabled else "DQN"
+    if spr_enabled:
+        model_type += "+SPR"
+
+    run_epsilon = get_run_eval_epsilon(config)
+    repeat_action_prob = get_repeat_action_probability(config)
+
+    print(f"RUN  {run_name}")
+    print(f"     backend=pytorch, env={env_id}, model={model_type}")
+    print(f"     epsilon={run_epsilon}, sticky={repeat_action_prob}")
+    print(f"     steps: {sorted_steps}")
+
+    env_kwargs = {}
+    if record_video:
+        env_kwargs["render_mode"] = "rgb_array"
+    env = make_atari_env(
+        env_id=env_id,
+        frame_size=84,
+        num_stack=4,
+        frame_skip=4,
+        clip_rewards=False,
+        episode_life=False,
+        noop_max=30,
+        repeat_action_probability=repeat_action_prob,
+        **env_kwargs,
+    )
+    num_actions = env.action_space.n
+
+    video_dir = os.path.join(run_dir, "videos") if record_video else None
+    if video_dir:
+        os.makedirs(video_dir, exist_ok=True)
+
+    run_start_time = time.time()
+
+    for step_idx, step in enumerate(sorted_steps):
+        cp_path = os.path.join(checkpoint_dir, f"checkpoint_{step}.pt")
+        print(f"     step {step // 1000}K ... ", end="", flush=True)
+
+        checkpoint = torch.load(cp_path, map_location=device, weights_only=False)
+
+        model = create_model(config, num_actions, device)
+        model.load_state_dict(
+            checkpoint["online_model_state_dict"], strict=True
+        )
+        model.eval()
+
+        training_epsilon = checkpoint.get("epsilon", 0.1)
+
+        results = evaluate(
+            env=env,
+            model=model,
+            num_episodes=EVAL_EPISODES,
+            eval_epsilon=run_epsilon,
+            num_actions=num_actions,
+            device=device,
+            step=step,
+            record_video=record_video,
+            video_dir=video_dir,
+        )
+
+        save_results(
+            run_dir, step, results, run_epsilon, training_epsilon
+        )
+
+        write_reeval_progress(
+            run_dir, run_name, step,
+            steps_done=step_idx + 1,
+            steps_total=len(sorted_steps),
+            start_time=run_start_time,
+            mean_return=results["mean_return"],
+        )
+
+        video_msg = ""
+        if results.get("video_info"):
+            video_msg = f"  video=saved"
+        print(
+            f"mean={results['mean_return']:.1f} "
+            f"+/- {results['std_return']:.1f}{video_msg}"
+        )
+
+    env.close()
+
+
 def main():
     args = parse_args()
 
@@ -368,8 +587,10 @@ def main():
             print(f"SKIP {run_name}: directory not found")
             continue
 
-        config = load_config(run_dir)
-        env_id = config["environment"]["env_id"]
+        backend = detect_run_backend(run_dir)
+        if backend is None:
+            print(f"SKIP {run_name}: no config.yaml or config.gin found")
+            continue
 
         # Determine which checkpoints need processing
         if args.force:
@@ -385,95 +606,15 @@ def main():
             print(f"SKIP {run_name}: all checkpoints already processed")
             continue
 
-        # Determine model type and settings
-        rainbow_enabled = config.get("rainbow", {}).get("enabled", False)
-        spr_enabled = config.get("spr", {}).get("enabled", False)
-        model_type = "RainbowDQN" if rainbow_enabled else "DQN"
-        if spr_enabled:
-            model_type += "+SPR"
-
-        run_eval_epsilon = get_run_eval_epsilon(config)
-        repeat_action_prob = get_repeat_action_probability(config)
-
-        print(f"RUN  {run_name}")
-        print(f"     env={env_id}, model={model_type}")
-        print(f"     epsilon={run_eval_epsilon}, sticky={repeat_action_prob}")
-        print(f"     steps: {missing_steps}")
-
-        # Create environment with correct sticky actions
-        # render_mode needed for video recording (env.render() returns frames)
-        env_kwargs = {}
-        if args.record_video:
-            env_kwargs["render_mode"] = "rgb_array"
-        env = make_atari_env(
-            env_id=env_id,
-            frame_size=84,
-            num_stack=4,
-            frame_skip=4,
-            clip_rewards=False,
-            episode_life=False,
-            noop_max=30,
-            repeat_action_probability=repeat_action_prob,
-            **env_kwargs,
-        )
-        num_actions = env.action_space.n
-
-        # Video directory
-        video_dir = os.path.join(run_dir, "videos") if args.record_video else None
-        if video_dir:
-            os.makedirs(video_dir, exist_ok=True)
-
         sorted_steps = sorted(missing_steps)
-        run_start_time = time.time()
 
-        for step_idx, step in enumerate(sorted_steps):
-            cp_path = os.path.join(checkpoint_dir, f"checkpoint_{step}.pt")
-            print(f"     step {step // 1000}K ... ", end="", flush=True)
-
-            checkpoint = torch.load(cp_path, map_location=device, weights_only=False)
-
-            model = create_model(config, num_actions, device)
-            model.load_state_dict(
-                checkpoint["online_model_state_dict"], strict=True
-            )
-            # model.eval() disables NoisyNet noise (uses mean weights)
-            model.eval()
-
-            training_epsilon = checkpoint.get("epsilon", 0.1)
-
-            results = evaluate(
-                env=env,
-                model=model,
-                num_episodes=EVAL_EPISODES,
-                eval_epsilon=run_eval_epsilon,
-                num_actions=num_actions,
-                device=device,
-                step=step,
-                record_video=args.record_video,
-                video_dir=video_dir,
-            )
-
-            save_results(
-                run_dir, step, results, run_eval_epsilon, training_epsilon
-            )
-
-            write_reeval_progress(
-                run_dir, run_name, step,
-                steps_done=step_idx + 1,
-                steps_total=len(sorted_steps),
-                start_time=run_start_time,
-                mean_return=results["mean_return"],
-            )
-
-            video_msg = ""
-            if results.get("video_info"):
-                video_msg = f"  video=saved"
-            print(
-                f"mean={results['mean_return']:.1f} "
-                f"+/- {results['std_return']:.1f}{video_msg}"
-            )
-
-        env.close()
+        if backend == "jax":
+            _process_jax_run(
+                run_dir, run_name, checkpoint_dir, sorted_steps)
+        else:
+            _process_pytorch_run(
+                run_dir, run_name, checkpoint_dir, sorted_steps,
+                device, args.record_video)
 
         # Sort CSV by step after processing all checkpoints
         sort_csv(run_dir)

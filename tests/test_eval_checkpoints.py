@@ -22,6 +22,7 @@ from scripts.eval_checkpoints import (
     detect_run_backend,
     discover_checkpoint_steps,
     discover_runs,
+    evaluate_jax_checkpoint,
     get_existing_steps,
     get_repeat_action_probability,
     get_run_eval_epsilon,
