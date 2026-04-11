@@ -184,6 +184,12 @@ def save_checkpoint(agent, step, run_dir):
     # This saves replay_buffer_<iteration>.npz in the same directory.
     agent.bundle_and_checkpoint(ckpt_dir, step)
 
+    # Write resets.json from the agent's captured reset events.
+    if agent._reset_log:
+        resets_path = os.path.join(run_dir, "resets.json")
+        with open(resets_path, "w") as f:
+            json.dump(agent._reset_log, f, indent=2)
+
     print(f"Checkpoint saved at step {step}: {path}")
 
 
