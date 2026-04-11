@@ -240,19 +240,28 @@ PROGRESS_INTERVAL = 100
 
 
 def save_checkpoint(agent, step, run_dir):
-    """Save online_params as .npz with path-based keys plus metadata."""
-    ckpt_dir = os.path.join(run_dir, "checkpoints")
-    arrays = {}
-    for path, leaf in jax.tree_util.tree_leaves_with_path(agent.online_params):
-        key = "/".join(str(k) for k in path)
-        arrays[key] = np.asarray(leaf)
-    arrays["__training_steps"] = np.array(agent.training_steps)
-    arrays["__cumulative_resets"] = np.array(agent.cumulative_resets)
-    arrays["__cycle_grad_steps"] = np.array(agent.cycle_grad_steps)
-    arrays["__gin_config_str"] = np.array(gin.config_str())
+    """Save online_params as msgpack and metadata as JSON."""
+    from flax.serialization import msgpack_serialize, to_state_dict
 
-    path = os.path.join(ckpt_dir, f"checkpoint_{step}.npz")
-    np.savez_compressed(path, **arrays)
+    ckpt_dir = os.path.join(run_dir, "checkpoints")
+
+    # Params -> msgpack (preserves pytree structure natively)
+    state_dict = to_state_dict(agent.online_params)
+    params_path = os.path.join(ckpt_dir, f"checkpoint_{step}.msgpack")
+    with open(params_path, "wb") as f:
+        f.write(msgpack_serialize(state_dict))
+
+    # Metadata -> JSON sidecar
+    meta = {
+        "step": step,
+        "training_steps": int(agent.training_steps),
+        "cumulative_resets": int(agent.cumulative_resets),
+        "cycle_grad_steps": int(agent.cycle_grad_steps),
+        "gin_config": gin.config_str(),
+    }
+    meta_path = os.path.join(ckpt_dir, f"checkpoint_{step}.json")
+    with open(meta_path, "w") as f:
+        json.dump(meta, f, indent=2)
 
     # Also trigger replay buffer save via the agent's bundle_and_checkpoint.
     # This saves replay_buffer_<iteration>.npz in the same directory.
@@ -267,7 +276,7 @@ def save_checkpoint(agent, step, run_dir):
     # Incremental Drive sync (Colab only)
     sync_to_drive(run_dir)
 
-    print(f"Checkpoint saved at step {step}: {path}")
+    print(f"Checkpoint saved at step {step}: {params_path}")
 
 
 DRIVE_BASE = "/content/drive/MyDrive/thesis-runs"
