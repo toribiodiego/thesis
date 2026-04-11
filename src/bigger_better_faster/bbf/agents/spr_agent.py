@@ -185,7 +185,7 @@ def interpolate_weights(
 
   if strip_params_layer:
     combined_params = {"params": combined_params}
-  return FrozenDict(combined_params)
+  return combined_params
 
 
 @functools.partial(
@@ -242,7 +242,8 @@ def jit_reset(
   # Create some dummy actions of arbitrary length to initialize the transition
   # model, if the network has one.
   actions = jnp.zeros((5,))
-  random_params = network_def.init(
+  from flax.core import unfreeze as _unfreeze
+  random_params = _unfreeze(network_def.init(
       x=state,
       actions=actions,
       do_rollout=do_rollout,
@@ -251,8 +252,8 @@ def jit_reset(
           "dropout": rng
       },
       support=support,
-  )
-  target_random_params = network_def.init(
+  ))
+  target_random_params = _unfreeze(network_def.init(
       x=state,
       actions=actions,
       do_rollout=do_rollout,
@@ -261,7 +262,7 @@ def jit_reset(
           "dropout": rng
       },
       support=support,
-  )
+  ))
 
   if shrink_perturb_keys:
     online_params = interpolate_weights(
@@ -271,7 +272,8 @@ def jit_reset(
         old_weight=shrink_factor,
         new_weight=perturb_factor,
     )
-  online_params = FrozenDict(
+  from flax.core import unfreeze
+  online_params = unfreeze(
       copy_params(online_params, random_params, keys=keys_to_copy))
 
   updated_optim_state = []
@@ -282,7 +284,7 @@ def jit_reset(
         dict(optim_state[i]._asdict()),
         keys=keys_to_copy,
     )
-    optim_to_copy = FrozenDict(optim_to_copy)
+    optim_to_copy = dict(optim_to_copy)
     updated_optim_state.append(optim_state[i]._replace(**optim_to_copy))
   optimizer_state = tuple(updated_optim_state)
 
@@ -295,9 +297,8 @@ def jit_reset(
           old_weight=shrink_factor,
           new_weight=perturb_factor,
       )
-    target_network_params = copy_params(
-        target_network_params, target_random_params, keys=keys_to_copy)
-    target_network_params = FrozenDict(target_network_params)
+    target_network_params = unfreeze(copy_params(
+        target_network_params, target_random_params, keys=keys_to_copy))
 
   return online_params, target_network_params, optimizer_state, random_params
 
@@ -1282,7 +1283,7 @@ class BBFAgent(dqn_agent.JaxDQNAgent):
     # Create some dummy actions of arbitrary length to initialize the transition
     # model, if the network has one.
     actions = jnp.zeros((5,))
-    self.online_params = self.network_def.init(
+    online_params = self.network_def.init(
         x=self.state.astype(self.dtype),
         actions=actions,
         do_rollout=self.spr_weight > 0,
@@ -1292,6 +1293,11 @@ class BBFAgent(dqn_agent.JaxDQNAgent):
         },
         support=self._support,
     )
+    # Normalize to plain dicts for compatibility across flax versions.
+    # Flax <0.10 returns FrozenDict, >=0.10 returns plain dict.
+    # optax.masked requires matching pytree types between params and mask.
+    from flax.core import unfreeze
+    self.online_params = unfreeze(online_params)
     optimizer = create_scaling_optimizer(
         self._optimizer_name,
         warmup=self.head_warmup,
@@ -1304,14 +1310,14 @@ class BBFAgent(dqn_agent.JaxDQNAgent):
     )
 
     encoder_keys = {"encoder", "transition_model"}
-    self.encoder_mask = FrozenDict({
+    self.encoder_mask = {
         "params": {k: k in encoder_keys for k in self.online_params["params"]}
-    })
-    self.head_mask = FrozenDict({
+    }
+    self.head_mask = {
         "params": {
             k: k not in encoder_keys for k in self.online_params["params"]
         }
-    })
+    }
 
     self.optimizer = optax.chain(
         optax.masked(encoder_optimizer, self.encoder_mask),
