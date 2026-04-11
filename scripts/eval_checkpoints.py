@@ -2,7 +2,7 @@
 """Re-run evaluations on saved checkpoints that are missing data.
 
 Loads each checkpoint, creates the matching model and environment,
-runs 30 evaluation episodes, and saves results to the eval/ directory.
+runs 100 evaluation episodes, and saves results to the eval/ directory.
 
 Produces the same output format as inline evaluation:
   - eval/evaluations.csv (summary statistics per checkpoint)
@@ -40,7 +40,7 @@ from src.training.evaluation import evaluate
 
 RUNS_DIR = "experiments/dqn_atari/runs"
 
-EVAL_EPISODES = 30
+EVAL_EPISODES = 100
 
 
 def detect_run_backend(run_dir):
