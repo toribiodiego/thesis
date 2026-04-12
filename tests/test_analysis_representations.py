@@ -1,8 +1,7 @@
-"""Tests for representation extraction from loaded checkpoints.
+"""Tests for representation and Q-value extraction, and transition model evaluation.
 
 Smoke tests using verification checkpoints on CPU. Each test
-extracts representations from a small number of observations
-to verify shapes and dtype.
+processes a small number of observations to verify shapes and dtype.
 """
 
 import os
@@ -172,3 +171,82 @@ class TestExtractQValuesSPR:
 
         assert q.shape == (4, 9)
         assert q.dtype == np.float32
+
+
+# ---------------------------------------------------------------------------
+# Transition model evaluation
+# ---------------------------------------------------------------------------
+
+
+def _get_transition_pairs(run_dir, n=4):
+    """Build stacked frame transition pairs from replay buffer.
+
+    Returns (obs, actions, obs_next) where obs/obs_next are
+    (n, 84, 84, 4) uint8 stacked frames and actions is (n,) int32.
+    """
+    from src.analysis.replay_buffer import load_replay_buffer
+
+    replay = load_replay_buffer(run_dir, STEP)
+    frames = replay.observations
+    obs_list, obs_next_list, act_list = [], [], []
+    i = 0
+    while len(obs_list) < n and i + 4 < len(frames):
+        # Need 5 consecutive non-terminal frames for a valid pair:
+        # frames[i:i+4] -> obs_t, frames[i+1:i+5] -> obs_{t+1}
+        if not any(replay.terminals[i : i + 4]):
+            obs_t = np.stack(frames[i : i + 4], axis=-1)       # (84, 84, 4)
+            obs_next = np.stack(frames[i + 1 : i + 5], axis=-1)  # (84, 84, 4)
+            obs_list.append(obs_t)
+            obs_next_list.append(obs_next)
+            act_list.append(replay.actions[i + 3])  # action at time of last frame
+        i += 1
+    return (
+        np.array(obs_list, dtype=np.uint8),
+        np.array(act_list, dtype=np.int32),
+        np.array(obs_next_list, dtype=np.uint8),
+    )
+
+
+@pytest.mark.skipif(not _has_run(BBF_RUN), reason="BBF verification run not found")
+class TestEvaluateTransitionModelBBF:
+
+    def test_output_shape(self):
+        from src.analysis.checkpoint import load_checkpoint
+        from src.analysis.representations import evaluate_transition_model
+
+        ckpt = load_checkpoint(BBF_RUN, STEP)
+        obs, actions, obs_next = _get_transition_pairs(BBF_RUN, n=4)
+
+        sims = evaluate_transition_model(ckpt, obs, actions, obs_next, batch_size=4)
+
+        assert sims.shape == (4,)
+        assert sims.dtype == np.float32
+
+    def test_values_in_range(self):
+        from src.analysis.checkpoint import load_checkpoint
+        from src.analysis.representations import evaluate_transition_model
+
+        ckpt = load_checkpoint(BBF_RUN, STEP)
+        obs, actions, obs_next = _get_transition_pairs(BBF_RUN, n=4)
+
+        sims = evaluate_transition_model(ckpt, obs, actions, obs_next, batch_size=4)
+
+        assert np.all(sims >= -1.0 - 1e-6)
+        assert np.all(sims <= 1.0 + 1e-6)
+        assert np.all(np.isfinite(sims))
+
+
+@pytest.mark.skipif(not _has_run(SPR_RUN), reason="SPR verification run not found")
+class TestEvaluateTransitionModelSPR:
+
+    def test_output_shape(self):
+        from src.analysis.checkpoint import load_checkpoint
+        from src.analysis.representations import evaluate_transition_model
+
+        ckpt = load_checkpoint(SPR_RUN, STEP)
+        obs, actions, obs_next = _get_transition_pairs(SPR_RUN, n=4)
+
+        sims = evaluate_transition_model(ckpt, obs, actions, obs_next, batch_size=4)
+
+        assert sims.shape == (4,)
+        assert sims.dtype == np.float32

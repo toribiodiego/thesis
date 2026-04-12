@@ -6,6 +6,8 @@ a loaded RainbowDQNNetwork:
   probing methods M9, M10, M14
 - Full-network Q-values via C51 expected value for value
   accuracy analysis (M15)
+- Transition model predictions in projected space with cosine
+  similarity against encode_project targets (M16)
 """
 
 import jax
@@ -180,5 +182,98 @@ def extract_q_values(
 
         q_vals = _q_batch(obs_f32, keys)
         results.append(np.asarray(q_vals))
+
+    return np.concatenate(results, axis=0)
+
+
+# ---------------------------------------------------------------------------
+# Transition model prediction function (used by method= in apply)
+# ---------------------------------------------------------------------------
+
+def _transition_predict(self, obs, action, key):
+    """Predict one step forward: encode, transition model, flatten, project, predict."""
+    spatial = self.encode(obs, eval_mode=True)
+    actions_seq = jnp.expand_dims(action, 0)  # (1,) for single-step scan
+    _, pred_latents = self.transition_model(spatial, actions_seq)
+    pred_flat = self.flatten_spatial_latent(pred_latents[0])
+    pred_proj = self.project(pred_flat, key, eval_mode=True)
+    return self.predictor(pred_proj)
+
+
+def evaluate_transition_model(
+    checkpoint: CheckpointData,
+    obs: np.ndarray,
+    actions: np.ndarray,
+    obs_next: np.ndarray,
+    batch_size: int = 64,
+    seed: int = 0,
+) -> np.ndarray:
+    """Evaluate transition model prediction accuracy via cosine similarity.
+
+    For each transition (obs[t], action[t], obs[t+1]):
+    - Prediction: encode obs[t] with online params, run transition
+      model with action[t], flatten, project, predict.
+    - Target: encode_project obs[t+1] with target params (or online
+      params if target unavailable).
+    - Metric: cosine similarity after L2 normalization, matching
+      the SPR loss formulation (N4 in notes_16.md).
+
+    Args:
+        checkpoint: Loaded checkpoint from load_checkpoint.
+        obs: (N, 84, 84, 4) uint8 HWC stacked frames at time t.
+        actions: (N,) int32 actions taken at time t.
+        obs_next: (N, 84, 84, 4) uint8 HWC stacked frames at time t+1.
+        batch_size: Number of transitions per forward pass chunk.
+        seed: RNG seed for dropout keys.
+
+    Returns:
+        (N,) float32 cosine similarities in [-1, 1]. Values near 1
+        indicate accurate transition model predictions.
+    """
+    net = checkpoint.network_def
+    online_params = {"params": checkpoint.online_params}
+    target_params_dict = checkpoint.target_params
+    if target_params_dict is not None:
+        target_params = {"params": target_params_dict}
+    else:
+        target_params = online_params
+
+    @jax.jit
+    def _eval_batch(obs_batch, acts_batch, obs_next_batch, keys):
+        def _single(ob, act, ob_next, key):
+            # Prediction: online params, full SPR pipeline
+            prediction = net.apply(
+                online_params, ob, act, key,
+                method=_transition_predict,
+                rngs={"dropout": key},
+            )
+            # Target: target (or online) params, encode_project
+            target = net.apply(
+                target_params, ob_next, key, True,
+                method=net.encode_project,
+                rngs={"dropout": key},
+            )
+            # L2-normalize and compute cosine similarity
+            pred_norm = prediction / (jnp.linalg.norm(prediction) + 1e-8)
+            tgt_norm = target / (jnp.linalg.norm(target) + 1e-8)
+            return jnp.dot(pred_norm, tgt_norm)
+
+        return jax.vmap(_single)(obs_batch, acts_batch, obs_next_batch, keys)
+
+    rng = jax.random.PRNGKey(seed)
+    n = len(obs)
+    results = []
+
+    for start in range(0, n, batch_size):
+        end = min(start + batch_size, n)
+        obs_chunk = obs[start:end].astype(np.float32) / 255.0
+        acts_chunk = actions[start:end]
+        obs_next_chunk = obs_next[start:end].astype(np.float32) / 255.0
+
+        rng, rng_batch = jax.random.split(rng)
+        keys = jax.random.split(rng_batch, end - start)
+
+        sims = _eval_batch(obs_chunk, acts_chunk, obs_next_chunk, keys)
+        results.append(np.asarray(sims))
 
     return np.concatenate(results, axis=0)
