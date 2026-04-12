@@ -8,6 +8,10 @@ from src.analysis.replay_buffer import (
     get_valid_transitions,
     load_replay_buffer,
 )
+from src.analysis.representations import (
+    extract_representations,
+    extract_representations_target,
+)
 
 __all__ = [
     "CheckpointData",
@@ -19,4 +23,6 @@ __all__ = [
     "TransitionData",
     "load_replay_buffer",
     "get_valid_transitions",
+    "extract_representations",
+    "extract_representations_target",
 ]
