@@ -22,6 +22,10 @@ import time
 # Unbuffered stdout for real-time progress in non-TTY environments (Colab, CI)
 sys.stdout.reconfigure(line_buffering=True)
 
+# Prevent TensorFlow from pre-allocating all GPU memory.
+# Without this, TF grabs 100% VRAM on import, blocking concurrent runs.
+os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
+
 # Add src/ to path so BBF package imports work.
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
