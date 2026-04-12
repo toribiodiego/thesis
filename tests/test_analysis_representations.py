@@ -123,3 +123,52 @@ class TestBatchProcessing:
         reps_chunked = extract_representations(ckpt, obs, batch_size=3, seed=0)
 
         np.testing.assert_allclose(reps_single, reps_chunked, rtol=1e-5)
+
+
+# ---------------------------------------------------------------------------
+# Q-value extraction
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.skipif(not _has_run(BBF_RUN), reason="BBF verification run not found")
+class TestExtractQValuesBBF:
+
+    def test_output_shape(self):
+        from src.analysis.checkpoint import load_checkpoint
+        from src.analysis.representations import extract_q_values
+
+        ckpt = load_checkpoint(BBF_RUN, STEP)
+        obs = _get_obs(BBF_RUN, n=4)
+
+        q = extract_q_values(ckpt, obs, batch_size=4)
+
+        # CrazyClimber has 9 actions
+        assert q.shape == (4, 9)
+        assert q.dtype == np.float32
+
+    def test_finite_values(self):
+        from src.analysis.checkpoint import load_checkpoint
+        from src.analysis.representations import extract_q_values
+
+        ckpt = load_checkpoint(BBF_RUN, STEP)
+        obs = _get_obs(BBF_RUN, n=2)
+
+        q = extract_q_values(ckpt, obs, batch_size=2)
+
+        assert np.all(np.isfinite(q)), "Q-values should be finite"
+
+
+@pytest.mark.skipif(not _has_run(SPR_RUN), reason="SPR verification run not found")
+class TestExtractQValuesSPR:
+
+    def test_output_shape(self):
+        from src.analysis.checkpoint import load_checkpoint
+        from src.analysis.representations import extract_q_values
+
+        ckpt = load_checkpoint(SPR_RUN, STEP)
+        obs = _get_obs(SPR_RUN, n=4)
+
+        q = extract_q_values(ckpt, obs, batch_size=4)
+
+        assert q.shape == (4, 9)
+        assert q.dtype == np.float32

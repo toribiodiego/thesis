@@ -9,6 +9,7 @@ from src.analysis.replay_buffer import (
     load_replay_buffer,
 )
 from src.analysis.representations import (
+    extract_q_values,
     extract_representations,
     extract_representations_target,
 )
@@ -23,6 +24,7 @@ __all__ = [
     "TransitionData",
     "load_replay_buffer",
     "get_valid_transitions",
+    "extract_q_values",
     "extract_representations",
     "extract_representations_target",
 ]

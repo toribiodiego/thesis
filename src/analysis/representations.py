@@ -4,7 +4,8 @@ Provides functions to run observations through specific parts of
 a loaded RainbowDQNNetwork:
 - FeatureLayer representations (encode + flatten + project) for
   probing methods M9, M10, M14
-- Full-network Q-values (Task 28 checklist items 2-3, added later)
+- Full-network Q-values via C51 expected value for value
+  accuracy analysis (M15)
 """
 
 import jax
@@ -124,5 +125,60 @@ def extract_representations_target(
 
         reps = _extract_batch(obs_f32, keys)
         results.append(np.asarray(reps))
+
+    return np.concatenate(results, axis=0)
+
+
+def extract_q_values(
+    checkpoint: CheckpointData,
+    observations: np.ndarray,
+    batch_size: int = 64,
+    seed: int = 0,
+) -> np.ndarray:
+    """Extract Q-values via the full network forward pass.
+
+    Runs each observation through the complete network (encoder,
+    projection, ReLU, distributional head) and returns the C51
+    expected Q-values: sum(support * softmax(logits)) per action.
+    Used for value accuracy analysis (M15).
+
+    Args:
+        checkpoint: Loaded checkpoint from load_checkpoint.
+        observations: (N, 84, 84, 4) uint8 HWC stacked frames.
+        batch_size: Number of observations per forward pass chunk.
+        seed: RNG seed for dropout keys.
+
+    Returns:
+        (N, num_actions) float32 Q-value array.
+    """
+    net = checkpoint.network_def
+    params = {"params": checkpoint.online_params}
+    support = checkpoint.support
+
+    @jax.jit
+    def _q_batch(obs_batch, keys):
+        def _single(obs, key):
+            output = net.apply(
+                params, obs, support=support,
+                eval_mode=True, key=key,
+                rngs={"dropout": key},
+            )
+            return output.q_values
+        return jax.vmap(_single)(obs_batch, keys)
+
+    rng = jax.random.PRNGKey(seed)
+    n = len(observations)
+    results = []
+
+    for start in range(0, n, batch_size):
+        end = min(start + batch_size, n)
+        chunk = observations[start:end]
+        obs_f32 = chunk.astype(np.float32) / 255.0
+
+        rng, rng_batch = jax.random.split(rng)
+        keys = jax.random.split(rng_batch, len(chunk))
+
+        q_vals = _q_batch(obs_f32, keys)
+        results.append(np.asarray(q_vals))
 
     return np.concatenate(results, axis=0)
