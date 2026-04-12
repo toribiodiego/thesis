@@ -212,3 +212,22 @@ def test_loss_shape_compatibility(tmp_path):
     assert np.isfinite(float(metrics["DQNLoss"])), (
         f"DQNLoss should be finite, got {metrics['DQNLoss']}"
     )
+
+
+@pytest.mark.slow
+def test_spr_target_hard_copy(tmp_path):
+    """SPR target network is an exact copy of online, giving zero divergence.
+
+    SPR uses target_update_period=1 and target_update_tau=1.0, so
+    the target update is target = 1.0*online + 0.0*target = online
+    every step. TargetDivergence should be 0.0 after training.
+    """
+    agent = _create_agent(tmp_path, condition="SPR")
+
+    _fill_replay_and_train(agent)
+
+    metrics = agent._last_metrics
+    assert "TargetDivergence" in metrics
+    assert float(metrics["TargetDivergence"]) == 0.0, (
+        f"SPR TargetDivergence should be 0.0, got {metrics['TargetDivergence']}"
+    )
