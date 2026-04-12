@@ -10,6 +10,7 @@ from src.analysis.replay_buffer import (
 )
 from src.analysis.probing import ProbeResult, train_probe, train_probes_multi
 from src.analysis.returns import compute_returns
+from src.analysis.sequences import SequenceData, get_multi_step_sequences
 from src.analysis.representations import (
     evaluate_transition_model,
     extract_q_values,
@@ -35,4 +36,6 @@ __all__ = [
     "train_probe",
     "train_probes_multi",
     "compute_returns",
+    "SequenceData",
+    "get_multi_step_sequences",
 ]
