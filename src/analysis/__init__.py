@@ -8,6 +8,7 @@ from src.analysis.replay_buffer import (
     get_valid_transitions,
     load_replay_buffer,
 )
+from src.analysis.probing import ProbeResult, train_probe, train_probes_multi
 from src.analysis.representations import (
     evaluate_transition_model,
     extract_q_values,
@@ -29,4 +30,7 @@ __all__ = [
     "extract_q_values",
     "extract_representations",
     "extract_representations_target",
+    "ProbeResult",
+    "train_probe",
+    "train_probes_multi",
 ]
