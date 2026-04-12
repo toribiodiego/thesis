@@ -485,6 +485,7 @@ def main():
     write_progress(run_dir, step, args.total_steps,
                    episode, fps, start_time, status="complete",
                    last_checkpoint_validation=last_ckpt_validation)
+    sync_to_drive(run_dir)
     print(f"Training complete: {step} steps in {elapsed:.1f}s "
           f"({fps:.0f} FPS)")
 
