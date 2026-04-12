@@ -1,6 +1,9 @@
-# GPU environment (CUDA 12.1+)
-# Use this for Google Colab, cloud instances with NVIDIA GPUs
-# Python 3.11 recommended (compatible with Google Colab)
+# GPU environment (CUDA 12.x, Google Colab)
+# Tested on Colab L4/T4 with Python 3.12, 2026-04-12.
+#
+# On Colab, jax and jaxlib are pre-installed. This file
+# pins the versions that work together. Install with:
+#   pip install -r setup/requirements-gpu.txt
 
 # Deep Learning (CUDA 12.1)
 --extra-index-url https://download.pytorch.org/whl/cu121
@@ -18,7 +21,7 @@ ale-py==0.10.1
 # Utilities
 opencv-python==4.10.0.84
 tqdm==4.66.4
-typing-extensions==4.12.2
+typing-extensions>=4.12.2
 
 # Visualization & Logging
 matplotlib==3.9.1
@@ -27,17 +30,26 @@ rich==13.7.1
 # Configuration
 omegaconf==2.3.0
 
-# W&B (optional, for experiment tracking)
-wandb==0.18.1
-
 # JAX ecosystem (for BBF agent conditions)
-# On Colab, jax and jaxlib with CUDA support are pre-installed.
-# These minimums ensure compatibility if installing from scratch.
-jax>=0.4.20
-jaxlib>=0.4.20
-flax>=0.7.0
-optax>=0.1.7
-dopamine-rl>=4.0.9
-gin-config>=0.5.0
+jax==0.7.1
+jaxlib==0.7.1
+flax==0.11.2
+optax==0.2.8
+dopamine-rl==4.1.2
+gin-config==0.5.0
 tensorflow>=2.15.0
+chex>=0.1.88
 etils>=1.5.0
+
+# JAX 0.7 compatibility
+# tfp-nightly replaces tensorflow-probability to avoid
+# removed jax.interpreters.xla imports.
+tfp-nightly
+
+# CUDA runtime alignment (Colab ships CuDNN 9.1 but
+# jaxlib 0.7.1 was compiled against 9.8)
+nvidia-cudnn-cu12>=9.8
+jax-cuda12-plugin==0.7.1
+
+# Atari wrappers (used by BBF codebase internals)
+baselines @ git+https://github.com/openai/baselines.git
