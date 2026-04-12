@@ -183,3 +183,32 @@ def test_reset_fires_at_interval(tmp_path):
     assert "training_step" in first_reset
     assert "cumulative_resets" in first_reset
     assert first_reset["cumulative_resets"] == 1
+
+
+@pytest.mark.slow
+def test_loss_shape_compatibility(tmp_path):
+    """Uniform replay with spr_weight>0 does not crash from shape mismatch.
+
+    Before the fix, loss_weights had shape (batch, subseq_len) from
+    state.shape[0:2] which could not broadcast against the (batch,)
+    loss vector. The fix uses state.shape[0:1]. This test forces
+    uniform replay on BBF to exercise the fixed code path.
+    """
+    agent = _create_agent(
+        tmp_path, condition="BBF",
+        extra_bindings=[
+            'BBFAgent.replay_scheme = "uniform"',
+        ],
+    )
+
+    assert agent.spr_weight > 0, "BBF should have spr_weight > 0"
+    assert agent._replay_scheme == "uniform"
+
+    # If the shape fix is broken, this will raise ValueError
+    _fill_replay_and_train(agent)
+
+    metrics = agent._last_metrics
+    assert "DQNLoss" in metrics, "DQNLoss should be in _last_metrics"
+    assert np.isfinite(float(metrics["DQNLoss"])), (
+        f"DQNLoss should be finite, got {metrics['DQNLoss']}"
+    )
