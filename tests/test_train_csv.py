@@ -158,26 +158,31 @@ def test_write_step_row_missing_metrics_are_empty():
 def test_validate_checkpoint_valid(tmp_path):
     """Valid files pass validation."""
     params = tmp_path / "checkpoint_1000.msgpack"
+    target = tmp_path / "target_1000.msgpack"
     meta = tmp_path / "checkpoint_1000.json"
     params.write_bytes(b"\x80")
+    target.write_bytes(b"\x80")
     meta.write_text("{}")
 
-    result = validate_checkpoint(str(params), str(meta))
+    result = validate_checkpoint(str(params), str(target), str(meta))
     assert result["valid"] is True
     assert result["errors"] == []
     assert result["files"]["params"]["exists"] is True
     assert result["files"]["params"]["size"] > 0
+    assert result["files"]["target_params"]["exists"] is True
     assert result["files"]["metadata"]["exists"] is True
 
 
 def test_validate_checkpoint_missing_file(tmp_path):
     """Missing file triggers validation failure."""
     params = tmp_path / "checkpoint_1000.msgpack"
+    target = tmp_path / "target_1000.msgpack"
     meta = tmp_path / "checkpoint_1000.json"
     params.write_bytes(b"\x80")
+    target.write_bytes(b"\x80")
     # meta not created
 
-    result = validate_checkpoint(str(params), str(meta))
+    result = validate_checkpoint(str(params), str(target), str(meta))
     assert result["valid"] is False
     assert len(result["errors"]) == 1
     assert "metadata missing" in result["errors"][0]
@@ -186,24 +191,27 @@ def test_validate_checkpoint_missing_file(tmp_path):
 def test_validate_checkpoint_empty_file(tmp_path):
     """Zero-byte file triggers validation failure."""
     params = tmp_path / "checkpoint_1000.msgpack"
+    target = tmp_path / "target_1000.msgpack"
     meta = tmp_path / "checkpoint_1000.json"
     params.write_bytes(b"")  # empty
+    target.write_bytes(b"\x80")
     meta.write_text("{}")
 
-    result = validate_checkpoint(str(params), str(meta))
+    result = validate_checkpoint(str(params), str(target), str(meta))
     assert result["valid"] is False
     assert len(result["errors"]) == 1
     assert "params empty" in result["errors"][0]
 
 
 def test_validate_checkpoint_both_missing(tmp_path):
-    """Both files missing produces two errors."""
+    """All three files missing produces three errors."""
     result = validate_checkpoint(
         str(tmp_path / "nope.msgpack"),
+        str(tmp_path / "target_nope.msgpack"),
         str(tmp_path / "nope.json"),
     )
     assert result["valid"] is False
-    assert len(result["errors"]) == 2
+    assert len(result["errors"]) == 3
 
 
 # =============================================================================

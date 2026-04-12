@@ -255,7 +255,7 @@ CHECKPOINT_INTERVAL = 10_000
 PROGRESS_INTERVAL = 100
 
 
-def validate_checkpoint(params_path, meta_path):
+def validate_checkpoint(params_path, target_path, meta_path):
     """Verify checkpoint files exist and have nonzero size.
 
     Returns a dict with 'valid' (bool), 'files' (per-file details),
@@ -264,7 +264,9 @@ def validate_checkpoint(params_path, meta_path):
     """
     files = {}
     errors = []
-    for path, label in [(params_path, "params"), (meta_path, "metadata")]:
+    for path, label in [(params_path, "params"),
+                        (target_path, "target_params"),
+                        (meta_path, "metadata")]:
         if not os.path.isfile(path):
             errors.append(f"{label} missing: {path}")
             files[label] = {"path": path, "exists": False, "size": 0}
@@ -278,16 +280,24 @@ def validate_checkpoint(params_path, meta_path):
 
 
 def save_checkpoint(agent, step, run_dir):
-    """Save online_params as msgpack and metadata as JSON."""
+    """Save online and target params as msgpack and metadata as JSON."""
     from flax.serialization import msgpack_serialize, to_state_dict
 
     ckpt_dir = os.path.join(run_dir, "checkpoints")
 
-    # Params -> msgpack (preserves pytree structure natively)
+    # Online params -> msgpack
     state_dict = to_state_dict(agent.online_params)
     params_path = os.path.join(ckpt_dir, f"checkpoint_{step}.msgpack")
     with open(params_path, "wb") as f:
         f.write(msgpack_serialize(state_dict))
+
+    # Target params -> msgpack (irreplaceable for EMA conditions;
+    # the target is a running average that can't be reconstructed
+    # from the 10 online checkpoints alone)
+    target_dict = to_state_dict(agent.target_network_params)
+    target_path = os.path.join(ckpt_dir, f"target_{step}.msgpack")
+    with open(target_path, "wb") as f:
+        f.write(msgpack_serialize(target_dict))
 
     # Metadata -> JSON sidecar
     meta = {
@@ -312,7 +322,7 @@ def save_checkpoint(agent, step, run_dir):
             json.dump(agent._reset_log, f, indent=2)
 
     # Validate checkpoint files exist and have nonzero size
-    validation = validate_checkpoint(params_path, meta_path)
+    validation = validate_checkpoint(params_path, target_path, meta_path)
 
     # Incremental Drive sync (Colab only)
     sync_to_drive(run_dir)
