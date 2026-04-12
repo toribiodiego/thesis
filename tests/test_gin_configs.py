@@ -64,14 +64,14 @@ GAMES = {
 
 # Expected resolved values per condition.
 EXPECTED = {
-    "BBF":     {"spr_weight": 5, "jumps": 5, "log_every": 1, "data_augmentation": False, "reset_every": 20_000},
-    "BBFc":    {"spr_weight": 0, "jumps": 0, "log_every": 1, "data_augmentation": False, "reset_every": 20_000},
-    "SR-SPR":  {"spr_weight": 5, "jumps": 5, "log_every": 1, "data_augmentation": False, "reset_every": 20_000, "replay_ratio": 64},
-    "SR-SPRc": {"spr_weight": 0, "jumps": 0, "log_every": 1, "data_augmentation": False, "reset_every": 20_000, "replay_ratio": 64},
-    "SPR":     {"spr_weight": 5, "jumps": 5, "log_every": 1, "data_augmentation": False, "noisy": True},
-    "SPRc":    {"spr_weight": 0, "jumps": 0, "log_every": 1, "data_augmentation": False, "noisy": True},
-    "DER":     {"spr_weight": 5, "jumps": 5, "log_every": 1, "data_augmentation": False, "replay_ratio": 1, "update_horizon": 20, "target_update_period": 8000, "target_update_tau": 1.0, "JaxDQNAgent.min_replay_history": 1600},
-    "DERc":    {"spr_weight": 0, "jumps": 0, "log_every": 1, "data_augmentation": False, "replay_ratio": 1, "update_horizon": 20, "target_update_period": 8000, "target_update_tau": 1.0, "JaxDQNAgent.min_replay_history": 1600},
+    "BBF":     {"spr_weight": 5, "jumps": 5, "log_every": 10, "data_augmentation": False, "reset_every": 20_000},
+    "BBFc":    {"spr_weight": 0, "jumps": 0, "log_every": 10, "data_augmentation": False, "reset_every": 20_000},
+    "SR-SPR":  {"spr_weight": 5, "jumps": 5, "log_every": 10, "data_augmentation": False, "reset_every": 20_000, "replay_ratio": 64},
+    "SR-SPRc": {"spr_weight": 0, "jumps": 0, "log_every": 10, "data_augmentation": False, "reset_every": 20_000, "replay_ratio": 64},
+    "SPR":     {"spr_weight": 5, "jumps": 5, "log_every": 10, "data_augmentation": False, "noisy": True},
+    "SPRc":    {"spr_weight": 0, "jumps": 0, "log_every": 10, "data_augmentation": False, "noisy": True},
+    "DER":     {"spr_weight": 5, "jumps": 5, "log_every": 10, "data_augmentation": False, "replay_ratio": 1, "update_horizon": 20, "target_update_period": 8000, "target_update_tau": 1.0, "JaxDQNAgent.min_replay_history": 1600},
+    "DERc":    {"spr_weight": 0, "jumps": 0, "log_every": 10, "data_augmentation": False, "replay_ratio": 1, "update_horizon": 20, "target_update_period": 8000, "target_update_tau": 1.0, "JaxDQNAgent.min_replay_history": 1600},
 }
 
 
@@ -122,3 +122,18 @@ class TestConditionParameterValues:
             assert resolved == expected, (
                 f"{condition}: {param} expected {expected}, got {resolved}"
             )
+
+
+class TestControlConditionResetSafety:
+    """Control conditions with resets must not reference transition_model
+    in shrink_perturb_keys, because jumps=0 means no transition model
+    is created. Regression test for BBFc crash at step 20K."""
+
+    @pytest.mark.parametrize("condition", ["BBFc", "SR-SPRc"])
+    def test_no_transition_model_in_shrink_perturb_keys(self, condition):
+        _load_config(condition, "boxing.gin")
+        keys = gin.query_parameter("BBFAgent.shrink_perturb_keys")
+        assert "transition_model" not in keys, (
+            f"{condition}: shrink_perturb_keys={keys!r} includes "
+            f"transition_model but jumps=0 (no transition model exists)"
+        )

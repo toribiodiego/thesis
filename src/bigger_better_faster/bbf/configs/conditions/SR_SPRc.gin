@@ -11,3 +11,4 @@ BBFAgent.batches_to_group = 2
 BBFAgent.reset_every = 20000
 BBFAgent.spr_weight = 0
 BBFAgent.jumps = 0
+BBFAgent.shrink_perturb_keys = "encoder"

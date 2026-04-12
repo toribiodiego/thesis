@@ -8,3 +8,4 @@ BBFAgent.log_every = 10
 BBFAgent.data_augmentation = False
 BBFAgent.spr_weight = 0
 BBFAgent.jumps = 0
+BBFAgent.shrink_perturb_keys = "encoder"
