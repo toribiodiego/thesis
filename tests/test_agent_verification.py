@@ -302,3 +302,33 @@ def test_sr_spr_ema_target_divergence(tmp_path):
         "SR-SPR TargetDivergence should be nonzero (EMA lag), "
         f"got {metrics['TargetDivergence']}"
     )
+
+
+@pytest.mark.slow
+def test_der_target_copy_sawtooth(tmp_path):
+    """DER hard-copies target every 8000 steps, producing nonzero divergence between copies.
+
+    With target_update_period=8000 and tau=1.0, the target is a stale
+    snapshot. After a few training steps (well under 8000), online
+    params have diverged, so TargetDivergence should be nonzero.
+    """
+    agent = _create_agent(
+        tmp_path, condition="DER",
+        extra_bindings=[
+            # Override replay_ratio so update_period=1 (otherwise
+            # DER's replay_ratio=1 gives update_period=32, and
+            # training never fires within 80 transitions).
+            "BBFAgent.replay_ratio = 64",
+        ],
+    )
+
+    assert agent.target_update_period == 8000
+
+    _fill_replay_and_train(agent)
+
+    metrics = agent._last_metrics
+    assert "TargetDivergence" in metrics
+    assert float(metrics["TargetDivergence"]) > 0, (
+        "DER TargetDivergence should be nonzero between hard copies, "
+        f"got {metrics['TargetDivergence']}"
+    )
