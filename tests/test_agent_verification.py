@@ -136,3 +136,20 @@ def test_bbf_spr_loss_nonzero(tmp_path):
     assert float(metrics["SPRLoss"]) > 0, (
         f"BBF SPR loss should be nonzero, got {metrics['SPRLoss']}"
     )
+
+
+@pytest.mark.slow
+def test_bbfc_spr_loss_zero(tmp_path):
+    """BBFc (spr_weight=0, jumps=0) produces zero SPR loss after training."""
+    agent = _create_agent(tmp_path, condition="BBFc")
+
+    assert agent.spr_weight == 0, "BBFc should have spr_weight == 0"
+    assert agent._jumps == 0, "BBFc should have jumps == 0"
+
+    _fill_replay_and_train(agent)
+
+    metrics = agent._last_metrics
+    assert "SPRLoss" in metrics, "SPRLoss should be in _last_metrics"
+    assert float(metrics["SPRLoss"]) == 0, (
+        f"BBFc SPR loss should be zero, got {metrics['SPRLoss']}"
+    )
