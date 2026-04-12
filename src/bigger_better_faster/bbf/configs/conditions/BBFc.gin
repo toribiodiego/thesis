@@ -4,7 +4,7 @@
 # transition model rollout. All other BBF parameters inherited.
 import bigger_better_faster.bbf.agents.metric_agent
 
-BBFAgent.log_every = 100
+BBFAgent.log_every = 10
 BBFAgent.data_augmentation = False
 BBFAgent.spr_weight = 0
 BBFAgent.jumps = 0

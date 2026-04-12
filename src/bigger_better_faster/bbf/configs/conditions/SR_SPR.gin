@@ -4,7 +4,7 @@
 # Nature CNN encoder, spr_weight=5, gamma=0.99 (no scheduler).
 import bigger_better_faster.bbf.agents.metric_agent
 
-BBFAgent.log_every = 100
+BBFAgent.log_every = 10
 BBFAgent.data_augmentation = False
 BBFAgent.replay_ratio = 64
 BBFAgent.batches_to_group = 2
