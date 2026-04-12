@@ -117,6 +117,57 @@ def _fill_replay_and_train(agent, num_transitions=80, num_actions=4):
 
 
 # =========================================================================
+# Fast tests (init-time properties, no training needed)
+# =========================================================================
+
+
+def _forward_pass(agent):
+    """Run a single forward pass through the network and return output."""
+    obs = np.zeros((1, *agent.observation_shape, 1), dtype=np.uint8)
+    agent.reset_all(obs)
+    state = agent.state.astype(agent.dtype)
+    rng = jax.random.PRNGKey(0)
+    actions = jax.numpy.zeros((5,))
+    output = agent.network_def.apply(
+        agent.online_params,
+        x=state,
+        actions=actions,
+        do_rollout=False,
+        eval_mode=True,
+        key=rng,
+        support=agent._support,
+    )
+    return output
+
+
+def test_impala_encoder_spatial_output(tmp_path):
+    """BBF IMPALA encoder produces 11x11x128 spatial output from 84x84 input."""
+    agent = _create_agent(tmp_path, condition="BBF")
+    output = _forward_pass(agent)
+    latent = np.asarray(output.latent)
+    # spatial_latent shape: (height, width, channels) without batch
+    assert latent.shape[-3:] == (11, 11, 128), (
+        f"Expected IMPALA spatial output (11, 11, 128), got {latent.shape}"
+    )
+
+
+def test_c51_probabilities_valid(tmp_path):
+    """C51 probabilities from the distributional head sum to 1 per action."""
+    agent = _create_agent(tmp_path, condition="BBF")
+    output = _forward_pass(agent)
+    probs = np.asarray(output.probabilities)
+    # probabilities shape: (num_actions, num_atoms)
+    assert probs.shape[-1] == 51, (
+        f"Expected 51 atoms, got {probs.shape[-1]}"
+    )
+    per_action_sums = probs.sum(axis=-1)
+    np.testing.assert_allclose(per_action_sums, 1.0, atol=1e-5, err_msg=(
+        f"C51 probabilities should sum to 1, got sums {per_action_sums}"
+    ))
+    assert (probs >= 0).all(), "Probabilities should be non-negative"
+
+
+# =========================================================================
 # Slow tests (require training / JIT compilation)
 # =========================================================================
 
