@@ -41,7 +41,7 @@ import flax.linen as nn
 import jax
 import numpy as np
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 DEAD_NEURON_THRESHOLD = 0.025
 
