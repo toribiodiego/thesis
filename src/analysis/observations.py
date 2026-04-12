@@ -2,11 +2,14 @@
 
 Runs a trained agent's greedy policy (or random policy) in an Atari
 environment, collecting frame-stacked observations, actions, rewards,
-and episode boundaries. Observations are stored in the network's
+and episode boundaries. Optionally collects AtariARI per-step RAM
+labels for probing analysis. Observations are stored in the network's
 expected HWC format (84, 84, 4) as uint8.
 """
 
-from dataclasses import dataclass
+from collections import defaultdict
+from dataclasses import dataclass, field
+from typing import Optional
 
 import numpy as np
 
@@ -23,6 +26,8 @@ class CollectedData:
         rewards: (N,) float32 rewards received (clipped).
         terminals: (N,) bool, True when episode ended.
         episode_returns: list of float, total return per episode.
+        labels: Dict mapping variable name to (N,) int arrays of
+            AtariARI RAM labels, or None if labels not collected.
     """
 
     observations: np.ndarray
@@ -30,6 +35,7 @@ class CollectedData:
     rewards: np.ndarray
     terminals: np.ndarray
     episode_returns: list
+    labels: Optional[dict] = None
 
 
 def _game_to_env_id(game: str) -> str:
@@ -44,7 +50,45 @@ def _game_to_env_id(game: str) -> str:
     return f"ALE/{game}-v5"
 
 
-def _run_collection_loop(env, num_steps, action_fn, seed):
+def _wrap_with_atariari(env):
+    """Wrap an environment with AtariARIWrapper for RAM label collection.
+
+    Handles the ALE/Game-v5 ID format by temporarily setting a
+    compatible spec ID that AtariARIWrapper can parse.
+
+    Returns:
+        Wrapped environment, or raises ImportError if atariari is
+        not installed, or ValueError if the game is not annotated.
+    """
+    from atariari.benchmark.wrapper import AtariARIWrapper, atari_dict
+
+    # Extract game name from ALE/GameName-v5 format
+    spec_id = env.spec.id  # e.g., 'ALE/Boxing-v5'
+    if "/" in spec_id:
+        game_part = spec_id.split("/")[1]  # 'Boxing-v5'
+    else:
+        game_part = spec_id
+
+    game_name = game_part.split("-")[0]  # 'Boxing'
+
+    if game_name.lower() not in atari_dict:
+        raise ValueError(
+            f"{game_name} is not annotated in AtariARI. "
+            f"Supported: {sorted(atari_dict.keys())}"
+        )
+
+    # AtariARIWrapper parses env.spec.id with split("-")[0].split("No")[0]
+    # which fails for ALE/Boxing-v5. We subclass to fix the game name.
+    class _FixedAtariARIWrapper(AtariARIWrapper):
+        def __init__(self, env, fixed_name):
+            # Skip AtariARIWrapper.__init__ assertion by setting env_name directly
+            super(AtariARIWrapper, self).__init__(env)  # call InfoWrapper.__init__
+            self.env_name = f"{fixed_name}NoFrameskip-v4"
+
+    return _FixedAtariARIWrapper(env, game_name)
+
+
+def _run_collection_loop(env, num_steps, action_fn, seed, collect_labels=False):
     """Shared environment loop for both greedy and random collection.
 
     Args:
@@ -52,6 +96,7 @@ def _run_collection_loop(env, num_steps, action_fn, seed):
         num_steps: Number of steps to collect.
         action_fn: Callable (obs_hwc, step) -> int action.
         seed: Seed for env.reset().
+        collect_labels: If True, extract AtariARI labels from info dict.
 
     Returns:
         CollectedData.
@@ -61,6 +106,7 @@ def _run_collection_loop(env, num_steps, action_fn, seed):
     rewards = np.empty(num_steps, dtype=np.float32)
     terminals = np.empty(num_steps, dtype=bool)
     episode_returns = []
+    label_lists = defaultdict(list) if collect_labels else None
 
     obs_chw, _ = env.reset(seed=seed)
     obs_hwc = np.transpose(obs_chw, (1, 2, 0))  # CHW -> HWC
@@ -70,13 +116,17 @@ def _run_collection_loop(env, num_steps, action_fn, seed):
         observations[t] = obs_hwc
         action = action_fn(obs_hwc, t)
 
-        obs_chw_next, reward, terminated, truncated, _ = env.step(action)
+        obs_chw_next, reward, terminated, truncated, info = env.step(action)
         done = terminated or truncated
 
         actions[t] = action
         rewards[t] = reward
         terminals[t] = done
         episode_return += reward
+
+        if collect_labels and "labels" in info:
+            for var_name, value in info["labels"].items():
+                label_lists[var_name].append(int(value))
 
         if done:
             episode_returns.append(episode_return)
@@ -88,12 +138,17 @@ def _run_collection_loop(env, num_steps, action_fn, seed):
 
     env.close()
 
+    labels = None
+    if label_lists:
+        labels = {k: np.array(v, dtype=np.int32) for k, v in label_lists.items()}
+
     return CollectedData(
         observations=observations,
         actions=actions,
         rewards=rewards,
         terminals=terminals,
         episode_returns=episode_returns,
+        labels=labels,
     )
 
 
@@ -104,6 +159,7 @@ def collect_greedy(
     epsilon: float = 0.05,
     seed: int = 0,
     noop_max: int = 30,
+    collect_labels: bool = False,
 ) -> CollectedData:
     """Collect observations using an epsilon-greedy policy.
 
@@ -122,9 +178,13 @@ def collect_greedy(
         epsilon: Exploration rate (default 0.05).
         seed: Random seed for environment and action selection.
         noop_max: Maximum no-ops on reset (default 30).
+        collect_labels: If True, wrap env with AtariARIWrapper to
+            collect per-step RAM labels. Requires atariari package
+            and an annotated game.
 
     Returns:
-        CollectedData with observations, actions, rewards, terminals.
+        CollectedData with observations, actions, rewards, terminals,
+        and labels (dict of per-variable arrays if collect_labels=True).
     """
     import jax
     import jax.numpy as jnp
@@ -137,6 +197,8 @@ def collect_greedy(
         episode_life=False,
         repeat_action_probability=0.0,
     )
+    if collect_labels:
+        env = _wrap_with_atariari(env)
 
     # Build JIT-compiled Q-value function
     net = checkpoint.network_def
@@ -163,7 +225,7 @@ def collect_greedy(
         q_values = q_fn(obs_batch, rng_act)
         return int(jnp.argmax(q_values))
 
-    return _run_collection_loop(env, num_steps, action_fn, seed)
+    return _run_collection_loop(env, num_steps, action_fn, seed, collect_labels)
 
 
 def collect_random(
@@ -172,6 +234,7 @@ def collect_random(
     num_steps: int = 10_000,
     seed: int = 0,
     noop_max: int = 30,
+    collect_labels: bool = False,
 ) -> CollectedData:
     """Collect observations using a uniform random policy.
 
@@ -188,9 +251,12 @@ def collect_random(
         num_steps: Number of environment steps to collect.
         seed: Random seed for environment and action selection.
         noop_max: Maximum no-ops on reset (default 30).
+        collect_labels: If True, wrap env with AtariARIWrapper to
+            collect per-step RAM labels.
 
     Returns:
-        CollectedData with observations, actions, rewards, terminals.
+        CollectedData with observations, actions, rewards, terminals,
+        and labels (dict of per-variable arrays if collect_labels=True).
     """
     env_id = _game_to_env_id(game)
     env = make_atari_env(
@@ -200,10 +266,12 @@ def collect_random(
         episode_life=False,
         repeat_action_probability=0.0,
     )
+    if collect_labels:
+        env = _wrap_with_atariari(env)
 
     np_rng = np.random.RandomState(seed)
 
     def action_fn(obs_hwc, t):
         return int(np_rng.randint(num_actions))
 
-    return _run_collection_loop(env, num_steps, action_fn, seed)
+    return _run_collection_loop(env, num_steps, action_fn, seed, collect_labels)

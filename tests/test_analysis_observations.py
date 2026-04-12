@@ -162,3 +162,58 @@ class TestCollectRandom:
 
         assert np.array_equal(data1.actions, data2.actions)
         assert np.array_equal(data1.observations, data2.observations)
+
+    def test_labels_none_by_default(self):
+        from src.analysis.observations import collect_random
+
+        data = collect_random(
+            game="CrazyClimber", num_actions=9, num_steps=10,
+            seed=42, noop_max=0,
+        )
+        assert data.labels is None
+
+
+# ---------------------------------------------------------------------------
+# AtariARI label collection (needs ale-py + atariari)
+# ---------------------------------------------------------------------------
+
+_has_atariari = True
+try:
+    from atariari.benchmark.wrapper import atari_dict  # noqa: F401
+except ImportError:
+    _has_atariari = False
+
+
+@pytest.mark.skipif(
+    not (_has_ale and _has_atariari), reason="ale-py or atariari not installed"
+)
+class TestAtariARILabels:
+    """Test label collection with an annotated game (Boxing)."""
+
+    def test_random_collect_with_labels(self):
+        from src.analysis.observations import collect_random
+
+        data = collect_random(
+            game="Boxing", num_actions=18, num_steps=20,
+            seed=42, noop_max=0, collect_labels=True,
+        )
+
+        assert data.labels is not None
+        assert isinstance(data.labels, dict)
+        assert len(data.labels) > 0
+        # Boxing has 7 annotated variables
+        assert "player_x" in data.labels
+        assert "enemy_x" in data.labels
+        # Each label array has length == num_steps
+        for var_name, arr in data.labels.items():
+            assert arr.shape == (20,), f"{var_name} has wrong shape"
+            assert arr.dtype == np.int32
+
+    def test_unannotated_game_raises(self):
+        from src.analysis.observations import collect_random
+
+        with pytest.raises(ValueError, match="not annotated"):
+            collect_random(
+                game="CrazyClimber", num_actions=9, num_steps=5,
+                seed=42, noop_max=0, collect_labels=True,
+            )
