@@ -22,9 +22,11 @@ import time
 # Unbuffered stdout for real-time progress in non-TTY environments (Colab, CI)
 sys.stdout.reconfigure(line_buffering=True)
 
-# Prevent TensorFlow from pre-allocating all GPU memory.
-# Without this, TF grabs 100% VRAM on import, blocking concurrent runs.
+# Prevent TensorFlow and JAX from pre-allocating all GPU memory.
+# Without these, TF grabs 100% and JAX grabs 75% of VRAM on import,
+# making concurrent runs impossible.
 os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
+os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
 
 # Add src/ to path so BBF package imports work.
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
