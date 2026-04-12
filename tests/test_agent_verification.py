@@ -167,6 +167,40 @@ def test_c51_probabilities_valid(tmp_path):
     assert (probs >= 0).all(), "Probabilities should be non-negative"
 
 
+def test_optimizer_mask_keys(tmp_path):
+    """Optimizer masks partition all param keys into encoder and head groups."""
+    agent = _create_agent(tmp_path, condition="BBF")
+
+    param_keys = set(agent.online_params["params"].keys())
+    encoder_true = {k for k, v in agent.encoder_mask["params"].items() if v}
+    head_true = {k for k, v in agent.head_mask["params"].items() if v}
+
+    # Encoder group: encoder + transition_model
+    assert encoder_true == {"encoder", "transition_model"}, (
+        f"Encoder mask should select encoder and transition_model, got {encoder_true}"
+    )
+    # Head group: projection + predictor + head
+    assert head_true == {"projection", "predictor", "head"}, (
+        f"Head mask should select projection, predictor, head, got {head_true}"
+    )
+    # Masks are exhaustive and non-overlapping
+    assert encoder_true | head_true == param_keys, (
+        f"Masks should cover all param keys. Missing: {param_keys - (encoder_true | head_true)}"
+    )
+    assert encoder_true & head_true == set(), "Masks should not overlap"
+
+
+def test_gradient_norm_keys(tmp_path):
+    """Online params have the expected top-level keys for per-layer gradient norms."""
+    agent = _create_agent(tmp_path, condition="BBF")
+
+    param_keys = set(agent.online_params["params"].keys())
+    expected = {"encoder", "transition_model", "projection", "predictor", "head"}
+    assert param_keys == expected, (
+        f"Expected param keys {expected}, got {param_keys}"
+    )
+
+
 # =========================================================================
 # Slow tests (require training / JIT compilation)
 # =========================================================================
