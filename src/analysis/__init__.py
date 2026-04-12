@@ -2,6 +2,12 @@
 
 from src.analysis.checkpoint import CheckpointData, load_checkpoint
 from src.analysis.observations import CollectedData, collect_greedy, collect_random
+from src.analysis.replay_buffer import (
+    ReplayData,
+    TransitionData,
+    get_valid_transitions,
+    load_replay_buffer,
+)
 
 __all__ = [
     "CheckpointData",
@@ -9,4 +15,8 @@ __all__ = [
     "CollectedData",
     "collect_greedy",
     "collect_random",
+    "ReplayData",
+    "TransitionData",
+    "load_replay_buffer",
+    "get_valid_transitions",
 ]
