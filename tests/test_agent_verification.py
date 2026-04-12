@@ -201,6 +201,79 @@ def test_gradient_norm_keys(tmp_path):
     )
 
 
+def test_spr_nature_cnn_spatial_output(tmp_path):
+    """SPR Nature CNN encoder produces 11x11x64 spatial output from 84x84 input."""
+    agent = _create_agent(tmp_path, condition="SPR")
+    output = _forward_pass(agent)
+    latent = np.asarray(output.latent)
+    assert latent.shape[-3:] == (11, 11, 64), (
+        f"Expected Nature CNN spatial output (11, 11, 64), got {latent.shape}"
+    )
+
+
+def test_spr_no_resets(tmp_path):
+    """SPR has no periodic resets (reset_every defaults to -1)."""
+    agent = _create_agent(tmp_path, condition="SPR")
+    assert agent.reset_every == -1, (
+        f"SPR reset_every should be -1, got {agent.reset_every}"
+    )
+
+
+def test_spr_fixed_hyperparameters(tmp_path):
+    """SPR uses fixed gamma=0.99 and n_step=10 with no scheduling."""
+    agent = _create_agent(tmp_path, condition="SPR")
+    # Schedulers should return constants regardless of cycle step
+    assert float(agent.gamma_scheduler(0)) == 0.99
+    assert float(agent.gamma_scheduler(5000)) == 0.99
+    assert int(agent.update_horizon_scheduler(0)) == 10
+    assert int(agent.update_horizon_scheduler(5000)) == 10
+
+
+def test_spr_noisy_nets(tmp_path):
+    """SPR uses noisy nets for exploration with epsilon forced to zero."""
+    agent = _create_agent(tmp_path, condition="SPR")
+    assert agent._noisy is True, "SPR should have noisy=True"
+    assert agent.epsilon_train == 0, (
+        f"SPR epsilon_train should be 0, got {agent.epsilon_train}"
+    )
+
+
+def test_sr_spr_shrink_perturb_factors(tmp_path):
+    """SR-SPR uses shrink_factor=0.8 and perturb_factor=0.2."""
+    agent = _create_agent(tmp_path, condition="SR_SPR")
+    assert agent.shrink_factor == 0.8, (
+        f"SR-SPR shrink_factor should be 0.8, got {agent.shrink_factor}"
+    )
+    assert agent.perturb_factor == 0.2, (
+        f"SR-SPR perturb_factor should be 0.2, got {agent.perturb_factor}"
+    )
+
+
+def test_sr_spr_target_action_selection(tmp_path):
+    """SR-SPR selects actions using the target network during training."""
+    agent = _create_agent(tmp_path, condition="SR_SPR")
+    assert agent.target_action_selection is True, (
+        "SR-SPR should have target_action_selection=True"
+    )
+
+
+def test_der_config_structure(tmp_path):
+    """DER differs from DERc by exactly spr_weight and jumps."""
+    agent_der = _create_agent(tmp_path, condition="DER")
+    gin.clear_config()
+    agent_derc = _create_agent(tmp_path, condition="DERc")
+
+    # DER has SPR system active
+    assert agent_der.spr_weight == 5
+    assert agent_der._jumps == 5
+    # DERc has SPR system off
+    assert agent_derc.spr_weight == 0
+    assert agent_derc._jumps == 0
+    # Both share the same base parameters
+    assert agent_der.target_update_period == agent_derc.target_update_period == 8000
+    assert agent_der.learning_rate == agent_derc.learning_rate
+
+
 # =========================================================================
 # Slow tests (require training / JIT compilation)
 # =========================================================================
