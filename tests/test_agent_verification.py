@@ -153,3 +153,33 @@ def test_bbfc_spr_loss_zero(tmp_path):
     assert float(metrics["SPRLoss"]) == 0, (
         f"BBFc SPR loss should be zero, got {metrics['SPRLoss']}"
     )
+
+
+@pytest.mark.slow
+def test_reset_fires_at_interval(tmp_path):
+    """BBF reset triggers after training_steps exceeds next_reset.
+
+    Uses a small reset_every=5 and reset_offset=0 so the first reset
+    fires within a short training run. Verifies MetricBBFAgent._reset_log
+    captures the event.
+    """
+    agent = _create_agent(
+        tmp_path, condition="BBF",
+        extra_bindings=[
+            "BBFAgent.reset_every = 5",
+            "BBFAgent.reset_offset = 0",
+        ],
+    )
+
+    assert agent.reset_every == 5, "reset_every should be overridden to 5"
+    assert agent.next_reset == 5, "next_reset should be reset_every + offset = 5"
+
+    _fill_replay_and_train(agent)
+
+    assert len(agent._reset_log) >= 1, (
+        f"Expected at least one reset, got {len(agent._reset_log)}"
+    )
+    first_reset = agent._reset_log[0]
+    assert "training_step" in first_reset
+    assert "cumulative_resets" in first_reset
+    assert first_reset["cumulative_resets"] == 1
