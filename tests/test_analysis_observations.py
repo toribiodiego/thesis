@@ -1,8 +1,8 @@
 """Tests for the observation collection module.
 
-Unit tests for helpers (no environment needed) and a small smoke
-test for greedy collection using a real checkpoint + Atari env.
-All CPU-only; the smoke test runs only 20 steps.
+Unit tests for helpers (no environment needed) and small smoke
+tests for greedy and random collection. All CPU-only; smoke
+tests run only 20 steps.
 """
 
 import os
@@ -120,3 +120,45 @@ class TestCollectGreedy:
 
         assert data.observations.shape == (20, 84, 84, 4)
         assert np.all(data.actions < ckpt.num_actions)
+
+
+# ---------------------------------------------------------------------------
+# Random collection smoke test (needs ale-py only, no JAX or checkpoint)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.skipif(not _has_ale, reason="ale-py not installed")
+class TestCollectRandom:
+    """Smoke test: 20 steps of random collection."""
+
+    def test_random_collect_shapes(self):
+        from src.analysis.observations import collect_random
+
+        data = collect_random(
+            game="CrazyClimber", num_actions=9, num_steps=20,
+            seed=42, noop_max=0,
+        )
+
+        assert isinstance(data, CollectedData)
+        assert data.observations.shape == (20, 84, 84, 4)
+        assert data.observations.dtype == np.uint8
+        assert data.actions.shape == (20,)
+        assert data.rewards.shape == (20,)
+        assert data.terminals.shape == (20,)
+        assert np.all(data.actions >= 0)
+        assert np.all(data.actions < 9)
+
+    def test_random_collect_deterministic(self):
+        from src.analysis.observations import collect_random
+
+        data1 = collect_random(
+            game="CrazyClimber", num_actions=9, num_steps=20,
+            seed=42, noop_max=0,
+        )
+        data2 = collect_random(
+            game="CrazyClimber", num_actions=9, num_steps=20,
+            seed=42, noop_max=0,
+        )
+
+        assert np.array_equal(data1.actions, data2.actions)
+        assert np.array_equal(data1.observations, data2.observations)
