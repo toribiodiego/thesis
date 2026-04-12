@@ -231,3 +231,23 @@ def test_spr_target_hard_copy(tmp_path):
     assert float(metrics["TargetDivergence"]) == 0.0, (
         f"SPR TargetDivergence should be 0.0, got {metrics['TargetDivergence']}"
     )
+
+
+@pytest.mark.slow
+def test_sr_spr_ema_target_divergence(tmp_path):
+    """SR-SPR EMA target update produces nonzero TargetDivergence.
+
+    SR-SPR uses tau=0.005 with period=1, so the target network lags
+    behind online via slow EMA. After training, the param difference
+    should be nonzero.
+    """
+    agent = _create_agent(tmp_path, condition="SR_SPR")
+
+    _fill_replay_and_train(agent)
+
+    metrics = agent._last_metrics
+    assert "TargetDivergence" in metrics
+    assert float(metrics["TargetDivergence"]) > 0, (
+        "SR-SPR TargetDivergence should be nonzero (EMA lag), "
+        f"got {metrics['TargetDivergence']}"
+    )
