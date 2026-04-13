@@ -112,129 +112,96 @@ def main():
                         help="Run directory for checkpoint A")
     parser.add_argument("--run-dir-b", type=str, default=None,
                         help="Run directory for checkpoint B (cross-condition mode)")
-    parser.add_argument("--step-a", type=int, required=True,
-                        help="Checkpoint step for A")
-    parser.add_argument("--step-b", type=int, default=None,
-                        help="Checkpoint step for B (cross-checkpoint mode)")
-    parser.add_argument("--game", type=str, required=True,
-                        help="Game name for observation collection")
+    parser.add_argument("--steps", nargs="+", required=True,
+                        help="Checkpoint steps (e.g., 10000 50000 100000) or 'all'")
+    parser.add_argument("--game", type=str, default=None,
+                        help="Game name (required for greedy/random source)")
     parser.add_argument("--source", choices=["greedy", "random", "replay"],
-                        default="random",
-                        help="Observation source (default: random)")
+                        default="replay",
+                        help="Observation source (default: replay)")
     parser.add_argument("--num-steps", type=int, default=1000,
-                        help="Steps for observation collection (default: 1000)")
+                        help="Steps for greedy/random collection (default: 1000)")
     parser.add_argument("--mode", required=True,
-                        choices=["cross-checkpoint", "cross-condition", "online-target"])
+                        choices=["cross-condition", "online-target"])
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--batch-size", type=int, default=64)
-    parser.add_argument("--output", type=str, default=None)
+    parser.add_argument("--output", type=str, default=None,
+                        help="Path to save CSV results")
     args = parser.parse_args()
 
-    # Validate mode-specific args
-    if args.mode == "cross-checkpoint":
-        if args.step_b is None:
-            parser.error("--step-b required for cross-checkpoint mode")
-        args.run_dir_b = args.run_dir_a
-    elif args.mode == "cross-condition":
-        if args.run_dir_b is None:
-            parser.error("--run-dir-b required for cross-condition mode")
-        if args.step_b is None:
-            args.step_b = args.step_a
-    elif args.mode == "online-target":
-        args.run_dir_b = args.run_dir_a
-        args.step_b = args.step_a
+    if args.mode == "cross-condition" and args.run_dir_b is None:
+        parser.error("--run-dir-b required for cross-condition mode")
 
-    from src.analysis.checkpoint import load_checkpoint
+    import gc
+    import pandas as pd
+    from src.analysis.checkpoint import discover_checkpoints, load_checkpoint
     from src.analysis.representations import (
         extract_representations,
         extract_representations_target,
     )
 
-    # -- Load checkpoint(s) --------------------------------------------------
-    print(f"Loading checkpoint A: {args.run_dir_a} step {args.step_a}")
-    ckpt_a = load_checkpoint(args.run_dir_a, args.step_a)
-    print(f"  encoder: {ckpt_a.encoder_type}, hidden_dim: {ckpt_a.hidden_dim}")
-
-    if args.mode != "online-target":
-        print(f"Loading checkpoint B: {args.run_dir_b} step {args.step_b}")
-        ckpt_b = load_checkpoint(args.run_dir_b, args.step_b)
+    if args.steps == ["all"]:
+        steps = discover_checkpoints(args.run_dir_a)
+        if not steps:
+            raise ValueError(f"No checkpoints found in {args.run_dir_a}")
     else:
-        ckpt_b = ckpt_a
-        if ckpt_a.target_params is None:
-            print("WARNING: No target params in checkpoint. "
-                  "Online-target CKA will be 1.0 (same params).")
+        steps = sorted(int(s) for s in args.steps)
 
-    # -- Collect observations (shared across both representations) -----------
-    print(f"Collecting observations ({args.source}, {args.num_steps} steps)...")
-    t0 = time.time()
-    observations = _get_observations(
-        args.game, args.num_steps, ckpt_a, args.seed, args.source,
-        run_dir=args.run_dir_a, step=args.step_a,
-    )
-    print(f"  {len(observations)} observations ({time.time() - t0:.1f}s)")
+    print(f"CKA ({args.mode}): {args.run_dir_a}")
+    if args.mode == "cross-condition":
+        print(f"  vs: {args.run_dir_b}")
+    print(f"  checkpoints: {steps}")
 
-    # -- Extract representations ---------------------------------------------
-    print("Extracting representations...")
-    t0 = time.time()
+    all_rows = []
 
-    reps_a = extract_representations(
-        ckpt_a, observations, batch_size=args.batch_size, seed=args.seed,
-    )
-    print(f"  A (online): {reps_a.shape}")
+    for step in steps:
+        print(f"\n--- step {step} ---")
+        t0 = time.time()
 
-    if args.mode == "online-target":
-        reps_b = extract_representations_target(
+        ckpt_a = load_checkpoint(args.run_dir_a, step)
+        observations = _get_observations(
+            args.game, args.num_steps, ckpt_a, args.seed, args.source,
+            run_dir=args.run_dir_a, step=step,
+        )
+
+        reps_a = extract_representations(
             ckpt_a, observations, batch_size=args.batch_size, seed=args.seed,
         )
-        if reps_b is None:
-            # No target params -- use online (CKA will be 1.0)
-            reps_b = reps_a
-            b_label = "online (no target params)"
+
+        if args.mode == "online-target":
+            reps_b = extract_representations_target(
+                ckpt_a, observations, batch_size=args.batch_size, seed=args.seed,
+            )
+            if reps_b is None:
+                reps_b = reps_a
         else:
-            b_label = "target"
-        print(f"  B ({b_label}): {reps_b.shape}")
-    else:
-        reps_b = extract_representations(
-            ckpt_b, observations, batch_size=args.batch_size, seed=args.seed,
-        )
-        print(f"  B (online): {reps_b.shape}")
+            ckpt_b = load_checkpoint(args.run_dir_b, step)
+            reps_b = extract_representations(
+                ckpt_b, observations, batch_size=args.batch_size, seed=args.seed,
+            )
 
-    print(f"  ({time.time() - t0:.1f}s)")
+        cka = linear_cka(reps_a, reps_b)
+        elapsed = time.time() - t0
+        print(f"  CKA={cka:.6f}  ({elapsed:.1f}s)")
 
-    # -- Compute CKA ---------------------------------------------------------
-    cka = linear_cka(reps_a, reps_b)
+        all_rows.append({
+            "step": step,
+            "mode": args.mode,
+            "cka": round(cka, 6),
+            "n_observations": len(observations),
+        })
 
-    print()
-    print(f"Linear CKA: {cka:.6f}")
-    print(f"  Mode: {args.mode}")
-    if args.mode == "cross-checkpoint":
-        print(f"  A: step {args.step_a}, B: step {args.step_b}")
-    elif args.mode == "cross-condition":
-        print(f"  A: {os.path.basename(args.run_dir_a)}")
-        print(f"  B: {os.path.basename(args.run_dir_b)}")
-    elif args.mode == "online-target":
-        print(f"  Online vs target at step {args.step_a}")
-    print()
+        del ckpt_a, observations, reps_a, reps_b
+        gc.collect()
 
-    # -- Save JSON -----------------------------------------------------------
+    # -- Save CSV ------------------------------------------------------------
     if args.output:
         os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
-        output = {
-            "mode": args.mode,
-            "run_dir_a": args.run_dir_a,
-            "run_dir_b": args.run_dir_b,
-            "step_a": args.step_a,
-            "step_b": args.step_b,
-            "game": args.game,
-            "source": args.source,
-            "num_observations": len(observations),
-            "encoder_type": ckpt_a.encoder_type,
-            "hidden_dim": ckpt_a.hidden_dim,
-            "cka": cka,
-        }
-        with open(args.output, "w") as f:
-            json.dump(output, f, indent=2)
-        print(f"Results saved to {args.output}")
+        df = pd.DataFrame(all_rows)
+        df.to_csv(args.output, index=False)
+        print(f"\nResults saved to {args.output} ({len(df)} rows)")
+    else:
+        print(f"\n{len(all_rows)} rows computed (use --output to save)")
 
 
 if __name__ == "__main__":
