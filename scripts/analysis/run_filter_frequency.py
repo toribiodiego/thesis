@@ -20,9 +20,12 @@ Usage:
         --step 10000 --output output/probing/filter_freq.json
 """
 
+import os
+
+os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+
 import argparse
 import json
-import os
 import sys
 
 import numpy as np

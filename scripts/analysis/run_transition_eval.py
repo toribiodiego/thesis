@@ -23,9 +23,12 @@ Usage:
         --step 10000 --K 3 --output output/probing/transition_eval.json
 """
 
+import os
+
+os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+
 import argparse
 import json
-import os
 import sys
 import time
 

@@ -25,10 +25,13 @@ Usage:
         --game Boxing --source greedy --num-steps 5000
 """
 
+import os
+
+os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+
 import argparse
 import csv
 import json
-import os
 import re
 import sys
 import time

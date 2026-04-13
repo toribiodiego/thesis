@@ -33,9 +33,12 @@ Usage:
         --game CrazyClimber --num-steps 500
 """
 
+import os
+
+os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+
 import argparse
 import json
-import os
 import sys
 import time
 

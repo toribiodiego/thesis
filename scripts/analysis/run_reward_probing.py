@@ -27,9 +27,12 @@ Usage:
         --output output/probing/reward_results.json
 """
 
+import os
+
+os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+
 import argparse
 import json
-import os
 import sys
 import time
 

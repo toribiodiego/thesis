@@ -20,9 +20,12 @@ Usage:
         --step 10000 --output output/probing/inverse_dynamics.json
 """
 
+import os
+
+os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+
 import argparse
 import json
-import os
 import sys
 import time
 
