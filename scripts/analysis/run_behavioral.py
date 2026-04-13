@@ -77,8 +77,8 @@ def main():
     parser.add_argument("--run-dir", required=True)
     parser.add_argument("--steps", nargs="+", required=True,
                         help="Checkpoint steps (e.g., 10000 50000 100000) or 'all'")
-    parser.add_argument("--output", type=str, default=None,
-                        help="Path to save CSV results")
+    parser.add_argument("--output-dir", type=str, default=None,
+                        help="Directory to save CSV files (e.g., run_dir/analysis/behavioral/)")
     args = parser.parse_args()
 
     import pandas as pd
@@ -88,7 +88,9 @@ def main():
     print(f"Behavioral analysis: {args.run_dir}")
     print(f"  checkpoints: {steps}")
 
-    all_rows = []
+    action_rows = []
+    return_rows = []
+    length_rows = []
 
     for step in steps:
         t0 = time.time()
@@ -121,29 +123,46 @@ def main():
               f"mean_ret={mean_return:.1f}  mean_len={mean_length:.0f}  "
               f"episodes={n_episodes}  ({elapsed:.1f}s)")
 
-        all_rows.append({
+        action_rows.append({
             "step": step,
             "action_entropy": round(entropy, 6),
             "action_max_pct": round(max_action_pct, 6),
-            "mean_return": round(mean_return, 4),
-            "std_return": round(std_return, 4),
-            "mean_episode_length": round(mean_length, 2),
-            "std_episode_length": round(std_length, 2),
-            "n_episodes": n_episodes,
             "reward_rate": round(reward_rate, 6),
             "n_transitions": replay.add_count,
         })
 
+        return_rows.append({
+            "step": step,
+            "mean_return": round(mean_return, 4),
+            "std_return": round(std_return, 4),
+            "n_episodes": n_episodes,
+        })
+
+        length_rows.append({
+            "step": step,
+            "mean_episode_length": round(mean_length, 2),
+            "std_episode_length": round(std_length, 2),
+            "n_episodes": n_episodes,
+        })
+
         del replay
 
-    # -- Save CSV ------------------------------------------------------------
-    if args.output:
-        os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
-        df = pd.DataFrame(all_rows)
-        df.to_csv(args.output, index=False)
-        print(f"\nResults saved to {args.output} ({len(df)} rows)")
+    # -- Save CSVs -----------------------------------------------------------
+    if args.output_dir:
+        os.makedirs(args.output_dir, exist_ok=True)
+
+        for name, rows in [
+            ("action_distribution", action_rows),
+            ("episode_returns", return_rows),
+            ("episode_lengths", length_rows),
+        ]:
+            path = os.path.join(args.output_dir, f"{name}.csv")
+            pd.DataFrame(rows).to_csv(path, index=False)
+            print(f"  {path} ({len(rows)} rows)")
+
+        print(f"\nResults saved to {args.output_dir}")
     else:
-        print(f"\n{len(all_rows)} rows computed (use --output to save)")
+        print(f"\n{len(action_rows)} rows computed (use --output-dir to save)")
 
 
 if __name__ == "__main__":
