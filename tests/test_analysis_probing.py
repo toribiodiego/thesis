@@ -113,6 +113,22 @@ class TestTrainProbe:
         # Not guaranteed, but very likely with these parameters
         assert r1.f1_test != r2.f1_test
 
+    def test_stratified_split_preserves_minority_class(self):
+        """Imbalanced labels should have both classes in test set."""
+        rng = np.random.RandomState(42)
+        n = 500
+        X = rng.randn(n, 10).astype(np.float32)
+        # 2% positive rate (10 out of 500)
+        y = np.zeros(n, dtype=np.int32)
+        y[:10] = 1
+
+        result = train_probe(X, y, entropy_threshold=0.0)
+        assert not result.skipped
+        assert result.n_classes == 2
+        # With stratification, the probe should produce a valid F1
+        # (without it, test set could have zero positives -> F1=0)
+        assert result.f1_test >= 0.0
+
 
 # ---------------------------------------------------------------------------
 # Multi-variable probing
