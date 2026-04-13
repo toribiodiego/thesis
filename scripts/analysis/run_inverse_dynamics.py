@@ -70,108 +70,94 @@ def _stack_transitions(replay):
     )
 
 
+def _resolve_steps(args_steps, run_dir):
+    """Resolve step arguments to a sorted list of ints."""
+    from src.analysis.checkpoint import discover_checkpoints
+
+    if args_steps == ["all"]:
+        steps = discover_checkpoints(run_dir)
+        if not steps:
+            raise ValueError(f"No checkpoints found in {run_dir}")
+        return steps
+    return sorted(int(s) for s in args_steps)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Inverse dynamics probing on encoder representations (M14)"
     )
     parser.add_argument("--run-dir", required=True,
                         help="Path to the training run directory")
-    parser.add_argument("--step", type=int, required=True,
-                        help="Checkpoint step to load")
+    parser.add_argument("--steps", nargs="+", required=True,
+                        help="Checkpoint steps (e.g., 10000 50000 100000) or 'all'")
     parser.add_argument("--seed", type=int, default=0,
                         help="Random seed (default: 0)")
     parser.add_argument("--batch-size", type=int, default=64,
                         help="Batch size for representation extraction")
     parser.add_argument("--output", type=str, default=None,
-                        help="Path to save JSON results (optional)")
+                        help="Path to save CSV results")
     args = parser.parse_args()
 
-    # -- Step 1: Load checkpoint ---------------------------------------------
-    print(f"Loading checkpoint: {args.run_dir} step {args.step}")
+    import gc
+    import pandas as pd
     from src.analysis.checkpoint import load_checkpoint
-    ckpt = load_checkpoint(args.run_dir, args.step)
-    print(f"  encoder: {ckpt.encoder_type}, hidden_dim: {ckpt.hidden_dim}, "
-          f"num_actions: {ckpt.num_actions}")
-
-    # -- Step 2: Load replay buffer transitions ------------------------------
-    print("Loading replay buffer...")
     from src.analysis.replay_buffer import load_replay_buffer
-    replay = load_replay_buffer(args.run_dir, args.step)
-    print(f"  {replay.add_count} entries, "
-          f"{replay.terminals.sum()} episode boundaries")
-
-    print("Building stacked transition pairs...")
-    t0 = time.time()
-    obs_t, obs_next, actions = _stack_transitions(replay)
-    elapsed = time.time() - t0
-    print(f"  {len(obs_t)} valid transition pairs ({elapsed:.1f}s)")
-
-    chance = 1.0 / ckpt.num_actions
-    print(f"  chance baseline: {chance:.4f} (1/{ckpt.num_actions})")
-
-    # -- Step 3: Extract representations for both frames ---------------------
-    print(f"Extracting representations (batch_size={args.batch_size})...")
-    t0 = time.time()
     from src.analysis.representations import extract_representations
-    reps_t = extract_representations(
-        ckpt, obs_t, batch_size=args.batch_size, seed=args.seed,
-    )
-    reps_next = extract_representations(
-        ckpt, obs_next, batch_size=args.batch_size, seed=args.seed,
-    )
-    elapsed = time.time() - t0
-    print(f"  phi(t): {reps_t.shape}, phi(t+1): {reps_next.shape} ({elapsed:.1f}s)")
-
-    # -- Step 4: Concatenate and train probe ---------------------------------
-    features = np.concatenate([reps_t, reps_next], axis=1)
-    print(f"Concatenated features: {features.shape}")
-
-    print("Training inverse dynamics probe...")
-    t0 = time.time()
     from src.analysis.probing import train_probe
-    result = train_probe(
-        features, actions, variable_name="action",
-        entropy_threshold=0.0,  # always train
-    )
-    elapsed = time.time() - t0
-    print(f"  done ({elapsed:.1f}s)")
 
-    # -- Step 5: Print results -----------------------------------------------
-    print()
-    if result.skipped:
-        print(f"SKIPPED: {result.skip_reason}")
-    else:
-        print(f"Inverse Dynamics Probe Results")
-        print(f"  F1 test (macro):  {result.f1_test:.4f}")
-        print(f"  F1 train (macro): {result.f1_train:.4f}")
-        print(f"  Accuracy test:    {result.accuracy_test:.4f}")
-        print(f"  Chance baseline:  {chance:.4f}")
-        print(f"  Above chance:     {result.accuracy_test > chance}")
-        print(f"  Classes:          {result.n_classes}")
-    print()
+    steps = _resolve_steps(args.steps, args.run_dir)
+    print(f"Inverse dynamics: {args.run_dir}")
+    print(f"  checkpoints: {steps}")
 
-    # -- Step 6: Save JSON ---------------------------------------------------
+    all_rows = []
+
+    for step in steps:
+        print(f"\n--- step {step} ---")
+        t0 = time.time()
+
+        ckpt = load_checkpoint(args.run_dir, step)
+        replay = load_replay_buffer(args.run_dir, step)
+        obs_t, obs_next, actions = _stack_transitions(replay)
+        chance = 1.0 / ckpt.num_actions
+        print(f"  {len(obs_t)} transitions, {ckpt.num_actions} actions")
+
+        reps_t = extract_representations(
+            ckpt, obs_t, batch_size=args.batch_size, seed=args.seed,
+        )
+        reps_next = extract_representations(
+            ckpt, obs_next, batch_size=args.batch_size, seed=args.seed,
+        )
+        features = np.concatenate([reps_t, reps_next], axis=1)
+
+        result = train_probe(
+            features, actions, variable_name="action",
+            entropy_threshold=0.0,
+        )
+
+        elapsed = time.time() - t0
+        print(f"  F1_test={result.f1_test:.4f}  F1_train={result.f1_train:.4f}  ({elapsed:.1f}s)")
+
+        all_rows.append({
+            "step": step,
+            "f1_test": round(result.f1_test, 6),
+            "f1_train": round(result.f1_train, 6),
+            "accuracy_test": round(result.accuracy_test, 6),
+            "chance_baseline": round(chance, 6),
+            "n_classes": result.n_classes,
+            "n_transitions": len(obs_t),
+        })
+
+        del ckpt, replay, obs_t, obs_next, actions, reps_t, reps_next, features, result
+        gc.collect()
+
+    # -- Save CSV ------------------------------------------------------------
     if args.output:
         os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
-        output = {
-            "run_dir": args.run_dir,
-            "step": args.step,
-            "num_transitions": len(obs_t),
-            "num_actions": ckpt.num_actions,
-            "chance_baseline": chance,
-            "encoder_type": ckpt.encoder_type,
-            "hidden_dim": ckpt.hidden_dim,
-            "feature_dim": features.shape[1],
-            "f1_test": result.f1_test,
-            "f1_train": result.f1_train,
-            "accuracy_test": result.accuracy_test,
-            "n_classes": result.n_classes,
-            "skipped": result.skipped,
-            "skip_reason": result.skip_reason,
-        }
-        with open(args.output, "w") as f:
-            json.dump(output, f, indent=2)
-        print(f"Results saved to {args.output}")
+        df = pd.DataFrame(all_rows)
+        df.to_csv(args.output, index=False)
+        print(f"\nResults saved to {args.output} ({len(df)} rows)")
+    else:
+        print(f"\n{len(all_rows)} rows computed (use --output to save)")
 
 
 if __name__ == "__main__":
