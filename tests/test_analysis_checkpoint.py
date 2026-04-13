@@ -12,6 +12,7 @@ from src.analysis.checkpoint import (
     CheckpointData,
     _infer_num_actions,
     _parse_gin_network_params,
+    discover_checkpoints,
     load_checkpoint,
 )
 
@@ -236,6 +237,43 @@ class TestLoadDERCheckpoint:
 
 
 # -- Error handling tests ----------------------------------------------------
+
+
+class TestDiscoverCheckpoints:
+
+    def test_discovers_steps(self, tmp_path):
+        ckpt_dir = tmp_path / "checkpoints"
+        ckpt_dir.mkdir()
+        for step in [10000, 50000, 100000]:
+            (ckpt_dir / f"checkpoint_{step}.msgpack").touch()
+            (ckpt_dir / f"checkpoint_{step}.json").touch()
+        steps = discover_checkpoints(str(tmp_path))
+        assert steps == [10000, 50000, 100000]
+
+    def test_returns_sorted(self, tmp_path):
+        ckpt_dir = tmp_path / "checkpoints"
+        ckpt_dir.mkdir()
+        for step in [100000, 10000, 50000]:
+            (ckpt_dir / f"checkpoint_{step}.msgpack").touch()
+        steps = discover_checkpoints(str(tmp_path))
+        assert steps == [10000, 50000, 100000]
+
+    def test_empty_dir(self, tmp_path):
+        ckpt_dir = tmp_path / "checkpoints"
+        ckpt_dir.mkdir()
+        assert discover_checkpoints(str(tmp_path)) == []
+
+    def test_missing_dir(self):
+        assert discover_checkpoints("/nonexistent/path") == []
+
+    def test_ignores_non_checkpoint_files(self, tmp_path):
+        ckpt_dir = tmp_path / "checkpoints"
+        ckpt_dir.mkdir()
+        (ckpt_dir / "checkpoint_10000.msgpack").touch()
+        (ckpt_dir / "replay_buffer_10000.npz").touch()
+        (ckpt_dir / "target_10000.msgpack").touch()
+        steps = discover_checkpoints(str(tmp_path))
+        assert steps == [10000]
 
 
 class TestLoadCheckpointErrors:

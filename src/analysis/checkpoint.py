@@ -134,6 +134,34 @@ def load_checkpoint(
     )
 
 
+def discover_checkpoints(run_dir: str) -> list:
+    """Discover available checkpoint steps in a run directory.
+
+    Scans for checkpoint_<step>.msgpack files and returns a sorted
+    list of step numbers.
+
+    Args:
+        run_dir: Path to the run directory.
+
+    Returns:
+        Sorted list of int step numbers (e.g., [10000, 20000, ...]).
+    """
+    ckpt_dir = os.path.join(run_dir, "checkpoints")
+    if not os.path.isdir(ckpt_dir):
+        return []
+
+    steps = []
+    for fname in os.listdir(ckpt_dir):
+        if fname.startswith("checkpoint_") and fname.endswith(".msgpack"):
+            step_str = fname[len("checkpoint_"):-len(".msgpack")]
+            try:
+                steps.append(int(step_str))
+            except ValueError:
+                continue
+
+    return sorted(steps)
+
+
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------

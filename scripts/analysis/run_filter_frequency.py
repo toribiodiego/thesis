@@ -120,57 +120,74 @@ def analyze_kernel_frequency(kernel):
     }
 
 
+def _resolve_steps(args_steps, run_dir):
+    """Resolve step arguments to a sorted list of ints.
+
+    Accepts individual step numbers or 'all' to auto-discover
+    from the checkpoints directory.
+    """
+    from src.analysis.checkpoint import discover_checkpoints
+
+    if args_steps == ["all"]:
+        steps = discover_checkpoints(run_dir)
+        if not steps:
+            raise ValueError(f"No checkpoints found in {run_dir}")
+        return steps
+    return sorted(int(s) for s in args_steps)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Filter frequency analysis: 2D FFT of conv kernels (M12)"
     )
     parser.add_argument("--run-dir", required=True)
-    parser.add_argument("--step", type=int, required=True)
-    parser.add_argument("--output", type=str, default=None)
+    parser.add_argument("--steps", nargs="+", required=True,
+                        help="Checkpoint steps (e.g., 10000 50000 100000) or 'all'")
+    parser.add_argument("--output", type=str, default=None,
+                        help="Path to save CSV results (e.g., run_dir/analysis/filter_frequency.csv)")
     args = parser.parse_args()
 
-    # -- Load checkpoint (lightweight, no JAX forward pass) ------------------
-    print(f"Loading checkpoint: {args.run_dir} step {args.step}")
+    import pandas as pd
     from src.analysis.checkpoint import load_checkpoint
-    ckpt = load_checkpoint(args.run_dir, args.step)
-    print(f"  encoder: {ckpt.encoder_type}, hidden_dim: {ckpt.hidden_dim}")
 
-    # -- Extract conv kernels from encoder params ----------------------------
-    encoder_params = ckpt.online_params["encoder"]
-    kernels = _collect_conv_kernels(encoder_params)
-    print(f"  {len(kernels)} conv layers found")
+    steps = _resolve_steps(args.steps, args.run_dir)
+    print(f"Filter frequency analysis: {args.run_dir}")
+    print(f"  checkpoints: {steps}")
 
-    # -- Compute frequency statistics per layer ------------------------------
-    print()
-    print(f"{'Layer':<35} {'Kernel':>7} {'Filters':>8} "
-          f"{'DC':>10} {'NonDC':>10} {'DC%':>7} {'H/L':>7}")
-    print("-" * 90)
+    all_rows = []
 
-    results = []
-    for name, kernel in kernels:
-        stats = analyze_kernel_frequency(kernel)
-        h, w = stats["kernel_shape"]
-        hl = stats["high_low_ratio"]
-        hl_str = f"{hl:>7.3f}" if hl is not None else "    n/a"
-        print(f"{name:<35} {h}x{w:>5} {stats['n_filters']:>8} "
-              f"{stats['dc_power']:>10.4f} {stats['non_dc_mean_power']:>10.4f} "
-              f"{100 * stats['dc_fraction']:>6.1f}% {hl_str}")
-        results.append({"layer": name, **stats})
+    for step in steps:
+        print(f"\n--- step {step} ---")
+        ckpt = load_checkpoint(args.run_dir, step)
 
-    print()
+        encoder_params = ckpt.online_params["encoder"]
+        kernels = _collect_conv_kernels(encoder_params)
 
-    # -- Save JSON -----------------------------------------------------------
+        for name, kernel in kernels:
+            stats = analyze_kernel_frequency(kernel)
+            hl = stats["high_low_ratio"]
+            hl_str = f"{hl:.3f}" if hl is not None else "n/a"
+            print(f"  {name:<30} DC%={100*stats['dc_fraction']:.1f}%  H/L={hl_str}")
+            all_rows.append({
+                "step": step,
+                "layer": name,
+                "kernel_h": stats["kernel_shape"][0],
+                "kernel_w": stats["kernel_shape"][1],
+                "n_filters": stats["n_filters"],
+                "dc_power": stats["dc_power"],
+                "non_dc_mean_power": stats["non_dc_mean_power"],
+                "dc_fraction": round(stats["dc_fraction"], 6),
+                "high_low_ratio": stats["high_low_ratio"],
+            })
+
+    # -- Save CSV ------------------------------------------------------------
     if args.output:
         os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
-        output = {
-            "run_dir": args.run_dir,
-            "step": args.step,
-            "encoder_type": ckpt.encoder_type,
-            "layers": results,
-        }
-        with open(args.output, "w") as f:
-            json.dump(output, f, indent=2)
-        print(f"Results saved to {args.output}")
+        df = pd.DataFrame(all_rows)
+        df.to_csv(args.output, index=False)
+        print(f"\nResults saved to {args.output} ({len(df)} rows)")
+    else:
+        print(f"\n{len(all_rows)} rows computed (use --output to save)")
 
 
 if __name__ == "__main__":
