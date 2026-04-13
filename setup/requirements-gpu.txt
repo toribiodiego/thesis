@@ -53,3 +53,10 @@ jax-cuda12-plugin==0.7.1
 
 # Atari wrappers (used by BBF codebase internals)
 baselines @ git+https://github.com/openai/baselines.git
+
+# AtariARI probing labels (gymnasium-compatible community fork)
+atariari @ git+https://github.com/Sopralapanca/atari-representation-learning.git
+
+# Analysis
+pandas>=2.0
+scikit-learn>=1.3

@@ -107,9 +107,12 @@ def train_probe(
             skipped=True, skip_reason="constant value",
         )
 
-    # Split
+    # Split (stratify preserves class proportions in both sets,
+    # preventing empty-class splits on imbalanced targets like
+    # binary reward probing at early checkpoints)
     X_train, X_test, y_train, y_test = train_test_split(
         representations, labels, test_size=test_size, random_state=seed,
+        stratify=labels,
     )
 
     # Entropy filter on training labels

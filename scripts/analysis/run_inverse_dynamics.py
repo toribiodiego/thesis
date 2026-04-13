@@ -34,7 +34,7 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 
-def _stack_transitions(replay, transitions):
+def _stack_transitions(replay):
     """Build 4-frame stacked observations for obs_t and obs_{t+1}.
 
     The replay buffer stores single (84, 84) frames. For each valid
@@ -102,8 +102,7 @@ def main():
 
     print("Building stacked transition pairs...")
     t0 = time.time()
-    from src.analysis.replay_buffer import get_valid_transitions
-    obs_t, obs_next, actions = _stack_transitions(replay, get_valid_transitions(replay))
+    obs_t, obs_next, actions = _stack_transitions(replay)
     elapsed = time.time() - t0
     print(f"  {len(obs_t)} valid transition pairs ({elapsed:.1f}s)")
 
