@@ -80,11 +80,11 @@ def linear_cka(X, Y):
     return float(numerator / denominator)
 
 
-def _get_observations(game, num_steps, ckpt, seed, source):
+def _get_observations(game, num_steps, ckpt, seed, source, run_dir=None, step=None):
     """Collect observations for representation extraction."""
     if source == "replay":
         from src.analysis.replay_buffer import load_replay_buffer
-        replay = load_replay_buffer(ckpt._run_dir, ckpt._step)
+        replay = load_replay_buffer(run_dir, step)
         frames, terms = replay.observations, replay.terminals
         obs_list = []
         for i in range(3, len(frames)):
@@ -169,6 +169,7 @@ def main():
     t0 = time.time()
     observations = _get_observations(
         args.game, args.num_steps, ckpt_a, args.seed, args.source,
+        run_dir=args.run_dir_a, step=args.step_a,
     )
     print(f"  {len(observations)} observations ({time.time() - t0:.1f}s)")
 
