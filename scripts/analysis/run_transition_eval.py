@@ -142,91 +142,91 @@ def _evaluate_all_steps(checkpoint, obs_stacked, actions, K, batch_size, seed):
     return np.concatenate(all_sims, axis=0)  # (M, K)
 
 
+def _resolve_steps(args_steps, run_dir):
+    """Resolve step arguments to a sorted list of ints."""
+    from src.analysis.checkpoint import discover_checkpoints
+
+    if args_steps == ["all"]:
+        steps = discover_checkpoints(run_dir)
+        if not steps:
+            raise ValueError(f"No checkpoints found in {run_dir}")
+        return steps
+    return sorted(int(s) for s in args_steps)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Transition model evaluation: per-step cosine similarity (M16)"
     )
     parser.add_argument("--run-dir", required=True)
-    parser.add_argument("--step", type=int, required=True)
+    parser.add_argument("--steps", nargs="+", required=True,
+                        help="Checkpoint steps (e.g., 10000 50000 100000) or 'all'")
     parser.add_argument("--K", type=int, default=5,
                         help="Number of forward prediction steps (default: 5)")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--batch-size", type=int, default=32)
-    parser.add_argument("--output", type=str, default=None)
+    parser.add_argument("--output", type=str, default=None,
+                        help="Path to save CSV results")
     args = parser.parse_args()
 
-    # -- Load checkpoint -----------------------------------------------------
-    print(f"Loading checkpoint: {args.run_dir} step {args.step}")
+    import gc
+    import pandas as pd
     from src.analysis.checkpoint import load_checkpoint
-    ckpt = load_checkpoint(args.run_dir, args.step)
-    print(f"  encoder: {ckpt.encoder_type}, hidden_dim: {ckpt.hidden_dim}")
-
-    # -- Check for transition model (refuse -SPR checkpoints) ----------------
-    if "transition_model" not in ckpt.online_params:
-        print("ERROR: No transition_model in checkpoint params. "
-              "This checkpoint is from a -SPR condition and has no "
-              "transition model to evaluate.")
-        sys.exit(1)
-
-    # -- Load replay buffer and build stacked sequences ----------------------
-    print("Loading replay buffer...")
     from src.analysis.replay_buffer import load_replay_buffer
-    replay = load_replay_buffer(args.run_dir, args.step)
-    print(f"  {replay.add_count} entries, "
-          f"{replay.terminals.sum()} episode boundaries")
 
-    print(f"Building {args.K}-step stacked sequences...")
-    t0 = time.time()
-    obs_stacked, actions = _build_stacked_sequences(replay, args.K)
-    print(f"  {len(obs_stacked)} valid sequences ({time.time() - t0:.1f}s)")
+    steps = _resolve_steps(args.steps, args.run_dir)
+    print(f"Transition model eval: {args.run_dir}")
+    print(f"  checkpoints: {steps}, K={args.K}")
 
-    if len(obs_stacked) == 0:
-        print("ERROR: No valid sequences found.")
-        sys.exit(1)
+    all_rows = []
 
-    # -- Evaluate all K steps at once (single JIT compilation) ----------------
-    print(f"Evaluating transition model at steps k=1..{args.K}")
-    print("  (this may take a few minutes on CPU -- single JIT compile)")
-    t0 = time.time()
+    for step in steps:
+        print(f"\n--- step {step} ---")
+        t0 = time.time()
 
-    all_sims = _evaluate_all_steps(
-        ckpt, obs_stacked, actions, args.K,
-        batch_size=args.batch_size, seed=args.seed,
-    )  # (M, K)
-    elapsed = time.time() - t0
-    print(f"  done ({elapsed:.1f}s)")
+        ckpt = load_checkpoint(args.run_dir, step)
 
-    per_step_results = []
-    for k in range(args.K):
-        sims_k = all_sims[:, k]
-        per_step_results.append({
-            "step": k + 1,
-            "mean_cosine_sim": round(float(sims_k.mean()), 6),
-            "std_cosine_sim": round(float(sims_k.std()), 6),
-            "n_sequences": len(sims_k),
-        })
-        print(f"  k={k+1}: cosine_sim={sims_k.mean():.4f} +/- {sims_k.std():.4f}")
+        if "transition_model" not in ckpt.online_params:
+            print("  SKIPPED: no transition_model (-SPR condition)")
+            continue
 
-    overall_mean = np.mean([r["mean_cosine_sim"] for r in per_step_results])
-    print(f"\n  Mean across steps: {overall_mean:.4f}")
-    print()
+        replay = load_replay_buffer(args.run_dir, step)
+        obs_stacked, actions = _build_stacked_sequences(replay, args.K)
 
-    # -- Save JSON -----------------------------------------------------------
+        if len(obs_stacked) == 0:
+            print("  SKIPPED: no valid sequences")
+            continue
+
+        all_sims = _evaluate_all_steps(
+            ckpt, obs_stacked, actions, args.K,
+            batch_size=args.batch_size, seed=args.seed,
+        )
+
+        for k in range(args.K):
+            sims_k = all_sims[:, k]
+            all_rows.append({
+                "step": step,
+                "k": k + 1,
+                "cosine_sim_mean": round(float(sims_k.mean()), 6),
+                "cosine_sim_std": round(float(sims_k.std()), 6),
+                "n_sequences": len(sims_k),
+            })
+
+        elapsed = time.time() - t0
+        mean_k1 = float(all_sims[:, 0].mean())
+        print(f"  k=1: {mean_k1:.4f}  ({elapsed:.1f}s)")
+
+        del ckpt, replay, obs_stacked, actions, all_sims
+        gc.collect()
+
+    # -- Save CSV ------------------------------------------------------------
     if args.output:
         os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
-        output = {
-            "run_dir": args.run_dir,
-            "step": args.step,
-            "K": args.K,
-            "encoder_type": ckpt.encoder_type,
-            "hidden_dim": ckpt.hidden_dim,
-            "num_sequences": len(obs_stacked),
-            "overall_mean_cosine_sim": round(overall_mean, 6),
-            "per_step": per_step_results,
-        }
-        with open(args.output, "w") as f:
-            json.dump(output, f, indent=2)
-        print(f"Results saved to {args.output}")
+        df = pd.DataFrame(all_rows)
+        df.to_csv(args.output, index=False)
+        print(f"\nResults saved to {args.output} ({len(df)} rows)")
+    else:
+        print(f"\n{len(all_rows)} rows computed (use --output to save)")
 
 
 if __name__ == "__main__":
