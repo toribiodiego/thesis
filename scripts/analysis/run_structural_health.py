@@ -195,104 +195,99 @@ def effective_rank(activations):
     return float((s.sum() ** 2) / s_sq_sum), pooled.shape[1]
 
 
+def _resolve_steps(args_steps, run_dir):
+    """Resolve step arguments to a sorted list of ints."""
+    from src.analysis.checkpoint import discover_checkpoints
+
+    if args_steps == ["all"]:
+        steps = discover_checkpoints(run_dir)
+        if not steps:
+            raise ValueError(f"No checkpoints found in {run_dir}")
+        return steps
+    return sorted(int(s) for s in args_steps)
+
+
+def _load_replay_observations(run_dir, step):
+    """Load replay buffer and stack into 4-frame HWC observations."""
+    from src.analysis.replay_buffer import load_replay_buffer
+
+    replay = load_replay_buffer(run_dir, step)
+    frames, terms = replay.observations, replay.terminals
+    obs_list = []
+    for i in range(3, len(frames)):
+        if not any(terms[i - 3 : i]):
+            obs_list.append(np.stack(frames[i - 3 : i + 1], axis=-1))
+    return np.array(obs_list, dtype=np.uint8)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Structural health: dead neurons and effective rank (M11)"
     )
     parser.add_argument("--run-dir", required=True)
-    parser.add_argument("--step", type=int, required=True)
-    parser.add_argument("--game", type=str, default=None,
-                        help="Game name (required for greedy/random)")
-    parser.add_argument("--source", choices=["greedy", "random", "replay"],
+    parser.add_argument("--steps", nargs="+", required=True,
+                        help="Checkpoint steps (e.g., 10000 50000 100000) or 'all'")
+    parser.add_argument("--source", choices=["replay"],
                         default="replay")
-    parser.add_argument("--num-steps", type=int, default=1000)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--threshold", type=float, default=DEAD_NEURON_THRESHOLD)
-    parser.add_argument("--output", type=str, default=None)
+    parser.add_argument("--output", type=str, default=None,
+                        help="Path to save CSV results")
     args = parser.parse_args()
 
-    if args.source in ("greedy", "random") and args.game is None:
-        parser.error("--game is required for greedy and random sources")
-
-    # -- Load checkpoint -----------------------------------------------------
-    print(f"Loading checkpoint: {args.run_dir} step {args.step}")
+    import gc
+    import pandas as pd
     from src.analysis.checkpoint import load_checkpoint
-    ckpt = load_checkpoint(args.run_dir, args.step)
-    print(f"  encoder: {ckpt.encoder_type}, hidden_dim: {ckpt.hidden_dim}")
 
-    # -- Get observations ----------------------------------------------------
-    print(f"Loading observations (source={args.source})...")
-    t0 = time.time()
+    steps = _resolve_steps(args.steps, args.run_dir)
+    print(f"Structural health: {args.run_dir}")
+    print(f"  checkpoints: {steps}")
 
-    if args.source == "greedy":
-        from src.analysis.observations import collect_greedy
-        observations = collect_greedy(
-            ckpt, game=args.game, num_steps=args.num_steps,
-            seed=args.seed, noop_max=30,
-        ).observations
-    elif args.source == "random":
-        from src.analysis.observations import collect_random
-        observations = collect_random(
-            game=args.game, num_actions=ckpt.num_actions,
-            num_steps=args.num_steps, seed=args.seed, noop_max=30,
-        ).observations
-    else:
-        from src.analysis.replay_buffer import load_replay_buffer
-        replay = load_replay_buffer(args.run_dir, args.step)
-        frames, terms = replay.observations, replay.terminals
-        obs_list = []
-        for i in range(3, len(frames)):
-            if not any(terms[i - 3 : i]):
-                obs_list.append(np.stack(frames[i - 3 : i + 1], axis=-1))
-        observations = np.array(obs_list, dtype=np.uint8)
+    all_rows = []
 
-    print(f"  {len(observations)} observations ({time.time() - t0:.1f}s)")
+    for step in steps:
+        print(f"\n--- step {step} ---")
+        t0 = time.time()
 
-    # -- Extract per-layer activations (CPU-intensive) -----------------------
-    print(f"Extracting per-layer activations (batch_size={args.batch_size})...")
-    print("  (this may take a few minutes on CPU)")
-    t0 = time.time()
-    layer_data = _extract_layer_activations(
-        ckpt, observations, batch_size=args.batch_size, seed=args.seed,
-    )
-    print(f"  {len(layer_data)} layers ({time.time() - t0:.1f}s)")
+        ckpt = load_checkpoint(args.run_dir, step)
+        observations = _load_replay_observations(args.run_dir, step)
+        print(f"  {len(observations)} observations")
 
-    # -- Compute metrics -----------------------------------------------------
-    print()
-    print(f"{'Layer':<35} {'Shape':>14} {'Dead':>5} {'Dead%':>7} "
-          f"{'EffRank':>8} {'Ch':>5}")
-    print("-" * 80)
+        layer_data = _extract_layer_activations(
+            ckpt, observations, batch_size=args.batch_size, seed=args.seed,
+        )
 
-    results = []
-    for name, acts in layer_data:
-        dead_frac, n_dead, n_ch = dead_neuron_fraction(acts, args.threshold)
-        eff_r, _ = effective_rank(acts)
-        short = name.replace("encoder/", "").replace("/__call__", "")
-        shape = f"{acts.shape[1]}x{acts.shape[2]}x{acts.shape[3]}"
-        print(f"{short:<35} {shape:>14} {n_dead:>5} {100*dead_frac:>6.1f}% "
-              f"{eff_r:>8.1f} {n_ch:>5}")
-        results.append({
-            "layer": short, "channels": n_ch,
-            "spatial": [int(acts.shape[1]), int(acts.shape[2])],
-            "dead_neurons": n_dead, "dead_fraction": round(dead_frac, 4),
-            "effective_rank": round(eff_r, 2),
-        })
+        for name, acts in layer_data:
+            dead_frac, n_dead, n_ch = dead_neuron_fraction(acts, args.threshold)
+            eff_r, _ = effective_rank(acts)
+            short = name.replace("encoder/", "").replace("/__call__", "")
+            print(f"  {short:<30} dead={100*dead_frac:.1f}%  rank={eff_r:.1f}")
+            all_rows.append({
+                "step": step,
+                "layer": short,
+                "channels": n_ch,
+                "dead_count": n_dead,
+                "dead_fraction": round(dead_frac, 6),
+                "effective_rank": round(eff_r, 2),
+            })
 
-    print()
+        elapsed = time.time() - t0
+        print(f"  ({elapsed:.1f}s)")
 
-    # -- Save JSON -----------------------------------------------------------
+        # Free memory -- critical for structural health which
+        # stores per-layer activations (73% RAM at 100K for Nature CNN)
+        del ckpt, observations, layer_data
+        gc.collect()
+
+    # -- Save CSV ------------------------------------------------------------
     if args.output:
         os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
-        output = {
-            "run_dir": args.run_dir, "step": args.step,
-            "source": args.source, "num_observations": len(observations),
-            "encoder_type": ckpt.encoder_type, "threshold": args.threshold,
-            "layers": results,
-        }
-        with open(args.output, "w") as f:
-            json.dump(output, f, indent=2)
-        print(f"Results saved to {args.output}")
+        df = pd.DataFrame(all_rows)
+        df.to_csv(args.output, index=False)
+        print(f"\nResults saved to {args.output} ({len(df)} rows)")
+    else:
+        print(f"\n{len(all_rows)} rows computed (use --output to save)")
 
 
 if __name__ == "__main__":
