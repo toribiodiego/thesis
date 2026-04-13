@@ -107,12 +107,16 @@ def train_probe(
             skipped=True, skip_reason="constant value",
         )
 
-    # Split (stratify preserves class proportions in both sets,
-    # preventing empty-class splits on imbalanced targets like
-    # binary reward probing at early checkpoints)
+    # Stratify when feasible (preserves class proportions,
+    # prevents empty-class test sets on imbalanced binary
+    # targets). Skip stratification when any class has fewer
+    # than 2 samples (e.g., 256-way AtariARI byte labels with
+    # singleton classes).
+    _, counts = np.unique(labels, return_counts=True)
+    use_stratify = counts.min() >= 2
     X_train, X_test, y_train, y_test = train_test_split(
         representations, labels, test_size=test_size, random_state=seed,
-        stratify=labels,
+        stratify=labels if use_stratify else None,
     )
 
     # Entropy filter on training labels

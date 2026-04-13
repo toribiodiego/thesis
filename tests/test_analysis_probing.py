@@ -129,6 +129,19 @@ class TestTrainProbe:
         # (without it, test set could have zero positives -> F1=0)
         assert result.f1_test >= 0.0
 
+    def test_many_class_labels_with_singletons_does_not_crash(self):
+        """256-way classification with singleton classes should fall
+        back to unstratified split instead of crashing."""
+        rng = np.random.RandomState(42)
+        n = 1000
+        X = rng.randn(n, 10).astype(np.float32)
+        # Simulate AtariARI byte labels: many classes, some singletons
+        y = np.clip(rng.normal(128, 30, size=n).astype(np.int32), 0, 255)
+
+        result = train_probe(X, y, entropy_threshold=0.0)
+        assert not result.skipped
+        assert result.n_classes > 50
+
 
 # ---------------------------------------------------------------------------
 # Multi-variable probing
