@@ -79,6 +79,11 @@ def _wrap_with_atariari(env):
 
     # AtariARIWrapper parses env.spec.id with split("-")[0].split("No")[0]
     # which fails for ALE/Boxing-v5. We subclass to fix the game name.
+    # AtariARI uses old gym InfoWrapper which accesses env.reward_range,
+    # removed in gymnasium. Add the attribute if missing.
+    if not hasattr(env, "reward_range"):
+        env.reward_range = (-float("inf"), float("inf"))
+
     class _FixedAtariARIWrapper(AtariARIWrapper):
         def __init__(self, env, fixed_name):
             # Skip AtariARIWrapper.__init__ assertion by setting env_name directly
