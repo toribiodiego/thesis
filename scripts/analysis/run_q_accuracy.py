@@ -69,119 +69,113 @@ def _stack_replay_frames(replay):
     return np.array(obs_list, dtype=np.uint8), np.array(idx_list)
 
 
+def _resolve_steps(args_steps, run_dir):
+    """Resolve step arguments to a sorted list of ints."""
+    from src.analysis.checkpoint import discover_checkpoints
+
+    if args_steps == ["all"]:
+        steps = discover_checkpoints(run_dir)
+        if not steps:
+            raise ValueError(f"No checkpoints found in {run_dir}")
+        return steps
+    return sorted(int(s) for s in args_steps)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Q-value accuracy: predicted Q vs actual returns (M15)"
     )
     parser.add_argument("--run-dir", required=True)
-    parser.add_argument("--step", type=int, required=True)
+    parser.add_argument("--steps", nargs="+", required=True,
+                        help="Checkpoint steps (e.g., 10000 50000 100000) or 'all'")
     parser.add_argument("--gamma", type=float, default=None,
                         help="Override gamma (default: read from steps.csv)")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--batch-size", type=int, default=64)
-    parser.add_argument("--output", type=str, default=None)
+    parser.add_argument("--output", type=str, default=None,
+                        help="Path to save CSV results")
     args = parser.parse_args()
 
-    # -- Load checkpoint -----------------------------------------------------
-    print(f"Loading checkpoint: {args.run_dir} step {args.step}")
+    import gc
+    import pandas as pd_
     from src.analysis.checkpoint import load_checkpoint
-    ckpt = load_checkpoint(args.run_dir, args.step)
-    print(f"  encoder: {ckpt.encoder_type}, hidden_dim: {ckpt.hidden_dim}")
+    from src.analysis.replay_buffer import load_replay_buffer
+    from src.analysis.returns import compute_returns
+    from src.analysis.representations import extract_q_values
 
-    # -- Get gamma -----------------------------------------------------------
+    steps = _resolve_steps(args.steps, args.run_dir)
+    print(f"Q-value accuracy: {args.run_dir}")
+    print(f"  checkpoints: {steps}")
+
+    # Resolve gamma once (same for all checkpoints in a run)
     if args.gamma is not None:
         gamma = args.gamma
     else:
-        gamma = _read_effective_gamma(args.run_dir, args.step)
+        gamma = _read_effective_gamma(args.run_dir, steps[0])
         if gamma is None:
             print("ERROR: Could not read effective_gamma from steps.csv. "
                   "Use --gamma to specify manually.")
             sys.exit(1)
     print(f"  gamma: {gamma}")
 
-    # -- Load replay buffer and compute returns ------------------------------
-    print("Loading replay buffer...")
-    from src.analysis.replay_buffer import load_replay_buffer
-    replay = load_replay_buffer(args.run_dir, args.step)
-    print(f"  {replay.add_count} entries, "
-          f"{replay.terminals.sum()} episode boundaries")
+    all_rows = []
 
-    print("Computing discounted returns...")
-    from src.analysis.returns import compute_returns
-    returns = compute_returns(replay, gamma)
-    n_valid_returns = int(np.isfinite(returns).sum())
-    n_nan = int(np.isnan(returns).sum())
-    print(f"  {n_valid_returns} valid returns, {n_nan} NaN (incomplete episode)")
+    for step in steps:
+        print(f"\n--- step {step} ---")
+        t0 = time.time()
 
-    # -- Stack frames and extract Q-values -----------------------------------
-    print("Stacking replay frames...")
-    observations, valid_indices = _stack_replay_frames(replay)
-    print(f"  {len(observations)} stacked observations")
+        ckpt = load_checkpoint(args.run_dir, step)
+        replay = load_replay_buffer(args.run_dir, step)
+        returns = compute_returns(replay, gamma)
+        observations, valid_indices = _stack_replay_frames(replay)
 
-    print(f"Extracting Q-values (batch_size={args.batch_size})...")
-    print("  (this may take a few minutes on CPU)")
-    t0 = time.time()
-    from src.analysis.representations import extract_q_values
-    q_all = extract_q_values(
-        ckpt, observations, batch_size=args.batch_size, seed=args.seed,
-    )
-    elapsed = time.time() - t0
-    print(f"  shape: {q_all.shape} ({elapsed:.1f}s)")
+        q_all = extract_q_values(
+            ckpt, observations, batch_size=args.batch_size, seed=args.seed,
+        )
 
-    # -- Index Q(s_t, a_t) by taken action -----------------------------------
-    actions_at_valid = replay.actions[valid_indices]
-    q_taken = q_all[np.arange(len(q_all)), actions_at_valid]
+        actions_at_valid = replay.actions[valid_indices]
+        q_taken = q_all[np.arange(len(q_all)), actions_at_valid]
+        returns_at_valid = returns[valid_indices]
+        mask = np.isfinite(returns_at_valid)
+        q_matched = q_taken[mask]
+        g_matched = returns_at_valid[mask]
+        n_matched = len(q_matched)
 
-    # -- Filter to timesteps with known returns ------------------------------
-    returns_at_valid = returns[valid_indices]
-    mask = np.isfinite(returns_at_valid)
-    q_matched = q_taken[mask]
-    g_matched = returns_at_valid[mask]
-    n_matched = len(q_matched)
+        if n_matched < 2:
+            print(f"  SKIPPED: only {n_matched} matched pairs")
+            continue
 
-    print(f"  {n_matched} matched Q-return pairs")
+        spearman_r, spearman_p = stats.spearmanr(q_matched, g_matched)
+        signed_error = q_matched - g_matched
+        mean_signed_error = float(signed_error.mean())
+        rmse = float(np.sqrt((signed_error ** 2).mean()))
 
-    if n_matched < 2:
-        print("ERROR: Not enough matched pairs for correlation.")
-        sys.exit(1)
+        elapsed = time.time() - t0
+        print(f"  r={spearman_r:.4f}  err={mean_signed_error:+.3f}  "
+              f"Q={q_matched.mean():.3f}  G={g_matched.mean():.3f}  ({elapsed:.1f}s)")
 
-    # -- Compute metrics -----------------------------------------------------
-    spearman_r, spearman_p = stats.spearmanr(q_matched, g_matched)
-    signed_error = q_matched - g_matched
-    mean_signed_error = float(signed_error.mean())
-    rmse = float(np.sqrt((signed_error ** 2).mean()))
-
-    print()
-    print("Q-Value Accuracy Results")
-    print(f"  Spearman r:         {spearman_r:.4f} (p={spearman_p:.2e})")
-    print(f"  Mean signed error:  {mean_signed_error:.4f} (Q - G)")
-    print(f"  RMSE:               {rmse:.4f}")
-    print(f"  Q mean:             {q_matched.mean():.4f}")
-    print(f"  G mean:             {g_matched.mean():.4f}")
-    print(f"  Matched pairs:      {n_matched}")
-    print()
-
-    # -- Save JSON -----------------------------------------------------------
-    if args.output:
-        os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
-        output = {
-            "run_dir": args.run_dir,
-            "step": args.step,
-            "gamma": gamma,
-            "encoder_type": ckpt.encoder_type,
-            "hidden_dim": ckpt.hidden_dim,
-            "num_buffer_entries": replay.add_count,
-            "num_matched_pairs": n_matched,
+        all_rows.append({
+            "step": step,
             "spearman_r": round(spearman_r, 6),
             "spearman_p": spearman_p,
             "mean_signed_error": round(mean_signed_error, 6),
             "rmse": round(rmse, 6),
             "q_mean": round(float(q_matched.mean()), 6),
             "g_mean": round(float(g_matched.mean()), 6),
-        }
-        with open(args.output, "w") as f:
-            json.dump(output, f, indent=2)
-        print(f"Results saved to {args.output}")
+            "matched_pairs": n_matched,
+        })
+
+        del ckpt, replay, returns, observations, q_all, q_matched, g_matched
+        gc.collect()
+
+    # -- Save CSV ------------------------------------------------------------
+    if args.output:
+        os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
+        df = pd_.DataFrame(all_rows)
+        df.to_csv(args.output, index=False)
+        print(f"\nResults saved to {args.output} ({len(df)} rows)")
+    else:
+        print(f"\n{len(all_rows)} rows computed (use --output to save)")
 
 
 if __name__ == "__main__":
