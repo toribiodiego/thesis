@@ -1,8 +1,8 @@
 # SPR condition override (load after SPR.gin base config)
-# Published SPR agent with dense logging and no augmentation.
-# No periodic resets (reset_every defaults to -1). Nature CNN
-# encoder, noisy nets enabled, hard target copy every step.
+# Published SPR agent with dense logging. Augmentation inherited
+# from base config (True). No periodic resets (reset_every
+# defaults to -1). Nature CNN encoder, noisy nets enabled, hard
+# target copy every step.
 import bigger_better_faster.bbf.agents.metric_agent
 
 BBFAgent.log_every = 10
-BBFAgent.data_augmentation = False

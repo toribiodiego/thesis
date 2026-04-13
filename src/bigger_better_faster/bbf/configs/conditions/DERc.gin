@@ -1,12 +1,10 @@
 # DERc condition override (load after SPR.gin base config)
-# Data-Efficient Rainbow without SPR, matching the published DER
-# spec (van Hasselt et al., 2019). Nature CNN, no resets, no
-# augmentation, replay ratio 1, n-step 20, hard target copy
-# every 8000 steps.
+# Data-Efficient Rainbow without SPR. Nature CNN, no resets,
+# replay ratio 1, n-step 20, hard target copy every 8000 steps.
+# Augmentation inherited from base config (True).
 import bigger_better_faster.bbf.agents.metric_agent
 
 BBFAgent.log_every = 10
-BBFAgent.data_augmentation = False
 BBFAgent.spr_weight = 0
 BBFAgent.jumps = 0
 BBFAgent.replay_ratio = 1

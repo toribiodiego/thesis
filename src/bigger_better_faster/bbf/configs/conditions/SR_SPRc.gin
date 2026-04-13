@@ -5,7 +5,6 @@
 import bigger_better_faster.bbf.agents.metric_agent
 
 BBFAgent.log_every = 10
-BBFAgent.data_augmentation = False
 BBFAgent.replay_ratio = 64
 BBFAgent.batches_to_group = 2
 BBFAgent.reset_every = 20000

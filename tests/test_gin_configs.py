@@ -64,14 +64,14 @@ GAMES = {
 
 # Expected resolved values per condition.
 EXPECTED = {
-    "BBF":     {"spr_weight": 5, "jumps": 5, "log_every": 10, "data_augmentation": False, "reset_every": 20_000},
-    "BBFc":    {"spr_weight": 0, "jumps": 0, "log_every": 10, "data_augmentation": False, "reset_every": 20_000},
-    "SR-SPR":  {"spr_weight": 5, "jumps": 5, "log_every": 10, "data_augmentation": False, "reset_every": 20_000, "replay_ratio": 64},
-    "SR-SPRc": {"spr_weight": 0, "jumps": 0, "log_every": 10, "data_augmentation": False, "reset_every": 20_000, "replay_ratio": 64},
-    "SPR":     {"spr_weight": 5, "jumps": 5, "log_every": 10, "data_augmentation": False, "noisy": True},
-    "SPRc":    {"spr_weight": 0, "jumps": 0, "log_every": 10, "data_augmentation": False, "noisy": True},
-    "DER":     {"spr_weight": 5, "jumps": 5, "log_every": 10, "data_augmentation": False, "replay_ratio": 1, "update_horizon": 20, "target_update_period": 8000, "target_update_tau": 1.0, "JaxDQNAgent.min_replay_history": 1600},
-    "DERc":    {"spr_weight": 0, "jumps": 0, "log_every": 10, "data_augmentation": False, "replay_ratio": 1, "update_horizon": 20, "target_update_period": 8000, "target_update_tau": 1.0, "JaxDQNAgent.min_replay_history": 1600},
+    "BBF":     {"spr_weight": 5, "jumps": 5, "log_every": 10, "data_augmentation": True, "reset_every": 20_000},
+    "BBFc":    {"spr_weight": 0, "jumps": 0, "log_every": 10, "data_augmentation": True, "reset_every": 20_000},
+    "SR-SPR":  {"spr_weight": 5, "jumps": 5, "log_every": 10, "data_augmentation": True, "reset_every": 20_000, "replay_ratio": 64},
+    "SR-SPRc": {"spr_weight": 0, "jumps": 0, "log_every": 10, "data_augmentation": True, "reset_every": 20_000, "replay_ratio": 64},
+    "SPR":     {"spr_weight": 5, "jumps": 5, "log_every": 10, "data_augmentation": True, "noisy": True},
+    "SPRc":    {"spr_weight": 0, "jumps": 0, "log_every": 10, "data_augmentation": True, "noisy": True},
+    "DER":     {"spr_weight": 5, "jumps": 5, "log_every": 10, "data_augmentation": True, "replay_ratio": 1, "update_horizon": 20, "target_update_period": 8000, "target_update_tau": 1.0, "JaxDQNAgent.min_replay_history": 1600},
+    "DERc":    {"spr_weight": 0, "jumps": 0, "log_every": 10, "data_augmentation": True, "replay_ratio": 1, "update_horizon": 20, "target_update_period": 8000, "target_update_tau": 1.0, "JaxDQNAgent.min_replay_history": 1600},
 }
 
 
