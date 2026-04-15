@@ -21,6 +21,38 @@ alone matched its performance without architectural changes.}
 Every component of Rainbow serves a single objective, improving how
 the agent performs.
 
+\smallskip
+Self-Predictive Representations (SPR) \citep{schwarzer2021dataefficient}
+adds a second objective to the same architecture. The encoder learns
+to predict future representations through two additional components:
+a predictor and a transition model
+(\cref{tab:agents}).\footnote{We use the JAX reimplementation from
+\citet{nikishin2022primacy}. The original SPR paper describes a
+PyTorch implementation with a 256-dimensional hidden layer. The JAX
+version uses 512 dimensions and a separate projection layer. Both
+share the same algorithm and training parameters.}
+Predicting the future shapes the agent's features to capture how
+observations change over time.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lll}
+\toprule
+Component        & DER                          & SPR \\
+\midrule
+Predictor        & None & Fully connected, 512 units \\
+Transition model & None & Two conv layers, 64 channels \\
+Target update    & Hard copy every 8{,}000 steps & Moving average every step \\
+\bottomrule
+\end{tabular}
+\caption{Components that differ between DER and SPR. Both agents
+  share the Nature CNN encoder and a 512-unit projection layer. SPR
+  adds a predictor and transition model for predicting future
+  representations, and updates its target network with a moving
+  average ($\tau = 0.005$) rather than periodic hard copies.}
+\label{tab:agents}
+\end{table}
+
 \section{Experimental Design}
 \label{sec:experimental-design}
 
