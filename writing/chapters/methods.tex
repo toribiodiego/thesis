@@ -36,6 +36,7 @@ observations change over time.
 
 \begin{table}[htbp]
 \centering
+\vspace{0.5em}
 \begin{tabular}{lll}
 \toprule
 Component        & DER                          & SPR \\
@@ -45,6 +46,7 @@ Transition model & None & Two conv layers, 64 channels \\
 Target update    & Hard copy every 8{,}000 steps & Moving average every step \\
 \bottomrule
 \end{tabular}
+\vspace{0.5em}
 \caption{Components that differ between DER and SPR. Both agents
   share the Nature CNN encoder and a 512-unit projection layer. SPR
   adds a predictor and transition model for predicting future
@@ -52,6 +54,12 @@ Target update    & Hard copy every 8{,}000 steps & Moving average every step \\
   average ($\tau = 0.005$) rather than periodic hard copies.}
 \label{tab:agents}
 \end{table}
+
+The predictor, transition model, and prediction loss form the
+\emph{latent prediction system}. We apply the same system to both
+agents to test whether predicting the future improves features in
+different training contexts.
+\Cref{sec:experimental-design} specifies the full study design.
 
 \section{Experimental Design}
 \label{sec:experimental-design}
