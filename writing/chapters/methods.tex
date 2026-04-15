@@ -9,6 +9,18 @@ introduces two agents that develop features differently, and
 what accounts for the difference. \Cref{sec:analysis-methods}
 describes how we analyze what the features capture.
 
+\section{Agents}
+\label{sec:agents}
+
+Data-Efficient Rainbow (DER) \citep{vanHasselt2019} set the first
+baseline for learning from limited data by tuning Rainbow's
+hyperparameters.\footnote{SimPLe \citep{kaiser2020model} introduced
+the Atari-100K benchmark with a model-based approach.
+\citet{vanHasselt2019} showed that tuning Rainbow's hyperparameters
+alone matched its performance without architectural changes.}
+Every component of Rainbow serves a single objective, improving how
+the agent performs.
+
 \section{Experimental Design}
 \label{sec:experimental-design}
 
