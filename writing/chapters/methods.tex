@@ -27,10 +27,8 @@ adds a second objective to the same architecture. The encoder learns
 to predict future representations through two additional components:
 a predictor and a transition model
 (\cref{tab:agents}).\footnote{We use the JAX reimplementation from
-\citet{nikishin2022primacy}. The original SPR paper describes a
-PyTorch implementation with a 256-dimensional hidden layer. The JAX
-version uses 512 dimensions and a separate projection layer. Both
-share the same algorithm and training parameters.}
+\citet{nikishin2022primacy}, which uses 512 dimensions and a separate
+projection layer. The original PyTorch version uses 256 dimensions.}
 Predicting the future shapes the agent's features to capture how
 observations change over time.
 
@@ -48,10 +46,7 @@ Target update    & Hard copy every 8{,}000 steps & Moving average every step \\
 \end{tabular}
 \vspace{0.5em}
 \caption{Components that differ between DER and SPR. Both agents
-  share the Nature CNN encoder and a 512-unit projection layer. SPR
-  adds a predictor and transition model for predicting future
-  representations, and updates its target network with a moving
-  average ($\tau = 0.005$) rather than periodic hard copies.}
+  share the Nature CNN encoder and a 512-unit projection layer.}
 \label{tab:agents}
 \end{table}
 
