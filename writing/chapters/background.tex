@@ -1522,7 +1522,7 @@ compounding the risk of overfitting to early, unrepresentative
 data.
 
 \smallskip
-CURL~\citep{srinivas2020curl} combined contrastive learning with
+CURL~\citep{laskin2020curl} combined contrastive learning with
 random crop augmentation on data-efficient Rainbow, reporting
 improved performance on Atari-100K. The contrastive loss requires
 augmentation to generate positive pairs: two different random crops
@@ -2235,10 +2235,11 @@ instead of one (\cref{fig:dual-objective}). The shared encoder now
 serves two purposes, computing Q-values and predicting future
 representations, and both losses shape what it learns.
 
+\FloatBarrier
 \input{figures/dual-objective}
 
 \smallskip
-\emph{Contrastive methods} such as CURL~\citep{srinivas2020curl}
+\emph{Contrastive methods} such as CURL~\citep{laskin2020curl}
 define this self-supervised loss by pulling similar inputs together
 and pushing different inputs apart. \emph{Non-contrastive} or
 \emph{predictive methods} such as BYOL~\citep{grill2020bootstrap}
@@ -2259,8 +2260,8 @@ prediction task is solved perfectly and the resulting representation
 is useless. The next section explains this collapse problem and how
 modern methods overcome it.
 
-\subsection{The Collapse Problem}
-\label{subsec:collapse-problem}
+\subsection{Preventing Collapse}
+\label{subsec:preventing-collapse}
 
 A self-supervised encoder trained to predict its own future
 representations faces a degenerate solution. If the encoder maps
@@ -2294,7 +2295,7 @@ point.
 
 \smallskip
 Contrastive methods avoid collapse by construction. Methods such as
-SimCLR~\citep{chen2020simple} and CURL~\citep{srinivas2020curl}
+SimCLR~\citep{chen2020simple} and CURL~\citep{laskin2020curl}
 include negative pairs in the loss: the representation of state
 $s_t$ must be similar to a positive example (an augmented view of
 $s_t$) but dissimilar to negative examples (representations of
@@ -2406,7 +2407,7 @@ representations
 $\mathbf{y}^{\text{tgt}}_{t+k} = f_{\text{target}}(s_{t+k})$.
 Gradients do not flow through this encoder -- it provides stable
 targets for the online encoder to predict, using the same
-anti-collapse mechanism described in \cref{subsec:collapse-problem}.
+anti-collapse mechanism described in \cref{subsec:preventing-collapse}.
 
 \smallskip
 The \emph{transition model} $h$ is an action-conditioned network
@@ -2425,7 +2426,7 @@ suitable for comparison. It is applied to both predicted and target
 representations. A \emph{prediction head} $q$ -- the asymmetric
 predictor from BYOL -- is applied only to the online (predicted)
 side, providing the second anti-collapse mechanism from
-\cref{subsec:collapse-problem}. The full comparison for a single
+\cref{subsec:preventing-collapse}. The full comparison for a single
 prediction step is between
 $q(g(\hat{\mathbf{y}}_{t+k}))$ on the online side and
 $g(\mathbf{y}^{\text{tgt}}_{t+k})$ on the target side.
