@@ -2275,40 +2275,22 @@ while collapsed representations map every state to the same point
 \input{figures/collapse}
 
 \smallskip
-Contrastive methods avoid collapse by construction. Methods such as
-SimCLR~\citep{chen2020simple} and CURL~\citep{laskin2020curl}
-include negative pairs in the loss: the representation of state
-$s_t$ must be similar to a positive example (an augmented view of
-$s_t$) but dissimilar to negative examples (representations of
-other states in the batch). If the encoder collapsed to a constant,
-all representations would be identical and the negative pairs
-would score maximally -- the loss would be high. The negatives act
-as a repulsive force that prevents all representations from
-converging to a single point. But contrastive methods require
-large batches of negatives to work well. SimCLR uses batches of
-4{,}096 or more; RL typically uses replay batches of 32. This
-mismatch is a key reason why non-contrastive methods are preferred
-in RL -- a practical constraint, not just an aesthetic preference.
-
-\smallskip
-BYOL~\citep{grill2020bootstrap} demonstrated that collapse can be
-prevented without negative pairs using two mechanisms together. The
-first is an \emph{exponential moving average (EMA) target encoder}.
-Instead of using the same encoder for both prediction and target
-generation, BYOL maintains a separate target encoder whose
-parameters are a slowly updated average of the online encoder:
+Contrastive methods such as CURL~\citep{laskin2020curl} prevent
+collapse by requiring the encoder to distinguish between different
+inputs, but they need large batches of negative examples to work
+well. RL typically trains with batches of 32, far too small for
+contrastive approaches. BYOL~\citep{grill2020bootstrap} showed that
+collapse can be prevented without negative examples using two
+mechanisms together. The first, an \emph{exponential moving average
+(EMA) target encoder}, is a separate copy whose parameters are a
+slowly updated average of the training encoder's parameters:
+%
 \begin{equation}
 \label{eq:ema-update}
 \boldsymbol{\theta}_{\text{target}}
   \leftarrow \tau\, \boldsymbol{\theta}_{\text{target}}
-  + (1 - \tau)\, \boldsymbol{\theta}_{\text{online}},
+  + (1 - \tau)\, \boldsymbol{\theta}_{\text{online}}.
 \end{equation}
-where $\tau$ is close to 1 (typically 0.99). At each training step,
-the target encoder retains 99\% of its previous parameters and
-absorbs 1\% from the online encoder. Over hundreds of steps, the
-target gradually follows the online encoder, creating a temporal
-lag: the target reflects what the online encoder looked like in the
-recent past, not what it looks like now.
 
 \smallskip
 This temporal lag provides a restoring force against collapse. If
