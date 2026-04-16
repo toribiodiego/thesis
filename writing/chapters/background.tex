@@ -2171,29 +2171,20 @@ or not at all. The question is how to provide an additional training
 signal that does not depend on the quality of these targets.
 
 \smallskip
-Self-supervised learning creates training signals from the
-structure of the data itself, without requiring external labels. The
-general principle is to define a \emph{pretext task}: an auxiliary
-objective that requires the encoder to capture useful information
-about the input. The pretext task uses no external labels -- it
-derives supervisory signals from the observations themselves. The
-term ``self-supervised'' distinguishes this approach from supervised
-learning (which needs external labels like class names or reward
-signals) and from unsupervised learning (which typically refers to
-clustering or density estimation).
+One answer is \emph{self-supervised learning}, which creates training
+signals from the structure of the data itself, without requiring
+external labels. In practice, this means defining a \emph{pretext
+task}, an auxiliary objective that requires the encoder to capture
+useful information about the input, using only the observations
+themselves as supervision.
 
 \smallskip
-In computer vision, self-supervised methods have proven remarkably
-effective. Early approaches defined pretext tasks such as
-predicting image rotations, solving jigsaw puzzles from shuffled
-patches, or colorizing grayscale images. The insight behind these
-tasks is that solving them requires understanding the image's
-structure: a network that can predict how an image was rotated has
-implicitly learned to recognize the objects and spatial layout
-within it. Modern methods such as SimCLR~\citep{chen2020simple} and
-BYOL~\citep{grill2020bootstrap} learn representations by comparing
-augmented views of the same image, and their learned features rival
-those of supervised pre-training on downstream tasks.
+This idea first proved its value in computer vision, where a common
+pretext task is predicting how an image has been rotated. A network
+that solves this must learn to recognize the objects and spatial
+layout within the image. Modern methods such as
+BYOL~\citep{grill2020bootstrap} push this further, learning features
+that rival supervised approaches.
 
 \smallskip
 Reinforcement learning has something that static image datasets do
