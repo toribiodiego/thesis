@@ -2211,28 +2211,29 @@ idea behind SPR (\cref{subsec:spr}), which trains the encoder to
 predict its own future representations, not future images.
 
 \smallskip
-The self-supervised loss is added alongside the Q-learning loss as
-an auxiliary objective:
+This prediction objective is combined with the Q-learning loss:
+%
 \begin{equation}
 \label{eq:ssl-loss}
 \mathcal{L}_{\text{total}}
   = \mathcal{L}_{\text{Q}}
   + \lambda\, \mathcal{L}_{\text{SSL}}.
 \end{equation}
-The encoder receives gradients from both losses. The Q-learning
-loss tells the encoder what matters for decisions (action values);
-the self-supervised loss tells it what matters for understanding
-the environment's dynamics. The two signals are complementary: the
-Q-loss provides task-relevant guidance (even if noisy), while the
-self-supervised loss provides structurally rich guidance (even if
-not directly about rewards). The weight $\lambda$ controls the
-balance between the two objectives. In SPR, $\lambda = 2$, giving
-the self-supervised signal twice the weight of the Q-learning loss.
+%
+The weight $\lambda$ controls how much the encoder learns from each
+loss. The Q-learning loss tells the encoder which features predict
+accurate action values. The self-supervised loss tells it how
+observations change over time. Together, the Q-learning loss provides
+task-relevant guidance even when noisy early in training, and the
+self-supervised loss provides guidance about how the game changes even
+when it says nothing directly about rewards.
+
+\smallskip
 Compared to the single-objective architecture in
-\cref{fig:single-objective}, the encoder now receives a second
-gradient signal (\cref{fig:dual-objective}): the shared encoder
-feeds both the Q-head and the self-supervised head, and gradients
-from both losses flow back through the encoder.
+\cref{fig:single-objective}, the encoder is now updated by two losses
+instead of one (\cref{fig:dual-objective}). The shared encoder now
+serves two purposes, computing Q-values and predicting future
+representations, and both losses shape what it learns.
 
 \input{figures/dual-objective}
 
