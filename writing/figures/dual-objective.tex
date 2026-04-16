@@ -2,27 +2,36 @@
 \centering
 \input{figures/palette}
 \definecolor{encfade}{HTML}{B8D2E6}
-\definecolor{fcfront}{HTML}{7BA4CC}
-\definecolor{fctop}{HTML}{9CBDDD}
+\definecolor{fcfront}{HTML}{B3CEE4}
+\definecolor{fctop}{HTML}{CDDEF0}
+\definecolor{fcside}{HTML}{8DB3D2}
+\definecolor{outfront}{HTML}{DCE8F4}
+\definecolor{outtop}{HTML}{EBF1F8}
+\definecolor{outside}{HTML}{C2D6E8}
 \definecolor{sslfront}{HTML}{B8D8A0}
 \definecolor{ssltop}{HTML}{CBE4B8}
+\definecolor{sslside}{HTML}{96C278}
+\definecolor{ssloutfront}{HTML}{D4E8C4}
+\definecolor{sslouttop}{HTML}{E2F0D8}
+\definecolor{ssloutside}{HTML}{BBDAA0}
 
-% Cuboid without right side face -- avoids stub-arrow artifact
-% when the cuboid is followed by an arrow on small elements.
-% Args: x, width, height, depth, front-color, top-color
-\newcommand{\cuboidns}[6]{%
+\newcommand{\cuboidd}[7]{%
     \fill[#5, draw=black!35, line join=round]
         (#1, {-#3/2}, 0) -- ({#1+#2}, {-#3/2}, 0) --
         ({#1+#2}, {#3/2}, 0) -- (#1, {#3/2}, 0) -- cycle;
     \fill[#6, draw=black!35, line join=round]
         (#1, {#3/2}, 0) -- ({#1+#2}, {#3/2}, 0) --
         ({#1+#2}, {#3/2}, #4) -- (#1, {#3/2}, #4) -- cycle;
+    \fill[#7, draw=black!35, line join=round]
+        ({#1+#2}, {-#3/2}, 0) -- ({#1+#2}, {#3/2}, 0) --
+        ({#1+#2}, {#3/2}, #4) -- ({#1+#2}, {-#3/2}, #4) -- cycle;
 }
 
 \begin{tikzpicture}[
+    xshift=-0.8cm,
     x={(1cm,0cm)}, y={(0cm,1cm)}, z={(0.35cm,0.25cm)},
     arr/.style={->, thick, >=stealth, black!45},
-    gradarr/.style={<-, thick, >=stealth, dashed},
+    gradarr/.style={<-, thick, >={Stealth[length=6pt, width=5pt]}, dashed},
     lbl/.style={font=\scriptsize, text=black!45},
 ]
 
@@ -30,72 +39,86 @@
 \node[font=\small, text=black!85] at (-0.5, 0, 0) {$s_t$};
 \draw[arr] (0.0, 0, 0) -- (0.6, 0, 0);
 
-% Encoder (trapezoid)
+% Encoder (trapezoid -- matches single-objective)
 \fill[encfade, draw=black!60, thick, line join=round]
-    (0.8, -0.9, 0) -- (0.8, 0.9, 0) -- (2.5, 0.5, 0)
-    -- (2.5, -0.5, 0) -- cycle;
-\node[font=\small, text=black!80] at (1.55, 0, 0) {$f_\theta$};
+    (0.8, -0.65, 0) -- (0.8, 0.65, 0) -- (2.2, 0.4, 0)
+    -- (2.2, -0.4, 0) -- cycle;
+\node[font=\small, text=black!80] at (1.4, 0, 0) {$f_\theta$};
 
 % z_t label
-\node[font=\small, text=black!85] (zt) at (3.4, 0, 0)
+\node[font=\small, text=black!85] (zt) at (3.1, 0, 0)
     {$\mathbf{z}_t$};
-\draw[arr] (2.5, 0, 0) -- (3.05, 0, 0);
+\draw[arr] (2.2, 0, 0) -- (2.75, 0, 0);
 
-% === Upper path: Q-head ===
-\draw[arr] (3.75, 0.15, 0) -- (4.4, 1.8, 0);
+% === Upper path: Q-head (blue, matches single-objective) ===
+\draw[arr, rounded corners=6pt]
+    (3.45, 0.15, 0) -- (4.0, 0.15, 0) -- (4.0, 1.8, 0)
+    -- (4.8, 1.8, 0);
 
-% Q-head cuboid (no side face, shifted to y=1.8)
+% Q-head FC layer
 \begin{scope}[yshift=1.8cm]
-\cuboidns{4.6}{0.35}{1.1}{0.15}{fcfront}{fctop}
+\cuboidd{5.0}{0.25}{1.4}{0.3}{fcfront}{fctop}{fcside}
 \end{scope}
-\node[lbl, anchor=west] at (5.05, 2.15, 0) {$Q(s,a)$};
-\node[lbl, anchor=north] at (4.77, 1.2, 0) {Q-head};
 
-% Q loss arrow
-\draw[arr] (4.97, 1.8, 0) -- (6.2, 1.8, 0)
-    node[right, font=\small, text=palA!80!black]
+% Q-values output
+\draw[arr] (5.6, 1.8, 0) -- (6.2, 1.8, 0);
+\begin{scope}[yshift=1.8cm]
+\cuboidd{6.4}{0.25}{0.9}{0.3}{outfront}{outtop}{outside}
+\end{scope}
+
+% Q loss
+\draw[arr] (6.9, 1.8, 0) -- (7.6, 1.8, 0);
+\node[font=\small, text=black!85] at (8.1, 1.8, 0)
     {$\mathcal{L}_{\text{Q}}$};
 
-% === Lower path: SSL head ===
-\draw[arr] (3.75, -0.15, 0) -- (4.4, -1.8, 0);
+% Upper labels (above, same horizontal line)
+\node[lbl, anchor=south] at (5.12, 2.75, 0) {Q-head};
+\node[lbl, anchor=south] at (6.52, 2.75, 0) {$Q(s,a)$};
 
-% SSL head cuboid (no side face, shifted to y=-1.8)
-\begin{scope}[yshift=-1.8cm]
-\cuboidns{4.6}{0.35}{1.1}{0.15}{sslfront}{ssltop}
+% === Lower path: SSL head (green) ===
+\draw[arr, rounded corners=6pt]
+    (3.45, -0.1, 0) -- (4.0, -0.1, 0) -- (4.0, -1.6, 0)
+    -- (4.8, -1.6, 0);
+
+% SSL head FC layer
+\begin{scope}[yshift=-1.6cm]
+\cuboidd{5.0}{0.25}{1.4}{0.3}{sslfront}{ssltop}{sslside}
 \end{scope}
-\node[lbl, anchor=west] at (5.05, -2.15, 0)
-    {$\hat{\mathbf{z}}_{t+1}$};
-\node[lbl, anchor=south] at (4.77, -1.2, 0) {SSL head};
 
-% SSL loss arrow
-\draw[arr] (4.97, -1.8, 0) -- (6.2, -1.8, 0)
-    node[right, font=\small, text=palC!70!black]
+% SSL output
+\draw[arr] (5.6, -1.6, 0) -- (6.2, -1.6, 0);
+\begin{scope}[yshift=-1.6cm]
+\cuboidd{6.4}{0.25}{0.9}{0.3}{ssloutfront}{sslouttop}{ssloutside}
+\end{scope}
+
+% SSL loss
+\draw[arr] (6.9, -1.6, 0) -- (7.6, -1.6, 0);
+\node[font=\small, text=black!85] at (8.3, -1.6, 0)
     {$\lambda\,\mathcal{L}_{\text{SSL}}$};
 
-% Encoder + bottleneck labels
-% encoder label omitted -- f_theta in the trapezoid is
-% established from figure 2.25 (single-objective)
-\node[lbl, anchor=north] at (3.4, -0.4, 0) {512};
+% Lower labels (above their cuboids, same line as upper labels)
+\node[lbl, anchor=south] at (5.12, -0.65, 0) {SSL head};
+\node[font=\small, text=black!85, anchor=south] at (6.52, -0.65, 0)
+    {$\hat{\mathbf{z}}_{t+1}$};
 
 % === Gradient arrows ===
-% Q gradient (blue, above)
-\draw[gradarr, palA!55, rounded corners=5pt]
-    (1.55, 1.5, 0) -- (1.55, 2.7, 0) -- (6.5, 2.7, 0)
-    -- (6.5, 2.05, 0);
-\node[lbl, text=palA!50] at (4.0, 2.9, 0) {action values};
+% Q gradient (blue, above -- symmetric with SSL loop)
+\draw[gradarr, palA!55, rounded corners=8pt]
+    (1.4, 1.2, 0) -- (1.4, 3.5, 0) -- (7.9, 3.5, 0)
+    -- (7.9, 2.1, 0);
+\node[lbl, text=palA!50] at (4.6, 3.8, 0)
+    {action values};
 
-% SSL gradient (green, below)
-\draw[gradarr, palC!45!black, rounded corners=5pt]
-    (1.55, -1.5, 0) -- (1.55, -2.7, 0) -- (6.7, -2.7, 0)
-    -- (6.7, -2.05, 0);
-\node[lbl, text=palC!45!black] at (4.1, -2.9, 0)
-    {dynamics / structure};
+% SSL gradient (green, below -- symmetric with Q loop)
+\draw[gradarr, palC!55, rounded corners=8pt]
+    (1.4, -1.2, 0) -- (1.4, -3.05, 0) -- (8.1, -3.05, 0)
+    -- (8.1, -1.9, 0);
+\node[lbl, text=palC!50] at (4.6, -3.35, 0)
+    {dynamics};
 
 \end{tikzpicture}
-\caption{Dual-objective training. Self-supervised learning adds a
-  second path: the encoder receives gradients from both
-  $\mathcal{L}_{\text{Q}}$ (action values) and
-  $\lambda\mathcal{L}_{\text{SSL}}$ (dynamics), shaping its
-  representations with complementary signals.}
+\caption{Dual-objective training. The encoder receives gradients
+  from both the Q-learning loss and the self-supervised loss,
+  shaping its representations with complementary signals.}
 \label{fig:dual-objective}
 \end{figure}
