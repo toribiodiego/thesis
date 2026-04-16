@@ -2238,26 +2238,26 @@ representations, and both losses shape what it learns.
 \input{figures/dual-objective}
 
 \smallskip
-Self-supervised methods fall into two broad families.
-\emph{Contrastive methods} (SimCLR, MoCo,
-CURL~\citep{srinivas2020curl}) learn by pulling together
-representations of similar inputs (positive pairs) and pushing
-apart representations of different inputs (negative pairs).
-\emph{Non-contrastive} or \emph{predictive methods} (BYOL, SPR)
-learn by predicting target representations without negatives,
-using an exponential moving average (EMA) target encoder to provide
-stable prediction targets. SPR belongs to the second family. The
-distinction matters for RL because non-contrastive methods are
-simpler (no negative sampling), more robust to small batch sizes
-(RL typically uses batches of 32, far smaller than the thousands
-used in vision), and less dependent on augmentation design.
+\emph{Contrastive methods} such as CURL~\citep{srinivas2020curl}
+define this self-supervised loss by pulling similar inputs together
+and pushing different inputs apart. \emph{Non-contrastive} or
+\emph{predictive methods} such as BYOL~\citep{grill2020bootstrap}
+and SPR take a different approach, predicting future outputs of a
+slowly updated copy of the encoder without requiring negative
+examples.
 
 \smallskip
-But prediction-based objectives have a fundamental obstacle: if the
-encoder maps every input to the same constant vector, the
-prediction task is solved perfectly -- with a useless
-representation. The next section explains this collapse problem and
-how modern methods overcome it.
+SPR uses the predictive approach, which is a better fit for RL
+because it does not require large batches of negative examples. RL
+typically trains with batches of 32, far smaller than the thousands
+used in vision. Predictive methods are also simpler to implement and
+less sensitive to augmentation choices.
+
+\smallskip
+But if the encoder maps every input to the same constant vector, the
+prediction task is solved perfectly and the resulting representation
+is useless. The next section explains this collapse problem and how
+modern methods overcome it.
 
 \subsection{The Collapse Problem}
 \label{subsec:collapse-problem}
