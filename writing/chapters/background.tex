@@ -2137,51 +2137,38 @@ experiments: Self-Predictive Representations
 \subsection{Shaping Better Representations}
 \label{subsec:shaping-better-representations}
 
-Recall the DQN architecture from \cref{subsec:dqn-architecture}: raw
-frames pass through three convolutional layers and a fully
-connected layer, producing a 512-dimensional vector. This vector
-is the agent's internal representation of the game state --
-everything the agent ``knows'' about the current observation
-passes through this bottleneck. The Q-values for all actions are
-computed from this vector, and the Q-learning loss
-(\cref{eq:dqn-loss}) is the only training signal that shapes it.
-The encoder learns to extract whatever features predict Q-values,
-and nothing more (\cref{fig:single-objective}).
+In the DQN architecture (\cref{subsec:dqn-architecture}), raw frames
+pass through three convolutional layers and a fully connected layer,
+producing a 512-dimensional representation of the game state.
+Everything the agent ``knows'' about the current observation passes
+through this vector. The Q-values for all actions are computed from
+it, and the Q-learning loss (\cref{eq:dqn-loss}) is the only training
+signal that shapes it. The encoder learns to extract whatever features
+predict Q-values, and nothing more (\cref{fig:single-objective}).
 
 \input{figures/single-objective}
 
 \smallskip
-In the 100K regime, this single training signal is problematic.
-Q-targets are bootstrapped from the agent's own estimates, which
-are poor early in training. The encoder receives weak, noisy
-gradient information about what features to extract. With limited
-data, it may find features that satisfy the current Q-targets
-without capturing the full structure of the environment -- learning,
-for instance, that dark pixels at the top of the screen correlate
-with high Q-values (because the ball happens to be there in the
-small set of stored transitions), rather than learning to track the
-ball's position and velocity more generally. This is overfitting at
-the representation level: the features work for the data seen so
-far but do not support generalization to new states.
+The encoder learns by matching its predictions against target values,
+but when data is scarce these targets are based on the agent's own
+poor estimates. The gradients that update the encoder are small and
+inconsistent, so the encoder gets little guidance about what features
+to develop.
 
 \smallskip
-In the standard 200-million-frame regime, this is less of a
-problem. With enough data, the Q-learning loss eventually provides
-sufficient gradient to learn good representations -- the encoder
-sees enough diverse states that fragile features are weeded out.
-The 100K regime does not offer this luxury. Good representations
-must emerge quickly or not at all.
+With limited data, the encoder may find features that satisfy the
+current targets without capturing the full structure of the
+environment. It might learn that dark pixels at the top of the screen
+correlate with high Q-values, because the ball happens to be there in
+the small set of stored transitions, rather than learning to track the
+ball's position and velocity. The features overfit at the
+representation level, working for the data seen so far but failing to
+generalize to new states.
 
 \smallskip
-Good representations make downstream learning easier. If the
-encoder captures object positions, velocities, and spatial
-relationships, then the Q-head -- a single linear layer -- can
-more easily learn to map these features to accurate Q-values. Poor
-representations force the Q-head to compensate for missing
-information, which is harder and requires more data. The question
-is how to shape the encoder's representations with an additional
-training signal that does not depend on the quality of the
-Q-targets.
+With so little training data, good representations must emerge quickly
+or not at all. The question is how to provide an additional training
+signal that does not depend on the quality of these targets.
 
 \smallskip
 Self-supervised learning creates training signals from the
