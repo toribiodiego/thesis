@@ -2263,33 +2263,14 @@ modern methods overcome it.
 \subsection{Preventing Collapse}
 \label{subsec:preventing-collapse}
 
-A self-supervised encoder trained to predict its own future
-representations faces a degenerate solution. If the encoder maps
-every input to the same constant vector $\mathbf{c}$, then every
-predicted representation equals every target representation --
-the prediction loss is zero, and the task is trivially solved. But
-the representation carries no information: every state looks
-identical to the encoder. This is \emph{representational collapse},
-and it is not a rare failure mode. It is the global minimum of any
-naive prediction loss. Without countermeasures, gradient descent
-will find it.
-
-\smallskip
-The reason is structural. The prediction loss is typically a
-similarity measure -- cosine similarity or squared distance --
-between the predicted and target representations. The loss is
-minimized when the two match perfectly. The easiest way to achieve
-a perfect match is for both representations to be constant: if the
-encoder always outputs the same vector, the prediction is always
-correct regardless of the input. Unlike classification losses,
-which assign diverse targets to different classes, a self-prediction
-objective has a single goal -- match yourself -- and nothing in the
-loss penalizes constant outputs. Any self-supervised method built
-on prediction must actively prevent this outcome.
-\Cref{fig:collapse} illustrates the contrast: useful
-representations preserve meaningful distinctions between game
-states, while collapsed representations map every state to the same
-point.
+This failure is called \emph{representational collapse}, and it is
+not a rare edge case. It is the global minimum of any naive prediction
+loss, and gradient descent will find it unless something prevents it.
+The loss only measures how well the prediction matches the target, so
+nothing penalizes an encoder that produces constant output. Useful
+representations preserve meaningful distinctions between game states,
+while collapsed representations map every state to the same point
+(\cref{fig:collapse}).
 
 \input{figures/collapse}
 
