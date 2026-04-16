@@ -2318,25 +2318,16 @@ cannot learn anything useful, pushing the encoder back toward diverse
 representations.
 
 \smallskip
-The EMA target encoder is the same design pattern the reader
-already knows from \cref{subsec:target-networks}: the DQN target
-network is a frozen copy that provides stable Q-value targets to
-prevent oscillation in Q-learning. The EMA target encoder serves
-an analogous role for representation learning: a slow-moving copy
-that provides stable representation targets to prevent collapse.
-The difference is the update mechanism: DQN uses hard updates
-(copy parameters every $C$ steps), while the EMA is a soft update
-(blend parameters at every step), avoiding the periodic
-discontinuities of hard copying. In SPR, both coexist as separate
-components -- the target network provides Q-value targets, and the
-EMA target encoder provides representation targets -- sharing the
-same design pattern of stability through slow change.
-
-\smallskip
-With these mechanisms in place, a prediction-based self-supervised
-objective can learn meaningful representations without collapse.
-The next section describes SPR, which applies this approach to
-predict the agent's own future latent states.
+The EMA target encoder and the asymmetric predictor must work
+together, and both follow the same principle as the DQN target
+network (\cref{subsec:target-networks}), which provides stable
+Q-value targets through a frozen copy of the network. The EMA
+target encoder serves the same role for representations, but where
+DQN copies parameters every $C$ steps, the EMA blends parameters at
+every step. In SPR, both mechanisms coexist, with the target network
+providing stable Q-value targets and the EMA target encoder providing
+stable representation targets, allowing the agent to predict its own
+future representations without collapse.
 
 \subsection{Self-Predictive Representations}
 \label{subsec:spr}
