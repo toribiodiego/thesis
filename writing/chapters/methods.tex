@@ -24,37 +24,18 @@ representations from that experience.
 
 \smallskip
 Self-Predictive Representations (SPR) \citep{schwarzer2021dataefficient}
-adds a second objective to the same architecture. The encoder learns
-to predict future representations through two additional components:
-a predictor and a transition model
-(\cref{tab:agents}).\footnote{We use the JAX reimplementation from
+consistently outperforms DER across the Atari-100K
+benchmark.\footnote{On the 26-game Atari-100K benchmark, SPR achieves
+a median human-normalized score of 0.510 compared to DER's
+0.161~\citep{schwarzer2021dataefficient}.}
+SPR trains the agent to predict its own future representations,
+adding an objective beyond the game score. A predictor, a transition
+model, and a prediction loss enable this
+prediction.\footnote{We use the JAX reimplementation from
 \citet{nikishin2022primacy}, which uses 512 dimensions and a separate
 projection layer. The original PyTorch version uses 256 dimensions.}
-Predicting the future shapes the agent's features to capture how
-observations change over time.
-
-\begin{table}[htbp]
-\centering
-\vspace{0.5em}
-\begin{tabular}{lll}
-\toprule
-Component        & DER                          & SPR \\
-\midrule
-Predictor        & None & Fully connected, 512 units \\
-Transition model & None & Two conv layers, 64 channels \\
-Target update    & Hard copy every 8{,}000 steps & Moving average every step \\
-\bottomrule
-\end{tabular}
-\vspace{0.5em}
-\caption{Components that differ between DER and SPR. Both agents
-  share the Nature CNN encoder and a 512-unit projection layer.}
-\label{tab:agents}
-\end{table}
-
-The predictor, transition model, and prediction loss form the
-\emph{latent prediction system}. We apply the same system to both
-agents to test whether predicting the future improves features in
-different training contexts.
+We call these the \emph{latent prediction system} and apply it to
+both agents to understand what shapes more capable agents.
 
 \section{Experimental Design}
 \label{sec:experimental-design}
