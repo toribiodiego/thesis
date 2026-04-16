@@ -2309,18 +2309,13 @@ so the prediction loss increases rather than decreases, pulling the
 training encoder back.
 
 \smallskip
-The second mechanism is an \emph{asymmetric predictor head}: a
-small MLP that exists only on the online side, mapping the online
-representation to the prediction space before comparison with the
-target. The target encoder has no predictor. This asymmetry breaks
-the symmetry that enables collapse. The predictor must learn a
-non-trivial mapping from the online representation to the target
-representation. If the encoder collapses, the predictor receives
-the same constant input for every example and cannot learn a useful
-mapping -- its gradient pushes the encoder back toward diverse
-representations. Removing either mechanism causes collapse: the EMA
-alone is not sufficient, and the predictor alone is not sufficient.
-Both together are required.
+The second mechanism, an \emph{asymmetric predictor head}, is a small
+network on the training side that maps the encoder's representation
+into a form comparable with the target. Because the target side has no
+predictor, this mapping must be meaningful. If the encoder collapses,
+the predictor receives the same constant input for every example and
+cannot learn anything useful, pushing the encoder back toward diverse
+representations.
 
 \smallskip
 The EMA target encoder is the same design pattern the reader
