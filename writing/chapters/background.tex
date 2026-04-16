@@ -2187,25 +2187,28 @@ BYOL~\citep{grill2020bootstrap} push this further, learning features
 that rival supervised approaches.
 
 \smallskip
-Reinforcement learning has something that static image datasets do
-not: temporal structure. The agent observes sequences of states
-connected by actions -- state $s_t$, action $a_t$, and next state
-$s_{t+1}$ form a natural prediction problem. Given the current
-state and the action taken, predict the next state. This is richer
-than spatial-only pretext tasks because it captures \emph{dynamics}
--- how the game state evolves under different actions. An encoder
-that can predict the next state must represent information about
-object positions, velocities, and the effects of actions: exactly
-the features that are useful for decision-making.
+Reinforcement learning offers an even richer source of pretext tasks
+because the agent observes sequences of states connected by actions,
+a property called \emph{temporal structure}. State~$s_t$,
+action~$a_t$, and next state~$s_{t+1}$ form a natural prediction
+problem. Given the current state and the action taken, predict the
+next state.
 
 \smallskip
-The prediction does not need to happen in pixel space. Predicting
-future pixels is expensive and requires modeling irrelevant details
--- exact textures, background patterns, rendering artifacts.
-Predicting future \emph{representations} -- the encoder's own
-internal features -- focuses on the abstract structure that matters.
-This is the key idea behind SPR (\cref{subsec:spr}): train the
-encoder to predict its own future latent states, not future images.
+This prediction task captures \emph{dynamics}, how the game state
+evolves under different actions. An encoder that can predict the next
+state must represent object positions, velocities, and the effects of
+actions. These are exactly the features that are useful for
+decision-making.
+
+\smallskip
+But predicting the next state in pixel space forces the encoder to
+model irrelevant details like exact textures, background patterns, and
+rendering artifacts. Instead, the encoder can predict its own future
+\emph{representations}, capturing positions, velocities, and how
+actions change the game without modeling every pixel. This is the key
+idea behind SPR (\cref{subsec:spr}), which trains the encoder to
+predict its own future representations, not future images.
 
 \smallskip
 The self-supervised loss is added alongside the Q-learning loss as
