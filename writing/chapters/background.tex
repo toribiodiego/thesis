@@ -2300,14 +2300,13 @@ the training encoder looked like in the recent past, not what it
 looks like now.
 
 \smallskip
-This temporal lag provides a restoring force against collapse. If
-the online encoder improves, the target slowly catches up,
-providing progressively better prediction targets. If the online
-encoder tries to collapse, the target still reflects its
-pre-collapse state -- diverse representations from the recent past
--- so the prediction loss increases rather than decreases. The
-collapse is self-correcting because the target does not collapse
-simultaneously.
+This temporal lag makes collapse self-correcting because the target
+does not collapse simultaneously. If the training encoder improves,
+the target slowly catches up, providing progressively better
+prediction targets. If the training encoder tries to collapse, the
+target still reflects diverse representations from the recent past,
+so the prediction loss increases rather than decreases, pulling the
+training encoder back.
 
 \smallskip
 The second mechanism is an \emph{asymmetric predictor head}: a
