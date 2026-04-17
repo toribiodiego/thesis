@@ -20,12 +20,9 @@ input matters more, and a weight near zero means it is mostly ignored.
 The neuron learns which combinations of inputs are relevant by
 adjusting these weights.
 
-\input{figures/neuron}
-
 \smallskip
-More precisely, each input is multiplied by a learned \emph{weight}, a
-\emph{bias} term is added, and the result is passed through an
-\emph{activation function}:
+Each input is multiplied by its weight, a \emph{bias} term is added,
+and the result is passed through an \emph{activation function}:
 %
 \begin{align}
 \label{eq:neuron-z}
@@ -36,12 +33,16 @@ a &= \sigma(z)
 %
 where $x_1, x_2, x_3$ are the inputs, $w_1, w_2, w_3$ are the
 weights, $b$ is the bias, $\sigma$ is the activation function, $z$ is the
-weighted sum, and $a$ is the neuron's output.
-The weights and bias are the neuron's \emph{parameters} -- the
-values that change during training.
-How these parameters are learned is the subject of
-\cref{subsec:loss-functions}; for now, it is enough to know that they are
-adjustable.
+weighted sum, and $a$ is the neuron's output. The bias shifts the output
+independently of the inputs, allowing the neuron to produce a nonzero
+result even when all inputs are zero.
+
+\smallskip
+This output is the neuron's prediction for the given inputs. The weights
+and bias are the neuron's \emph{parameters}, the values that change
+during training.
+
+\input{figures/neuron}
 
 \begin{example}
 \label{ex:neuron}
