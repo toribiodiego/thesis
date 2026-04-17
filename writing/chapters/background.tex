@@ -770,6 +770,112 @@ architectures.
 
 \input{figures/relu}
 
+\subsection{Loss Functions}
+\label{subsec:loss-functions}
+
+A neural network begins with random weights -- its outputs are
+meaningless. Training is the process of adjusting those weights so
+that the network's outputs match the desired outputs. This is an
+optimization problem: find a setting of the weights that minimizes
+some measure of how wrong the network is.
+
+\smallskip
+That measure is called the \emph{loss function}. Different tasks
+call for different loss functions, but the training procedure is
+the same regardless of which loss is used. The loss is a single
+number that summarizes how far the network's predictions are from
+the correct answers; training drives this number down.
+
+\smallskip
+For tasks where the network predicts a continuous value -- such as
+estimating a Q-value -- the standard loss is the \emph{mean squared
+error} (MSE): the average squared difference between the predicted
+and target values. Squaring means that large errors are penalized
+more heavily than small ones, so MSE prioritizes correcting the
+worst predictions first. This is the loss that appears in the
+function approximation setting of \cref{eq:fa-loss}.
+
+\smallskip
+For classification tasks -- predicting which category an input
+belongs to -- the standard loss is \emph{cross-entropy}. The
+network outputs a probability for each category, and cross-entropy
+measures how surprised the model is by the true label. If the
+network assigns 90\% probability to the correct class, the loss is
+low; if it assigns 50\%, the loss is higher; if it assigns 10\%,
+the loss is much higher. Cross-entropy appears later in this work
+when training linear probes to classify game-state properties.
+
+\subsection{Gradient Descent}
+\label{subsec:gradient-descent}
+
+Given a loss function, the network needs a way to reduce it. The
+loss defines a landscape over the space of all possible weight
+settings: each point in this space is a complete configuration of
+every weight in the network, and the height at that point is the
+loss. Training is the process of navigating this landscape toward
+a low point.
+
+\smallskip
+\emph{Gradient descent} is the standard navigation strategy. At the
+current weight setting, the \emph{gradient} of the loss -- the
+vector of partial derivatives introduced in \cref{subsec:func-approx}
+-- points in the direction of steepest increase. Stepping in the
+opposite direction reduces the loss. The update rule is:
+%
+\begin{equation}
+\label{eq:generic-gd}
+\mathbf{w} \;\leftarrow\; \mathbf{w} - \eta\, \nabla_{\mathbf{w}}\, L,
+\end{equation}
+%
+where $\eta$ is the \emph{learning rate} -- the step size. Too large
+and the update overshoots the minimum, causing the loss to increase
+or oscillate; too small and training progresses slowly. This is the
+same idea that appeared in the Q-learning update rule
+(\cref{eq:sgd-update}), now stated in general form: the RL-specific
+version is a special case where the loss is the squared TD error.
+
+\subsection{Optimizers}
+\label{subsec:optimizers}
+
+Computing the gradient over the entire dataset is expensive.
+\emph{Stochastic gradient descent} (SGD) approximates the full
+gradient by computing it on a small random subset of examples
+called a \emph{minibatch}. The estimate is noisier but much
+cheaper, and in practice the noise can even help training escape
+shallow local minima. This is the same idea that
+\cref{subsec:func-approx} introduced for Q-learning: instead of
+averaging over all transitions, each update uses a single
+minibatch sampled from the replay buffer.
+
+\smallskip
+Vanilla SGD treats every weight identically, using the same
+learning rate for all parameters. In practice, different parameters
+benefit from different step sizes. \emph{SGD with momentum}
+accumulates a running average of past gradients, smoothing out
+noise and helping the optimizer move consistently through regions
+where the gradient oscillates -- like a ball rolling downhill with
+inertia. \emph{Adam}~\citep{kingma2015adam} goes further by
+adapting the learning rate for each parameter individually based on
+the magnitude of its recent gradients: parameters that receive
+large, frequent updates get smaller steps, while parameters that
+receive small, infrequent updates get larger steps. Both optimizers
+appear in this work: RMSProp (a precursor to Adam) is used for the
+DQN base agent, and Adam is used for Rainbow and for training
+probes.
+
+\smallskip
+One additional technique that appears throughout this work is
+\emph{batch normalization}~\citep{ioffe2015batch}. During training,
+the distribution of activations within each layer shifts as the
+weights change -- what the network computes in one layer affects
+the inputs to the next. Batch normalization stabilizes this by
+normalizing each layer's activations to have zero mean and unit
+variance within each minibatch, then applying a learned scale and
+shift. This reduces sensitivity to weight initialization and
+learning rate choices, making training faster and more stable.
+Batch normalization appears in the SPR transition model introduced
+in \cref{subsec:spr}.
+
 \subsection{Layers and Depth}
 \label{subsec:layers-depth}
 
@@ -807,6 +913,39 @@ between each layer, each layer can detect combinations that the previous
 one could not. This is what makes depth useful.
 This flow of data from input through each layer to output is called a
 \emph{forward pass}.
+
+\subsection{Backpropagation}
+\label{subsec:backpropagation}
+
+For a network with millions of weights, computing the gradient
+requires knowing how much each weight contributed to the loss. This
+is where \emph{backpropagation} enters. A neural network is a chain
+of operations: the input passes through layer~1, then the activation,
+then layer~2, then the activation, and so on until the loss is
+computed at the end. The chain rule from calculus says that the
+derivative of a composition is the product of the derivatives at
+each step. Backpropagation applies this systematically, working
+backwards from the loss to the first layer: compute how the loss
+changes with respect to the last layer's output, use that to
+compute how it changes with respect to the last layer's weights,
+propagate the gradient one layer back, and repeat. Each layer's
+gradient depends on the gradient already computed for the layer
+above it -- that is why it flows \emph{backwards} through the
+network. The result is a gradient for every weight in the network,
+computed in a single backward pass.
+
+\smallskip
+This is what ``gradients flow back through every layer'' means
+concretely: the gradient signal originates at the loss and
+propagates backward through each layer, telling each weight how
+to change to reduce the error. Layers closer to the output receive
+the signal first; layers closer to the input receive it last, after
+the signal has passed through every intermediate layer.
+\Cref{fig:forward-backward} illustrates both passes: data flows
+left to right through the network (forward), and gradients flow
+right to left from the loss back to the first layer (backward).
+
+\input{figures/forward-backward-pass}
 
 \subsection{Network Architecture}
 \label{subsec:network-architecture}
@@ -921,145 +1060,6 @@ combination -- convolutional layers for spatial processing, fully
 connected layers for the final mapping -- is the foundation of most
 image-processing neural networks, including the one used in the
 deep Q-network described in \cref{sec:dqn}.
-
-\subsection{Loss Functions}
-\label{subsec:loss-functions}
-
-A neural network begins with random weights -- its outputs are
-meaningless. Training is the process of adjusting those weights so
-that the network's outputs match the desired outputs. This is an
-optimization problem: find a setting of the weights that minimizes
-some measure of how wrong the network is.
-
-\smallskip
-That measure is called the \emph{loss function}. Different tasks
-call for different loss functions, but the training procedure is
-the same regardless of which loss is used. The loss is a single
-number that summarizes how far the network's predictions are from
-the correct answers; training drives this number down.
-
-\smallskip
-For tasks where the network predicts a continuous value -- such as
-estimating a Q-value -- the standard loss is the \emph{mean squared
-error} (MSE): the average squared difference between the predicted
-and target values. Squaring means that large errors are penalized
-more heavily than small ones, so MSE prioritizes correcting the
-worst predictions first. This is the loss that appears in the
-function approximation setting of \cref{eq:fa-loss}.
-
-\smallskip
-For classification tasks -- predicting which category an input
-belongs to -- the standard loss is \emph{cross-entropy}. The
-network outputs a probability for each category, and cross-entropy
-measures how surprised the model is by the true label. If the
-network assigns 90\% probability to the correct class, the loss is
-low; if it assigns 50\%, the loss is higher; if it assigns 10\%,
-the loss is much higher. Cross-entropy appears later in this work
-when training linear probes to classify game-state properties.
-
-\subsection{Gradient Descent}
-\label{subsec:gradient-descent}
-
-Given a loss function, the network needs a way to reduce it. The
-loss defines a landscape over the space of all possible weight
-settings: each point in this space is a complete configuration of
-every weight in the network, and the height at that point is the
-loss. Training is the process of navigating this landscape toward
-a low point.
-
-\smallskip
-\emph{Gradient descent} is the standard navigation strategy. At the
-current weight setting, the \emph{gradient} of the loss -- the
-vector of partial derivatives introduced in \cref{subsec:func-approx}
--- points in the direction of steepest increase. Stepping in the
-opposite direction reduces the loss. The update rule is:
-%
-\begin{equation}
-\label{eq:generic-gd}
-\mathbf{w} \;\leftarrow\; \mathbf{w} - \eta\, \nabla_{\mathbf{w}}\, L,
-\end{equation}
-%
-where $\eta$ is the \emph{learning rate} -- the step size. Too large
-and the update overshoots the minimum, causing the loss to increase
-or oscillate; too small and training progresses slowly. This is the
-same idea that appeared in the Q-learning update rule
-(\cref{eq:sgd-update}), now stated in general form: the RL-specific
-version is a special case where the loss is the squared TD error.
-
-\subsection{Backpropagation}
-\label{subsec:backpropagation}
-
-For a network with millions of weights, computing the gradient
-requires knowing how much each weight contributed to the loss. This
-is where \emph{backpropagation} enters. A neural network is a chain
-of operations: the input passes through layer~1, then the activation,
-then layer~2, then the activation, and so on until the loss is
-computed at the end. The chain rule from calculus says that the
-derivative of a composition is the product of the derivatives at
-each step. Backpropagation applies this systematically, working
-backwards from the loss to the first layer: compute how the loss
-changes with respect to the last layer's output, use that to
-compute how it changes with respect to the last layer's weights,
-propagate the gradient one layer back, and repeat. Each layer's
-gradient depends on the gradient already computed for the layer
-above it -- that is why it flows \emph{backwards} through the
-network. The result is a gradient for every weight in the network,
-computed in a single backward pass.
-
-\smallskip
-This is what ``gradients flow back through every layer'' means
-concretely: the gradient signal originates at the loss and
-propagates backward through each layer, telling each weight how
-to change to reduce the error. Layers closer to the output receive
-the signal first; layers closer to the input receive it last, after
-the signal has passed through every intermediate layer.
-\Cref{fig:forward-backward} illustrates both passes: data flows
-left to right through the network (forward), and gradients flow
-right to left from the loss back to the first layer (backward).
-
-\input{figures/forward-backward-pass}
-
-\subsection{Optimizers}
-\label{subsec:optimizers}
-
-Computing the gradient over the entire dataset is expensive.
-\emph{Stochastic gradient descent} (SGD) approximates the full
-gradient by computing it on a small random subset of examples
-called a \emph{minibatch}. The estimate is noisier but much
-cheaper, and in practice the noise can even help training escape
-shallow local minima. This is the same idea that
-\cref{subsec:func-approx} introduced for Q-learning: instead of
-averaging over all transitions, each update uses a single
-minibatch sampled from the replay buffer.
-
-\smallskip
-Vanilla SGD treats every weight identically, using the same
-learning rate for all parameters. In practice, different parameters
-benefit from different step sizes. \emph{SGD with momentum}
-accumulates a running average of past gradients, smoothing out
-noise and helping the optimizer move consistently through regions
-where the gradient oscillates -- like a ball rolling downhill with
-inertia. \emph{Adam}~\citep{kingma2015adam} goes further by
-adapting the learning rate for each parameter individually based on
-the magnitude of its recent gradients: parameters that receive
-large, frequent updates get smaller steps, while parameters that
-receive small, infrequent updates get larger steps. Both optimizers
-appear in this work: RMSProp (a precursor to Adam) is used for the
-DQN base agent, and Adam is used for Rainbow and for training
-probes.
-
-\smallskip
-One additional technique that appears throughout this work is
-\emph{batch normalization}~\citep{ioffe2015batch}. During training,
-the distribution of activations within each layer shifts as the
-weights change -- what the network computes in one layer affects
-the inputs to the next. Batch normalization stabilizes this by
-normalizing each layer's activations to have zero mean and unit
-variance within each minibatch, then applying a learned scale and
-shift. This reduces sensitivity to weight initialization and
-learning rate choices, making training faster and more stable.
-Batch normalization appears in the SPR transition model introduced
-in \cref{subsec:spr}.
 
 \subsection{Representations}
 \label{subsec:representations}
