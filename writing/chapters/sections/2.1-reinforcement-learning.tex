@@ -1,0 +1,672 @@
+\section{Reinforcement Learning}
+\label{sec:rl-foundations}
+
+This section formalizes the problem of learning from interaction
+and develops the algorithms used to solve it. It then shows why
+these algorithms need to be extended before they can handle
+high-dimensional inputs like images.
+
+\subsection{Markov Decision Processes}
+\label{subsec:mdp}
+
+Consider the grid-world in \cref{fig:grid-world}: a player starts
+in the bottom-left cell of a $3 \times 3$ grid and must reach the
+top-right corner. At each step, the player chooses to move up,
+down, left, or right. Most moves score zero, but reaching the goal
+scores $+1$ and stepping on the center cell scores $-1$. The player
+has no map and no instructions -- only the score after each move.
+
+\input{figures/grid-world}
+
+\smallskip
+The player is the \emph{agent}, and the grid is the
+\emph{environment}. At each step, the agent observes which cell it
+occupies (its \emph{state}), chooses a direction to move (an
+\emph{action}), and receives a score (the \emph{reward}). This
+cycle repeats, and the agent's goal is to discover a strategy that
+accumulates as much reward as possible over time. The \emph{Markov
+decision process} (MDP)~\citep{sutton2018reinforcement} is the
+mathematical framework that formalizes this cycle.
+
+\smallskip
+In the MDP notation, each step is indexed by a time step
+$t = 0, 1, 2, \ldots$. The agent's current cell is $S_t$ (the
+state at time~$t$), its chosen direction is $A_t$ (the action),
+the score it receives is $R_{t+1}$ (the reward), and the cell it
+lands in is $S_{t+1}$ (the next state). One complete cycle of these
+four quantities is called a \emph{transition}:
+$(S_t, A_t, R_{t+1}, S_{t+1})$.
+
+\smallskip
+When we need to refer to a specific cell rather than a time step,
+we label it by its position in the grid: $s_{01}$ is the cell in
+column~0, row~1 (the left-center cell). Capital~$S_t$ means ``the
+state at time~$t$, whichever cell that happens to be'';
+lowercase~$s_{01}$ names a fixed cell.
+
+\smallskip
+Writing $\mathcal{S}$ for the set of states and $\mathcal{A}$ for
+the set of actions, the remaining piece of the MDP is the
+\emph{dynamics function}~$p$. It describes what happens when the
+agent acts: given state~$s$ and action~$a$, the function~$p$ gives
+the probability of landing in state~$s'$ and receiving reward~$r$:
+%
+\begin{equation}
+\label{eq:mdp-dynamics}
+p(s', r \mid s, a)
+  \;\doteq\;
+  \Pr\{S_t = s',\, R_t = r \mid S_{t-1} = s,\, A_{t-1} = a\}.
+\end{equation}
+%
+For any state--action pair $(s, a)$, these probabilities sum to one
+over all possible next states and rewards -- exactly one outcome
+must occur.
+
+\smallskip
+In our grid-world, moving right from a given cell always takes
+the agent to the cell on its right -- the dynamics are
+deterministic. But imagine a slippery version of the same grid:
+choosing ``right'' usually moves right but occasionally slides
+the agent up or down instead. The dynamics function~$p$ is a
+probability distribution rather than a deterministic mapping
+because it must handle this kind of uncertainty.
+
+\smallskip
+The framework rests on one key assumption, the \emph{Markov
+property}: the probability of reaching any next state and reward
+depends only on the current state and action, not on the history of
+states and actions that came before. In the grid-world, knowing
+which cell the agent is in right now is enough to determine what
+happens next. It does not matter whether the agent arrived from
+below, from the left, or by a longer winding path.
+
+\smallskip
+This is what makes the problem tractable. If the outcome depended
+on the agent's entire history -- every state it had visited and
+every action it had taken -- the agent would need to track an
+ever-growing record of past experience. The Markov property says
+that the current state is a sufficient summary: once we know where
+the agent is now, the past is irrelevant for predicting the future.
+
+\smallskip
+\cref{fig:mdp-views} illustrates several transitions from the
+grid-world: each arrow is one entry of the dynamics function, with
+the action label, destination state, and reward annotation
+corresponding to $a$, $s'$, and $r$.
+
+\input{figures/mdp-graph}
+
+\smallskip
+The agent's goal is to collect as much reward as possible over
+time -- but rewards at different times are not equally valuable.
+A reward received now is worth more than the same reward received
+far in the future, because the future is uncertain and because
+early rewards compound. A parameter $\gamma \in [0, 1)$, called
+the \emph{discount rate}, controls this trade-off. When
+$\gamma = 0$, the agent cares only about the very next reward.
+As $\gamma$ approaches~$1$, the agent weighs future rewards more
+heavily.
+
+\smallskip
+The \emph{return} makes this precise -- it is the total discounted
+reward from time step~$t$ onward:
+%
+\begin{equation}
+\label{eq:return}
+G_t \;\doteq\; R_{t+1} + \gamma\, R_{t+2} + \gamma^2 R_{t+3} + \cdots
+  = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1}.
+\end{equation}
+%
+Each term $\gamma^k R_{t+k+1}$ weights a future reward by how
+far away it is. Rewards received sooner count more, and very
+distant rewards fade toward zero.
+
+\smallskip
+To see this concretely, suppose the agent receives rewards
+$0, 0, +1$ over three steps with $\gamma = 0.9$. The return
+from the first step is $G_0 = 0 + 0.9 \cdot 0 + 0.81 \cdot 1
+= 0.81$ -- the distant reward of $+1$ is worth only $0.81$
+today because it is discounted twice.
+
+\smallskip
+Discounting also serves a mathematical purpose: because
+$\gamma < 1$, the infinite sum in \cref{eq:return} converges as
+long as individual rewards are bounded. Without discounting, the
+return could grow without limit.
+
+\smallskip
+\Cref{fig:discounting} illustrates the trade-off: with a low
+discount rate, the agent prefers a small reward nearby over a
+larger reward further away; with a high discount rate, the agent
+is willing to take more steps to collect the larger reward.
+
+\input{figures/discounting}
+
+\smallskip
+In many problems, the interaction breaks naturally into
+\emph{episodes} -- finite sequences that end in a terminal state
+and then reset. The grid-world is episodic: the agent starts in
+the bottom-left cell, takes a sequence of moves, and the episode ends
+when it reaches the goal or the penalty. Most reinforcement
+learning benchmark environments are episodic, so in practice the
+return reduces to a finite sum over the steps within each episode.
+
+\smallskip
+Given an MDP, the agent needs a rule for choosing actions. This
+rule is called a \emph{policy}, written $\pi(a \mid s)$, which
+gives the probability of selecting action~$a$ in state~$s$. A
+deterministic policy always picks the same action in a given state,
+while a stochastic policy samples from a distribution over actions.
+
+\smallskip
+In the grid-world, a policy assigns a direction to each cell:
+``go right when in the bottom-left cell, go up when in the cell
+above it,'' and so on for every cell in the grid. A different
+policy -- choosing different directions in some cells -- would
+trace a different path and potentially collect different rewards.
+
+\smallskip
+The central question of reinforcement learning is how to find a
+policy that maximizes the expected return -- and answering that
+question requires a way to evaluate how good a given policy is,
+which leads to value functions.
+
+\subsection{Value Functions}
+\label{subsec:value-functions}
+
+A policy tells the agent what to do, but not how well it will do.
+To compare policies -- and ultimately find the best one -- the
+agent needs a way to assign a numerical score to each state,
+capturing how much reward it can expect from that point onward.
+
+\smallskip
+But what does ``expect'' mean when outcomes are uncertain? If the
+agent is in a state where going right leads to reward $+1$ with
+probability $0.8$ (it reaches the goal) and reward $0$ with
+probability $0.2$ (it slips and stays put), the
+\emph{expected value} of that action's reward is
+$0.8 \times (+1) + 0.2 \times 0 = 0.8$ -- the average outcome,
+weighted by the probability of each possibility. The agent does
+not actually receive $0.8$; it gets either $+1$ or $0$. But $0.8$
+is the long-run average if this situation were repeated many times.
+We write $\mathbb{E}[X]$ for the expected value of a random
+quantity~$X$. When the expectation depends on a specific
+policy~$\pi$, we write $\mathbb{E}_\pi[\cdot]$ to indicate that
+the probabilities come from following that policy.
+
+\smallskip
+The \emph{state-value function} $v_\pi(s)$ answers exactly this
+question: it gives the expected return when starting in state~$s$
+and following policy~$\pi$ thereafter:
+%
+\begin{equation}
+\label{eq:v-pi}
+v_\pi(s) \;\doteq\; \mathbb{E}_\pi\!\big[G_t \mid S_t = s\big].
+\end{equation}
+%
+The subscript~$\pi$ on the expectation means that the agent
+follows policy~$\pi$ at every step -- the average is taken over
+all the randomness in the trajectory (action choices and
+transitions) that this policy produces.
+
+\smallskip
+In the grid-world, $v_\pi(s)$ is the average total reward the
+agent collects from cell~$s$ onward if it follows policy~$\pi$.
+Cells near the goal have high values because the agent reaches
+the $+1$ reward quickly; cells near the penalty have low values
+because the policy is likely to lead there.
+
+\smallskip
+\cref{fig:value-grid} makes this concrete: panel~(a) shows the
+value of each cell under a policy that navigates toward the goal,
+while panel~(b) shows the policy itself. The values form a
+gradient -- highest near the goal, decreasing with distance.
+
+\input{figures/value-grid}
+
+\smallskip
+The state-value function tells us how good a state is, but it
+does not tell us which action to take. For that, we need the
+\emph{action-value function} $q_\pi(s, a)$, which gives the
+expected return for taking action~$a$ in state~$s$ and then
+following~$\pi$:
+%
+\begin{equation}
+\label{eq:q-pi}
+q_\pi(s, a) \;\doteq\; \mathbb{E}_\pi\!\big[G_t \mid S_t = s,\, A_t = a\big].
+\end{equation}
+%
+The difference is subtle but important: $v_\pi$ evaluates
+\emph{states}, while $q_\pi$ evaluates \emph{actions in states}.
+
+\smallskip
+In the grid-world, consider the agent in cell~$s_{21}$.
+Moving up leads toward the $+1$ goal, so
+$q_\pi(s_{21}, \text{up})$ is high. Moving right leads directly
+to the $-1$ penalty in $s_{31}$, so
+$q_\pi(s_{21}, \text{right})$ is low. The state value $v_\pi$
+assigns a single number to~$s_{21}$, but the action values reveal
+that the actions available there are dramatically different.
+\Cref{fig:q-values} shows this: each arrow from~$s_{21}$ carries
+a different Q-value, making the best action immediately apparent.
+
+\input{figures/q-values}
+
+\smallskip
+This is why $q_\pi$ is more directly useful for decision-making
+than $v_\pi$: comparing Q-values across actions tells the agent
+which action to take, without needing a model of the environment.
+
+\smallskip
+Both value functions are defined as expectations over the entire
+future -- averages over every possible trajectory from the current
+state onward. Computing them from these definitions directly would
+require enumerating all such trajectories, which quickly becomes
+impractical. The next section shows that the Markov property provides
+a recursive shortcut.
+
+\subsection{The Bellman Equation}
+\label{subsec:bellman-equation}
+
+Computing $v_\pi$ from its definition means averaging the return over
+every possible trajectory from state~$s$ -- every sequence of
+actions, transitions, and rewards stretching to the end of the
+episode. Even for the grid-world, the number of trajectories grows
+exponentially with the episode length. For larger problems, this
+direct approach is hopeless.
+
+\smallskip
+The Markov property from \cref{subsec:mdp} provides a way out.
+Because the future depends only on the current state, the value of a
+state can be decomposed into two pieces: the reward from the next
+step, and the discounted value of wherever the agent ends up. For
+$v_\pi$, this gives the \emph{Bellman expectation equation}:
+%
+\begin{equation}
+\label{eq:bellman-expectation}
+v_\pi(s) = \sum_{a} \pi(a \mid s) \sum_{s',\, r}
+  p(s', r \mid s, a)\,\big[r + \gamma\, v_\pi(s')\big].
+\end{equation}
+%
+In words: the value of state~$s$ is the average, over all actions the
+policy might take, of the immediate reward plus the discounted value
+of the next state.
+
+\smallskip
+The equation has three layers, each handling a different source of
+uncertainty. The outer sum weights actions by $\pi(a \mid s)$ -- the
+probability the policy assigns to each action. The inner sum weights
+outcomes by $p(s', r \mid s, a)$ -- the environment's transition
+probabilities. And the bracketed term $r + \gamma\, v_\pi(s')$ is the
+one-step payoff: the reward received now, plus the discounted value of
+the successor state. \cref{fig:bellman-backup} shows this structure
+as a tree: from state~$s$, the policy selects an action, the
+environment responds with a reward and next state, and the payoff at
+each leaf is the immediate reward plus the discounted future value.
+
+\input{figures/bellman-backup}
+
+\smallskip
+To see this concretely, consider cell~$s_{21}$ in the grid-world.
+Suppose the policy says ``go up'' with certainty, and moving up from
+$s_{21}$ always leads to $s_{22}$ with reward $r = 0$ (the transition
+is deterministic). Then both sums collapse to a single term:
+%
+\[
+v_\pi(s_{21}) = 0 + 0.9 \times v_\pi(s_{22}).
+\]
+%
+If $v_\pi(s_{22}) = 1.0$, then $v_\pi(s_{21}) = 0.90$ -- matching
+the values shown in \cref{fig:value-grid}. The value of~$s_{21}$ is
+entirely determined by the value of its neighbor; no need to trace the
+trajectory all the way to the goal.
+
+\smallskip
+When the policy is stochastic -- assigning positive probability to
+more than one action -- the value becomes a weighted average across
+all possible actions, each weighted by the probability the policy
+assigns to it. And when transitions are stochastic, there is an
+additional average over the possible next states the environment might
+produce. The equation handles both cases through its nested sums.
+
+\smallskip
+This equation might seem circular -- the value of a state is defined
+in terms of the values of other states, which are themselves defined
+the same way. But it is not circular; it is recursive. The chain of
+dependencies terminates at terminal states, where the value is zero
+because the episode is over and no more reward can be collected. From
+there, values propagate backward: the cell next to the goal derives
+its value from the goal, the cell two steps away derives its value
+from the cell one step away, and so on through the grid.
+
+\smallskip
+The power of the Bellman equation is that it reduces a calculation
+over the entire future -- the sum of all discounted rewards along
+every possible trajectory -- to a one-step relationship between
+neighboring states. Instead of tracing every path to the end of the
+episode, we only need to look one step ahead. This recursion is what
+makes reinforcement learning computationally tractable.
+
+\subsection{Optimal Policies}
+\label{subsec:optimal-policies}
+
+The Bellman equation tells us how to evaluate any given policy -- but
+the agent does not just want to evaluate its current strategy. It
+wants to find the best one.
+
+\smallskip
+A policy $\pi^*$ is \emph{optimal} if its expected return is at least
+as high as that of every other policy, in every state:
+$v_{\pi^*}(s) \geq v_\pi(s)$ for all states~$s$ and all
+policies~$\pi$~\citep{sutton2018reinforcement}. At least one optimal
+policy always exists.
+
+\smallskip
+There may be several optimal policies -- for instance, two paths
+through the grid-world might yield the same total reward. But all
+optimal policies share the same value functions, which we denote
+$v_*$ and $q_*$:
+%
+\begin{align}
+\label{eq:v-star}
+v_*(s) &\;\doteq\; \max_\pi\, v_\pi(s), \\[4pt]
+\label{eq:q-star}
+q_*(s, a) &\;\doteq\; \max_\pi\, q_\pi(s, a).
+\end{align}
+%
+In words, $v_*(s)$ is the highest value achievable in state~$s$ under
+any policy, and $q_*(s, a)$ is the highest value achievable by taking
+action~$a$ in state~$s$ and then acting optimally thereafter.
+
+\smallskip
+The optimal value functions satisfy their own recursive relationship,
+the \emph{Bellman optimality equation}. For $q_*$:
+%
+\begin{equation}
+\label{eq:bellman-optimality-q}
+q_*(s, a) = \sum_{s',\, r} p(s', r \mid s, a)
+  \Big[r + \gamma \max_{a'} q_*(s', a')\Big].
+\end{equation}
+%
+The key difference from the Bellman expectation equation
+(\cref{eq:bellman-expectation}) is that the average over the policy's
+action choices is replaced by a maximum: instead of asking ``what
+return does the current policy achieve,'' we ask ``what is the best
+possible return if we act optimally from here.''
+
+\smallskip
+If $q_*$ were known, acting optimally would be trivial: in every
+state, the agent simply picks the action with the highest $q$-value,
+$\pi^*(s) = \arg\max_a q_*(s, a)$. No model of the environment is
+needed and no planning is required -- the optimal action is a direct
+lookup. This is why much of reinforcement learning, including the
+Q-learning algorithm in the next section and the deep Q-networks that
+build on it, focuses on estimating $q_*$ rather than $v_*$.
+
+\smallskip
+There is a catch, however. The Bellman optimality equation is a
+system of $|\mathcal{S}| \times |\mathcal{A}|$ simultaneous
+equations, one for every state--action pair. Solving it requires
+knowing the dynamics~$p$ and enumerating every state -- both of which
+are impractical for any problem with a large state space or unknown
+dynamics. The next two sections address these obstacles: Q-learning
+estimates $q_*$ from experience without knowing the dynamics, and
+function approximation replaces the explicit table of $q$-values with
+a neural network that can generalize across states.
+
+\subsection{Q-Learning}
+\label{subsec:q-learning}
+
+The Bellman optimality equation tells us what $q_*$ must satisfy,
+but solving it requires knowing the dynamics~$p$. In most problems
+of interest, the agent does not have this information -- it cannot
+look up what will happen; it can only try an action and observe the
+result. Q-learning~\citep{watkins1992q} addresses exactly this
+setting: the agent learns $q_*$ directly from experience, one
+transition at a time, without ever knowing $p$.
+
+\smallskip
+The key idea comes from \emph{temporal-difference} (TD)
+learning~\citep{sutton1988learning}: rather than waiting until
+the end of an episode to see how things turned out, the agent
+updates its estimate after every single step. It observes the
+immediate reward, peeks at its current estimate of the next
+state's value, and uses these together as a learning target.
+This peeking is called \emph{bootstrapping} -- the agent learns
+from its own estimates rather than from complete outcomes. The
+estimates may be wrong at first, but because each update
+incorporates a real observed reward, the errors shrink over time.
+
+\smallskip
+The Q-learning update rule puts this idea into practice. After
+the agent takes action~$A_t$ in state~$S_t$, observes
+reward~$R_{t+1}$, and arrives in state~$S_{t+1}$, it updates
+its estimate of $q_*(S_t, A_t)$:
+%
+\begin{equation}
+\label{eq:q-learning}
+Q(S_t, A_t) \;\leftarrow\; Q(S_t, A_t)
+  + \alpha \Big[R_{t+1} + \gamma \max_{a} Q(S_{t+1}, a)
+  - Q(S_t, A_t)\Big].
+\end{equation}
+%
+$Q(S_t, A_t)$ is the agent's current estimate for this
+state--action pair. The expression
+$R_{t+1} + \gamma \max_a Q(S_{t+1}, a)$ is the \emph{TD
+target} -- the reward the agent actually received, plus its best
+estimate of the value from the next state onward. The difference
+between the target and the current estimate is the \emph{TD
+error}: how far off the agent's prediction was. The learning rate
+$\alpha \in (0, 1]$ controls how far the estimate moves toward
+the target on each step -- large $\alpha$ moves quickly but may
+overshoot; small $\alpha$ is more stable but learns slowly.
+
+\smallskip
+To see this in the grid-world, suppose the agent is in
+cell~$s_{21}$ and moves up, receiving reward $r = 0$ and
+arriving in cell~$s_{22}$. If the agent currently estimates
+$Q(s_{21}, \text{up}) = 0.5$ and $\max_a Q(s_{22}, a) = 1.0$,
+then with $\gamma = 0.9$ and $\alpha = 0.1$:
+%
+\begin{align*}
+\text{target} &= 0 + 0.9 \times 1.0 = 0.9, \\
+\text{TD error} &= 0.9 - 0.5 = 0.4, \\
+Q(s_{21}, \text{up}) &\leftarrow 0.5 + 0.1 \times 0.4 = 0.54.
+\end{align*}
+%
+The estimate moved from $0.5$ toward the target of $0.9$ -- not
+all the way, but a step in the right direction.
+\Cref{fig:td-update} shows this update spatially: the value
+estimate at $s_{22}$ bootstraps back to refine the estimate at
+$s_{21}$. After many such updates across many transitions, the
+estimates converge to $q_*$.
+
+\input{figures/td-update}
+
+\smallskip
+The connection to the Bellman optimality equation
+(\cref{eq:bellman-optimality-q}) is direct: the TD target
+$R_{t+1} + \gamma \max_a Q(S_{t+1}, a)$ is a single-sample
+estimate of the right-hand side of that equation. Each update
+nudges the Q-values toward satisfying the Bellman optimality
+equation, using real experience instead of known dynamics.
+
+\smallskip
+There is a tension, however, between learning and acting. If the
+agent always picks the action with the highest Q-value -- the
+\emph{greedy} action -- it will exploit what it currently knows
+but may never discover that a different action is better. In the
+grid-world, an agent that found a path to the $+1$ reward early
+on might follow it forever, never exploring the route that leads
+to a higher reward elsewhere. \cref{fig:exploration} shows this
+tension in miniature: a greedy agent stays with the known $+1$
+and never discovers the $+3$.
+
+\input{figures/exploration}
+
+\smallskip
+This is the \emph{exploration--exploitation} trade-off: the agent
+must sometimes try actions that look suboptimal in order to gather
+information that could improve its long-term behavior. The
+simplest solution is the $\epsilon$\emph{-greedy} strategy: with
+probability $1 - \epsilon$ the agent takes the greedy action, and
+with probability~$\epsilon$ it picks a random action instead.
+Early in training, $\epsilon$ is large so the agent explores
+broadly; over time, $\epsilon$ is decayed toward a small value so
+the agent increasingly exploits its learned Q-values.
+
+\smallskip
+A notable property of Q-learning is that it is \emph{off-policy}:
+the update rule always uses $\max_a Q(S_{t+1}, a)$ -- the value
+of the best action -- regardless of which action the agent
+actually takes next. The agent explores with $\epsilon$-greedy,
+but the update targets the greedy (optimal) policy. This
+separation is what makes exploration safe: the agent can try
+random actions to discover new information without corrupting its
+estimate of $q_*$.
+
+\smallskip
+Under standard conditions -- all state--action pairs continue to
+be visited, and the learning rate is decreased
+appropriately -- Q-learning converges to $q_*$ with probability
+one~\citep{watkins1992q}. The $\epsilon$-greedy policy ensures
+the visitation condition as long as $\epsilon > 0$.
+
+\smallskip
+The algorithm as described maintains a table with one entry for
+every state--action pair. For the grid-world, this table has
+$11 \times 4 = 44$ entries -- perfectly manageable. But for
+problems with large state spaces, the table becomes impractical.
+If the state is a raw image, the number of possible states grows
+astronomically, and the agent would need to visit each one
+repeatedly to learn its Q-values. Worse, learning that one state
+is valuable tells the agent nothing about similar states it has
+not yet seen -- there is no generalization.
+
+\smallskip
+The next section addresses this limitation by replacing the table
+with a parameterized function that can generalize across states,
+allowing Q-learning to scale to problems where explicit
+enumeration is impossible.
+
+\subsection{Function Approximation}
+\label{subsec:func-approx}
+
+Q-learning as described in the previous section maintains a table
+with one entry for every state--action pair. When the state is a
+raw image -- say, $84 \times 84$ grayscale pixels -- the number of
+possible states is astronomical. A table cannot fit in memory, the
+agent cannot visit every entry, and learning that one state is
+valuable tells it nothing about similar states it has not yet seen.
+Tabular Q-learning is not merely slow in such settings; it is
+impossible.
+
+\smallskip
+The solution is to replace the table with a parameterized function.
+Instead of storing a separate value for each state--action pair, we
+define a function $Q(s, a;\, \mathbf{w})$ that takes a state and
+action as input and produces a Q-value estimate as output, where
+$\mathbf{w}$ is a vector of adjustable parameters (weights).
+
+\smallskip
+The key advantage is generalization. Because the function maps
+states to Q-values through shared parameters, updating
+$\mathbf{w}$ based on one state automatically changes the estimates
+for similar states. In the grid-world analogy, this is like learning
+the rule ``cells closer to the goal are worth more'' rather than
+memorizing the value of each cell individually -- the rule applies
+even to cells the agent has never visited.
+\Cref{fig:table-vs-network} contrasts the two approaches.
+
+\input{figures/table-vs-network}
+
+\smallskip
+To train the function, we need a loss to minimize. In supervised
+learning, the loss compares predictions to known labels. Here, the
+``labels'' are the TD targets from Q-learning: after each transition
+$(S_t, A_t, R_{t+1}, S_{t+1})$, the target is
+$R_{t+1} + \gamma \max_a Q(S_{t+1}, a;\, \mathbf{w})$ -- the same
+quantity that appeared in the tabular update rule
+(\cref{eq:q-learning}). The loss function is the squared difference
+between the prediction and this target:
+%
+\begin{equation}
+\label{eq:fa-loss}
+L(\mathbf{w}) = \mathbb{E}\Big[\big(
+  R_{t+1} + \gamma \max_{a} Q(S_{t+1}, a;\, \mathbf{w})
+  - Q(S_t, A_t;\, \mathbf{w})\big)^2\Big].
+\end{equation}
+%
+Each transition provides one training example:
+$Q(S_t, A_t;\, \mathbf{w})$ is the prediction, the TD target is
+the label, and the squared TD error measures how far off the
+prediction was.
+
+\smallskip
+Minimizing this loss follows the standard recipe from supervised
+learning: compute the gradient of $L$ with respect to $\mathbf{w}$
+and take a step in the direction that reduces the error. In
+practice, we use stochastic gradient descent -- updating
+$\mathbf{w}$ after each transition rather than averaging over many
+transitions first:
+%
+\begin{equation}
+\label{eq:sgd-update}
+\mathbf{w} \;\leftarrow\; \mathbf{w}
+  + \alpha \Big[R_{t+1} + \gamma \max_{a} Q(S_{t+1}, a;\, \mathbf{w})
+  - Q(S_t, A_t;\, \mathbf{w})\Big]\,
+  \nabla_{\mathbf{w}}\, Q(S_t, A_t;\, \mathbf{w}).
+\end{equation}
+%
+This is the function approximation counterpart of the tabular
+Q-learning update. The TD error -- the bracketed term -- plays the
+same role as before, but instead of directly adjusting one table
+entry, it is scaled by the gradient
+$\nabla_{\mathbf{w}}\, Q(S_t, A_t;\, \mathbf{w})$ -- a vector of
+partial derivatives that points in the direction of steepest
+increase in~$Q$, with one entry for each weight
+in~$\mathbf{w}$. This vector distributes the correction across all
+parameters: weights that contribute more to the current prediction
+receive larger adjustments.
+
+\smallskip
+There is a subtlety: the TD target itself depends on $\mathbf{w}$,
+because $Q(S_{t+1}, a;\, \mathbf{w})$ uses the same parameters we
+are updating. A true gradient would differentiate through the target
+as well, but in practice we treat the target as a fixed constant
+when computing the gradient. This is called a \emph{semi-gradient}
+method~\citep{sutton2018reinforcement}. Semi-gradient updates are
+simpler and more stable than full-gradient alternatives, though they
+weaken the theoretical convergence guarantees compared to supervised
+learning. \Cref{fig:semi-gradient} illustrates this asymmetry: the
+same parameters appear on both sides of the loss, but the gradient
+update treats the target as if it were a fixed label.
+
+\input{figures/semi-gradient}
+
+\smallskip
+Function approximation makes Q-learning applicable to problems that
+tabular methods cannot touch: the agent can process raw images,
+generalize across similar states, and scale to environments with
+vast state spaces. But these gains come at a cost. Tabular
+Q-learning converges to $q_*$ under standard conditions; with
+nonlinear function approximation, no such guarantee exists in
+general.
+
+\smallskip
+The instability arises from the combination of three elements,
+known as the \emph{deadly triad}~\citep{sutton2018reinforcement}.
+First, \emph{bootstrapping}: the TD target depends on the current
+estimates, so errors in the Q-values feed back into the targets
+used to train them. Second, \emph{off-policy learning}: the $\max$
+operator in the target means the agent updates toward a different
+policy (the greedy one) than the one it uses to collect data,
+which can amplify estimation errors. Third, \emph{function
+approximation} itself: because parameters are shared across states,
+a single update changes Q-values for many states simultaneously,
+and these coupled changes can reinforce each other and cause the
+estimates to diverge.
+
+\smallskip
+Before describing the specific network architecture used in
+practice, we need to understand the building blocks it is made from.
