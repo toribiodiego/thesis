@@ -957,7 +957,7 @@ low; if it assigns 50\%, the loss is higher; if it assigns 10\%,
 the loss is much higher. Cross-entropy appears later in this work
 when training linear probes to classify game-state properties.
 
-\subsection{Gradient Descent and Backpropagation}
+\subsection{Gradient Descent}
 \label{subsec:gradient-descent}
 
 Given a loss function, the network needs a way to reduce it. The
@@ -986,7 +986,9 @@ same idea that appeared in the Q-learning update rule
 (\cref{eq:sgd-update}), now stated in general form: the RL-specific
 version is a special case where the loss is the squared TD error.
 
-\smallskip
+\subsection{Backpropagation}
+\label{subsec:backpropagation}
+
 For a network with millions of weights, computing the gradient
 requires knowing how much each weight contributed to the loss. This
 is where \emph{backpropagation} enters. A neural network is a chain
