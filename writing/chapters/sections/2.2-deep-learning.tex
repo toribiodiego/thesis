@@ -10,21 +10,15 @@ units are arranged determines what the network can learn.
 \subsection{Neurons}
 \label{subsec:neurons}
 
-The simplest component of a neural network is the \emph{neuron}. It
-takes several input values, multiplies each one by a different number
-called a \emph{weight},
-adds the results together, and passes the total through a function that
-determines its output.
-For example, the three inputs could be a person's height, weight, and
-age.
+A \emph{neuron} takes several numbers as input, combines them, and
+produces a single number as output. Each input is scaled by its own
+number, and these numbers control how much each input matters.
 
 \smallskip
-Each weight controls how much its corresponding input influences the
-result. A large weight means that input matters more; a weight near zero
-means it is mostly ignored. By adjusting these weights, the neuron
-learns which combinations of inputs are relevant. Its output is a single
-number that summarizes the inputs, which can then be passed to other
-neurons.
+These numbers are called \emph{weights}. A large weight means that
+input matters more, and a weight near zero means it is mostly ignored.
+The neuron learns which combinations of inputs are relevant by
+adjusting these weights.
 
 \input{figures/neuron}
 
