@@ -66,10 +66,15 @@ The most widely used activation function is the \emph{rectified
 linear unit} (ReLU), which passes positive values through and sets
 negative values to zero:
 %
-\begin{equation}
+\begin{align}
 \label{eq:relu}
-\text{ReLU}(x) = \max(0,\, x).
-\end{equation}
+\text{ReLU}(x) &= \max(0,\, x) \\[4pt]
+\notag
+               &= \begin{cases}
+                  0 & \text{if } x \leq 0 \\
+                  x & \text{if } x > 0
+                  \end{cases}
+\end{align}
 %
 With $z = 0.2$, $\text{ReLU}(0.2) = 0.2$, so the neuron's output is
 $a = 0.2$. If the weighted sum had been $-0.3$, the output would be
@@ -77,8 +82,6 @@ $a = 0$.%
 \footnote{Earlier activation functions such as the sigmoid and
 hyperbolic tangent (tanh) have been largely replaced by ReLU in
 modern architectures.}
-
-\input{figures/relu}
 
 \smallskip
 The weights and bias start with arbitrary values, so the neuron's first
